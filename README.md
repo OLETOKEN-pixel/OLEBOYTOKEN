@@ -1,73 +1,66 @@
-# Welcome to your Lovable project
+# OLEBOY TOKEN - Competitive Gaming Platform
 
-## Project info
+Piattaforma competitiva Fortnite dove gli utenti creano partite private, competono per Coins e scalano la classifica.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+- **Frontend**: React 18 + Vite + TypeScript
+- **UI**: shadcn/ui + Radix UI + Tailwind CSS + Framer Motion
+- **3D**: React Three Fiber
+- **Backend**: Supabase (Auth, Database, Realtime)
+- **Payments**: Stripe (via Vercel Serverless Functions)
+- **Hosting**: Vercel
+- **State**: TanStack React Query
+- **Routing**: React Router DOM v6
 
-There are several ways of editing your application.
+## Setup
 
-**Use Lovable**
+```bash
+# Install dependencies
+npm install
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+# Copy env file and fill in your values
+cp .env.example .env
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+See `.env.example` for all required variables:
+- `VITE_SUPABASE_URL` - Supabase project URL (frontend)
+- `VITE_SUPABASE_PUBLISHABLE_KEY` - Supabase anon key (frontend)
+- `SUPABASE_URL` - Supabase URL (serverless functions)
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (serverless functions)
+- `STRIPE_SECRET_KEY` - Stripe secret key (serverless functions)
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook secret (serverless functions)
 
-**Use GitHub Codespaces**
+## Deployment (Vercel)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Connect this repo to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy - Vercel auto-detects Vite and builds correctly
+4. Set up Stripe webhook pointing to `https://your-domain.vercel.app/api/stripe-webhook`
 
-## What technologies are used for this project?
+## Project Structure
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+src/
+  components/     # React components
+    3d/           # Three.js 3D components
+    admin/        # Admin panel
+    common/       # Shared components
+    home/         # Homepage sections
+    layout/       # Header, Footer, BottomNav
+    matches/      # Match-related components
+    ui/           # shadcn/ui primitives
+  contexts/       # React contexts (Auth)
+  hooks/          # Custom hooks
+  integrations/   # Supabase client & types
+  pages/          # Route pages
+  assets/         # Static assets
+api/              # Vercel serverless functions
+  create-checkout.js   # Stripe checkout session
+  stripe-webhook.js    # Stripe webhook handler
+```
