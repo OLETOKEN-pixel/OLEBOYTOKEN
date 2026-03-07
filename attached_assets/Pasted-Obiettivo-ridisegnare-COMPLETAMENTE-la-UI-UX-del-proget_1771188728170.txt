@@ -1,0 +1,111 @@
+Obiettivo: ridisegnare COMPLETAMENTE la UI/UX del progetto “OLEBOY TOKEN” mantenendo TUTTE le funzionalità esistenti (routing, chiamate API, supabase/discord/stripe, logiche di match/team/challenges/shop/admin), ma sostituendo l’attuale stile “gaming HUD” (barre grosse, glow pesante, font brutti, impaginazione piena) con un design DARK ULTRA CLEAN e SUPER PREMIUM, stile “Apple product / luxury automotive”, con nero “Mercedes” opaco-lucido e luce cinematografica.
+
+REGOLE FONDAMENTALI
+1) NON cambiare la logica di business e le integrazioni: mantieni invariati endpoint, chiamate, provider auth, stripe flow, supabase rpc, ecc. Cambia SOLO presentazione, layout, componenti UI, copy e naming.
+2) NIENTE barre grosse: header/top nav deve essere sottile, quasi trasparente, elegante, con blur leggero e massimo 56px di altezza. Spazi ampi, pochi elementi.
+3) NIENTE look “HUD neon”: elimina bordi spessi, clip-path aggressivi, scanlines/grid troppo visibili. Se c’è una griglia deve essere micro, quasi impercettibile.
+4) Home NON deve obbligare a scrollare: deve stare “above the fold”. Se contenuti extra servono, mettili in tab, carousel orizzontale o pannelli interni scrollabili (solo dentro card, non tutta la pagina).
+5) Visual identity:
+   - Background: nero premium “obsidian / piano black” con finitura opaco-lucida + riflessi cinematografici (soft gradient radiale + specular highlights tipo film light) + micro noise.
+   - Accento principale: GOLD premium (testare 2–3 varianti che funzionano sul nero: champagne gold, warm brushed gold, rich antique gold). Scegli una variante finale coerente e definisci token.
+   - Accento secondario: un cyan/teal molto controllato (non neon), solo per stati attivi e link secondari. Il gold è il protagonista.
+6) Font: moderno, grande, pulito (premium). Usa uno tra Inter / Manrope / Plus Jakarta (scegline uno) con gerarchie chiare e poche varianti (Regular/Medium/Semibold/Bold). Titoli grandi con tracking leggermente negativo, body leggibile.
+7) Naming: sostituire “Arena” con “Play” e “Matches” (es. tab Play / Matches). “Arena” non deve comparire nel copy.
+8) Fortnite vibe MA ORIGINALE (NO IP): icone e oggetti ispirati (shield/medkit/pickaxe) ma ridisegnati da zero come set di icone/illustrations originali. Niente personaggi o loghi Fortnite.
+9) 3D: Home + Leaderboard devono avere un elemento 3D forte:
+   - una mascotte/logo cartoon in 3D (OleBoy Token) ANIMATA (idle: breathing, slight head turn, blink; hover: wave/tilt; click: small celebration). Deve essere pulita, “toy / toon” premium, illuminazione morbida cinematografica, non low quality.
+   - se non esiste un modello glTF, costruisci una mascotte procedurale con primitive (sphere/capsule/rounded box) in react-three-fiber + toon material + outline leggerissima. Deve sembrare “brand character”.
+   - integra framer-motion per micro-interazioni UI, ma 3D in r3f.
+10) Layout: tanto spazio, poche info, super premium. Le info devono essere “curate”, non riempitive.
+
+TASK TECNICI (DA ESEGUIRE)
+A) CREA UN DESIGN SYSTEM
+- Definisci tokens in Tailwind/CSS variables:
+  --bg-0, --bg-1, --panel, --panel-2, --text, --muted, --gold, --gold-2, --teal, --border-soft, --shadow-soft.
+- Definisci radius coerenti (es. 16–20), border sottilissimi (1px con alpha), shadow morbide (non glow).
+- Definisci spacing scale: tanto respiro (24/32/40/56).
+- Componenti base:
+  - PremiumCard (surface con blur leggero opzionale, highlight speculare in alto a sinistra)
+  - PremiumButton (primary gold, secondary ghost, tertiary outline)
+  - PremiumInput (border soft, focus ring gold/teal minimale)
+  - PremiumTabs / SegmentedControl
+  - PremiumBadge (VIP, Live, New)
+  - Skeleton loaders premium + empty states.
+
+B) NAVIGATION (TOP NAV)
+- Top nav “floating” quasi trasparente (glass), altezza max 56px, blur, border sottile.
+- Mostra solo voci principali: Play, Matches, Leaderboard, Challenges, Shop. Il resto sotto un menu “More”.
+- A destra: balance (coin) minimal, VIP badge, avatar utente. Nessun bottone enorme.
+- Stato attivo: underline gold sottile o pill highlight, non cyan neon.
+
+C) HOME (NO SCROLL)
+- Vista a griglia in un’unica schermata (100vh - nav):
+  1) Hero sinistra (o centro): mascotte 3D grande con luce cinematografica e titolo breve.
+     - Titolo: “OLEBOY TOKEN”
+     - Subtitle: 1 riga massimo, premium (no slogan lunghi).
+     - CTA: “Play” (gold) + “Create Match” (ghost).
+  2) Colonna destra: “Live Matches” come lista di card compatte (con mini icone originali stile shield/medkit/pickaxe), con stato LIVE, mode, entry, prize, pulsante Join.
+     - Se molti match: lista scrollabile dentro il pannello, NON tutta la pagina.
+  3) Sotto (sempre above fold): una barra “Highlights / Challenges / Leaderboard preview” in formato carousel orizzontale (3 card max visibili).
+- Niente sezioni lunghe verticali. Tutto deve respirare.
+
+D) PLAY / MATCHES
+- Matches list: card premium con thumbnail astratta (illustration originale) + info essenziale. Filtri minimal in un’unica riga, niente “tactical filters” gigante.
+- Match detail: layout pulito, due colonne max, con pannello “Rules / Prize / Players / Join”.
+- Create match: wizard in 2–3 step con progress discreto, validations chiare.
+
+E) TEAMS
+- Pagina teams: empty state premium con illustrazione originale + CTA create team (gold).
+- Modale “Create Team”: design premium, error handling visibile inline, loading state elegante. Assicurati che l’utente capisca se la creazione fallisce (non solo toast).
+- UI per invitare membri e gestire team in stile card minimale.
+
+F) LEADERBOARD (3D FORTE)
+- Header con grande elemento 3D (trophy/mascotte) e luce cinematografica.
+- Top 3 in cards grandi “podium” premium (gold accent), poi lista compatta sotto.
+- Micro-animazioni: hover sulle card con lift + highlight speculare.
+
+G) CHALLENGES
+- Cards pulite tipo “premium pass”: titolo grande, reward in gold, progress minimal con barra sottilissima.
+- Icone originali (no Fortnite).
+
+H) HIGHLIGHTS
+- Layout a griglia con card video pulite, niente elementi enormi.
+- Voto (1 per settimana) spiegato con microcopy elegante, badge “Weekly prize”.
+
+I) SHOP + PAYMENTS (Stripe)
+- Shop items: card premium con illustrazioni originali degli oggetti (shield/medkit/pickaxe reinterpretati), prezzi e CTA.
+- Checkout: estremamente pulito, quasi “Apple Pay style” (ma usando Stripe). Feedback chiari.
+
+J) PROFILE / SETTINGS
+- Layout minimal, 2 colonne max.
+- Connections: Discord con stato connesso e micro badge.
+- Payments: storico transazioni in tabella minimal (linee sottili).
+
+K) ADMIN PANEL
+- Admin dashboard: stessa estetica premium, ma più “console”.
+- Tabelle: minimal, righe sottili, spacing ampio, filtri compatti.
+
+ASSET ORIGINALI (OBBLIGATORIO)
+- Crea un set di 12–20 icone SVG originali (shield, medkit, pickaxe, trophy, crown, coin, bolt, controller, target, users, video, ticket).
+- Crea 6–10 “illustrations” astratte in SVG/PNG generate da forme/gradients (no stock, no due immagini fornite dall’utente). Devono richiamare Fortnite vibe senza copiare.
+- Crea pattern background micro (noise + soft grid quasi invisibile).
+
+QUALITÀ / FINISH
+- Tipografia: gerarchia chiara, titoli grandi, body pulito, nessun font “sci-fi” tipo Orbitron.
+- Consistenza: ogni pagina deve sembrare parte dello stesso brand.
+- Responsive: desktop first, ma gestisci tablet/mobile con layout che mantiene premium.
+- Accessibilità: contrasto alto, focus states eleganti.
+- Performance: evita ombre pesanti e effetti inutili; 3D solo dove serve.
+
+DELIVERABLE
+- Aggiorna componenti e pagine esistenti per aderire al nuovo design.
+- Ripulisci index.css e classi “hud-*” sostituendole con il nuovo design system.
+- Mantieni tutte le route e funzionalità, ma cambia copy e UI.
+- Non introdurre dipendenze inutili; usa quello che c’è (tailwind, shadcn, framer-motion, react-three-fiber).
+
+Inizia da:
+1) Design tokens + cleanup CSS,
+2) Top nav premium,
+3) Home no-scroll con mascotte 3D animata + Live Matches,
+4) Leaderboard con 3D,
+poi prosegui con le altre pagine.

@@ -1,0 +1,185 @@
+Sei un Senior Product Designer + Creative Director + Frontend Engineer (livello Apple/Nike/Fortnite UI). Devi rifare da zero il design e l’esperienza utente di tutta la piattaforma OleBoy Token, mantenendo la logica e le funzionalità esistenti ma cambiando completamente look, componenti, layout, icone, overlay, motion e scene 3D.
+
+Obiettivo
+
+Re-design totale: la UI attuale è disordinata, pulsanti brutti, spacing sbagliato, overlay incoerenti.
+
+Nuovo stile premium AAA gaming: moderno, pulito, “high-end”, con sensazione di prodotto enorme e memorabile.
+
+3D vero (non finto): voglio scene WebGL con coin/brand e micro-interazioni, animazioni fluide su ogni pagina e overlay.
+
+Il logo deve diventare il brand della piattaforma e deve comparire anche in versione 3D (coin/brand mark in 3D).
+
+Non riutilizzare layout attuali, non riutilizzare icone attuali, non riutilizzare overlay attuali. Ricostruisci tutto.
+
+Input che ti fornirò
+
+Solo due asset: logo (png) e coin (png).
+
+Tutto il resto lo devi creare tu: icone nuove (SVG), pattern, background, illustrazioni/placeholder, micro-video o animazioni (in alternativa: animazioni real-time via canvas/three.js), UI kit completo.
+
+Tecnologia e vincoli tecnici
+
+Prima analizza il repository e capisci stack, routing e pagine. Non rompere i flussi esistenti (login, create/join match, wallet/buy coins, ecc.).
+
+Mantieni gli endpoint e la logica di business. Cambia SOLO presentazione, componenti UI, layout, animazioni, asset e struttura visiva.
+
+Implementa un design system: token (colori, spacing, radius, blur, shadow, typography, motion) + component library riutilizzabile.
+
+3D: usa three.js (preferibile react-three-fiber se React) e librerie tipo drei. Animazioni UI: framer-motion + (opzionale) GSAP per transizioni avanzate.
+
+Performance: lazy-load delle scene 3D, qualità adattiva (desktop high / mobile medium), fallback 2D se device lento. Supporta prefers-reduced-motion.
+
+Accessibilità: contrasto, focus states, navigazione tastiera, hover/focus coerenti.
+
+Direzione creativa (look & feel)
+Voglio un design premium dark che non sembri “template”, ma un prodotto top:
+
+Base dark elegante (non grigio piatto): profondità, gradienti controllati, noise leggero, glow sofisticato.
+
+Accenti “neon premium” (non tamarri): 1-2 colori principali + 1 colore “reward” (gold coin).
+
+Glass e metallo: pannelli con blur leggero, bordi morbidi, highlight sottili, shadow realistica.
+
+Tipografia: scegli coppia font premium (es. display per titoli + text leggibile). Gerarchia chiarissima.
+
+Spacing e grid: tutto deve essere allineato e respirare come un prodotto enterprise.
+
+3D vero (focus principale)
+Devi rendere la piattaforma memorabile con 3D reale:
+
+Hero/Brand 3D: una coin 3D “OleBoy Token” con materiali metallici, riflessi, luce dinamica, glow controllato. Deve reagire a mouse/scroll (parallax/tilt) e a hover/click (micro-animazioni).
+
+Scene 3D “Arena”: un ambiente leggero (non pesantissimo) tipo mini-arena/scena futuristica con elementi che danno profondità (particelle, linee, grid, luci).
+
+Ogni pagina principale deve avere un “signature 3D moment” (piccolo ma presente): header 3D, coin che ruota, badge 3D, trophy 3D sul leaderboard, ecc.
+
+Transizioni: quando apro overlay importanti (create match, buy coins, match details) voglio transition cinematica breve (200–600ms), come un gioco: blur + slide + fade + micro bounce controllato, e un “focus light” sul contenuto.
+
+Non usare finti effetti 3D solo CSS: il coin/elementi principali devono essere WebGL/three.
+
+Animazioni e micro-interazioni (su tutto)
+Devi animare praticamente ogni interazione:
+
+Hover: bottoni, card, righe tabella, nav items, dropdown.
+
+Click: feedback immediato (press, ripple/glow, micro haptic feel visivo).
+
+Loading: skeleton premium + mini-scene 3D o loader coin.
+
+Empty state: scene/illustrazione e CTA chiara.
+
+Toast, tooltip, modal: animazioni coerenti e “premium”.
+
+Scroll: reveal progressivo, parallax leggero, sezioni che entrano con motion elegante.
+
+Animazioni di stato: match “live”, “open”, “finished” devono avere badge animati e chiari.
+
+Struttura della piattaforma (pagine e funzioni da coprire)
+Ricostruisci il design per tutte le pagine/aree tipiche della piattaforma gaming:
+
+Auth / Login (Discord sign-in): pagina premium con hero 3D coin e CTA enorme.
+
+Dashboard/Home: overview (live matches, quick actions, wallet snapshot, highlights).
+
+Live Matches: lista/filtri/sort, card match, status, join.
+
+Create Match: wizard a step (modal o pagina), con overlay, conferma, summary finale.
+
+Match Details: pagina dettagli con panel info, partecipanti, regole, stato, CTA join/leave.
+
+My Matches: cronologia, risultati, payout, status.
+
+Wallet / Buy Coins: acquisto coins, saldo, transazioni, ricevute, stati di pagamento.
+
+Leaderboard: ranking con “trophy moment” 3D e filtri timeframe.
+
+Challenges: missioni, progress bar, reward animati.
+
+Highlights: gallery di clip/risultati (anche se placeholder).
+
+Teams: gestione team, inviti, roster, stats.
+
+Profile/Settings: dati utente, preferenze, sicurezza, link account.
+
+Support / Rules / Terms / Privacy: pagine pulite ma premium, con micro-animazioni.
+
+Admin (se esiste): layout coerente ma più “tooling”, senza perdere stile.
+
+Overlay e componenti (devono essere rifatti tutti)
+Devi creare un sistema overlay completo:
+
+Modal base (small/medium/large) + full-screen overlay (tipo “game overlay”).
+
+Drawer laterale (mobile/desktop) per filtri e dettagli rapidi.
+
+Dropdown menu premium, tooltip, popover, toast, confirm dialog.
+
+States: hover/focus/disabled/loading/error/success/empty per ogni componente.
+
+Tabelle e liste: niente tabelle “piatte”, devono sembrare UI gaming premium con row hover, highlight, azioni contestuali.
+
+Bottoni: 3 stili minimo (primary, secondary, ghost) + stato premium, con glow controllato e press animation.
+
+Form: input, select, slider, stepper, segmented controls, search, tags/chips.
+
+Icone e asset (nuovi, non uguali agli attuali)
+
+Non usare le icone attuali. Crea un set coerente di nuove icone (SVG) con stile unico: line premium + piccoli dettagli “tech”.
+
+Crea badge/status iconici (live, queued, finished, warning, verified).
+
+Background: pattern leggero (noise, grid, scanlines delicate) e gradienti di profondità.
+
+Se servono immagini: crea placeholder di qualità (SVG/gradient/3D render generato in runtime).
+
+Se servono “micro-video”: preferisci animazioni real-time (canvas/three) invece di video pesanti.
+
+Implementazione (come voglio che lavori)
+
+Audit: mappa rotte/pagine/componenti esistenti e flussi critici. Elenca cosa c’è e cosa va preservato come logica.
+
+Progetta un design system: definisci token, palette, typography, spacing scale, radius, shadow, blur, motion timings.
+
+Ricostruisci la UI kit: Button, Card, Input, Modal, Toast, Tabs, Table, Badge, Tooltip, Dropdown, Drawer, Skeleton, EmptyState.
+
+Integra 3D: crea modulo “3D engine” con scene riutilizzabili (Coin3D, ArenaHeader3D, Trophy3D, ParticlesBG).
+
+Rebuild pagine una per una con nuova struttura e nuove sezioni, mantenendo funzionalità.
+
+Overlay: rifai create/join/buy flows con modali/stepper e animazioni coerenti.
+
+QA: controlla che i flussi non si rompano (create match, join match, wallet, checkout, ecc.).
+
+Performance e fallback: riduci peso, lazy-load, disattiva 3D su device deboli, supporta reduced-motion.
+
+Standard qualità (non negoziabili)
+
+Deve sembrare un prodotto “da studio”, non un template.
+
+Layout pulito, grid perfetta, spacing coerente, tipografia top.
+
+Ogni pagina deve avere “wow factor” ma senza distruggere usabilità.
+
+Animazioni fluide (60fps), nessun caos visivo.
+
+Tutto responsive (desktop, tablet, mobile).
+
+Nessun elemento “casuale”: ogni pulsante, icona, overlay deve avere logica e coerenza.
+
+Output richiesto
+
+Nuova struttura UI completa su tutte le pagine.
+
+Un file DESIGN_SYSTEM.md nel repo con: palette, typography, component rules, motion rules, esempi.
+
+Component library sotto /src/components/ui (o struttura equivalente).
+
+Moduli 3D sotto /src/components/3d con scene riutilizzabili.
+
+Sostituzione totale di icone/overlay/layout rispetto alla UI attuale.
+
+Nota finale
+Il risultato deve essere radicalmente diverso dall’attuale: nuova identità visiva, nuovi componenti, nuove animazioni, nuovo modo di navigare e percepire la piattaforma. Mantieni la logica, cambia tutto il resto.
+
+Fine prompt.
