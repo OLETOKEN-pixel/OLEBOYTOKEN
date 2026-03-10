@@ -14,13 +14,6 @@ export default {
     },
     extend: {
       colors: {
-        // Locofy/Figma landing page colors
-        "gray": "#04080f",
-        "mintcream": "#f7fff7",
-        "crimson": "#ff1654",
-        "mediumblue": "#3b28cc",
-        "gainsboro": "#d9d9d9",
-        // Existing theme colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -101,7 +94,6 @@ export default {
         display: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
         teko: ["Teko", "system-ui", "sans-serif"],
-        "base-neue-trial": ["Base Neue Trial", "sans-serif"],
       },
       boxShadow: {
         soft: "0 4px 24px hsl(0 0% 0% / 0.3)",
