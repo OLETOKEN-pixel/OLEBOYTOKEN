@@ -4,14 +4,15 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { POILayer } from './POILayer';
 import { MapControls } from './MapControls';
-import type { MapVersion, PointOfInterest, MapStyle } from '@/types/strategy';
+import type { FortniteMapData, PointOfInterest, MapStyle } from '@/types/strategy';
 
 interface MapViewerProps {
-  mapVersion: MapVersion;
+  mapData: FortniteMapData;
   pois: PointOfInterest[];
   mapStyle: MapStyle;
   showPOIs: boolean;
-  overlayLayers?: React.ReactNode[];
+  selectedPOI: string | null;
+  onSelectPOI: (id: string | null) => void;
 }
 
 function ResetViewButton({ bounds }: { bounds: L.LatLngBoundsExpression }) {
@@ -23,29 +24,28 @@ function ResetViewButton({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   return <MapControls onResetView={resetView} />;
 }
 
-export function MapViewer({ mapVersion, pois, mapStyle, showPOIs, overlayLayers }: MapViewerProps) {
+export function MapViewer({ mapData, pois, mapStyle, showPOIs, selectedPOI, onSelectPOI }: MapViewerProps) {
   const imageUrl = mapStyle === 'blank'
-    ? mapVersion.blank_image_url
-    : mapVersion.poi_image_url;
+    ? mapData.images.blank
+    : mapData.images.pois;
 
-  // Leaflet CRS.Simple: y-axis inverted. Image bounds = [[0,0], [height, width]]
   const bounds = useMemo<L.LatLngBoundsExpression>(
-    () => [[0, 0], [mapVersion.image_height, mapVersion.image_width]],
-    [mapVersion.image_height, mapVersion.image_width]
+    () => [[0, 0], [mapData.imageHeight, mapData.imageWidth]],
+    [mapData.imageHeight, mapData.imageWidth]
   );
 
   const center = useMemo<L.LatLngExpression>(
-    () => [mapVersion.image_height / 2, mapVersion.image_width / 2],
-    [mapVersion.image_height, mapVersion.image_width]
+    () => [mapData.imageHeight / 2, mapData.imageWidth / 2],
+    [mapData.imageHeight, mapData.imageWidth]
   );
 
   return (
     <div className="w-full h-full strategy-map-container">
       <MapContainer
         center={center}
-        zoom={-1}
-        minZoom={-2}
-        maxZoom={3}
+        zoom={0}
+        minZoom={-1}
+        maxZoom={4}
         crs={L.CRS.Simple}
         maxBounds={bounds}
         maxBoundsViscosity={0.8}
@@ -59,12 +59,10 @@ export function MapViewer({ mapVersion, pois, mapStyle, showPOIs, overlayLayers 
         {showPOIs && pois.length > 0 && (
           <POILayer
             pois={pois}
-            imageWidth={mapVersion.image_width}
-            imageHeight={mapVersion.image_height}
+            selectedPOI={selectedPOI}
+            onSelectPOI={onSelectPOI}
           />
         )}
-
-        {overlayLayers}
 
         <ResetViewButton bounds={bounds} />
       </MapContainer>
