@@ -3,8 +3,8 @@ import type { PointOfInterest } from '@/types/strategy';
 
 interface POILayerProps {
   pois: PointOfInterest[];
-  imageWidth: number;
-  imageHeight: number;
+  selectedPOI: string | null;
+  onSelectPOI: (id: string | null) => void;
 }
 
 const POI_COLORS: Record<string, string> = {
@@ -16,35 +16,41 @@ const POI_COLORS: Record<string, string> = {
   custom: '#BB88FF',
 };
 
-export function POILayer({ pois, imageWidth, imageHeight }: POILayerProps) {
+export function POILayer({ pois, selectedPOI, onSelectPOI }: POILayerProps) {
   return (
     <LayerGroup>
       {pois.map((poi) => {
-        // Convert normalized 0..1 to Leaflet CRS.Simple pixel coordinates
-        const lat = poi.y * imageHeight;
-        const lng = poi.x * imageWidth;
+        // Coordinates are already in pixel space (matching Leaflet CRS.Simple)
+        // In CRS.Simple: lat = y (from top), lng = x (from left)
+        const lat = poi.y;
+        const lng = poi.x;
         const color = POI_COLORS[poi.type] ?? POI_COLORS.named;
+        const isSelected = selectedPOI === poi.id;
 
         return (
           <CircleMarker
             key={poi.id}
             center={[lat, lng]}
-            radius={6}
+            radius={isSelected ? 10 : 7}
             pathOptions={{
               fillColor: color,
-              fillOpacity: 0.9,
-              color: '#000',
-              weight: 2,
-              opacity: 0.8,
+              fillOpacity: isSelected ? 1 : 0.85,
+              color: isSelected ? '#fff' : '#000',
+              weight: isSelected ? 3 : 2,
+              opacity: 0.9,
+            }}
+            eventHandlers={{
+              click: () => onSelectPOI(isSelected ? null : poi.id),
             }}
           >
             <Tooltip
               direction="top"
-              offset={[0, -8]}
+              offset={[0, -10]}
               className="strategy-poi-tooltip"
+              permanent={isSelected}
             >
               <div className="px-2 py-1">
-                <p className="font-bold text-sm">{poi.name}</p>
+                <p className="font-bold text-sm text-white">{poi.name}</p>
                 <p className="text-xs text-gray-400 capitalize">{poi.type.replace('_', ' ')}</p>
               </div>
             </Tooltip>

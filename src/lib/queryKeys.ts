@@ -15,9 +15,5 @@ export const queryKeys = {
   profile: (userId: string) => ['profile', userId] as const,
   transactions: (userId: string) => ['transactions', userId] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
-  strategy: {
-    mapVersions: ['strategy', 'mapVersions'] as const,
-    currentMap: ['strategy', 'currentMap'] as const,
-    pois: (mapVersionId: string) => ['strategy', 'pois', mapVersionId] as const,
-  },
+  fortniteMap: ['fortnite', 'map'] as const,
 };
