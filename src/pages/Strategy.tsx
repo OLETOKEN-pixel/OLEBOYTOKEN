@@ -1,28 +1,24 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MapViewer } from '@/components/strategy/MapViewer';
 import { MapSidebar } from '@/components/strategy/MapSidebar';
-import { MapLoadingState } from '@/components/strategy/MapLoadingState';
-import { useFortniteMap } from '@/hooks/useMapData';
-import { useState, useMemo } from 'react';
-import type { MapStyle, POIType } from '@/types/strategy';
+import { useMapConfig, usePOIData, useChestData } from '@/hooks/useMapData';
+import { useState } from 'react';
+import type { ChestType } from '@/types/strategy';
 
 export default function Strategy() {
-  const { data: mapData, isLoading, error } = useFortniteMap();
-  const [mapStyle, setMapStyle] = useState<MapStyle>('labeled');
+  const config = useMapConfig();
+  const pois = usePOIData();
+  const { chests, stats } = useChestData();
+
   const [showPOIs, setShowPOIs] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [enabledTypes, setEnabledTypes] = useState<Set<POIType>>(
-    new Set(['named', 'landmark'])
+  const [enabledChestTypes, setEnabledChestTypes] = useState<Set<ChestType>>(
+    new Set(['regular_chest', 'rare_chest'])
   );
-  const [selectedPOI, setSelectedPOI] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const filteredPOIs = useMemo(() => {
-    if (!mapData?.pois) return [];
-    return mapData.pois.filter((poi) => enabledTypes.has(poi.type));
-  }, [mapData?.pois, enabledTypes]);
-
-  const toggleType = (type: POIType) => {
-    setEnabledTypes((prev) => {
+  const toggleChestType = (type: ChestType) => {
+    setEnabledChestTypes((prev) => {
       const next = new Set(prev);
       if (next.has(type)) {
         next.delete(type);
@@ -39,30 +35,28 @@ export default function Strategy() {
         <MapSidebar
           open={sidebarOpen}
           onToggle={() => setSidebarOpen(!sidebarOpen)}
-          mapStyle={mapStyle}
-          onMapStyleChange={setMapStyle}
           showPOIs={showPOIs}
           onShowPOIsChange={setShowPOIs}
-          pois={mapData?.pois ?? []}
-          enabledTypes={enabledTypes}
-          onToggleType={toggleType}
-          selectedPOI={selectedPOI}
-          onSelectPOI={setSelectedPOI}
+          pois={pois}
+          chests={chests}
+          chestStats={stats}
+          enabledChestTypes={enabledChestTypes}
+          onToggleChestType={toggleChestType}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          mapLabel={config.label}
         />
 
         <div className="flex-1 relative">
-          {isLoading || !mapData ? (
-            <MapLoadingState error={error?.message} />
-          ) : (
-            <MapViewer
-              mapData={mapData}
-              pois={filteredPOIs}
-              mapStyle={mapStyle}
-              showPOIs={showPOIs}
-              selectedPOI={selectedPOI}
-              onSelectPOI={setSelectedPOI}
-            />
-          )}
+          <MapViewer
+            config={config}
+            pois={pois}
+            chests={chests}
+            showPOIs={showPOIs}
+            enabledChestTypes={enabledChestTypes}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
         </div>
       </div>
     </MainLayout>
