@@ -13,6 +13,7 @@ export interface MapConfig {
   label: string;
   tileUrl: string;
   bounds: [[number, number], [number, number]];
+  center: [number, number];
   minZoom: number;
   maxZoom: number;
   tileSize: number;
@@ -53,8 +54,11 @@ const MAP_CRS_HEIGHT = 2048;
 
 /**
  * Convert normalized [0,1] to CRS.Simple coordinates.
- * TMS bounds: x=[0, 2048], y=[-2048, 0], origin=(0, -2048)
- * CRS.Simple: lat=Y, lng=X
+ * TMS bounds from tilemapresource.xml:
+ *   BoundingBox: x=[0, 2048], y=[-2048, 0]
+ *   Origin: (0, -2048)
+ *
+ * CRS.Simple: [lat, lng] where lat=Y, lng=X
  */
 export function normToCRS(xNorm: number, yNorm: number): [number, number] {
   const lng = xNorm * MAP_CRS_WIDTH;

@@ -1,70 +1,84 @@
-import { useMemo, useCallback } from 'react';
-import { MapContainer, ImageOverlay, useMap } from 'react-leaflet';
+import { useCallback } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { POILayer } from './POILayer';
+import { ChestLayer } from './ChestLayer';
 import { MapControls } from './MapControls';
-import type { FortniteMapData, PointOfInterest, MapStyle } from '@/types/strategy';
+import type { MapConfig, PointOfInterest, ChestSpawn, ChestType } from '@/types/strategy';
 
 interface MapViewerProps {
-  mapData: FortniteMapData;
+  config: MapConfig;
   pois: PointOfInterest[];
-  mapStyle: MapStyle;
+  chests: ChestSpawn[];
   showPOIs: boolean;
-  selectedPOI: string | null;
-  onSelectPOI: (id: string | null) => void;
+  enabledChestTypes: Set<ChestType>;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
 }
 
-function ResetViewButton({ bounds }: { bounds: L.LatLngBoundsExpression }) {
+function ResetViewButton({ config }: { config: MapConfig }) {
   const map = useMap();
   const resetView = useCallback(() => {
-    map.fitBounds(bounds as L.LatLngBounds);
-  }, [map, bounds]);
+    map.fitBounds(config.bounds as L.LatLngBounds);
+  }, [map, config.bounds]);
 
   return <MapControls onResetView={resetView} />;
 }
 
-export function MapViewer({ mapData, pois, mapStyle, showPOIs, selectedPOI, onSelectPOI }: MapViewerProps) {
-  const imageUrl = mapStyle === 'blank'
-    ? mapData.images.blank
-    : mapData.images.pois;
-
-  const bounds = useMemo<L.LatLngBoundsExpression>(
-    () => [[0, 0], [mapData.imageHeight, mapData.imageWidth]],
-    [mapData.imageHeight, mapData.imageWidth]
-  );
-
-  const center = useMemo<L.LatLngExpression>(
-    () => [mapData.imageHeight / 2, mapData.imageWidth / 2],
-    [mapData.imageHeight, mapData.imageWidth]
-  );
+export function MapViewer({
+  config,
+  pois,
+  chests,
+  showPOIs,
+  enabledChestTypes,
+  selectedId,
+  onSelect,
+}: MapViewerProps) {
+  const filteredChests = chests.filter((c) => enabledChestTypes.has(c.chestType));
 
   return (
     <div className="w-full h-full strategy-map-container">
       <MapContainer
-        center={center}
-        zoom={0}
-        minZoom={-1}
-        maxZoom={4}
+        center={config.center}
+        zoom={1}
+        minZoom={config.minZoom}
+        maxZoom={config.maxZoom}
         crs={L.CRS.Simple}
-        maxBounds={bounds}
-        maxBoundsViscosity={0.8}
+        maxBounds={config.bounds}
+        maxBoundsViscosity={1.0}
         zoomControl={false}
         attributionControl={false}
         className="w-full h-full bg-[#04080f] rounded-lg"
         style={{ background: '#04080f' }}
       >
-        <ImageOverlay url={imageUrl} bounds={bounds} />
+        <TileLayer
+          url={config.tileUrl}
+          tileSize={config.tileSize}
+          minZoom={config.minZoom}
+          maxZoom={config.maxZoom}
+          tms={config.tms}
+          noWrap={true}
+          bounds={config.bounds}
+        />
 
-        {showPOIs && pois.length > 0 && (
+        {showPOIs && (
           <POILayer
             pois={pois}
-            selectedPOI={selectedPOI}
-            onSelectPOI={onSelectPOI}
+            selectedId={selectedId}
+            onSelect={onSelect}
           />
         )}
 
-        <ResetViewButton bounds={bounds} />
+        {filteredChests.length > 0 && (
+          <ChestLayer
+            chests={filteredChests}
+            selectedId={selectedId}
+            onSelect={onSelect}
+          />
+        )}
+
+        <ResetViewButton config={config} />
       </MapContainer>
     </div>
   );

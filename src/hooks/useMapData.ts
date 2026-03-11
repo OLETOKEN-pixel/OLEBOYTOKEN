@@ -1,13 +1,25 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchFortniteMap } from '@/services/fortniteMapService';
+import { useMemo } from 'react';
+import { currentMapConfig } from '@/data/mapConfig';
+import { pois } from '@/data/pois';
+import { chestSpawns, chestStats } from '@/data/chestSpawns';
 
-const THIRTY_MINUTES = 30 * 60 * 1000;
+/**
+ * Phase 1: All data is static (embedded in code).
+ * No API calls needed. These hooks provide a clean interface
+ * for components and can be swapped to fetch from API in Phase 2.
+ */
 
-export function useFortniteMap() {
-  return useQuery({
-    queryKey: ['fortnite', 'map'],
-    queryFn: fetchFortniteMap,
-    staleTime: THIRTY_MINUTES,
-    retry: 2,
-  });
+export function useMapConfig() {
+  return currentMapConfig;
+}
+
+export function usePOIData() {
+  return pois;
+}
+
+export function useChestData() {
+  return useMemo(() => ({
+    chests: chestSpawns,
+    stats: chestStats,
+  }), []);
 }
