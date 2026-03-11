@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, X, Bell, Trophy, Medal, ShoppingBag, User, Shield, Gamepad2, Swords, Wallet, Star } from 'lucide-react';
+import { LogOut, Menu, X, Bell, Trophy, Medal, ShoppingBag, User, Shield, Gamepad2, Swords, Wallet, Star, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
   { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Highlights', href: '/highlights' },
   { label: 'Challenge', href: '/challenges' },
+  { label: 'Strategy', href: '/strategy' },
 ];
 
 const mobileNavItems = [
@@ -41,6 +42,7 @@ const mobileNavItems = [
   { label: 'Leaderboard', href: '/leaderboard', icon: Medal },
   { label: 'Highlights', href: '/highlights', icon: Star },
   { label: 'Challenge', href: '/challenges', icon: Trophy },
+  { label: 'Strategy', href: '/strategy', icon: Map },
 ];
 
 function XIcon({ className }: { className?: string }) {

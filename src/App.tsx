@@ -33,6 +33,7 @@ import Challenges from "./pages/Challenges";
 import Rules from "./pages/Rules";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Strategy from "./pages/Strategy";
 
 
 const queryClient = new QueryClient({
@@ -90,6 +91,7 @@ function App() {
                 <Route path="/highlights" element={<Highlights />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/challenges" element={<Challenges />} />
+                <Route path="/strategy" element={<Strategy />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
