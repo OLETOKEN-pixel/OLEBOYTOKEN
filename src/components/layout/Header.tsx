@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Highlights', href: '/highlights' },
   { label: 'Challenge', href: '/challenges' },
-  { label: 'Strategy', href: '/strategy' },
+  { label: 'Competitive', href: '/strategy' },
 ];
 
 const mobileNavItems = [
@@ -42,7 +42,7 @@ const mobileNavItems = [
   { label: 'Leaderboard', href: '/leaderboard', icon: Medal },
   { label: 'Highlights', href: '/highlights', icon: Star },
   { label: 'Challenge', href: '/challenges', icon: Trophy },
-  { label: 'Strategy', href: '/strategy', icon: Map },
+  { label: 'Competitive', href: '/strategy', icon: Map },
 ];
 
 function XIcon({ className }: { className?: string }) {
