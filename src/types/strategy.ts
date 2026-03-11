@@ -1,62 +1,63 @@
-// Competitive Strategy Module - Type Definitions
+// Fortnite Map Module — Type Definitions
+// Coordinate convention: normalized [0, 1]
+//   xNorm=0 → left edge, xNorm=1 → right edge
+//   yNorm=0 → top edge,  yNorm=1 → bottom edge
 
-// ── POI Types ──
+// ── Map Configuration ──
 
-export type POIType = 'named' | 'landmark' | 'hot_drop' | 'mobility' | 'reboot' | 'custom';
+export interface MapConfig {
+  id: string;
+  chapter: number;
+  season: number;
+  patch: string;
+  label: string;
+  tileUrl: string;
+  bounds: [[number, number], [number, number]];
+  minZoom: number;
+  maxZoom: number;
+  tileSize: number;
+  tms: boolean;
+  mapWidth: number;
+  mapHeight: number;
+}
+
+// ── POI ──
 
 export interface PointOfInterest {
   id: string;
   name: string;
-  type: POIType;
-  x: number; // pixel coordinate on map image
-  y: number; // pixel coordinate on map image
+  type: 'named' | 'landmark';
+  xNorm: number;
+  yNorm: number;
 }
 
-// ── Map Data (from fortnite-api.com) ──
+// ── Chest Spawns ──
 
-export interface FortniteMapData {
-  images: {
-    blank: string;
-    pois: string;
-  };
-  pois: PointOfInterest[];
-  imageWidth: number;
-  imageHeight: number;
+export type ChestType = 'regular_chest' | 'rare_chest';
+
+export interface ChestSpawn {
+  id: string;
+  chestType: ChestType;
+  xNorm: number;
+  yNorm: number;
+  locationName: string;
+  spawnRate: number;
+  confidence: 'verified' | 'estimated' | 'approximate';
+  source: string;
 }
 
-// ── External API Response (fortnite-api.com /v1/map) ──
+// ── Coordinate Conversion ──
 
-export interface FortniteApiMapResponse {
-  status: number;
-  data: {
-    images: {
-      blank: string;
-      pois: string;
-    };
-    pois: Array<{
-      id: string;
-      name: string;
-      location: { x: number; y: number; z: number };
-    }>;
-  };
-}
+const MAP_CRS_WIDTH = 2048;
+const MAP_CRS_HEIGHT = 2048;
 
-// ── Map Viewer State ──
-
-export type MapStyle = 'blank' | 'labeled';
-
-export interface MapViewerState {
-  mapStyle: MapStyle;
-  showPOIs: boolean;
-  zoom: number;
-  center: [number, number];
-}
-
-// ── Filter Categories ──
-
-export interface POICategory {
-  type: POIType;
-  label: string;
-  color: string;
-  enabled: boolean;
+/**
+ * Convert normalized [0,1] to CRS.Simple coordinates.
+ * TMS bounds: x=[0, 2048], y=[-2048, 0], origin=(0, -2048)
+ * CRS.Simple: lat=Y, lng=X
+ */
+export function normToCRS(xNorm: number, yNorm: number): [number, number] {
+  const lng = xNorm * MAP_CRS_WIDTH;
+  const lat = -yNorm * MAP_CRS_HEIGHT;
+  return [lat, lng];
 }
