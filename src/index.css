@@ -1,4 +1,28 @@
+@import url('https://fonts.cdnfonts.com/css/base-neue');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Teko:wght@400;500;600;700&display=swap');
+
+/* Base Neue font - from Figma design */
+@font-face {
+  font-family: 'Base Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/BaseNeue-Regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Base Neue';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/BaseNeue-Bold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Base Neue';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/BaseNeue-Black.woff') format('woff');
+}
 
 @tailwind base;
 @tailwind components;
@@ -6,12 +30,18 @@
 
 @layer base {
   :root {
-    --header-height: 64px;
+    --header-height: 91px;
+    /* === FIGMA DESIGN TOKENS === */
+    --color-lime: #d8ff16;
+    --color-purple: #3b28cc;
+    --color-pink: #ff1654;
+    --color-near-white: #f7fff7;
+    --color-dark-bg: #04080f;
     --sidebar-width: 300px;
     --content-max-width: 1680px;
     --content-padding-x: 2.5rem;
 
-    --bg-0: 0 0% 4%;
+    --bg-0: 220 60% 3%;
     --bg-1: 0 0% 7%;
     --bg-2: 0 0% 10%;
     --bg-3: 0 0% 13%;
@@ -123,7 +153,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Base Neue', 'Inter', system-ui, sans-serif;
     font-weight: 400;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
@@ -155,8 +185,8 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Teko', sans-serif;
-    font-weight: 700;
+    font-family: 'Base Neue', 'Teko', sans-serif;
+    font-weight: 900;
     letter-spacing: 0.025em;
     text-transform: uppercase;
   }
@@ -171,7 +201,7 @@
   }
 
   .font-display {
-    font-family: 'Teko', sans-serif;
+    font-family: 'Base Neue', 'Teko', sans-serif;
     font-weight: 700;
     letter-spacing: 0.025em;
     text-transform: uppercase;

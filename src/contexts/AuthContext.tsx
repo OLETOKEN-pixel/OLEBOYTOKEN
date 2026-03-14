@@ -114,7 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Check for existing session and validate it
+    // Add a safety timeout for the entire auth initialization
+    const authInitTimeout = setTimeout(() => {
+      console.warn('Auth init timed out, showing app as unauthenticated');
+      setLoading(false);
+    }, 3000);
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(authInitTimeout);
       if (session) {
         // Try to refresh the session to ensure it's still valid
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
