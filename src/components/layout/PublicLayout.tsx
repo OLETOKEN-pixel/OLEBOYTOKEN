@@ -7,16 +7,20 @@ interface PublicLayoutProps {
 
 /**
  * Layout for public pages (not logged in users).
- * Uses the new Figma navbar design with dark background.
+ * Uses the Figma navbar design with dark background.
  */
 export function PublicLayout({ children }: PublicLayoutProps) {
   return (
     <div
-      className="min-h-screen w-full"
-      style={{ background: '#04080f', fontFamily: "'Base Neue', sans-serif" }}
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        background: '#04080f',
+        fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+      }}
     >
       <NavbarFigma />
-      <main className="w-full">
+      <main style={{ width: '100%' }}>
         {children}
       </main>
     </div>

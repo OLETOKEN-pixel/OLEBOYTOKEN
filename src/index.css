@@ -23,6 +23,28 @@
   font-display: swap;
   src: url('/fonts/BaseNeue-Black.woff') format('woff');
 }
+/* Alias for Figma's 'Base Neue Trial' reference */
+@font-face {
+  font-family: 'Base Neue Trial';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/BaseNeue-Regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Base Neue Trial';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/BaseNeue-Bold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Base Neue Trial';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/BaseNeue-Black.woff') format('woff');
+}
 
 @tailwind base;
 @tailwind components;
