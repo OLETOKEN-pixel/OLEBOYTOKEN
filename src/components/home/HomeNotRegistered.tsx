@@ -12,43 +12,17 @@
  * Navbar is handled by PublicLayout (NavbarFigma).
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 
 const SECTION_IDS = ['section-hero', 'section-rank-up', 'section-arena', 'section-rewards', 'section-footer'];
 
 export function HomeNotRegistered() {
-  const [currentSection, setCurrentSection] = useState(0);
-
   const scrollToSection = useCallback((index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, SECTION_IDS.length - 1));
     const el = document.getElementById(SECTION_IDS[clampedIndex]);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
-
-  const scrollUp = useCallback(() => {
-    scrollToSection(currentSection - 1);
-  }, [currentSection, scrollToSection]);
-
-  const scrollDown = useCallback(() => {
-    scrollToSection(currentSection + 1);
-  }, [currentSection, scrollToSection]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY + window.innerHeight / 2;
-      for (let i = SECTION_IDS.length - 1; i >= 0; i--) {
-        const el = document.getElementById(SECTION_IDS[i]);
-        if (el && scrollY >= el.offsetTop) {
-          setCurrentSection(i);
-          break;
-        }
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
@@ -252,6 +226,34 @@ export function HomeNotRegistered() {
             display: 'block',
           }}
         />
+        {/* Up arrow overlay — cx=918 cy=850 r=31 on 1920×955 */}
+        <div
+          onClick={() => scrollToSection(0)}
+          style={{
+            position: 'absolute',
+            left: 'calc(918 / 1920 * 100% - 31 / 1920 * 100%)',
+            top: 'calc(850 / 955 * 100% - 31 / 955 * 100%)',
+            width: 'calc(62 / 1920 * 100%)',
+            height: 'calc(62 / 955 * 100%)',
+            cursor: 'pointer',
+            borderRadius: '50%',
+            zIndex: 2,
+          }}
+        />
+        {/* Down arrow overlay — cx=1001 cy=850 r=31 on 1920×955 */}
+        <div
+          onClick={() => scrollToSection(2)}
+          style={{
+            position: 'absolute',
+            left: 'calc(1001 / 1920 * 100% - 31 / 1920 * 100%)',
+            top: 'calc(850 / 955 * 100% - 31 / 955 * 100%)',
+            width: 'calc(62 / 1920 * 100%)',
+            height: 'calc(62 / 955 * 100%)',
+            cursor: 'pointer',
+            borderRadius: '50%',
+            zIndex: 2,
+          }}
+        />
       </section>
 
       {/* ══════════════════════════════════════════════════════
@@ -277,6 +279,34 @@ export function HomeNotRegistered() {
             display: 'block',
           }}
         />
+        {/* Up arrow overlay — cx=918.5 cy=821.5 r=31 on 1920×955 */}
+        <div
+          onClick={() => scrollToSection(1)}
+          style={{
+            position: 'absolute',
+            left: 'calc(918.5 / 1920 * 100% - 31 / 1920 * 100%)',
+            top: 'calc(821.5 / 955 * 100% - 31 / 955 * 100%)',
+            width: 'calc(62 / 1920 * 100%)',
+            height: 'calc(62 / 955 * 100%)',
+            cursor: 'pointer',
+            borderRadius: '50%',
+            zIndex: 2,
+          }}
+        />
+        {/* Down arrow overlay — cx=1001.5 cy=821.5 r=31 on 1920×955 */}
+        <div
+          onClick={() => scrollToSection(3)}
+          style={{
+            position: 'absolute',
+            left: 'calc(1001.5 / 1920 * 100% - 31 / 1920 * 100%)',
+            top: 'calc(821.5 / 955 * 100% - 31 / 955 * 100%)',
+            width: 'calc(62 / 1920 * 100%)',
+            height: 'calc(62 / 955 * 100%)',
+            cursor: 'pointer',
+            borderRadius: '50%',
+            zIndex: 2,
+          }}
+        />
       </section>
 
       {/* ══════════════════════════════════════════════════════
@@ -298,6 +328,34 @@ export function HomeNotRegistered() {
             width: '100%',
             height: 'auto',
             display: 'block',
+          }}
+        />
+        {/* Up arrow overlay — cx=918.5 cy=819.5 r=31 on 1920×955 */}
+        <div
+          onClick={() => scrollToSection(2)}
+          style={{
+            position: 'absolute',
+            left: 'calc(918.5 / 1920 * 100% - 31 / 1920 * 100%)',
+            top: 'calc(819.5 / 955 * 100% - 31 / 955 * 100%)',
+            width: 'calc(62 / 1920 * 100%)',
+            height: 'calc(62 / 955 * 100%)',
+            cursor: 'pointer',
+            borderRadius: '50%',
+            zIndex: 2,
+          }}
+        />
+        {/* Down arrow overlay — cx=1001.5 cy=819.5 r=31 on 1920×955 */}
+        <div
+          onClick={() => scrollToSection(4)}
+          style={{
+            position: 'absolute',
+            left: 'calc(1001.5 / 1920 * 100% - 31 / 1920 * 100%)',
+            top: 'calc(819.5 / 955 * 100% - 31 / 955 * 100%)',
+            width: 'calc(62 / 1920 * 100%)',
+            height: 'calc(62 / 955 * 100%)',
+            cursor: 'pointer',
+            borderRadius: '50%',
+            zIndex: 2,
           }}
         />
       </section>
@@ -594,76 +652,6 @@ export function HomeNotRegistered() {
         </div>
       </footer>
 
-      {/* Floating up/down navigation buttons */}
-      <style>{`
-        @keyframes navBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-      `}</style>
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '40px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: '16px',
-          zIndex: 40,
-          pointerEvents: 'auto',
-        }}
-      >
-        <button
-          onClick={scrollUp}
-          aria-label="Scroll up"
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            background: 'rgba(15, 4, 4, 0.7)',
-            border: '1.5px solid rgba(255, 255, 255, 0.3)',
-            color: '#ffffff',
-            fontSize: '20px',
-            cursor: currentSection === 0 ? 'default' : 'pointer',
-            opacity: currentSection === 0 ? 0.3 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'opacity 0.3s, background 0.2s',
-            animation: currentSection > 0 ? 'navBounce 2s ease-in-out infinite' : 'none',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 15l-6-6-6 6" />
-          </svg>
-        </button>
-        <button
-          onClick={scrollDown}
-          aria-label="Scroll down"
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            background: 'rgba(15, 4, 4, 0.7)',
-            border: '1.5px solid rgba(255, 255, 255, 0.3)',
-            color: '#ffffff',
-            fontSize: '20px',
-            cursor: currentSection === SECTION_IDS.length - 1 ? 'default' : 'pointer',
-            opacity: currentSection === SECTION_IDS.length - 1 ? 0.3 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'opacity 0.3s, background 0.2s',
-            animation: currentSection < SECTION_IDS.length - 1 ? 'navBounce 2s ease-in-out infinite 0.3s' : 'none',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-      </div>
     </div>
   );
 }
