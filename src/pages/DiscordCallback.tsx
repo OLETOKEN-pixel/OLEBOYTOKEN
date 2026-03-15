@@ -16,9 +16,42 @@ export default function DiscordCallback() {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    // Capture provider_token from URL hash IMMEDIATELY before Supabase consumes it
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const providerTokenFromHash = hashParams.get('provider_token');
+    if (providerTokenFromHash) {
+      console.info('[Discord Auto-Join] Captured provider_token from URL hash');
+    }
+
+    const tryAutoJoin = async (providerToken: string) => {
+      try {
+        console.info('[Discord Auto-Join] Calling edge function with token...');
+        const { data: joinData, error: joinError } = await supabase.functions.invoke('discord-auto-join', {
+          body: { providerToken },
+        });
+        if (joinError) {
+          console.warn('[Discord Auto-Join] Edge function error:', joinError);
+        } else if (joinData?.skipped) {
+          console.info('[Discord Auto-Join] Skipped:', joinData.reason);
+        } else if (joinData?.success) {
+          console.info('[Discord Auto-Join] OK:', joinData.action);
+        } else if (joinData?.error) {
+          console.warn('[Discord Auto-Join] Failed:', joinData.detail || joinData.error);
+          toast({
+            title: 'Discord Server',
+            description: 'Non è stato possibile aggiungerti automaticamente al server Discord. Puoi unirti manualmente.',
+            variant: 'destructive',
+          });
+        }
+      } catch (joinErr) {
+        console.warn('[Discord Auto-Join] Unexpected error:', joinErr);
+      }
+    };
+
+    let autoJoinDone = false;
+
     const handleCallback = async () => {
       try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const errorParam = hashParams.get('error');
         const errorDescription = hashParams.get('error_description');
 
@@ -28,6 +61,7 @@ export default function DiscordCallback() {
           return;
         }
 
+        // Wait for session to be established
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -62,33 +96,20 @@ export default function DiscordCallback() {
           }
         }
 
-        // Try auto-join Discord server (non-blocking)
-        try {
+        // Try auto-join with token from hash (captured before Supabase consumed it)
+        if (providerTokenFromHash && !autoJoinDone) {
+          autoJoinDone = true;
+          await tryAutoJoin(providerTokenFromHash);
+        } else if (!autoJoinDone) {
+          // Fallback: try from session (may work in some Supabase versions)
           const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (currentSession?.provider_token) {
-            const { data: joinData, error: joinError } = await supabase.functions.invoke('discord-auto-join', {
-              body: { providerToken: currentSession.provider_token },
-            });
-            if (joinError) {
-              console.warn('[Discord Auto-Join] Edge function error:', joinError);
-            } else if (joinData?.skipped) {
-              console.info('[Discord Auto-Join] Skipped:', joinData.reason);
-            } else if (joinData?.success) {
-              console.info('[Discord Auto-Join] OK:', joinData.action);
-            } else if (joinData?.error) {
-              console.warn('[Discord Auto-Join] Failed:', joinData.detail || joinData.error);
-              toast({
-                title: 'Discord Server',
-                description: 'Non è stato possibile aggiungerti automaticamente al server Discord. Puoi unirti manualmente.',
-                variant: 'destructive',
-              });
-            }
+          const fallbackToken = currentSession?.provider_token;
+          if (fallbackToken) {
+            autoJoinDone = true;
+            await tryAutoJoin(fallbackToken);
           } else {
-            console.warn('[Discord Auto-Join] No provider_token in session — auto-join skipped');
+            console.warn('[Discord Auto-Join] No provider_token available (not in hash or session)');
           }
-        } catch (joinErr) {
-          // Auto-join is best-effort, don't block login
-          console.warn('[Discord Auto-Join] Unexpected error:', joinErr);
         }
 
         setStatus('success');
@@ -110,7 +131,20 @@ export default function DiscordCallback() {
       }
     };
 
+    // Also listen for auth state change which may include provider_token
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.provider_token && !autoJoinDone) {
+        console.info('[Discord Auto-Join] Got provider_token from onAuthStateChange');
+        autoJoinDone = true;
+        await tryAutoJoin(session.provider_token);
+      }
+    });
+
     handleCallback();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, toast]);
 
   return (
