@@ -13,12 +13,22 @@
  */
 
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const SECTION_IDS = ['section-hero', 'section-rank-up', 'section-arena', 'section-rewards', 'section-footer'];
 
 export function HomeNotRegistered() {
-  const navigate = useNavigate();
+  const handleSignUp = useCallback(async () => {
+    const currentOrigin = window.location.origin;
+    await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${currentOrigin}/auth/discord/callback`,
+        scopes: 'identify email guilds.join',
+      },
+    });
+  }, []);
+
   const scrollToSection = useCallback((index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, SECTION_IDS.length - 1));
     const el = document.getElementById(SECTION_IDS[clampedIndex]);
@@ -143,7 +153,7 @@ export function HomeNotRegistered() {
 
           {/* SIGN UP BUTTON — 285×69, #3b28cc, rounded 29px */}
           <div
-            onClick={() => navigate('/auth')}
+            onClick={handleSignUp}
             style={{
               position: 'relative',
               width: '285px',

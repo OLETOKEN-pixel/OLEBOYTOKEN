@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.discord-auth-callback]
 verify_jwt = false
 
+[functions.discord-auto-join]
+verify_jwt = false
+
 [functions.create-stripe-connect-account]
 verify_jwt = false
 
