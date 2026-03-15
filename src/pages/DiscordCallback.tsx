@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,49 +11,19 @@ type CallbackStatus = 'loading' | 'success' | 'error';
 
 export default function DiscordCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [status, setStatus] = useState<CallbackStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    // Capture provider_token from URL hash IMMEDIATELY before Supabase consumes it
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const providerTokenFromHash = hashParams.get('provider_token');
-    if (providerTokenFromHash) {
-      console.info('[Discord Auto-Join] Captured provider_token from URL hash');
-    }
-
-    const tryAutoJoin = async (providerToken: string) => {
-      try {
-        console.info('[Discord Auto-Join] Calling edge function with token...');
-        const { data: joinData, error: joinError } = await supabase.functions.invoke('discord-auto-join', {
-          body: { providerToken },
-        });
-        if (joinError) {
-          console.warn('[Discord Auto-Join] Edge function error:', joinError);
-        } else if (joinData?.skipped) {
-          console.info('[Discord Auto-Join] Skipped:', joinData.reason);
-        } else if (joinData?.success) {
-          console.info('[Discord Auto-Join] OK:', joinData.action);
-        } else if (joinData?.error) {
-          console.warn('[Discord Auto-Join] Failed:', joinData.detail || joinData.error);
-          toast({
-            title: 'Discord Server',
-            description: 'Non è stato possibile aggiungerti automaticamente al server Discord. Puoi unirti manualmente.',
-            variant: 'destructive',
-          });
-        }
-      } catch (joinErr) {
-        console.warn('[Discord Auto-Join] Unexpected error:', joinErr);
-      }
-    };
-
-    let autoJoinDone = false;
-
     const handleCallback = async () => {
       try {
-        const errorParam = hashParams.get('error');
-        const errorDescription = hashParams.get('error_description');
+        // Get code and state from URL query params (Discord OAuth redirect)
+        const code = searchParams.get('code');
+        const state = searchParams.get('state');
+        const errorParam = searchParams.get('error');
+        const errorDescription = searchParams.get('error_description');
 
         if (errorParam) {
           setStatus('error');
@@ -61,64 +31,65 @@ export default function DiscordCallback() {
           return;
         }
 
-        // Wait for session to be established
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('Session error:', error);
+        if (!code || !state) {
           setStatus('error');
-          setErrorMessage('Errore durante la creazione della sessione');
+          setErrorMessage('Parametri di autorizzazione mancanti. Riprova il login.');
           return;
         }
 
-        if (!session) {
-          const maxAttempts = 10;
-          let attempts = 0;
-          const waitForSession = () => new Promise<boolean>((resolve) => {
-            const interval = setInterval(async () => {
-              attempts++;
-              const { data: { session: s } } = await supabase.auth.getSession();
-              if (s) {
-                clearInterval(interval);
-                resolve(true);
-              } else if (attempts >= maxAttempts) {
-                clearInterval(interval);
-                resolve(false);
-              }
-            }, 500);
-          });
+        console.info('[Discord Auth] Exchanging code for session via edge function...');
 
-          const gotSession = await waitForSession();
-          if (!gotSession) {
-            setStatus('error');
-            setErrorMessage('Sessione non trovata. Riprova il login.');
-            return;
-          }
+        // Send code+state to the edge function which:
+        // 1. Exchanges code for Discord token
+        // 2. Auto-joins the user to the Discord server (server-side)
+        // 3. Creates/updates the user and returns session tokens
+        const { data, error } = await supabase.functions.invoke('discord-auth-callback', {
+          body: { code, state },
+        });
+
+        if (error) {
+          console.error('[Discord Auth] Edge function error:', error);
+          setStatus('error');
+          setErrorMessage('Errore durante il login. Riprova.');
+          return;
         }
 
-        // Try auto-join with token from hash (captured before Supabase consumed it)
-        if (providerTokenFromHash && !autoJoinDone) {
-          autoJoinDone = true;
-          await tryAutoJoin(providerTokenFromHash);
-        } else if (!autoJoinDone) {
-          // Fallback: try from session (may work in some Supabase versions)
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          const fallbackToken = currentSession?.provider_token;
-          if (fallbackToken) {
-            autoJoinDone = true;
-            await tryAutoJoin(fallbackToken);
-          } else {
-            console.warn('[Discord Auto-Join] No provider_token available (not in hash or session)');
-          }
+        if (data?.error) {
+          console.error('[Discord Auth] Auth error:', data.error);
+          setStatus('error');
+          setErrorMessage(data.error);
+          return;
         }
 
+        if (!data?.accessToken || !data?.refreshToken) {
+          console.error('[Discord Auth] No session tokens returned');
+          setStatus('error');
+          setErrorMessage('Sessione non creata. Riprova il login.');
+          return;
+        }
+
+        // Set the Supabase session with the tokens from the edge function
+        console.info('[Discord Auth] Setting session...');
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.accessToken,
+          refresh_token: data.refreshToken,
+        });
+
+        if (sessionError) {
+          console.error('[Discord Auth] Session set error:', sessionError);
+          setStatus('error');
+          setErrorMessage('Errore nella creazione della sessione. Riprova.');
+          return;
+        }
+
+        console.info('[Discord Auth] Login successful!');
         setStatus('success');
         toast({
           title: 'Benvenuto!',
           description: 'Login con Discord completato con successo',
         });
 
-        const storedRedirect = localStorage.getItem('auth_redirect') || '/';
+        const storedRedirect = localStorage.getItem('auth_redirect') || data.redirectTo || '/';
         localStorage.removeItem('auth_redirect');
 
         setTimeout(() => {
@@ -131,21 +102,8 @@ export default function DiscordCallback() {
       }
     };
 
-    // Also listen for auth state change which may include provider_token
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.provider_token && !autoJoinDone) {
-        console.info('[Discord Auto-Join] Got provider_token from onAuthStateChange');
-        autoJoinDone = true;
-        await tryAutoJoin(session.provider_token);
-      }
-    });
-
     handleCallback();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, toast]);
+  }, [navigate, searchParams, toast]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
