@@ -43,17 +43,17 @@ export default function Auth() {
     setIsSubmitting(true);
     try {
       localStorage.setItem('auth_redirect', redirectTo);
-
-      // Use custom edge function for Discord OAuth (includes guilds.join for auto-join)
-      const { data, error } = await supabase.functions.invoke('discord-auth-start', {
-        body: { redirectAfter: redirectTo, isLogin: true },
+      const currentOrigin = window.location.origin;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${currentOrigin}/auth/discord/callback`,
+          scopes: 'identify email guilds.join',
+        },
       });
-
-      if (error) throw error;
-      if (!data?.authUrl) throw new Error('No auth URL returned');
-
-      // Redirect to Discord consent screen
-      window.location.href = data.authUrl;
+      if (error) {
+        throw error;
+      }
     } catch (err) {
       console.error('Discord sign-in error:', err);
       toast({
