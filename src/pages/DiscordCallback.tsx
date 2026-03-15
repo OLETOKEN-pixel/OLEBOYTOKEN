@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +11,7 @@ type CallbackStatus = 'loading' | 'success' | 'error';
 
 export default function DiscordCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [status, setStatus] = useState<CallbackStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -18,9 +19,10 @@ export default function DiscordCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        // Check for errors in hash (Supabase built-in flow)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const errorParam = hashParams.get('error');
-        const errorDescription = hashParams.get('error_description');
+        const errorParam = hashParams.get('error') || searchParams.get('error');
+        const errorDescription = hashParams.get('error_description') || searchParams.get('error_description');
 
         if (errorParam) {
           setStatus('error');
@@ -28,10 +30,54 @@ export default function DiscordCallback() {
           return;
         }
 
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Custom flow: code + state in query params
+        const code = searchParams.get('code');
+        const state = searchParams.get('state');
 
-        if (error) {
-          console.error('Session error:', error);
+        if (code && state) {
+          // Call custom discord-auth-callback edge function
+          const { data, error } = await supabase.functions.invoke('discord-auth-callback', {
+            body: { code, state },
+          });
+
+          if (error || !data?.success) {
+            setStatus('error');
+            setErrorMessage(data?.error || error?.message || 'Errore durante il login Discord');
+            return;
+          }
+
+          // Set session from the returned tokens
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: data.accessToken,
+            refresh_token: data.refreshToken,
+          });
+
+          if (sessionError) {
+            setStatus('error');
+            setErrorMessage('Errore nella creazione della sessione');
+            return;
+          }
+
+          setStatus('success');
+          toast({
+            title: 'Benvenuto!',
+            description: 'Login con Discord completato con successo',
+          });
+
+          const redirectTo = data.redirectTo || localStorage.getItem('auth_redirect') || '/';
+          localStorage.removeItem('auth_redirect');
+
+          setTimeout(() => {
+            navigate(redirectTo, { replace: true });
+          }, 500);
+          return;
+        }
+
+        // Fallback: Supabase built-in flow (hash-based tokens)
+        const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+
+        if (sessionErr) {
+          console.error('Session error:', sessionErr);
           setStatus('error');
           setErrorMessage('Errore durante la creazione della sessione');
           return;
@@ -82,7 +128,7 @@ export default function DiscordCallback() {
     };
 
     handleCallback();
-  }, [navigate, toast]);
+  }, [navigate, toast, searchParams]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
