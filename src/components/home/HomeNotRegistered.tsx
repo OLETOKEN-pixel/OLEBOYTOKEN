@@ -47,18 +47,22 @@ export function HomeNotRegistered() {
           overflow: 'hidden',
         }}
       >
-        {/* Zaps — 4 corner lightning bolts */}
+        {/* Zaps — 4 corner lightning bolts
+            Figma: left=-183.62 top=-290 w=2288.42 h=1373.50 on a 1920px frame
+            We scale proportionally to viewport width so bolts stay at edges */}
         <img
           src="/figma-assets/9-130.svg"
           alt=""
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '-183.62px',
-            top: '-290px',
-            width: '2288.42px',
-            height: '1373.50px',
+            left: '-9.56%',
+            top: '-30.37%',
+            width: '119.19%',
+            height: 'auto',
+            aspectRatio: '2288.42 / 1373.50',
             pointerEvents: 'none',
+            zIndex: 1,
           }}
         />
 
@@ -72,6 +76,7 @@ export function HomeNotRegistered() {
             height: '146px',
             background: 'linear-gradient(to bottom, rgba(255,22,84,0.20), transparent)',
             pointerEvents: 'none',
+            zIndex: 2,
           }}
         />
 
@@ -86,6 +91,7 @@ export function HomeNotRegistered() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            zIndex: 2,
           }}
         >
           {/* OLEBOY — 96px black weight */}
@@ -117,7 +123,7 @@ export function HomeNotRegistered() {
               whiteSpace: 'pre-line',
             }}
           >
-            Stake tokens. Win Matches.{'       '}<br/>Claim your victory.
+            Stake tokens. Win Matches.<br/>Claim your victory.
           </p>
 
           {/* SIGN UP BUTTON — 285×69, #3b28cc, rounded 29px */}
@@ -254,25 +260,30 @@ export function HomeNotRegistered() {
           OLEBOY GIANT TEXT — gradient text overlapping footer
           Figma: left=81, top=3802, 347px font, gradient from #0f0404 to white
           ══════════════════════════════════════════════════════ */}
+      {/* OLEBOY GIANT TEXT — Figma: left=81, top=3802 on 1920px frame
+          The text sits above the footer with proper spacing.
+          Figma font-size: 347px on 1920px = ~18vw */}
       <div
         style={{
           position: 'relative',
           width: '100%',
           overflow: 'hidden',
           background: '#0f0404',
+          paddingTop: 'clamp(40px, 4vw, 80px)',
         }}
       >
         <div
           style={{
             fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
             fontWeight: 900,
-            fontSize: 'clamp(120px, 18vw, 347px)',
-            lineHeight: 0.85,
+            fontSize: 'clamp(80px, 18vw, 347px)',
+            lineHeight: 0.9,
             background: 'linear-gradient(to bottom, #0f0404 0%, #ffffff 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-            padding: '0 81px',
+            paddingLeft: '4.2%',
+            paddingBottom: 'clamp(10px, 1vw, 20px)',
             userSelect: 'none',
           }}
         >
