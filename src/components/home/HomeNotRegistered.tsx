@@ -12,7 +12,45 @@
  * Navbar is handled by PublicLayout (NavbarFigma).
  */
 
+import { useEffect, useState, useCallback } from 'react';
+
+const SECTION_IDS = ['section-hero', 'section-rank-up', 'section-arena', 'section-rewards', 'section-footer'];
+
 export function HomeNotRegistered() {
+  const [currentSection, setCurrentSection] = useState(0);
+
+  const scrollToSection = useCallback((index: number) => {
+    const clampedIndex = Math.max(0, Math.min(index, SECTION_IDS.length - 1));
+    const el = document.getElementById(SECTION_IDS[clampedIndex]);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  const scrollUp = useCallback(() => {
+    scrollToSection(currentSection - 1);
+  }, [currentSection, scrollToSection]);
+
+  const scrollDown = useCallback(() => {
+    scrollToSection(currentSection + 1);
+  }, [currentSection, scrollToSection]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY + window.innerHeight / 2;
+      for (let i = SECTION_IDS.length - 1; i >= 0; i--) {
+        const el = document.getElementById(SECTION_IDS[i]);
+        if (el && scrollY >= el.offsetTop) {
+          setCurrentSection(i);
+          break;
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div style={{ background: '#04080f', width: '100%', overflowX: 'hidden', position: 'relative' }}>
 
@@ -39,6 +77,7 @@ export function HomeNotRegistered() {
           Zaps overlay, center text, sign up button, know more
           ══════════════════════════════════════════════════════ */}
       <section
+        id="section-hero"
         style={{
           position: 'relative',
           width: '100%',
@@ -169,6 +208,10 @@ export function HomeNotRegistered() {
 
           {/* Know More — pill button with arrows */}
           <div
+            onClick={() => {
+              const el = document.getElementById('section-rank-up');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
             style={{
               marginTop: '44px',
               cursor: 'pointer',
@@ -191,6 +234,7 @@ export function HomeNotRegistered() {
           Full SVG background with all content embedded
           ══════════════════════════════════════════════════════ */}
       <section
+        id="section-rank-up"
         style={{
           position: 'relative',
           width: '100%',
@@ -215,6 +259,7 @@ export function HomeNotRegistered() {
           Full SVG background with all content embedded
           ══════════════════════════════════════════════════════ */}
       <section
+        id="section-arena"
         style={{
           position: 'relative',
           width: '100%',
@@ -239,6 +284,7 @@ export function HomeNotRegistered() {
           Full SVG background with all content embedded
           ══════════════════════════════════════════════════════ */}
       <section
+        id="section-rewards"
         style={{
           position: 'relative',
           width: '100%',
@@ -295,6 +341,7 @@ export function HomeNotRegistered() {
           FOOTER — 1920×637, bg #0f0404, white top border
           ══════════════════════════════════════════════════════ */}
       <footer
+        id="section-footer"
         style={{
           position: 'relative',
           width: '100%',
@@ -400,7 +447,10 @@ export function HomeNotRegistered() {
               SOCIALS
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div
+              <a
+                href="https://x.com/oleboytokens"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
                   fontWeight: 400,
@@ -411,8 +461,11 @@ export function HomeNotRegistered() {
                 }}
               >
                 X/Twitter
-              </div>
-              <div
+              </a>
+              <a
+                href="https://www.tiktok.com/@oleboytokens"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
                   fontWeight: 400,
@@ -423,8 +476,11 @@ export function HomeNotRegistered() {
                 }}
               >
                 TikTok
-              </div>
-              <div
+              </a>
+              <a
+                href="https://discord.gg/2XVffNDPAE"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
                   fontWeight: 400,
@@ -435,7 +491,7 @@ export function HomeNotRegistered() {
                 }}
               >
                 Discord
-              </div>
+              </a>
             </div>
           </div>
 
@@ -537,6 +593,77 @@ export function HomeNotRegistered() {
           </span>
         </div>
       </footer>
+
+      {/* Floating up/down navigation buttons */}
+      <style>{`
+        @keyframes navBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+      `}</style>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: '16px',
+          zIndex: 40,
+          pointerEvents: 'auto',
+        }}
+      >
+        <button
+          onClick={scrollUp}
+          aria-label="Scroll up"
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            background: 'rgba(15, 4, 4, 0.7)',
+            border: '1.5px solid rgba(255, 255, 255, 0.3)',
+            color: '#ffffff',
+            fontSize: '20px',
+            cursor: currentSection === 0 ? 'default' : 'pointer',
+            opacity: currentSection === 0 ? 0.3 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 0.3s, background 0.2s',
+            animation: currentSection > 0 ? 'navBounce 2s ease-in-out infinite' : 'none',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+        </button>
+        <button
+          onClick={scrollDown}
+          aria-label="Scroll down"
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            background: 'rgba(15, 4, 4, 0.7)',
+            border: '1.5px solid rgba(255, 255, 255, 0.3)',
+            color: '#ffffff',
+            fontSize: '20px',
+            cursor: currentSection === SECTION_IDS.length - 1 ? 'default' : 'pointer',
+            opacity: currentSection === SECTION_IDS.length - 1 ? 0.3 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 0.3s, background 0.2s',
+            animation: currentSection < SECTION_IDS.length - 1 ? 'navBounce 2s ease-in-out infinite 0.3s' : 'none',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
