@@ -66,13 +66,29 @@ export default function DiscordCallback() {
         try {
           const { data: { session: currentSession } } = await supabase.auth.getSession();
           if (currentSession?.provider_token) {
-            await supabase.functions.invoke('discord-auto-join', {
+            const { data: joinData, error: joinError } = await supabase.functions.invoke('discord-auto-join', {
               body: { providerToken: currentSession.provider_token },
             });
+            if (joinError) {
+              console.warn('[Discord Auto-Join] Edge function error:', joinError);
+            } else if (joinData?.skipped) {
+              console.info('[Discord Auto-Join] Skipped:', joinData.reason);
+            } else if (joinData?.success) {
+              console.info('[Discord Auto-Join] OK:', joinData.action);
+            } else if (joinData?.error) {
+              console.warn('[Discord Auto-Join] Failed:', joinData.detail || joinData.error);
+              toast({
+                title: 'Discord Server',
+                description: 'Non è stato possibile aggiungerti automaticamente al server Discord. Puoi unirti manualmente.',
+                variant: 'destructive',
+              });
+            }
+          } else {
+            console.warn('[Discord Auto-Join] No provider_token in session — auto-join skipped');
           }
         } catch (joinErr) {
           // Auto-join is best-effort, don't block login
-          console.warn('Discord auto-join failed:', joinErr);
+          console.warn('[Discord Auto-Join] Unexpected error:', joinErr);
         }
 
         setStatus('success');
