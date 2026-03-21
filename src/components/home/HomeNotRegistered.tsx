@@ -1,21 +1,58 @@
 /**
- * HomeNotRegistered — pixel-perfect replica of the Figma "NO LOGGED" frame.
- * Frame: 1920×4457px — 5 sections stacked vertically:
- *   1. First page (Hero): 0–955px
- *   2. Second page (RANK UP!): 955–1910px
- *   3. Third page (JOIN THE ARENA!): 1910–2865px
- *   4. Fourth page (GET REWARDS!): 2865–3843px
- *   5. Footer: 3820–4457px
+ * HomeNotRegistered — pixel-perfect replica of the Figma "NO LOGGED USER" frame.
+ * Frame: 1920×4457px — sections stacked vertically:
+ *   1. First page  (Hero):           0–955px
+ *   2. Second page (RANK UP!):       955–1910px
+ *   3. Third page  (JOIN THE ARENA!):1910–2865px
+ *   4. Fourth page (GET REWARDS!):   2865–3820px
+ *   5. Giant OLEBOY gradient text
+ *   5. Footer:                       3820px+
  *
- * All sections use full-width SVG backgrounds exported from Figma.
- * Decorative lightning bolts overlay the hero.
- * Navbar is handled by PublicLayout (NavbarFigma).
+ * All percentage-based horizontal values are relative to the 1920px Figma frame.
+ * Sections 2–4 use individual positioned elements over the guide background.
  */
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const SECTION_IDS = ['section-hero', 'section-rank-up', 'section-arena', 'section-rewards', 'section-footer'];
+const SECTION_IDS = [
+  'section-hero',
+  'section-rank-up',
+  'section-arena',
+  'section-rewards',
+  'section-footer',
+];
+
+const BASE_FONT = "'Base Neue Trial', 'Base Neue', sans-serif";
+
+/** Navigation arrow button used in sections 2–4 */
+function ArrowBtn({
+  src,
+  alt,
+  onClick,
+}: {
+  src: string;
+  alt: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={alt}
+      style={{
+        width: '63.1px',
+        height: '63.1px',
+        border: 'none',
+        background: 'transparent',
+        cursor: 'pointer',
+        padding: 0,
+        flexShrink: 0,
+      }}
+    >
+      <img src={src} alt={alt} style={{ width: '100%', height: '100%', display: 'block' }} />
+    </button>
+  );
+}
 
 export function HomeNotRegistered() {
   const handleSignUp = useCallback(async () => {
@@ -30,38 +67,46 @@ export function HomeNotRegistered() {
   }, []);
 
   const scrollToSection = useCallback((index: number) => {
-    const clampedIndex = Math.max(0, Math.min(index, SECTION_IDS.length - 1));
-    const el = document.getElementById(SECTION_IDS[clampedIndex]);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    const idx = Math.max(0, Math.min(index, SECTION_IDS.length - 1));
+    const el = document.getElementById(SECTION_IDS[idx]);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   return (
-    <div style={{ background: '#04080f', width: '100%', overflowX: 'hidden', position: 'relative' }}>
-
-      {/* ══════════════════════════════════════════════════════
-          TOP NEON GRADIENT — from #ff1654/20 to transparent
-          Figma: y=0, h=146, full width
-          ══════════════════════════════════════════════════════ */}
+    <div
+      style={{
+        background: '#0f0404',
+        width: '100%',
+        overflowX: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* ══════════════════════════════════════════════════
+          TOP NEON — full-width pink glow at page top
+          ══════════════════════════════════════════════════ */}
       <div
+        aria-hidden="true"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: '146px',
-          background: 'linear-gradient(to bottom, rgba(255,22,84,0.20), transparent)',
           zIndex: 2,
           pointerEvents: 'none',
+          overflow: 'hidden',
         }}
-      />
+      >
+        <img
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>
 
-      {/* ══════════════════════════════════════════════════════
-          SECTION 1 — HERO (First page: 1920×955)
-          Background: #0f0404
-          Zaps overlay, center text, sign up button, know more
-          ══════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════
+          SECTION 1 — HERO (1920×955)
+          ══════════════════════════════════════════════════ */}
       <section
         id="section-hero"
         style={{
@@ -72,11 +117,9 @@ export function HomeNotRegistered() {
           overflow: 'hidden',
         }}
       >
-        {/* Zaps — 4 corner lightning bolts
-            Figma: left=-183.62 top=-290 w=2288.42 h=1373.50 on a 1920px frame
-            We scale proportionally to viewport width so bolts stay at edges */}
+        {/* Zaps — 4 corner lightning bolts */}
         <img
-          src="/figma-assets/9-130.svg"
+          src="/figma-assets/figma-zaps.svg"
           alt=""
           aria-hidden="true"
           style={{
@@ -85,27 +128,35 @@ export function HomeNotRegistered() {
             top: '-30.37%',
             width: '119.19%',
             height: 'auto',
-            aspectRatio: '2288.42 / 1373.50',
+            aspectRatio: '2288.42 / 1373.5',
             pointerEvents: 'none',
             zIndex: 1,
           }}
         />
 
-        {/* BOTTOM NEON — gradient at bottom of hero */}
+        {/* Bottom neon — glows at 827px from top, flipped */}
         <div
+          aria-hidden="true"
           style={{
             position: 'absolute',
             left: 0,
             top: '827px',
             width: '100%',
             height: '146px',
-            background: 'linear-gradient(to bottom, rgba(255,22,84,0.20), transparent)',
             pointerEvents: 'none',
             zIndex: 2,
+            overflow: 'hidden',
+            transform: 'scaleY(-1)',
           }}
-        />
+        >
+          <img
+            src="/figma-assets/figma-neon.png"
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
 
-        {/* Main Text block — centered */}
+        {/* Main text block — centered horizontally */}
         <div
           style={{
             position: 'absolute',
@@ -116,20 +167,19 @@ export function HomeNotRegistered() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            zIndex: 2,
+            zIndex: 3,
           }}
         >
-          {/* OLEBOY — 96px black weight */}
+          {/* OLEBOY — 128px Black */}
           <h1
             style={{
-              fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+              fontFamily: BASE_FONT,
               fontWeight: 900,
-              fontSize: '96px',
+              fontSize: '128px',
               lineHeight: 1,
               color: '#ffffff',
               margin: 0,
               textAlign: 'center',
-              letterSpacing: '-0.01em',
             }}
           >
             OLEBOY
@@ -138,88 +188,117 @@ export function HomeNotRegistered() {
           {/* Subtitle */}
           <p
             style={{
-              fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+              fontFamily: BASE_FONT,
               fontWeight: 400,
-              fontSize: '32px',
-              lineHeight: 1.35,
+              fontSize: '30px',
+              lineHeight: '35px',
+              letterSpacing: '4.8px',
               color: '#ffffff',
-              margin: '16px 0 0 0',
+              margin: '20px 0 0',
               textAlign: 'center',
-              whiteSpace: 'pre-line',
             }}
           >
-            Stake tokens. Win Matches.<br/>Claim your victory.
+            Stake tokens. Win Matches.
+            <br />
+            Claim your victory.
           </p>
 
-          {/* SIGN UP BUTTON — 285×69, #3b28cc, rounded 29px */}
-          <div
+          {/* SIGN UP! button */}
+          <button
             onClick={handleSignUp}
             style={{
-              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginTop: '56px',
               width: '285px',
               height: '69px',
-              marginTop: '56px',
+              background: '#3b28cc',
+              borderRadius: '29px',
+              border: 'none',
               cursor: 'pointer',
+              boxShadow:
+                'inset 0px -3px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.15)',
             }}
           >
-            <div
+            <span
               style={{
-                width: '285px',
-                height: '69px',
-                background: '#3b28cc',
-                borderRadius: '29px',
-                boxShadow: 'inset 0px -3px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '16px',
+                fontFamily: BASE_FONT,
+                fontWeight: 900,
+                fontSize: '36px',
+                color: '#ffffff',
+                lineHeight: 1,
               }}
             >
-              <span
-                style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
-                  fontWeight: 900,
-                  fontSize: '36px',
-                  color: '#ffffff',
-                  textAlign: 'center',
-                }}
-              >
-                SIGN UP!
-              </span>
-              {/* Discord icon inline SVG */}
-              <svg width="53" height="39" viewBox="0 0 24 24" fill="white">
-                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.114 18.1.133 18.113a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-              </svg>
-            </div>
-          </div>
+              SIGN UP
+            </span>
+            <span
+              style={{
+                fontFamily: BASE_FONT,
+                fontWeight: 900,
+                fontSize: '40px',
+                color: '#ffffff',
+                lineHeight: 1,
+              }}
+            >
+              !
+            </span>
+            <img
+              src="/figma-assets/figma-ds-icon1.png"
+              alt="Discord"
+              style={{ width: '52.9px', height: '38.9px', objectFit: 'contain' }}
+            />
+          </button>
 
           {/* Know More — pill button with arrows */}
-          <div
-            onClick={() => {
-              const el = document.getElementById('section-rank-up');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
+          <button
+            onClick={() => scrollToSection(1)}
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '20px',
               marginTop: '44px',
+              width: '274px',
+              height: '65px',
+              background: 'rgba(255,22,84,0.23)',
+              border: '1px solid #ff1654',
+              borderRadius: '50px',
               cursor: 'pointer',
+              boxShadow:
+                'inset 0px -4px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.14)',
             }}
           >
             <img
-              src="/figma-assets/9-119.svg"
-              alt="Know More"
-              style={{
-                width: '303px',
-                height: '65px',
-              }}
+              src="/figma-assets/figma-arrow-stroke.svg"
+              alt=""
+              aria-hidden="true"
+              style={{ width: '16.3px', height: '21px' }}
             />
-          </div>
+            <span
+              style={{
+                fontFamily: BASE_FONT,
+                fontWeight: 400,
+                fontSize: '24px',
+                color: '#ffffff',
+              }}
+            >
+              Know More
+            </span>
+            <img
+              src="/figma-assets/figma-arrow-stroke1.svg"
+              alt=""
+              aria-hidden="true"
+              style={{ width: '15.7px', height: '21px' }}
+            />
+          </button>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          SECTION 2 — RANK UP! (Second page: 1920×955)
-          Full SVG background with all content embedded
-          ══════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════
+          SECTION 2 — RANK UP! (1920×955)
+          ══════════════════════════════════════════════════ */}
       <section
         id="section-rank-up"
         style={{
@@ -229,50 +308,157 @@ export function HomeNotRegistered() {
           overflow: 'hidden',
         }}
       >
+        {/* Guide background — solid #0f0404 */}
         <img
-          src="/figma-assets/9-87.svg"
-          alt="Rank Up section"
+          src="/figma-assets/figma-guide.svg"
+          alt=""
+          aria-hidden="true"
           style={{
+            position: 'absolute',
+            inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            display: 'block',
           }}
         />
-        {/* Up arrow overlay — cx=918 cy=850 r=31 on 1920×955 */}
-        <div
-          onClick={() => scrollToSection(0)}
+
+        {/* Spaccato title decoration */}
+        <img
+          src="/figma-assets/figma-spaccato-title1.svg"
+          alt=""
+          aria-hidden="true"
           style={{
             position: 'absolute',
-            left: 'calc(918 / 1920 * 100% - 31 / 1920 * 100%)',
-            top: 'calc(850 / 955 * 100% - 31 / 955 * 100%)',
-            width: 'calc(62 / 1920 * 100%)',
-            height: 'calc(62 / 955 * 100%)',
-            cursor: 'pointer',
-            borderRadius: '50%',
-            zIndex: 2,
+            left: 'calc(12% - 4.4px)',
+            top: '157px',
+            width: 'calc(846.854 / 1920 * 100%)',
+            height: 'auto',
           }}
         />
-        {/* Down arrow overlay — cx=1001 cy=850 r=31 on 1920×955 */}
-        <div
-          onClick={() => scrollToSection(2)}
+
+        {/* RANK UP! title */}
+        <p
           style={{
             position: 'absolute',
-            left: 'calc(1001 / 1920 * 100% - 31 / 1920 * 100%)',
-            top: 'calc(850 / 955 * 100% - 31 / 955 * 100%)',
-            width: 'calc(62 / 1920 * 100%)',
-            height: 'calc(62 / 955 * 100%)',
-            cursor: 'pointer',
-            borderRadius: '50%',
+            left: 'calc(16% + 289.3px)',
+            transform: 'translateX(-50%)',
+            top: '228px',
+            fontFamily: BASE_FONT,
+            fontWeight: 900,
+            fontStyle: 'italic',
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
+            lineHeight: 1,
+            margin: 0,
             zIndex: 2,
           }}
+        >
+          <span style={{ fontSize: '96px' }}>RANK UP</span>
+          <span style={{ fontSize: '110px' }}>!</span>
+        </p>
+
+        {/* Star shape decoration — left, rotated */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(8% - 17.6px)',
+            top: '252px',
+            width: 'calc(866.424 / 1920 * 100%)',
+            height: '596px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="/figma-assets/figma-star-shape.svg"
+            alt=""
+            style={{
+              transform: 'rotate(-15.44deg)',
+              width: 'calc(788.09 / 866.424 * 100%)',
+              height: 'auto',
+            }}
+          />
+        </div>
+
+        {/* Body text */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(16% - 7.2px)',
+            top: '464px',
+            fontFamily: BASE_FONT,
+            fontWeight: 700,
+            fontSize: '48px',
+            lineHeight: 1.2,
+            color: '#ffffff',
+            zIndex: 2,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <p style={{ margin: '0 0 4px' }}>Dominate the</p>
+          <p style={{ margin: 0 }}>
+            leaderboard and
+            <br />
+            claim your legacy.
+          </p>
+        </div>
+
+        {/* Animation / content area — right side */}
+        <img
+          src="/figma-assets/figma-animation.svg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(64% - 1.27px)',
+            top: '480px',
+            width: 'calc(408.932 / 1920 * 100%)',
+            height: 'auto',
+            aspectRatio: '408.932 / 230.024',
+          }}
         />
+
+        {/* Spaccato bottom — far right */}
+        <img
+          src="/figma-assets/figma-spaccato-bottom.svg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(80% + 44px)',
+            top: '602px',
+            width: 'calc(137.847 / 1920 * 100%)',
+            height: 'auto',
+          }}
+        />
+
+        {/* Navigation arrows */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(44% + 42.2px)',
+            top: '842px',
+            display: 'flex',
+            gap: 'calc(4% + 6.2px)',
+          }}
+        >
+          <ArrowBtn
+            src="/figma-assets/figma-bw-arrow2.svg"
+            alt="Previous section"
+            onClick={() => scrollToSection(0)}
+          />
+          <ArrowBtn
+            src="/figma-assets/figma-fw-arrow2.svg"
+            alt="Next section"
+            onClick={() => scrollToSection(2)}
+          />
+        </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          SECTION 3 — JOIN THE ARENA! (Third page: 1920×955)
-          Full SVG background with all content embedded
-          ══════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════
+          SECTION 3 — JOIN THE ARENA! (1920×955)
+          ══════════════════════════════════════════════════ */}
       <section
         id="section-arena"
         style={{
@@ -282,104 +468,339 @@ export function HomeNotRegistered() {
           overflow: 'hidden',
         }}
       >
+        {/* Guide background */}
         <img
-          src="/figma-assets/9-66.svg"
-          alt="Join the Arena section"
+          src="/figma-assets/figma-guide.svg"
+          alt=""
+          aria-hidden="true"
           style={{
+            position: 'absolute',
+            inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            display: 'block',
           }}
         />
-        {/* Up arrow overlay — cx=918.5 cy=821.5 r=31 on 1920×955 */}
-        <div
-          onClick={() => scrollToSection(1)}
+
+        {/* JOIN THE ARENA! title — right-aligned */}
+        <p
           style={{
             position: 'absolute',
-            left: 'calc(918.5 / 1920 * 100% - 31 / 1920 * 100%)',
-            top: 'calc(821.5 / 955 * 100% - 31 / 955 * 100%)',
-            width: 'calc(62 / 1920 * 100%)',
-            height: 'calc(62 / 955 * 100%)',
-            cursor: 'pointer',
-            borderRadius: '50%',
+            left: 'calc(28% + 1088.4px)',
+            transform: 'translateX(-100%)',
+            top: '203px',
+            fontFamily: BASE_FONT,
+            fontWeight: 900,
+            fontStyle: 'italic',
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
+            lineHeight: 1,
+            margin: 0,
             zIndex: 2,
+            textAlign: 'right',
           }}
-        />
-        {/* Down arrow overlay — cx=1001.5 cy=821.5 r=31 on 1920×955 */}
+        >
+          <span style={{ fontSize: '96px' }}>JOIN THE ARENA</span>
+          <span style={{ fontSize: '110px' }}>!</span>
+        </p>
+
+        {/* Outline decoration — thin horizontal element spanning section */}
         <div
-          onClick={() => scrollToSection(3)}
+          aria-hidden="true"
           style={{
             position: 'absolute',
-            left: 'calc(1001.5 / 1920 * 100% - 31 / 1920 * 100%)',
-            top: 'calc(821.5 / 955 * 100% - 31 / 955 * 100%)',
-            width: 'calc(62 / 1920 * 100%)',
-            height: 'calc(62 / 955 * 100%)',
-            cursor: 'pointer',
-            borderRadius: '50%',
+            left: 'calc(28% + 20.4px)',
+            top: '319px',
+            width: 'calc(1436.682 / 1920 * 100%)',
+            height: '25.5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'visible',
+          }}
+        >
+          <img
+            src="/figma-assets/figma-outline.svg"
+            alt=""
+            style={{
+              transform: 'rotate(90deg) scaleY(-1)',
+              width: '25.5px',
+              height: 'calc(1436.682 / 1920 * 100vw)',
+            }}
+          />
+        </div>
+
+        {/* Star 1 decoration — center-right, rotated */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(44% + 43.2px)',
+            top: '271px',
+            width: 'calc(813.516 / 1920 * 100%)',
+            height: '506px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="/figma-assets/figma-star1.svg"
+            alt=""
+            style={{
+              transform: 'rotate(-8.84deg)',
+              width: 'calc(762.061 / 813.516 * 100%)',
+              height: 'auto',
+            }}
+          />
+        </div>
+
+        {/* Rectangle11 (content area) — left side, flipped */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(16% + 3.8px)',
+            top: '454px',
+            width: 'calc(408.932 / 1920 * 100%)',
+            height: 'auto',
+            aspectRatio: '408.932 / 230.024',
+            transform: 'scaleY(-1) rotate(180deg)',
+          }}
+        >
+          <img
+            src="/figma-assets/figma-rectangle11.svg"
+            alt=""
+            style={{ width: '100%', height: '100%', display: 'block' }}
+          />
+        </div>
+
+        {/* Body text — right-aligned */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(48% + 708.4px)',
+            transform: 'translateX(-100%)',
+            top: '438px',
+            fontFamily: BASE_FONT,
+            fontWeight: 700,
+            fontSize: '48px',
+            lineHeight: 1.2,
+            color: '#ffffff',
+            textAlign: 'right',
             zIndex: 2,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <p style={{ margin: '0 0 4px' }}>Build your team,</p>
+          <p style={{ margin: 0 }}>
+            complete challenges
+            <br />
+            and get rewarded.
+          </p>
+        </div>
+
+        {/* Spaccato bottom1 — left, flipped */}
+        <img
+          src="/figma-assets/figma-spaccato-bottom1.svg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(12% - 5.4px)',
+            top: '536px',
+            width: 'calc(137.847 / 1920 * 100%)',
+            height: 'auto',
+            transform: 'scaleY(-1) rotate(180deg)',
           }}
         />
+
+        {/* Navigation arrows */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(44% + 42.2px)',
+            top: '842px',
+            display: 'flex',
+            gap: 'calc(4% + 6.2px)',
+          }}
+        >
+          <ArrowBtn
+            src="/figma-assets/figma-bw-arrow1.svg"
+            alt="Previous section"
+            onClick={() => scrollToSection(1)}
+          />
+          <ArrowBtn
+            src="/figma-assets/figma-fw-arrow1.svg"
+            alt="Next section"
+            onClick={() => scrollToSection(3)}
+          />
+        </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          SECTION 4 — GET REWARDS! (Fourth page: 1920×978)
-          Full SVG background with all content embedded
-          ══════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════
+          SECTION 4 — GET REWARDS! (1920×955)
+          ══════════════════════════════════════════════════ */}
       <section
         id="section-rewards"
         style={{
           position: 'relative',
           width: '100%',
+          height: '955px',
           overflow: 'hidden',
         }}
       >
+        {/* Guide background */}
         <img
-          src="/figma-assets/9-37.svg"
-          alt="Get Rewards section"
+          src="/figma-assets/figma-guide.svg"
+          alt=""
+          aria-hidden="true"
           style={{
+            position: 'absolute',
+            inset: 0,
             width: '100%',
+            height: '100%',
+          }}
+        />
+
+        {/* Spaccato title decoration */}
+        <img
+          src="/figma-assets/figma-spaccato-title.svg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(12% - 4.4px)',
+            top: '157px',
+            width: 'calc(1321.928 / 1920 * 100%)',
             height: 'auto',
-            display: 'block',
           }}
         />
-        {/* Up arrow overlay — cx=918.5 cy=819.5 r=31 on 1920×955 */}
-        <div
-          onClick={() => scrollToSection(2)}
+
+        {/* GET REWARDS! title */}
+        <p
           style={{
             position: 'absolute',
-            left: 'calc(918.5 / 1920 * 100% - 31 / 1920 * 100%)',
-            top: 'calc(819.5 / 955 * 100% - 31 / 955 * 100%)',
-            width: 'calc(62 / 1920 * 100%)',
-            height: 'calc(62 / 955 * 100%)',
-            cursor: 'pointer',
-            borderRadius: '50%',
+            left: 'calc(16% + 461.3px)',
+            transform: 'translateX(-50%)',
+            top: '228px',
+            fontFamily: BASE_FONT,
+            fontWeight: 900,
+            fontStyle: 'italic',
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
+            lineHeight: 1,
+            margin: 0,
             zIndex: 2,
           }}
-        />
-        {/* Down arrow overlay — cx=1001.5 cy=819.5 r=31 on 1920×955 */}
+        >
+          <span style={{ fontSize: '96px' }}>GET REWARDS</span>
+          <span style={{ fontSize: '110px' }}>!</span>
+        </p>
+
+        {/* Vector19 — rotated lightning-bolt shape, left */}
         <div
-          onClick={() => scrollToSection(4)}
+          aria-hidden="true"
           style={{
             position: 'absolute',
-            left: 'calc(1001.5 / 1920 * 100% - 31 / 1920 * 100%)',
-            top: 'calc(819.5 / 955 * 100% - 31 / 955 * 100%)',
-            width: 'calc(62 / 1920 * 100%)',
-            height: 'calc(62 / 955 * 100%)',
-            cursor: 'pointer',
-            borderRadius: '50%',
+            left: 'calc(12% - 6.4px)',
+            top: '286px',
+            width: 'calc(660.187 / 1920 * 100%)',
+            height: '651px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="/figma-assets/figma-vector19.svg"
+            alt=""
+            style={{
+              transform: 'rotate(46.25deg)',
+              width: 'calc(313.81 / 660.187 * 100%)',
+              height: 'auto',
+            }}
+          />
+        </div>
+
+        {/* Body text */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(16% + 2.8px)',
+            top: '464px',
+            fontFamily: BASE_FONT,
+            fontWeight: 700,
+            fontSize: '48px',
+            lineHeight: 1.2,
+            color: '#ffffff',
             zIndex: 2,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <p style={{ margin: '0 0 4px' }}>Complete tasks</p>
+          <p style={{ margin: 0 }}>
+            &amp; win matches to
+            <br />
+            get OBCoins.
+          </p>
+        </div>
+
+        {/* Animation / content area — right side */}
+        <img
+          src="/figma-assets/figma-animation.svg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(64% - 1.27px)',
+            top: '480px',
+            width: 'calc(408.932 / 1920 * 100%)',
+            height: 'auto',
+            aspectRatio: '408.932 / 230.024',
           }}
         />
+
+        {/* Spaccato bottom — far right */}
+        <img
+          src="/figma-assets/figma-spaccato-bottom.svg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 'calc(80% + 44px)',
+            top: '602px',
+            width: 'calc(137.847 / 1920 * 100%)',
+            height: 'auto',
+          }}
+        />
+
+        {/* Navigation arrows */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(44% + 42.2px)',
+            top: '842px',
+            display: 'flex',
+            gap: 'calc(4% + 6.2px)',
+          }}
+        >
+          <ArrowBtn
+            src="/figma-assets/figma-bw-arrow.svg"
+            alt="Previous section"
+            onClick={() => scrollToSection(2)}
+          />
+          <ArrowBtn
+            src="/figma-assets/figma-fw-arrow.svg"
+            alt="Next section"
+            onClick={() => scrollToSection(4)}
+          />
+        </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          OLEBOY GIANT TEXT — gradient text overlapping footer
-          Figma: left=81, top=3802, 347px font, gradient from #0f0404 to white
-          ══════════════════════════════════════════════════════ */}
-      {/* OLEBOY GIANT TEXT — Figma: left=81, top=3802 on 1920px frame
-          The text sits above the footer with proper spacing.
-          Figma font-size: 347px on 1920px = ~18vw */}
+      {/* ══════════════════════════════════════════════════
+          GIANT OLEBOY — gradient text above footer
+          Figma: 347px font, gradient from #0f0404 → white
+          ══════════════════════════════════════════════════ */}
       <div
         style={{
           position: 'relative',
@@ -390,12 +811,14 @@ export function HomeNotRegistered() {
         }}
       >
         <div
+          aria-hidden="true"
           style={{
-            fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+            fontFamily: BASE_FONT,
             fontWeight: 900,
+            fontStyle: 'italic',
             fontSize: 'clamp(80px, 18vw, 347px)',
             lineHeight: 0.9,
-            background: 'linear-gradient(to bottom, #0f0404 0%, #ffffff 100%)',
+            background: 'linear-gradient(180.075deg, #0f0404 10%, #ffffff 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -408,9 +831,9 @@ export function HomeNotRegistered() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════
-          FOOTER — 1920×637, bg #0f0404, white top border
-          ══════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════
+          FOOTER — bg #0f0404, white top border
+          ══════════════════════════════════════════════════ */}
       <footer
         id="section-footer"
         style={{
@@ -429,7 +852,7 @@ export function HomeNotRegistered() {
             flexWrap: 'wrap',
             maxWidth: '1532px',
             margin: '0 auto',
-            padding: '0 194px',
+            padding: '0 10.1%',
             gap: '40px',
           }}
         >
@@ -437,98 +860,110 @@ export function HomeNotRegistered() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             {/* BTS - Marv */}
             <div>
-              <div
+              <p
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 900,
+                  fontStyle: 'italic',
                   fontSize: '24px',
                   color: '#ff1654',
-                  marginBottom: '12px',
+                  margin: '0 0 12px',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 BTS - Marv
-              </div>
-              <div
+              </p>
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 400,
                   fontSize: '16px',
                   color: '#e6e6e6',
                   textDecoration: 'underline',
-                  cursor: 'pointer',
+                  display: 'block',
                 }}
               >
                 X/Twitter
-              </div>
+              </a>
             </div>
 
             {/* BTS - Tom */}
             <div>
-              <div
+              <p
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 900,
+                  fontStyle: 'italic',
                   fontSize: '24px',
                   color: '#ff1654',
-                  marginBottom: '12px',
+                  margin: '0 0 12px',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 BTS - Tom
-              </div>
+              </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div
+                <a
+                  href="https://x.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
-                    fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                    fontFamily: BASE_FONT,
                     fontWeight: 400,
                     fontSize: '16px',
                     color: '#e6e6e6',
                     textDecoration: 'underline',
-                    cursor: 'pointer',
                   }}
                 >
                   X/Twitter
-                </div>
-                <div
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
-                    fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                    fontFamily: BASE_FONT,
                     fontWeight: 400,
                     fontSize: '16px',
                     color: '#e6e6e6',
                     textDecoration: 'underline',
-                    cursor: 'pointer',
                   }}
                 >
                   Instagram
-                </div>
+                </a>
               </div>
             </div>
           </div>
 
           {/* Column 2: SOCIALS */}
           <div>
-            <div
+            <p
               style={{
-                fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                fontFamily: BASE_FONT,
                 fontWeight: 900,
+                fontStyle: 'italic',
                 fontSize: '24px',
                 color: '#ff1654',
-                marginBottom: '12px',
+                margin: '0 0 12px',
+                whiteSpace: 'nowrap',
               }}
             >
               SOCIALS
-            </div>
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <a
                 href="https://x.com/oleboytokens"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 400,
                   fontSize: '16px',
                   color: '#e6e6e6',
                   textDecoration: 'underline',
-                  cursor: 'pointer',
                 }}
               >
                 X/Twitter
@@ -538,12 +973,11 @@ export function HomeNotRegistered() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 400,
                   fontSize: '16px',
                   color: '#e6e6e6',
                   textDecoration: 'underline',
-                  cursor: 'pointer',
                 }}
               >
                 TikTok
@@ -553,12 +987,11 @@ export function HomeNotRegistered() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 400,
                   fontSize: '16px',
                   color: '#e6e6e6',
                   textDecoration: 'underline',
-                  cursor: 'pointer',
                 }}
               >
                 Discord
@@ -568,103 +1001,106 @@ export function HomeNotRegistered() {
 
           {/* Column 3: CONTACT US */}
           <div>
-            <div
+            <p
               style={{
-                fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                fontFamily: BASE_FONT,
                 fontWeight: 900,
+                fontStyle: 'italic',
                 fontSize: '24px',
                 color: '#ff1654',
-                marginBottom: '12px',
+                margin: '0 0 12px',
+                whiteSpace: 'nowrap',
               }}
             >
               CONTACT US
-            </div>
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div
+              <a
+                href="mailto:coolowner.2025@gmail.com"
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 400,
                   fontSize: '16px',
                   color: '#e6e6e6',
                   textDecoration: 'underline',
-                  cursor: 'pointer',
                 }}
               >
                 coolowner.2025@gmail.com
-              </div>
-              <div
+              </a>
+              <a
+                href="mailto:letterio.tomasini@gmail.com"
                 style={{
-                  fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                  fontFamily: BASE_FONT,
                   fontWeight: 400,
                   fontSize: '16px',
                   color: '#e6e6e6',
                   textDecoration: 'underline',
-                  cursor: 'pointer',
                 }}
               >
                 letterio.tomasini@gmail.com
-              </div>
+              </a>
             </div>
           </div>
 
           {/* Column 4: PRIVACY */}
           <div>
-            <div
+            <p
               style={{
-                fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                fontFamily: BASE_FONT,
                 fontWeight: 900,
+                fontStyle: 'italic',
                 fontSize: '24px',
                 color: '#ff1654',
-                marginBottom: '12px',
+                margin: '0 0 12px',
+                whiteSpace: 'nowrap',
               }}
             >
               PRIVACY
-            </div>
-            <div
+            </p>
+            <a
+              href="/terms"
               style={{
-                fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+                fontFamily: BASE_FONT,
                 fontWeight: 400,
                 fontSize: '16px',
                 color: '#e6e6e6',
                 textDecoration: 'underline',
-                cursor: 'pointer',
               }}
             >
-              Terms & Privacy
-            </div>
+              Terms &amp; Privacy
+            </a>
           </div>
         </div>
 
-        {/* Copyright */}
+        {/* Copyright row */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: '4px',
+            gap: '6px',
             maxWidth: '1920px',
             margin: '0 auto',
             padding: '40px 44px 0',
           }}
         >
           <img
-            src="/figma-assets/9-36.webp"
-            alt="copyright"
-            style={{ width: '23px', height: '23px' }}
+            src="/figma-assets/figma-copyright.png"
+            alt="©"
+            style={{ width: '23px', height: '23px', filter: 'invert(1)' }}
           />
           <span
             style={{
-              fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
+              fontFamily: BASE_FONT,
               fontWeight: 400,
               fontSize: '24px',
               color: '#e6e6e6',
             }}
           >
-            {' '}2026 OLEBOY. All Rights Reserved.
+            2026 OLEBOY. All Rights Reserved.
           </span>
         </div>
       </footer>
-
     </div>
   );
 }
