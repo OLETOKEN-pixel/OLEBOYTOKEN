@@ -51,14 +51,14 @@
   font-style: oblique;
   font-weight: 900;
   font-display: swap;
-  src: url('https://fonts.cdnfonts.com/s/109659/BaseNeue-ExpandedBlackOblique.woff') format('woff');
+  src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff');
 }
 @font-face {
   font-family: 'Base Neue Expanded';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('https://fonts.cdnfonts.com/s/109659/BaseNeue-ExpandedBold.woff') format('woff');
+  src: url('/fonts/BaseNeue-ExpandedBold.woff') format('woff');
 }
 
 @tailwind base;

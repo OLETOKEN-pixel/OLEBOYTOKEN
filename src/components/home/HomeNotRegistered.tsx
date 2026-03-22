@@ -270,34 +270,45 @@ export function HomeNotRegistered() {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* Spaccato title decoration — aligned to 16% base to sync outline with title */}
+        {/* Spaccato title decoration — triangles only */}
         <div style={{ position: 'absolute', left: 'calc(16% - 68px)', top: '157px', width: '843px', height: '207.862px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_2} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
-        {/* RANK UP! title */}
-        <p
+        {/* RANK UP! title + outline wrapper */}
+        <div
           style={{
             position: 'absolute',
-            left: 'calc(16% + 289.3px)',
-            transform: 'translateX(-50%)',
+            left: '16%',
             top: '228.89px',
-            width: '583px',
-            fontFamily: FE,
-            fontWeight: 900,
-            fontStyle: 'oblique',
-            fontSize: 0,
-            lineHeight: 0,
-            color: '#ffffff',
-            whiteSpace: 'nowrap',
-            margin: 0,
-            textAlign: 'center',
             zIndex: 2,
           }}
         >
-          <span style={{ fontSize: '96px', lineHeight: 'normal' }}>RANK UP</span>
-          <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
-        </p>
+          <p
+            style={{
+              fontFamily: FE,
+              fontWeight: 900,
+              fontStyle: 'oblique',
+              fontSize: 0,
+              lineHeight: 0,
+              color: '#ffffff',
+              whiteSpace: 'nowrap',
+              margin: 0,
+            }}
+          >
+            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>RANK UP!</span>
+          </p>
+          {/* Pink outline — matches text width exactly */}
+          <div
+            style={{
+              width: '100%',
+              height: '17.75px',
+              marginTop: '8px',
+              background: '#FF1654',
+              clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+            }}
+          />
+        </div>
 
         {/* Star shape — decorative */}
         <div
@@ -389,48 +400,40 @@ export function HomeNotRegistered() {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* JOIN THE ARENA! title */}
-        <p
-          style={{
-            position: 'absolute',
-            left: 'calc(28% + 1088.4px)',
-            transform: 'translateX(-100%)',
-            top: '203px',
-            fontFamily: FE,
-            fontWeight: 900,
-            fontStyle: 'oblique',
-            fontSize: 0,
-            lineHeight: 0,
-            color: '#ffffff',
-            whiteSpace: 'nowrap',
-            margin: 0,
-            textAlign: 'right',
-            zIndex: 2,
-          }}
-        >
-          <span style={{ fontSize: '96px', lineHeight: 'normal' }}>JOIN THE ARENA</span>
-          <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
-        </p>
-
-        {/* Outline decoration — aligned to title left edge */}
+        {/* JOIN THE ARENA! title + outline wrapper — right-aligned */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(28% + 18.4px)',
-            top: '319.71px',
-            width: '1427px',
-            height: '25.5px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
+            right: 'calc(100% - 84%)',
+            top: '203px',
+            zIndex: 2,
           }}
         >
-          <div style={{ transform: 'scaleY(-1) rotate(89.8deg)', flexShrink: 0, height: '1427px', width: '20.499px', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: '6.7%', right: '6.7%', bottom: '25%' }}>
-              <img src={A_OUTLINE_S3} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
-            </div>
-          </div>
+          <p
+            style={{
+              fontFamily: FE,
+              fontWeight: 900,
+              fontStyle: 'oblique',
+              fontSize: 0,
+              lineHeight: 0,
+              color: '#ffffff',
+              whiteSpace: 'nowrap',
+              margin: 0,
+              textAlign: 'right',
+            }}
+          >
+            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>JOIN THE ARENA!</span>
+          </p>
+          {/* Pink outline — matches text width exactly */}
+          <div
+            style={{
+              width: '100%',
+              height: '17.75px',
+              marginTop: '13px',
+              background: '#FF1654',
+              clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+            }}
+          />
         </div>
 
         {/* Star decoration */}
@@ -536,33 +539,45 @@ export function HomeNotRegistered() {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* Spaccato title decoration — aligned to 16% base to sync outline with title */}
+        {/* Spaccato title decoration — triangles only */}
         <div style={{ position: 'absolute', left: 'calc(16% - 66px)', top: '157px', width: '1299px', height: '207.861px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
-        {/* GET REWARDS! title */}
-        <p
+        {/* GET REWARDS! title + outline wrapper */}
+        <div
           style={{
             position: 'absolute',
-            left: 'calc(16% + 461.3px)',
-            transform: 'translateX(-50%)',
+            left: '16%',
             top: '228px',
-            fontFamily: FE,
-            fontWeight: 900,
-            fontStyle: 'oblique',
-            fontSize: 0,
-            lineHeight: 0,
-            color: '#ffffff',
-            whiteSpace: 'nowrap',
-            margin: 0,
-            textAlign: 'center',
             zIndex: 2,
           }}
         >
-          <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS</span>
-          <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
-        </p>
+          <p
+            style={{
+              fontFamily: FE,
+              fontWeight: 900,
+              fontStyle: 'oblique',
+              fontSize: 0,
+              lineHeight: 0,
+              color: '#ffffff',
+              whiteSpace: 'nowrap',
+              margin: 0,
+            }}
+          >
+            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS!</span>
+          </p>
+          {/* Pink outline — matches text width exactly */}
+          <div
+            style={{
+              width: '100%',
+              height: '17.75px',
+              marginTop: '8px',
+              background: '#FF1654',
+              clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+            }}
+          />
+        </div>
 
         {/* Vector 19 — decorative star shape */}
         <div
