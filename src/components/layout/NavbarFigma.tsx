@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
@@ -14,6 +15,9 @@ const A_ELLIPSE = '/figma-assets/figma-ellipse.svg';
 const A_DS_NAV  = '/figma-assets/figma-ds-icon-nav.png';
 
 export function NavbarFigma() {
+  const { profile } = useAuth();
+  const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
+
   return (
     <nav
       style={{
@@ -200,6 +204,22 @@ export function NavbarFigma() {
             }}
           />
         </a>
+
+        {/* Discord PFP — shown when logged in */}
+        {avatarUrl && (
+          <img
+            src={avatarUrl}
+            alt="Profile"
+            style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid rgba(255,22,84,0.6)',
+              flexShrink: 0,
+            }}
+          />
+        )}
       </div>
     </nav>
   );

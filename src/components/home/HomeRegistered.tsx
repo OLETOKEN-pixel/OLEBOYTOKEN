@@ -10,7 +10,6 @@ import { useCallback } from 'react';
 
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON = '/figma-assets/figma-neon.png';
-const A_ZAPS = '/figma-assets/figma-zaps.svg';
 const A_GUIDE = '/figma-assets/figma-guide.svg';
 const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
 const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
@@ -71,7 +70,7 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           <img src={A_NEON} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
-        {/* ZAPS — lightning bolts overlay */}
+        {/* ZAPS — 2 lightning bolts only (LB left-bottom, RT right-top) */}
         <div
           aria-hidden="true"
           style={{
@@ -84,7 +83,16 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
             zIndex: 2,
           }}
         >
-          <img src={A_ZAPS} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          <svg
+            viewBox="0 0 2288.42 1373.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          >
+            <path d="M317.78 1162.75L103.273 1322.33L8.98886 1220.33L138.149 1133.86L182.208 1161.81L104.995 1078.27L545.918 875.212L279.561 1100.15L244.428 1083.39L317.78 1162.75Z" fill="#FF1654"/>
+            <path d="M1973.05 196.038L2152.46 42.0506L2242.11 125.883L2133.48 210.131L2092.82 188.315L2166.23 256.969L1789.62 463.501L2010.72 248.726L2042.79 261.259L1973.05 196.038Z" fill="#FF1654"/>
+          </svg>
         </div>
 
         {/* BOTTOM NEON — at bottom of hero, flipped */}
@@ -125,7 +133,7 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
         <div
           style={{
             position: 'absolute',
-            left: 'calc(16% - 2.2px)',
+            left: 'calc(12% - 7.4px)',
             top: '191px',
             zIndex: 4,
           }}
@@ -139,7 +147,18 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
               color: '#ffffff',
             }}
           >
-            {'Welcome, '}
+            Welcome
+          </span>
+          <span
+            style={{
+              fontFamily: FE,
+              fontWeight: 900,
+              fontSize: '64px',
+              lineHeight: 'normal',
+              color: '#ffffff',
+            }}
+          >
+            {', '}
           </span>
           <span
             style={{
@@ -155,16 +174,17 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           </span>
         </div>
 
-        {/* Welcome outline — pink gradient line */}
+        {/* Welcome outline — tapered triangle line matching Figma */}
         <div
           aria-hidden="true"
           style={{
             position: 'absolute',
             left: 'calc(12% - 10.4px)',
-            top: '260px',
+            top: '257px',
             width: '845px',
-            height: '4px',
-            background: 'linear-gradient(90deg, #ff1654 0%, #ff1654 60%, transparent 100%)',
+            height: '16.5px',
+            background: '#ff1654',
+            clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
             zIndex: 4,
           }}
         />
