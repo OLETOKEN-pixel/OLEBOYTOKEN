@@ -270,7 +270,7 @@ export function HomeNotRegistered() {
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
         {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '44.1%', height: '207.862px', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: '226px', top: '157px', width: '846.854px', height: '207.862px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_2} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -278,8 +278,7 @@ export function HomeNotRegistered() {
         <p
           style={{
             position: 'absolute',
-            left: 'calc(16% + 289.3px)',
-            transform: 'translateX(-50%)',
+            left: '305px',
             top: '228.89px',
             fontFamily: F,
             fontWeight: 900,
@@ -289,7 +288,6 @@ export function HomeNotRegistered() {
             color: '#ffffff',
             whiteSpace: 'nowrap',
             margin: 0,
-            textAlign: 'center',
             zIndex: 2,
           }}
         >
@@ -387,11 +385,11 @@ export function HomeNotRegistered() {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* JOIN THE ARENA! title — right-aligned */}
+        {/* JOIN THE ARENA! title */}
         <p
           style={{
             position: 'absolute',
-            right: 'calc(100% - 28% - 1088.4px)',
+            left: '556px',
             top: '203px',
             fontFamily: F,
             fontWeight: 900,
@@ -401,7 +399,6 @@ export function HomeNotRegistered() {
             color: '#ffffff',
             whiteSpace: 'nowrap',
             margin: 0,
-            textAlign: 'right',
             zIndex: 2,
           }}
         >
@@ -520,7 +517,7 @@ export function HomeNotRegistered() {
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
         {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '68.8%', height: '207.861px', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: '226px', top: '157px', width: '1321.928px', height: '207.861px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -528,8 +525,7 @@ export function HomeNotRegistered() {
         <p
           style={{
             position: 'absolute',
-            left: 'calc(16% + 461.3px)',
-            transform: 'translateX(-50%)',
+            left: '306px',
             top: '228px',
             fontFamily: F,
             fontWeight: 900,
@@ -539,7 +535,6 @@ export function HomeNotRegistered() {
             color: '#ffffff',
             whiteSpace: 'nowrap',
             margin: 0,
-            textAlign: 'center',
             zIndex: 2,
           }}
         >
