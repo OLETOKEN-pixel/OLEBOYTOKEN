@@ -278,9 +278,7 @@ export function HomeNotRegistered() {
               padding: 0,
             }}
           >
-            <svg width="16" height="21" viewBox="0 0 16 21" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M14 2L4 10.5L14 19" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <img src="/figma-assets/figma-arrow-stroke.svg" alt="" aria-hidden style={{ width: '16.312px', height: '21.071px', flexShrink: 0 }} />
             <span
               style={{
                 fontFamily: F,
@@ -293,9 +291,7 @@ export function HomeNotRegistered() {
             >
               Know More
             </span>
-            <svg width="16" height="21" viewBox="0 0 16 21" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M2 2L12 10.5L2 19" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <img src="/figma-assets/figma-arrow-stroke1.svg" alt="" aria-hidden style={{ width: '15.653px', height: '21.071px', flexShrink: 0 }} />
           </button>
         </div>
       </section>
