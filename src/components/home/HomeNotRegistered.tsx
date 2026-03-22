@@ -46,52 +46,9 @@ const SECTION_BG = 'radial-gradient(ellipse at 50% 40%, #1a0a0a 0%, #0f0404 50%,
 // ─── Section scroll IDs ─────────────────────────────────────────────────────
 const IDS = ['s-hero', 's-rank', 's-arena', 's-rewards', 's-footer'];
 
-// ─── Arrow Button Component ─────────────────────────────────────────────────
-function ArrowButton({ direction, onClick }: { direction: 'up' | 'down'; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: '55px',
-        height: '55px',
-        borderRadius: '50%',
-        border: '2px solid rgba(255, 22, 84, 0.6)',
-        background: 'rgba(255, 22, 84, 0.15)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.2s ease',
-        backdropFilter: 'blur(4px)',
-        padding: 0,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(255, 22, 84, 0.35)';
-        e.currentTarget.style.borderColor = '#ff1654';
-        e.currentTarget.style.transform = 'scale(1.1)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255, 22, 84, 0.15)';
-        e.currentTarget.style.borderColor = 'rgba(255, 22, 84, 0.6)';
-        e.currentTarget.style.transform = 'scale(1)';
-      }}
-    >
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#ff1654"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ transform: direction === 'up' ? 'rotate(180deg)' : 'none' }}
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </button>
-  );
-}
+// ─── Asset URLs for navigation arrows ────────────────────────────────────────
+const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
+const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
 
 export function HomeNotRegistered() {
   const handleSignUp = useCallback(async () => {
@@ -405,8 +362,12 @@ export function HomeNotRegistered() {
 
         {/* Navigation arrows */}
         <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '842px', display: 'flex', gap: '20px', zIndex: 5 }}>
-          <ArrowButton direction="up" onClick={() => scrollTo(0)} />
-          <ArrowButton direction="down" onClick={() => scrollTo(2)} />
+          <button onClick={() => scrollTo(0)} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, width: '63.107px', height: '63.107px' }}>
+            <img src={A_BW_ARROW} alt="Previous section" style={{ width: '100%', height: '100%' }} />
+          </button>
+          <button onClick={() => scrollTo(2)} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, width: '63.107px', height: '63.107px' }}>
+            <img src={A_FW_ARROW} alt="Next section" style={{ width: '100%', height: '100%' }} />
+          </button>
         </div>
       </section>
 
@@ -548,8 +509,12 @@ export function HomeNotRegistered() {
 
         {/* Navigation arrows */}
         <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '842px', display: 'flex', gap: '20px', zIndex: 5 }}>
-          <ArrowButton direction="up" onClick={() => scrollTo(1)} />
-          <ArrowButton direction="down" onClick={() => scrollTo(3)} />
+          <button onClick={() => scrollTo(1)} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, width: '63.107px', height: '63.107px' }}>
+            <img src={A_BW_ARROW} alt="Previous section" style={{ width: '100%', height: '100%' }} />
+          </button>
+          <button onClick={() => scrollTo(3)} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, width: '63.107px', height: '63.107px' }}>
+            <img src={A_FW_ARROW} alt="Next section" style={{ width: '100%', height: '100%' }} />
+          </button>
         </div>
       </section>
 
@@ -663,8 +628,12 @@ export function HomeNotRegistered() {
 
         {/* Navigation arrows */}
         <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '842px', display: 'flex', gap: '20px', zIndex: 5 }}>
-          <ArrowButton direction="up" onClick={() => scrollTo(2)} />
-          <ArrowButton direction="down" onClick={() => scrollTo(4)} />
+          <button onClick={() => scrollTo(2)} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, width: '63.107px', height: '63.107px' }}>
+            <img src={A_BW_ARROW} alt="Previous section" style={{ width: '100%', height: '100%' }} />
+          </button>
+          <button onClick={() => scrollTo(4)} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, width: '63.107px', height: '63.107px' }}>
+            <img src={A_FW_ARROW} alt="Next section" style={{ width: '100%', height: '100%' }} />
+          </button>
         </div>
       </section>
 
