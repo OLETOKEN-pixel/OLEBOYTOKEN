@@ -270,7 +270,7 @@ export function HomeNotRegistered() {
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
         {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: '226px', top: '157px', width: '846.854px', height: '207.862px', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '846.854px', height: '207.862px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_2} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -278,8 +278,10 @@ export function HomeNotRegistered() {
         <p
           style={{
             position: 'absolute',
-            left: '305px',
+            left: 'calc(16% + 289.3px)',
+            transform: 'translateX(-50%)',
             top: '228.89px',
+            width: '583px',
             fontFamily: F,
             fontWeight: 900,
             fontStyle: 'italic',
@@ -288,6 +290,7 @@ export function HomeNotRegistered() {
             color: '#ffffff',
             whiteSpace: 'nowrap',
             margin: 0,
+            textAlign: 'center',
             zIndex: 2,
           }}
         >
@@ -389,7 +392,8 @@ export function HomeNotRegistered() {
         <p
           style={{
             position: 'absolute',
-            left: '556px',
+            left: 'calc(28% + 1088.4px)',
+            transform: 'translateX(-100%)',
             top: '203px',
             fontFamily: F,
             fontWeight: 900,
@@ -399,6 +403,7 @@ export function HomeNotRegistered() {
             color: '#ffffff',
             whiteSpace: 'nowrap',
             margin: 0,
+            textAlign: 'right',
             zIndex: 2,
           }}
         >
@@ -407,9 +412,23 @@ export function HomeNotRegistered() {
         </p>
 
         {/* Outline decoration */}
-        <div style={{ position: 'absolute', left: '558px', top: '324.73px', width: '1436.682px', height: '25.522px', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', top: 0, left: '6.7%', right: '6.7%', bottom: '25%' }}>
-            <img src={A_OUTLINE_S3} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(28% + 20.4px)',
+            top: '319.71px',
+            width: '1436.682px',
+            height: '25.522px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{ transform: 'scaleY(-1) rotate(89.8deg)', flexShrink: 0, height: '1436.62px', width: '20.499px', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: '6.7%', right: '6.7%', bottom: '25%' }}>
+              <img src={A_OUTLINE_S3} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
+            </div>
           </div>
         </div>
 
@@ -517,7 +536,7 @@ export function HomeNotRegistered() {
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
         {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: '226px', top: '157px', width: '1321.928px', height: '207.861px', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '1321.928px', height: '207.861px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -525,7 +544,8 @@ export function HomeNotRegistered() {
         <p
           style={{
             position: 'absolute',
-            left: '306px',
+            left: 'calc(16% + 461.3px)',
+            transform: 'translateX(-50%)',
             top: '228px',
             fontFamily: F,
             fontWeight: 900,
@@ -535,6 +555,7 @@ export function HomeNotRegistered() {
             color: '#ffffff',
             whiteSpace: 'nowrap',
             margin: 0,
+            textAlign: 'center',
             zIndex: 2,
           }}
         >
