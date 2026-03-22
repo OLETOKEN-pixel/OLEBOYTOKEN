@@ -270,8 +270,8 @@ export function HomeNotRegistered() {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '846.854px', height: '207.862px', pointerEvents: 'none' }}>
+        {/* Spaccato title decoration — aligned to 16% base to sync outline with title */}
+        <div style={{ position: 'absolute', left: 'calc(16% - 68px)', top: '157px', width: '843px', height: '207.862px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_2} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -412,21 +412,21 @@ export function HomeNotRegistered() {
           <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
         </p>
 
-        {/* Outline decoration */}
+        {/* Outline decoration — aligned to title left edge */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(28% + 20.4px)',
+            left: 'calc(28% + 18.4px)',
             top: '319.71px',
-            width: '1436.682px',
-            height: '25.522px',
+            width: '1427px',
+            height: '25.5px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             pointerEvents: 'none',
           }}
         >
-          <div style={{ transform: 'scaleY(-1) rotate(89.8deg)', flexShrink: 0, height: '1436.62px', width: '20.499px', position: 'relative' }}>
+          <div style={{ transform: 'scaleY(-1) rotate(89.8deg)', flexShrink: 0, height: '1427px', width: '20.499px', position: 'relative' }}>
             <div style={{ position: 'absolute', top: 0, left: '6.7%', right: '6.7%', bottom: '25%' }}>
               <img src={A_OUTLINE_S3} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
             </div>
@@ -536,8 +536,8 @@ export function HomeNotRegistered() {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '1321.928px', height: '207.861px', pointerEvents: 'none' }}>
+        {/* Spaccato title decoration — aligned to 16% base to sync outline with title */}
+        <div style={{ position: 'absolute', left: 'calc(16% - 66px)', top: '157px', width: '1299px', height: '207.861px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
