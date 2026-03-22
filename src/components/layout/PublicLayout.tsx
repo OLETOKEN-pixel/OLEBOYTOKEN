@@ -1,15 +1,19 @@
 import { ReactNode } from 'react';
 import { NavbarFigma } from './NavbarFigma';
+import { NavbarFigmaLoggedIn } from './NavbarFigmaLoggedIn';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PublicLayoutProps {
   children: ReactNode;
 }
 
 /**
- * Layout for public pages (not logged in users).
- * Uses the Figma navbar design with dark background.
+ * Layout for public/home pages.
+ * Renders the public navbar for guests and the logged-in navbar for authenticated users.
  */
 export function PublicLayout({ children }: PublicLayoutProps) {
+  const { user } = useAuth();
+
   return (
     <div
       style={{
@@ -19,7 +23,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         fontFamily: "'Base Neue Trial', 'Base Neue', sans-serif",
       }}
     >
-      <NavbarFigma />
+      {user ? <NavbarFigmaLoggedIn /> : <NavbarFigma />}
       <main style={{ width: '100%' }}>
         {children}
       </main>
