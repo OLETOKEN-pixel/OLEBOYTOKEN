@@ -26,7 +26,6 @@ const A_SPAC_BOTTOM   = '/figma-assets/figma-spaccato-bottom.svg';
 const A_ANIMATION     = '/figma-assets/figma-animation.svg';
 const A_STAR_SHAPE    = '/figma-assets/figma-star-shape.svg';
 const A_SPAC_TITLE_2  = '/figma-assets/figma-spaccato-title-s2.svg';
-const A_OUTLINE_S2    = '/figma-assets/figma-outline-s2.svg';
 // Section 3 - JOIN THE ARENA
 const A_ANIMATION_S3  = '/figma-assets/figma-animation-s3.svg';
 const A_SPAC_BOTTOM_S3= '/figma-assets/figma-spaccato-bottom-s3.svg';
@@ -35,7 +34,6 @@ const A_OUTLINE_S3    = '/figma-assets/figma-outline-s3.svg';
 // Section 4 - GET REWARDS
 const A_VECTOR19      = '/figma-assets/figma-vector19.svg';
 const A_SPAC_TITLE_4  = '/figma-assets/figma-spaccato-title-s4.svg';
-const A_OUTLINE_S4    = '/figma-assets/figma-outline-s4.svg';
 // Footer
 const A_COPYRIGHT     = '/figma-assets/figma-copyright.png';
 
@@ -299,13 +297,6 @@ export function HomeNotRegistered() {
           <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
         </p>
 
-        {/* Outline decoration */}
-        <div style={{ position: 'absolute', left: '292px', top: '344.36px', width: '780.854px', height: '23.229px', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', top: 0, left: '6.7%', right: '6.7%', bottom: '25%' }}>
-            <img src={A_OUTLINE_S2} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
-          </div>
-        </div>
-
         {/* Star shape — decorative */}
         <div
           style={{
@@ -555,13 +546,6 @@ export function HomeNotRegistered() {
           <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS</span>
           <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
         </p>
-
-        {/* Outline decoration */}
-        <div style={{ position: 'absolute', left: '292px', top: '344.36px', width: '1255.928px', height: '24.890px', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', top: 0, left: '6.7%', right: '6.7%', bottom: '25%' }}>
-            <img src={A_OUTLINE_S4} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
-          </div>
-        </div>
 
         {/* Vector 19 — decorative star shape */}
         <div
