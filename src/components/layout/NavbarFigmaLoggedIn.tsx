@@ -9,16 +9,19 @@
 
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import coinIcon from '@/assets/coin-icon.png';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 const FE = "'Base Neue Expanded', 'Base Neue Trial', 'Base Neue', sans-serif";
 
 const A_LOGO = '/figma-assets/figma-logo.svg';
+// Figma assets for the right section
+const A_COIN_CIRCLE = '/figma-assets/b263e5b69c85b19df9c41aec85aebe9fb9be1de4.svg';
+const A_RECHARGE_CIRCLE = '/figma-assets/ed0e9082258c15c22aceda00bea77820256739f9.svg';
+const A_SEP = '/figma-assets/c8d970b53fe56a074ba321c6a2ea0bc1e6b8d1d7.svg';
 
 const linkStyle: React.CSSProperties = {
-  fontFamily: FE,
-  fontWeight: 700,
+  fontFamily: F,
+  fontWeight: 400,
   fontSize: '24px',
   lineHeight: 'normal',
   color: '#ffffff',
@@ -85,7 +88,6 @@ export function NavbarFigmaLoggedIn() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0',
           background: 'rgba(255, 22, 84, 0.2)',
           borderRadius: '23px',
           height: '50px',
@@ -96,9 +98,10 @@ export function NavbarFigmaLoggedIn() {
         {/* Coins */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <img
-            src={coinIcon}
-            alt="coins"
-            style={{ width: '29px', height: '29px', borderRadius: '50%', objectFit: 'contain' }}
+            src={A_COIN_CIRCLE}
+            alt=""
+            aria-hidden
+            style={{ width: '29px', height: '29px' }}
           />
           <span
             style={{
@@ -114,46 +117,44 @@ export function NavbarFigmaLoggedIn() {
           </span>
         </div>
 
-        {/* Recharge "+" */}
+        {/* Recharge "+" — Figma ellipse asset with "+" overlay */}
         <button
           style={{
             marginLeft: '8px',
             width: '16px',
             height: '16px',
-            borderRadius: '50%',
-            background: '#ff1654',
+            position: 'relative',
+            background: 'none',
             border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             cursor: 'pointer',
             padding: 0,
             flexShrink: 0,
           }}
         >
+          <img
+            src={A_RECHARGE_CIRCLE}
+            alt=""
+            aria-hidden
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          />
           <span
             style={{
+              position: 'relative',
               fontFamily: F,
-              fontSize: '14px',
+              fontWeight: 400,
+              fontSize: '16px',
               lineHeight: 1,
               color: '#ffffff',
-              fontWeight: 400,
             }}
           >
             +
           </span>
         </button>
 
-        {/* Separator */}
-        <div
-          style={{
-            width: '1px',
-            height: '30px',
-            background: 'rgba(255, 255, 255, 0.2)',
-            margin: '0 12px',
-            flexShrink: 0,
-          }}
-        />
+        {/* Separator — Figma SVG asset */}
+        <div style={{ width: '0.5px', height: '30px', margin: '0 12px', flexShrink: 0 }}>
+          <img src={A_SEP} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
+        </div>
 
         {/* LVL */}
         <span
