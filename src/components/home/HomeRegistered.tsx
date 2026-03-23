@@ -70,35 +70,20 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           <img src={A_NEON} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
-        {/* LB ZAP — left-bottom lightning bolt */}
+        {/* ZAPS — LB + RT combined, natural size, clipped by section overflow */}
         <div
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '47.72px',
-            top: '466px',
-            width: '419.58px',
-            height: '508.17px',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
             pointerEvents: 'none',
             zIndex: 2,
           }}
         >
-          <img src="/figma-assets/48461c941a4e1c7068134ed6b58d772c8aae7e21.svg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-        </div>
-        {/* RT ZAP — right-top lightning bolt */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            right: '-24.18px',
-            top: '-60px',
-            width: '263.50px',
-            height: '341.43px',
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}
-        >
-          <img src="/figma-assets/a523569ed50c70e859b5db4acd159922194e995f.svg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          <img src="/figma-assets/figma-zaps-logged.svg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
         {/* BOTTOM NEON — at bottom of hero, flipped */}
