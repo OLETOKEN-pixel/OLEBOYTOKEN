@@ -295,16 +295,27 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
         {/* Background guide SVG */}
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-        {/* Spaccato title decoration */}
-        <div style={{ position: 'absolute', left: 'calc(16% - 68px)', top: '143px', width: '1263px', height: '207px', pointerEvents: 'none' }}>
-          <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-        </div>
+        {/* Triangles decoration — Figma 84-244: 137.85x206.77px at left:226px, top:143px */}
+        <img
+          src="/figma-assets/84-244.svg"
+          alt=""
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '226px',
+            top: '143px',
+            width: '137.85px',
+            height: '206.77px',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
 
-        {/* LIVE MATCHES title */}
+        {/* LIVE MATCHES title — Figma: left:305px (226+79), top:229px (143+86) */}
         <p
           style={{
             position: 'absolute',
-            left: 'calc(16% - 2.2px)',
+            left: '305px',
             top: '229px',
             fontFamily: FE,
             fontWeight: 900,
@@ -320,103 +331,124 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           LIVE MATCHES
         </p>
 
-        {/* Star shape — decorative */}
+        {/* Outline (red tapered line) — Figma 84-243: at left:292px, top:325px, width:1196.84px */}
+        <img
+          src="/figma-assets/84-243.svg"
+          alt=""
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '292px',
+            top: '325px',
+            width: '1196.84px',
+            height: '24.68px',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
+
+        {/* Star shape — decorative — Figma 84-170: 866.42x596.41px at left:931px, top:269px, rotate -15.44deg */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(48% + 9.4px)',
+            left: '931px',
             top: '269px',
-            width: '866.424px',
-            height: '596.408px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: '866.42px',
+            height: '596.41px',
             pointerEvents: 'none',
+            zIndex: 1,
           }}
         >
-          <div style={{ transform: 'rotate(-15.44deg)', flexShrink: 0 }}>
-            <img src={A_STAR_SHAPE} alt="" aria-hidden style={{ display: 'block', width: '788.09px', height: '401.031px' }} />
-          </div>
+          <img
+            src="/figma-assets/84-170.svg"
+            alt=""
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              transform: 'rotate(-15.44deg)',
+              transformOrigin: 'top left',
+            }}
+          />
         </div>
 
-        {/* ─── Match Card 1 (bigger, left) ─── */}
+        {/* ─── Match Card 1 (bigger, left) — Figma 84-210: 300x400px at left:229px, top:367px ─── */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(12% - 1.4px)',
+            left: '229px',
             top: '367px',
             width: '300px',
             height: '400px',
-            background: '#282828',
+            background: '#272727',
             border: '1px solid #ff1654',
             borderRadius: '12px',
             zIndex: 3,
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '20px',
-            boxSizing: 'border-box',
+            overflow: 'hidden',
           }}
         >
-          {/* Header */}
-          <p style={{ fontFamily: FE, fontWeight: 900, fontSize: '32px', color: '#ffffff', margin: 0, textAlign: 'center' }}>
-            BUILD FIGHT
-          </p>
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.15)', margin: '12px 0' }} />
-
-          {/* First to */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
-            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '20px', color: 'rgba(255,255,255,0.6)' }}>First to</span>
-            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '30px', color: '#ffffff' }}>5+2</span>
+          {/* Header — "BUILD FIGHT" at left:22px inside, 32px black */}
+          <div style={{ position: 'absolute', left: '20px', top: '25px', width: '259px' }}>
+            <p style={{ fontFamily: F, fontWeight: 900, fontSize: '32px', color: '#ffffff', margin: 0 }}>
+              BUILD FIGHT
+            </p>
+            {/* Separator line — Figma 84-240: 259px */}
+            <img src="/figma-assets/84-240.svg" alt="" aria-hidden style={{ display: 'block', width: '259px', marginTop: '12px' }} />
           </div>
 
-          {/* Platform */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
-            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '20px', color: 'rgba(255,255,255,0.6)' }}>Platform</span>
-            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '24px', color: '#ffffff' }}>PS5</span>
-          </div>
-
-          {/* Entry fee / Prize */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Entry fee</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'linear-gradient(135deg, #ffb800, #ff8c00)' }} />
-                <span style={{ fontFamily: F, fontWeight: 700, fontSize: '20px', color: '#ffffff' }}>0.75</span>
-              </div>
-            </div>
-            <span style={{ fontFamily: F, fontSize: '20px', color: 'rgba(255,255,255,0.4)' }}>|</span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Prize</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'linear-gradient(135deg, #ffb800, #ff8c00)' }} />
-                <span style={{ fontFamily: F, fontWeight: 700, fontSize: '20px', color: '#ffffff' }}>1.40</span>
-              </div>
+          {/* First to — left:38px, top:107px */}
+          <div style={{ position: 'absolute', left: '38px', top: '107px' }}>
+            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '20px', color: '#ffffff', display: 'block' }}>First to</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px' }}>
+              <img src="/figma-assets/84-233.svg" alt="" aria-hidden style={{ width: '19px', height: '28.5px' }} />
+              <span style={{ fontFamily: F, fontWeight: 700, fontSize: '30px', color: '#ffffff' }}>5+2</span>
             </div>
           </div>
 
-          {/* Expires in */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
-            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '16px', color: 'rgba(255,255,255,0.6)' }}>Expires in</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <circle cx="8" cy="8" r="7" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
-              <line x1="8" y1="4" x2="8" y2="8.5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="8" y1="8" x2="11" y2="10" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '16px', color: '#ffffff' }}>23:00</span>
+          {/* Platform — left:170px, top:107px */}
+          <div style={{ position: 'absolute', left: '170px', top: '107px' }}>
+            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '20px', color: '#ffffff', display: 'block' }}>Platform</span>
+            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '24px', color: '#ffffff', display: 'block', marginTop: '7px' }}>PS5</span>
           </div>
 
-          {/* Accept token button */}
+          {/* Money row — Figma 84-219: 224x55px at left:38px, top:187px */}
+          <img
+            src="/figma-assets/84-219.svg"
+            alt="Entry fee and Prize"
+            style={{
+              position: 'absolute',
+              left: '38px',
+              top: '187px',
+              width: '224px',
+              height: '55px',
+            }}
+          />
+
+          {/* Expires in — left:38px, top:261px */}
+          <div style={{ position: 'absolute', left: '38px', top: '261px' }}>
+            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '20px', color: '#ffffff', display: 'block' }}>Expires in</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px' }}>
+              <div style={{ width: '19px', height: '19px', borderRadius: '50%', background: '#ff1654', flexShrink: 0 }} />
+              <span style={{ fontFamily: F, fontWeight: 900, fontSize: '24px', color: '#ffffff' }}>23:00</span>
+            </div>
+          </div>
+
+          {/* Accept token button — Figma: 247x44px at left:27px, top:340px */}
           <button
             style={{
-              marginTop: 'auto',
-              width: '100%',
+              position: 'absolute',
+              left: '27px',
+              top: '340px',
+              width: '247px',
               height: '44px',
               background: '#ff1654',
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
               fontFamily: F,
-              fontWeight: 700,
+              fontWeight: 900,
               fontSize: '20px',
               color: '#ffffff',
             }}
@@ -425,100 +457,105 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           </button>
         </div>
 
-        {/* ─── Match Card 2 (smaller, right) ─── */}
+        {/* ─── Match Card 2 (smaller, blurred) — Figma 84-178: 233.48x311.30px at left:621px, top:456px ─── */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(32% + 6.6px)',
+            left: '621px',
             top: '456px',
-            width: '233px',
-            height: '311px',
-            background: '#282828',
-            border: '1px solid #ff1654',
-            borderRadius: '12px',
+            width: '233.48px',
+            height: '311.30px',
             zIndex: 3,
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '16px',
-            boxSizing: 'border-box',
+            filter: 'blur(1.35px)',
+            boxShadow: 'inset 0px -319px 4px 0px rgba(0,0,0,0.25)',
           }}
         >
-          {/* Header */}
-          <p style={{ fontFamily: FE, fontWeight: 900, fontSize: '25px', color: '#ffffff', margin: 0, textAlign: 'center' }}>
-            REALISTIC 1V1
-          </p>
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.15)', margin: '10px 0' }} />
-
-          {/* First to */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '16px', color: 'rgba(255,255,255,0.6)' }}>First to</span>
-            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '23px', color: '#ffffff' }}>5+2</span>
-          </div>
-
-          {/* Platform */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
-            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '16px', color: 'rgba(255,255,255,0.6)' }}>Platform</span>
-            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '19px', color: '#ffffff' }}>PS5</span>
-          </div>
-
-          {/* Entry fee / Prize */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>Entry fee</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: 'linear-gradient(135deg, #ffb800, #ff8c00)' }} />
-                <span style={{ fontFamily: F, fontWeight: 700, fontSize: '16px', color: '#ffffff' }}>0.75</span>
-              </div>
-            </div>
-            <span style={{ fontFamily: F, fontSize: '16px', color: 'rgba(255,255,255,0.4)' }}>|</span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>Prize</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: 'linear-gradient(135deg, #ffb800, #ff8c00)' }} />
-                <span style={{ fontFamily: F, fontWeight: 700, fontSize: '16px', color: '#ffffff' }}>1.40</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Expires in */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '12px' }}>
-            <span style={{ fontFamily: F, fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>Expires in</span>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <circle cx="8" cy="8" r="7" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
-              <line x1="8" y1="4" x2="8" y2="8.5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="8" y1="8" x2="11" y2="10" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span style={{ fontFamily: F, fontWeight: 700, fontSize: '13px', color: '#ffffff' }}>23:00</span>
-          </div>
-
-          {/* Accept token button */}
-          <button
+          <div
             style={{
-              marginTop: 'auto',
-              width: '100%',
-              height: '34px',
-              background: '#ff1654',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontFamily: F,
-              fontWeight: 700,
-              fontSize: '16px',
-              color: '#ffffff',
+              position: 'absolute',
+              inset: 0,
+              background: '#272727',
+              borderRadius: '9.34px',
+              border: '0.78px solid #ff1654',
+              overflow: 'hidden',
             }}
           >
-            Accept token
-          </button>
+            {/* Header — "REALISTIC 1V1" */}
+            <div style={{ position: 'absolute', left: '13px', top: '18px', width: '207px' }}>
+              <p style={{ fontFamily: F, fontWeight: 900, fontSize: '24.9px', color: '#ffffff', margin: 0 }}>
+                REALISTIC 1V1
+              </p>
+              {/* Separator line — Figma 84-208 */}
+              <img src="/figma-assets/84-208.svg" alt="" aria-hidden style={{ display: 'block', width: '201.57px', marginTop: '8px' }} />
+            </div>
+
+            {/* First to — left:29.57px, top:83.27px */}
+            <div style={{ position: 'absolute', left: '29.57px', top: '83.27px' }}>
+              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#ffffff', display: 'block' }}>First to</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '3px' }}>
+                <img src="/figma-assets/84-201.svg" alt="" aria-hidden style={{ width: '14.79px', height: '22.18px' }} />
+                <span style={{ fontFamily: F, fontWeight: 700, fontSize: '24px', color: '#ffffff' }}>5+2</span>
+              </div>
+            </div>
+
+            {/* Platform — left:132.30px, top:83.27px */}
+            <div style={{ position: 'absolute', left: '132.30px', top: '83.27px' }}>
+              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#ffffff', display: 'block' }}>Platform</span>
+              <span style={{ fontFamily: F, fontWeight: 700, fontSize: '18px', color: '#ffffff', display: 'block', marginTop: '5px' }}>PC</span>
+            </div>
+
+            {/* Money row — Figma 84-187: 174.19x42.23px at left:29.57px, top:145.53px */}
+            <img
+              src="/figma-assets/84-187.svg"
+              alt="Entry fee and Prize"
+              style={{
+                position: 'absolute',
+                left: '29.57px',
+                top: '145.53px',
+                width: '174.19px',
+                height: '42.23px',
+              }}
+            />
+
+            {/* Expires in — left:29.57px, top:203.13px */}
+            <div style={{ position: 'absolute', left: '29.57px', top: '203.13px' }}>
+              <span style={{ fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#ffffff', display: 'block' }}>Expires in</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                <div style={{ width: '14.79px', height: '14.79px', borderRadius: '50%', background: '#ff1654', flexShrink: 0 }} />
+                <span style={{ fontFamily: F, fontWeight: 900, fontSize: '18px', color: '#ffffff' }}>00:13</span>
+              </div>
+            </div>
+
+            {/* Accept token button — Figma: 192.23x34.24px at left:20.24px, top:260.72px */}
+            <button
+              style={{
+                position: 'absolute',
+                left: '20.24px',
+                top: '260.72px',
+                width: '192.23px',
+                height: '34.24px',
+                background: '#ff1654',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: F,
+                fontWeight: 900,
+                fontSize: '16px',
+                color: '#ffffff',
+              }}
+            >
+              Accept token
+            </button>
+          </div>
         </div>
 
-        {/* Body text — right side */}
+        {/* Body text — right side — Figma: at left:1067px (226+705+136), top:484px (143+126+215) */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(56% + 554.8px)',
-            transform: 'translateX(-100%)',
-            top: '570px',
-            fontFamily: FE,
+            left: '1067px',
+            top: '484px',
+            fontFamily: F,
             fontWeight: 700,
             fontSize: '48px',
             lineHeight: 'normal',
@@ -528,40 +565,36 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
             zIndex: 2,
           }}
         >
-          <p style={{ margin: 0 }}>Find an opponent.</p>
-          <p style={{ margin: 0 }}>
-            {"Let's see who's"}
-            <br />
-            {'built different'}
-            <span style={{ fontSize: '55px' }}>!</span>
-          </p>
+          Find an opponent.<br />
+          {"Let\u2019s see who\u2019s"}<br />
+          built different!
         </div>
 
-        {/* PLAY button */}
+        {/* PLAY button — Figma 84-171: 214x65px at left:1242px (226+705+311), top:675px (143+126+406) */}
         <button
           onClick={() => {}}
           style={{
             position: 'absolute',
-            left: 'calc(64% + 13.2px)',
+            left: '1242px',
             top: '675px',
             width: '214px',
             height: '65px',
-            background: 'rgba(255,22,84,0.23)',
+            background: 'rgba(255,22,84,0.25)',
             border: '1px solid #ff1654',
             borderRadius: '50px',
-            boxShadow: 'inset 0px -4px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.14)',
+            boxShadow: 'inset 0px 4px 4px 0px rgba(255,255,255,0.14), inset 0px -4px 4px 0px rgba(0,0,0,0.25)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '12px',
+            gap: '16px',
             padding: 0,
             zIndex: 4,
           }}
         >
           <span
             style={{
-              fontFamily: FE,
+              fontFamily: F,
               fontWeight: 900,
               fontSize: '32px',
               lineHeight: 'normal',
@@ -571,7 +604,7 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           >
             PLAY
           </span>
-          <img src="/figma-assets/figma-arrow-stroke1.svg" alt="" aria-hidden style={{ width: '15.653px', height: '21.071px', flexShrink: 0 }} />
+          <img src="/figma-assets/84-175.svg" alt="" aria-hidden style={{ width: '32px', height: '23px', flexShrink: 0 }} />
         </button>
 
         {/* Navigation arrows */}

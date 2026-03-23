@@ -2,37 +2,25 @@
  * NavbarFigmaLoggedIn — Logged-in user navbar
  * Based on Figma node 84:282
  *
- * Different from NavbarFigma (public):
- *  - Nav links: matches, leaderboard, challenges, hls, teams, shop
- *  - Right section: coins, recharge, separator, LVL, PFP (Discord avatar)
+ * Navbar: 1532x91px, centered, top:55px (from page top, Figma y=168 relative to frame y=113)
+ * TAB pill: 394x50px at left:1088px inside navbar, top:20px
+ * PFP: 50x50px at left:347.54px inside TAB (extends 3.54px beyond TAB right edge)
+ * RECHARGE "+": Ellipse 16x16px at left:190px, top:18px inside TAB
+ * SEP: at left:228px inside TAB
+ * LVL: at left:245px inside TAB
+ * COINS: at left:23px inside TAB
  */
 
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
-const FE = "'Base Neue Expanded', 'Base Neue Trial', 'Base Neue', sans-serif";
-
-const A_LOGO = '/figma-assets/figma-logo.svg';
-// Figma assets for the right section
-const A_COIN_CIRCLE = '/figma-assets/b263e5b69c85b19df9c41aec85aebe9fb9be1de4.svg';
-const A_RECHARGE_CIRCLE = '/figma-assets/ed0e9082258c15c22aceda00bea77820256739f9.svg';
-const A_SEP = '/figma-assets/c8d970b53fe56a074ba321c6a2ea0bc1e6b8d1d7.svg';
-
-const linkStyle: React.CSSProperties = {
-  fontFamily: F,
-  fontWeight: 400,
-  fontSize: '24px',
-  lineHeight: 'normal',
-  color: '#ffffff',
-  textDecoration: 'none',
-  whiteSpace: 'nowrap',
-};
 
 export function NavbarFigmaLoggedIn() {
   const { profile, wallet } = useAuth();
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
+  const level = profile?.level ?? 1;
 
   return (
     <nav
@@ -44,159 +32,238 @@ export function NavbarFigmaLoggedIn() {
         width: 'min(1532px, calc(100% - 100px))',
         height: '91px',
         zIndex: 50,
-        borderRadius: '50px',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        background: 'rgba(10, 10, 15, 0.8)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 40px',
       }}
     >
-      {/* Logo */}
-      <Link
-        to="/"
+      {/* SVG Bar background */}
+      <img
+        src="/figma-assets/84-283.svg"
+        alt=""
+        aria-hidden
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '65px',
-          height: '55px',
-          flexShrink: 0,
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
         }}
-      >
-        <div style={{ transform: 'rotate(89.78deg)', flexShrink: 0 }}>
-          <img src={A_LOGO} alt="OleBoy" style={{ display: 'block', width: '55px', height: '65px' }} />
-        </div>
-      </Link>
+      />
 
-      {/* Nav Links */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-        <Link to="/matches" style={linkStyle}>matches</Link>
-        <Link to="/leaderboard" style={linkStyle}>leaderboard</Link>
-        <Link to="/challenges" style={linkStyle}>challenges</Link>
-        <Link to="/highlights" style={linkStyle}>hls</Link>
-        <Link to="/teams" style={linkStyle}>teams</Link>
-        <Link to="/shop" style={linkStyle}>shop</Link>
-      </div>
-
-      {/* Right section — coins, recharge, LVL, PFP */}
+      {/* Content layer */}
       <div
         style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
           display: 'flex',
           alignItems: 'center',
-          background: 'rgba(255, 22, 84, 0.2)',
-          borderRadius: '23px',
-          height: '50px',
-          padding: '0 8px 0 16px',
-          flexShrink: 0,
+          padding: '0 42px',
+          boxSizing: 'border-box',
         }}
       >
-        {/* Coins */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Logo — 65x55px */}
+        <Link
+          to="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '65px',
+            height: '55px',
+            flexShrink: 0,
+            filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))',
+          }}
+        >
           <img
-            src={A_COIN_CIRCLE}
-            alt=""
-            aria-hidden
-            style={{ width: '29px', height: '29px' }}
+            src="/figma-assets/84-287.svg"
+            alt="OleBoy"
+            style={{ display: 'block', width: '65px', height: '55px' }}
           />
+        </Link>
+
+        {/* Nav Links — Figma Pages group starts at x=179 from navbar left */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '26px',
+            marginLeft: '72px',
+            flex: 1,
+          }}
+        >
+          {['matches', 'leaderboard', 'challenges', 'hls', 'teams', 'shop'].map((item) => (
+            <Link
+              key={item}
+              to={item === 'hls' ? '/highlights' : `/${item}`}
+              style={{
+                fontFamily: F,
+                fontWeight: 400,
+                fontSize: '24px',
+                lineHeight: 'normal',
+                color: '#ffffff',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {item}
+            </Link>
+          ))}
+        </div>
+
+        {/* TAB section — 394x50px pill + PFP extending beyond right edge */}
+        <div
+          style={{
+            position: 'relative',
+            width: '398px', /* 394 + 4px for PFP overflow */
+            height: '50px',
+            flexShrink: 0,
+          }}
+        >
+          {/* TAB background pill — 394x50px */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '394px',
+              height: '50px',
+              background: 'rgba(255, 22, 84, 0.2)',
+              borderRadius: '23px',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+            }}
+          />
+
+          {/* COINS — red circle 29x29 at left:23, top:11 + balance text */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '23px',
+              top: '11px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '29px',
+                height: '29px',
+                borderRadius: '50%',
+                background: '#ff1654',
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: F,
+                fontWeight: 700,
+                fontSize: '24px',
+                lineHeight: 'normal',
+                color: '#ffffff',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {balance}
+            </span>
+          </div>
+
+          {/* RECHARGE "+" — Ellipse 16x16 at left:190, top:18 inside TAB */}
+          <button
+            style={{
+              position: 'absolute',
+              left: '190px',
+              top: '18px',
+              width: '16px',
+              height: '16px',
+              background: 'rgba(255, 22, 84, 0.5)',
+              border: '1px solid #ff1654',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: F,
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: 1,
+                color: '#ffffff',
+                textAlign: 'center',
+                marginTop: '-2px',
+              }}
+            >
+              +
+            </span>
+          </button>
+
+          {/* SEP — separator line at left:228, top:10, height:30 */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '228px',
+              top: '10px',
+              width: '1px',
+              height: '30px',
+            }}
+          >
+            <img
+              src="/figma-assets/84-294.svg"
+              alt=""
+              aria-hidden
+              style={{ display: 'block', width: '100%', height: '100%' }}
+            />
+          </div>
+
+          {/* LVL — at left:245, top:11 */}
           <span
             style={{
-              fontFamily: FE,
+              position: 'absolute',
+              left: '245px',
+              top: '11px',
+              fontFamily: F,
               fontWeight: 700,
-              fontSize: '24.76px',
+              fontSize: '24px',
               lineHeight: 'normal',
               color: '#ffffff',
               whiteSpace: 'nowrap',
             }}
           >
-            {balance}
+            LVL.{level}
           </span>
+
+          {/* PFP — 50x50 circle at left:347.54 (extends 3.54px beyond TAB right edge) */}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="Profile"
+              style={{
+                position: 'absolute',
+                left: '347px',
+                top: 0,
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                position: 'absolute',
+                left: '347px',
+                top: 0,
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+              }}
+            />
+          )}
         </div>
-
-        {/* Recharge "+" — Figma ellipse asset with "+" overlay */}
-        <button
-          style={{
-            marginLeft: '8px',
-            width: '16px',
-            height: '16px',
-            position: 'relative',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            flexShrink: 0,
-          }}
-        >
-          <img
-            src={A_RECHARGE_CIRCLE}
-            alt=""
-            aria-hidden
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-          />
-          <span
-            style={{
-              position: 'relative',
-              fontFamily: F,
-              fontWeight: 400,
-              fontSize: '16px',
-              lineHeight: 1,
-              color: '#ffffff',
-            }}
-          >
-            +
-          </span>
-        </button>
-
-        {/* Separator — Figma SVG asset */}
-        <div style={{ width: '0.5px', height: '30px', margin: '0 12px', flexShrink: 0 }}>
-          <img src={A_SEP} alt="" aria-hidden style={{ display: 'block', width: '100%', height: '100%' }} />
-        </div>
-
-        {/* LVL */}
-        <span
-          style={{
-            fontFamily: FE,
-            fontWeight: 700,
-            fontSize: '24.76px',
-            lineHeight: 'normal',
-            color: '#ffffff',
-            whiteSpace: 'nowrap',
-            marginRight: '12px',
-          }}
-        >
-          <span style={{ fontFamily: F, fontWeight: 700, fontSize: '15px' }}>LVL</span>
-          <span style={{ fontSize: '24.76px' }}>.</span>
-          <span>1</span>
-        </span>
-
-        {/* PFP — Discord avatar */}
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt="Profile"
-            style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              flexShrink: 0,
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
-              flexShrink: 0,
-            }}
-          />
-        )}
       </div>
     </nav>
   );

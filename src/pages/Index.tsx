@@ -6,7 +6,6 @@ import { HomeRegistered } from '@/components/home/HomeRegistered';
 export default function Index() {
   const { user, profile } = useAuth();
 
-  // Show new Figma design for non-logged-in users
   if (!user) {
     return (
       <PublicLayout>
@@ -15,7 +14,6 @@ export default function Index() {
     );
   }
 
-  // Logged-in home page
   return (
     <PublicLayout>
       <HomeRegistered displayName={profile?.discord_display_name || 'Player'} />
