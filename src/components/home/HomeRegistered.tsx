@@ -70,29 +70,35 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           <img src={A_NEON} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
-        {/* ZAPS — 2 lightning bolts only (LB left-bottom, RT right-top) */}
+        {/* LB ZAP — left-bottom lightning bolt */}
         <div
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '-9.56%',
-            top: '-290px',
-            width: '119.19%',
-            height: '1373.5px',
+            left: '47.72px',
+            top: '466px',
+            width: '419.58px',
+            height: '508.17px',
             pointerEvents: 'none',
             zIndex: 2,
           }}
         >
-          <svg
-            viewBox="0 0 2288.42 1373.5"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-          >
-            <path d="M317.78 1162.75L103.273 1322.33L8.98886 1220.33L138.149 1133.86L182.208 1161.81L104.995 1078.27L545.918 875.212L279.561 1100.15L244.428 1083.39L317.78 1162.75Z" fill="#FF1654"/>
-            <path d="M1973.05 196.038L2152.46 42.0506L2242.11 125.883L2133.48 210.131L2092.82 188.315L2166.23 256.969L1789.62 463.501L2010.72 248.726L2042.79 261.259L1973.05 196.038Z" fill="#FF1654"/>
-          </svg>
+          <img src="/figma-assets/48461c941a4e1c7068134ed6b58d772c8aae7e21.svg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+        </div>
+        {/* RT ZAP — right-top lightning bolt */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            right: '-24.18px',
+            top: '-60px',
+            width: '263.50px',
+            height: '341.43px',
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}
+        >
+          <img src="/figma-assets/a523569ed50c70e859b5db4acd159922194e995f.svg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
         {/* BOTTOM NEON — at bottom of hero, flipped */}
@@ -112,22 +118,21 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           <img src={A_NEON} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
-        {/* Decorative triangle */}
+        {/* Decorative triangles */}
         <div
           aria-hidden="true"
           style={{
             position: 'absolute',
             left: 'calc(8% + 37.4px)',
             top: '174px',
-            width: 0,
-            height: 0,
-            borderLeft: '22px solid transparent',
-            borderRight: '22px solid transparent',
-            borderBottom: '44px solid #ff1654',
-            transform: 'rotate(-15deg)',
+            width: '44.667px',
+            height: '67px',
+            pointerEvents: 'none',
             zIndex: 4,
           }}
-        />
+        >
+          <img src="/figma-assets/9120c582ef8a1a7b7bd66762a474643c853358d9.svg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+        </div>
 
         {/* Welcome text */}
         <div
@@ -180,14 +185,25 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
           style={{
             position: 'absolute',
             left: 'calc(12% - 10.4px)',
-            top: '257px',
-            width: '845px',
-            height: '16.5px',
-            background: '#ff1654',
-            clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+            top: '256.96px',
+            width: '844.69px',
+            height: '16.52px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
             zIndex: 4,
           }}
-        />
+        >
+          <div style={{
+            width: '13.564px',
+            height: '844.652px',
+            transform: 'rotate(89.8deg) scaleY(-1)',
+            flexShrink: 0,
+          }}>
+            <img src="/figma-assets/d3724143505f06bd6ee5c9ea25d16e097f91fd3c.svg" alt="" style={{ width: '100%', height: '100%' }} />
+          </div>
+        </div>
 
         {/* News card */}
         <div
