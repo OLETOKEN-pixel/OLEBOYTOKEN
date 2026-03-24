@@ -61,6 +61,15 @@
   src: url('/fonts/BaseNeue-ExpandedBold.woff') format('woff');
 }
 
+/* Anima export font-family aliases — maps Anima names to loaded font files */
+@font-face { font-family: 'Base_Neue_Trial-Regular'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/BaseNeue-Regular.woff') format('woff'); }
+@font-face { font-family: 'Base_Neue_Trial-Bold'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/BaseNeue-Bold.woff') format('woff'); }
+@font-face { font-family: 'Base_Neue_Trial-Black'; font-style: normal; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-Black.woff') format('woff'); }
+@font-face { font-family: 'Base_Neue_Trial-WideBlack'; font-style: oblique; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff'); }
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack_Oblique'; font-style: oblique; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff'); }
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBold'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBold.woff') format('woff'); }
+@font-face { font-family: 'Base_Neue_Trial-RegularOblique'; font-style: oblique; font-weight: 400; font-display: swap; src: url('/fonts/BaseNeue-Regular.woff') format('woff'); }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
