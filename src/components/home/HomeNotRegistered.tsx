@@ -673,12 +673,14 @@ export function HomeNotRegistered() {
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '4.2%',
+            left: '81px',
             top: '-18px',
+            width: '1757px',
+            height: '413px',
             fontFamily: FE,
             fontWeight: 900,
             fontStyle: 'oblique',
-            fontSize: 'clamp(200px, 18.07vw, 347.059px)',
+            fontSize: '347.06px',
             lineHeight: 'normal',
             whiteSpace: 'nowrap',
             margin: 0,
@@ -699,12 +701,14 @@ export function HomeNotRegistered() {
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '4.2%',
+            left: '81px',
             top: '-18px',
+            width: '1757px',
+            height: '413px',
             fontFamily: FE,
             fontWeight: 900,
             fontStyle: 'oblique',
-            fontSize: 'clamp(200px, 18.07vw, 347.059px)',
+            fontSize: '347.06px',
             lineHeight: 'normal',
             whiteSpace: 'nowrap',
             margin: 0,
