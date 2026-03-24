@@ -35,7 +35,7 @@ const A_OUTLINE_S3    = '/figma-assets/figma-outline-s3.svg';
 const A_VECTOR19      = '/figma-assets/figma-vector19.svg';
 const A_SPAC_TITLE_4  = '/figma-assets/figma-spaccato-title-s4.svg';
 // Footer
-const A_COPYRIGHT     = '/figma-assets/figma-copyright.png';
+const A_COPYRIGHT     = '/figma-assets/09cc6f7be40e6ae94c5b810ffbf6f4d073a45444.png';
 
 // ─── Font ────────────────────────────────────────────────────────────────────
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
@@ -673,22 +673,17 @@ export function HomeNotRegistered() {
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '81px',
+            left: 'calc(4% + 4.2px)',
             top: '-18px',
-            width: '1757px',
-            height: '413px',
-            fontFamily: F,
+            fontFamily: FE,
             fontWeight: 900,
-            fontSize: '347.06px',
+            fontStyle: 'oblique',
+            fontSize: '347.059px',
             lineHeight: 'normal',
-            letterSpacing: 0,
-            textAlign: 'left',
             whiteSpace: 'nowrap',
             margin: 0,
-            opacity: 1,
-            borderRadius: 0,
             WebkitTextStroke: '3.48px transparent',
-            background: 'linear-gradient(180deg, #FFFFFF 0%, #0F0404 100%)',
+            background: 'linear-gradient(180.075deg, #FFFFFF 0%, #0F0404 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -699,26 +694,21 @@ export function HomeNotRegistered() {
         >
           OLEBOY
         </p>
-        {/* Giant OLEBOY text — fill layer (gradient fill: #0f0404 → #FFFFFF) */}
+        {/* Giant OLEBOY text — fill layer (Figma-exact gradient) */}
         <p
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '81px',
+            left: 'calc(4% + 4.2px)',
             top: '-18px',
-            width: '1757px',
-            height: '413px',
-            fontFamily: F,
+            fontFamily: FE,
             fontWeight: 900,
-            fontSize: '347.06px',
+            fontStyle: 'oblique',
+            fontSize: '347.059px',
             lineHeight: 'normal',
-            letterSpacing: 0,
-            textAlign: 'left',
             whiteSpace: 'nowrap',
             margin: 0,
-            opacity: 1,
-            borderRadius: 0,
-            background: 'linear-gradient(180deg, #0f0404 0%, #FFFFFF 100%)',
+            backgroundImage: 'linear-gradient(180.075deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -755,11 +745,14 @@ export function HomeNotRegistered() {
         <p style={{ position: 'absolute', left: 'calc(80% + 26px)', top: '397px', fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: '24px', color: '#ff1654', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>PRIVACY</p>
         <a href="/terms" style={{ position: 'absolute', left: 'calc(80% + 29px)', top: '439px', fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#e6e6e6', textDecoration: 'underline', zIndex: 2 }}>Terms &amp; Privacy</a>
 
-        {/* COPYRIGHT — © inline on same line as text */}
-        <p style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '585px', fontFamily: F, fontWeight: 400, fontSize: '24px', color: '#e6e6e6', whiteSpace: 'nowrap', margin: 0, zIndex: 2, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <img src={A_COPYRIGHT} alt="©" style={{ width: '23px', height: '23px', objectFit: 'contain', filter: 'invert(1)', flexShrink: 0 }} />
-          2026 OLEBOY. All Rights Reserved.
+        {/* COPYRIGHT — Figma-exact: separate © icon + text */}
+        <p style={{ position: 'absolute', left: 'calc(76% + 48.8px)', top: '585px', fontFamily: F, fontWeight: 400, fontSize: '24px', color: '#e6e6e6', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>
+          {' '}2026 OLEBOY. All Rights Reserved.
         </p>
+        <div style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '588px', width: '23px', height: '23px', pointerEvents: 'none', zIndex: 2 }}>
+          <img src={A_COPYRIGHT} alt="©" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', boxShadow: 'inset 0px -555px 0px 0px white' }} />
+        </div>
       </section>
     </div>
   );
