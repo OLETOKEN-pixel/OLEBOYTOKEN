@@ -35,7 +35,7 @@ const A_OUTLINE_S3    = '/figma-assets/figma-outline-s3.svg';
 const A_VECTOR19      = '/figma-assets/figma-vector19.svg';
 const A_SPAC_TITLE_4  = '/figma-assets/figma-spaccato-title-s4.svg';
 // Footer
-const A_COPYRIGHT     = '/figma-assets/09cc6f7be40e6ae94c5b810ffbf6f4d073a45444.png';
+const A_COPYRIGHT     = '/figma-assets/figma-copyright.png';
 
 // ─── Font ────────────────────────────────────────────────────────────────────
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
@@ -745,14 +745,13 @@ export function HomeNotRegistered() {
         <p style={{ position: 'absolute', left: 'calc(80% + 26px)', top: '397px', fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: '24px', color: '#ff1654', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>PRIVACY</p>
         <a href="/terms" style={{ position: 'absolute', left: 'calc(80% + 29px)', top: '439px', fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#e6e6e6', textDecoration: 'underline', zIndex: 2 }}>Terms &amp; Privacy</a>
 
-        {/* COPYRIGHT — Figma-exact: separate © icon + text */}
+        {/* COPYRIGHT */}
+        <div style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '588px', width: '23px', height: '23px', zIndex: 2 }}>
+          <img src={A_COPYRIGHT} alt="©" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'invert(1)' }} />
+        </div>
         <p style={{ position: 'absolute', left: 'calc(76% + 48.8px)', top: '585px', fontFamily: F, fontWeight: 400, fontSize: '24px', color: '#e6e6e6', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>
           {' '}2026 OLEBOY. All Rights Reserved.
         </p>
-        <div style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '588px', width: '23px', height: '23px', pointerEvents: 'none', zIndex: 2 }}>
-          <img src={A_COPYRIGHT} alt="©" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', boxShadow: 'inset 0px -555px 0px 0px white' }} />
-        </div>
       </section>
     </div>
   );
