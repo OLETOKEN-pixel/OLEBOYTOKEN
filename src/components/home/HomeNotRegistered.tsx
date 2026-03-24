@@ -668,7 +668,7 @@ export function HomeNotRegistered() {
           overflow: 'hidden',
         }}
       >
-        {/* Giant OLEBOY text */}
+        {/* Giant OLEBOY text — stroke layer (gradient stroke: #FFF → #0F0404, inside 1.74px) */}
         <p
           aria-hidden="true"
           style={{
@@ -682,11 +682,36 @@ export function HomeNotRegistered() {
             lineHeight: 'normal',
             whiteSpace: 'nowrap',
             margin: 0,
-            opacity: 0.15,
-            background: 'linear-gradient(180deg, #0f0404 10%, #ffffff 100%)',
+            WebkitTextStroke: '3.48px transparent',
+            background: 'linear-gradient(180deg, #FFFFFF 0%, #0F0404 100%)',
             WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            color: 'transparent',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        >
+          OLEBOY
+        </p>
+        {/* Giant OLEBOY text — fill layer (gradient fill: #0f0404 → #FFFFFF) */}
+        <p
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '4.2%',
+            top: '-18px',
+            fontFamily: FE,
+            fontWeight: 900,
+            fontStyle: 'oblique',
+            fontSize: 'clamp(200px, 18.07vw, 347.059px)',
+            lineHeight: 'normal',
+            whiteSpace: 'nowrap',
+            margin: 0,
+            background: 'linear-gradient(180deg, #0f0404 0%, #FFFFFF 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
             color: 'transparent',
             pointerEvents: 'none',
             zIndex: 1,
@@ -720,12 +745,10 @@ export function HomeNotRegistered() {
         <p style={{ position: 'absolute', left: 'calc(80% + 26px)', top: '397px', fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: '24px', color: '#ff1654', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>PRIVACY</p>
         <a href="/terms" style={{ position: 'absolute', left: 'calc(80% + 29px)', top: '439px', fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#e6e6e6', textDecoration: 'underline', zIndex: 2 }}>Terms &amp; Privacy</a>
 
-        {/* COPYRIGHT */}
-        <div style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '588px', width: '23px', height: '23px', zIndex: 2 }}>
-          <img src={A_COPYRIGHT} alt="(c)" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'invert(1)' }} />
-        </div>
-        <p style={{ position: 'absolute', left: 'calc(76% + 48.8px)', top: '585px', fontFamily: F, fontWeight: 400, fontSize: '24px', color: '#e6e6e6', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>
-          {' '}2026 OLEBOY. All Rights Reserved.
+        {/* COPYRIGHT — © inline on same line as text */}
+        <p style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '585px', fontFamily: F, fontWeight: 400, fontSize: '24px', color: '#e6e6e6', whiteSpace: 'nowrap', margin: 0, zIndex: 2, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <img src={A_COPYRIGHT} alt="©" style={{ width: '23px', height: '23px', objectFit: 'contain', filter: 'invert(1)', flexShrink: 0 }} />
+          2026 OLEBOY. All Rights Reserved.
         </p>
       </section>
     </div>
