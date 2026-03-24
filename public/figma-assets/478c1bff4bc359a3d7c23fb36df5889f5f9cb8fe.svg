@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 1920 955" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="zaps">
+<mask id="mask0_84_327" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="955">
+<rect id="Rectangle 28" width="1920" height="955" fill="var(--fill-0, #D9D9D9)"/>
+</mask>
+<g mask="url(#mask0_84_327)">
+<path id="LB ZAP" d="M176.241 916.193L11.3742 1038.85L-61.0905 960.449L38.1791 893.993L72.0426 915.471L12.6979 851.267L351.583 695.198L146.866 868.078L119.863 855.199L176.241 916.193Z" fill="var(--fill-0, #FF1654)"/>
+<path id="RT ZAP" d="M1803.84 52.0442L1906.38 -35.9662L1957.62 11.9475L1895.53 60.0992L1872.3 47.6302L1914.25 86.869L1699 204.911L1825.37 82.1579L1843.7 89.3211L1803.84 52.0442Z" fill="var(--fill-0, #FF1654)"/>
+</g>
+</g>
+</svg>

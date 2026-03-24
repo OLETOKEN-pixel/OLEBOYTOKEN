@@ -4,46 +4,92 @@ import { supabase } from '@/integrations/supabase/client';
 interface PlayerDisplay {
   rank: number;
   username: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   winRate: string;
   roundsWon: string;
   earnings: string;
 }
 
-const PLACEHOLDER_PLAYERS: PlayerDisplay[] = [
-  { rank: 1, username: 'LIGHTVSLS', avatarUrl: 'https://c.animaapp.com/cjSO5wtV/img/marv-2@2x.png', winRate: '70%', roundsWon: '253', earnings: '2.000' },
-  { rank: 2, username: 'MarvFN', avatarUrl: 'https://c.animaapp.com/cjSO5wtV/img/marv-1@2x.png', winRate: '59%', roundsWon: '189', earnings: '1.543' },
-  { rank: 3, username: 'TomTom', avatarUrl: 'https://c.animaapp.com/cjSO5wtV/img/marv@2x.png', winRate: '23%', roundsWon: '107', earnings: '874' },
-];
-
 export const LeaderboardSection = () => {
-  const [players, setPlayers] = useState<PlayerDisplay[]>(PLACEHOLDER_PLAYERS);
+  const [players, setPlayers] = useState<PlayerDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      const { data, error } = await supabase
-        .from('leaderboard_weekly')
-        .select('*')
-        .order('wins', { ascending: false })
-        .limit(3);
+      try {
+        // Try leaderboard_weekly view first
+        const { data: lbData, error: lbErr } = await supabase
+          .from('leaderboard_weekly')
+          .select('*')
+          .order('wins', { ascending: false })
+          .limit(3);
 
-      if (!error && data && data.length >= 3) {
-        setPlayers(data.map((p: any, i: number) => ({
-          rank: i + 1,
-          username: p.username || `Player${i + 1}`,
-          avatarUrl: p.avatar_url || PLACEHOLDER_PLAYERS[i].avatarUrl,
-          winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
-          roundsWon: String(p.wins ?? 0),
-          earnings: String(p.total_earnings?.toFixed(0) ?? 0),
-        })));
+        if (!lbErr && lbData && lbData.length > 0) {
+          // Get Discord avatars from profiles for these users
+          const userIds = lbData.map((p: any) => p.user_id).filter(Boolean);
+          let avatarMap: Record<string, string | null> = {};
+
+          if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('user_id, discord_avatar_url, avatar_url, discord_display_name, username')
+              .in('user_id', userIds);
+
+            if (profiles) {
+              for (const p of profiles) {
+                avatarMap[p.user_id] = p.discord_avatar_url || p.avatar_url || null;
+              }
+            }
+          }
+
+          setPlayers(lbData.map((p: any, i: number) => ({
+            rank: i + 1,
+            username: p.username || `Player${i + 1}`,
+            avatarUrl: avatarMap[p.user_id] || null,
+            winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
+            roundsWon: String(p.wins ?? 0),
+            earnings: p.total_earnings != null ? String(Number(p.total_earnings).toFixed(0)) : '0',
+          })));
+        } else {
+          // Fallback: get top 3 profiles by completed matches
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('user_id, username, discord_display_name, discord_avatar_url, avatar_url')
+            .order('created_at', { ascending: true })
+            .limit(3);
+
+          if (profiles && profiles.length > 0) {
+            setPlayers(profiles.map((p, i) => ({
+              rank: i + 1,
+              username: p.discord_display_name || p.username || `Player${i + 1}`,
+              avatarUrl: p.discord_avatar_url || p.avatar_url || null,
+              winRate: '0%',
+              roundsWon: '0',
+              earnings: '0',
+            })));
+          }
+        }
+      } catch (err) {
+        console.error('Leaderboard fetch error:', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchLeaderboard();
   }, []);
 
-  const first = players[0];
-  const second = players[1];
-  const third = players[2];
+  // Pad to 3 players minimum with empty placeholders
+  const first: PlayerDisplay = players[0] ?? { rank: 1, username: '—', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const second: PlayerDisplay = players[1] ?? { rank: 2, username: '—', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const third: PlayerDisplay = players[2] ?? { rank: 3, username: '—', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+
+  const Avatar = ({ url, alt, size }: { url: string | null; alt: string; size: string }) => (
+    url ? (
+      <img className={`${size} object-cover rounded-full`} alt={alt} src={url} />
+    ) : (
+      <div className={`${size} rounded-full bg-gradient-to-br from-[#3b28cc] to-[#6f5cff]`} />
+    )
+  );
 
   return (
     <div id="s-leaderboard" className="z-[3] w-[1920px] h-[955px] flex bg-[#0f0404]">
@@ -75,7 +121,9 @@ export const LeaderboardSection = () => {
           {/* 3rd place — right */}
           <div className="absolute top-[78px] left-[417px] w-[169px] h-[300px]">
             <div className="absolute -top-px -left-px w-[169px] h-[302px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
-            <img className="absolute top-6 left-[26px] w-[116px] h-[116px] object-cover" alt={third.username} src={third.avatarUrl} />
+            <div className="absolute top-6 left-[26px]">
+              <Avatar url={third.avatarUrl} alt={third.username} size="w-[116px] h-[116px]" />
+            </div>
             <p className="absolute top-[150px] left-[23px] [font-family:'Base_Neue_Trial-Black',Helvetica] font-normal text-transparent text-[22px] text-center leading-[normal]">
               <span className="tracking-[0.63px] font-black text-[#ff1654]">3</span>
               <span className="font-black text-[#ff1654] text-2xl tracking-[0]">°</span>
@@ -86,7 +134,9 @@ export const LeaderboardSection = () => {
           {/* 2nd place — left */}
           <div className="absolute top-[78px] left-0 w-[169px] h-[300px]">
             <div className="absolute -top-px -left-px w-[169px] h-[302px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
-            <img className="absolute top-6 left-[26px] w-[116px] h-[116px] object-cover" alt={second.username} src={second.avatarUrl} />
+            <div className="absolute top-6 left-[26px]">
+              <Avatar url={second.avatarUrl} alt={second.username} size="w-[116px] h-[116px]" />
+            </div>
             <p className="absolute top-[150px] left-[33px] [font-family:'Base_Neue_Trial-Black',Helvetica] font-normal text-transparent text-xl text-center leading-[normal]">
               <span className="tracking-[0.52px] font-black text-[#ff1654]">2</span>
               <span className="font-black text-[#ff1654] text-[22px] tracking-[0]">°</span>
@@ -97,7 +147,9 @@ export const LeaderboardSection = () => {
           {/* 1st place — center, larger */}
           <div className="absolute top-0 left-7 w-[530px] h-[378px]">
             <div className="absolute -top-px left-[158px] w-[212px] h-[380px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
-            <img className="absolute top-[30px] left-48 w-[146px] h-[146px] object-cover" alt={first.username} src={first.avatarUrl} />
+            <div className="absolute top-[30px] left-48">
+              <Avatar url={first.avatarUrl} alt={first.username} size="w-[146px] h-[146px]" />
+            </div>
 
             {/* 1st place stats */}
             <div className="absolute top-[265px] left-48 w-[147px] h-[70px] flex">
@@ -114,7 +166,7 @@ export const LeaderboardSection = () => {
               </div>
             </div>
 
-            {/* 2nd place small stats (left) */}
+            {/* 2nd place small stats */}
             <div className="left-0 flex absolute top-[294px] w-[111px] h-[52px]">
               <div className="w-[69px] h-[52.27px] flex flex-col gap-[6.6px]">
                 <div className="w-[46px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Win rate</div>
@@ -129,7 +181,7 @@ export const LeaderboardSection = () => {
               </div>
             </div>
 
-            {/* 3rd place small stats (right) */}
+            {/* 3rd place small stats */}
             <div className="left-[417px] absolute top-[294px] w-[111px] h-[52px]">
               <div className="absolute top-[42px] left-[82px] w-2 h-2 bg-[#ff1654] rounded-[4.15px]" />
               <div className="absolute top-0 left-[90px] w-[27px] h-[52px] flex flex-col gap-[6.6px]">
