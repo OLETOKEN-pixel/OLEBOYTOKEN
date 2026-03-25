@@ -32,6 +32,14 @@ export default function DiscordCallback() {
         }
 
         if (!code || !state) {
+          // Check if already logged in (e.g. Supabase built-in OAuth set the session via hash fragment)
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const storedRedirect = localStorage.getItem('auth_redirect') || '/';
+            localStorage.removeItem('auth_redirect');
+            navigate(storedRedirect, { replace: true });
+            return;
+          }
           setStatus('error');
           setErrorMessage('Parametri di autorizzazione mancanti. Riprova il login.');
           return;
