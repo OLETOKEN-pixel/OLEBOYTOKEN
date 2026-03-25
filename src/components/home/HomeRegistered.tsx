@@ -21,10 +21,8 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
     <div className="bg-[#0f0404] w-full min-w-[1920px] min-h-[6685px] flex flex-col">
       <LaunchVideoSection displayName={displayName} />
 
-      {/* Top neon gradient overlay */}
-      <div className="fixed top-0 left-0 w-[1920px] h-[146px] z-[7] bg-[linear-gradient(180deg,rgba(255,22,84,0.17)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
-      {/* Section boundary neon gradient overlay */}
-      <div className="fixed top-[825px] left-0 w-[1920px] h-[146px] z-[6] bg-[linear-gradient(180deg,rgba(255,22,84,0.17)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
+      {/* Top neon gradient overlay — very subtle, matches Figma */}
+      <div className="fixed top-0 left-0 w-[1920px] h-[146px] z-[7] bg-[linear-gradient(180deg,rgba(255,22,84,0.05)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
 
       <LiveMatchesSection />
       <LeaderboardSection />

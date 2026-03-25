@@ -80,11 +80,12 @@ export function NavbarFigmaLoggedIn() {
           />
         </Link>
 
-        {/* Nav Links — Figma Pages group starts at x=179 from navbar left */}
+        {/* Nav Links — centered between logo and TAB */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: '26px',
             marginLeft: '72px',
             flex: 1,
@@ -95,8 +96,8 @@ export function NavbarFigmaLoggedIn() {
               key={item}
               to={item === 'hls' ? '/highlights' : `/${item}`}
               style={{
-                fontFamily: F,
-                fontWeight: 400,
+                fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', 'Base Neue', sans-serif",
+                fontWeight: 700,
                 fontSize: '24px',
                 lineHeight: 'normal',
                 color: '#ffffff',
