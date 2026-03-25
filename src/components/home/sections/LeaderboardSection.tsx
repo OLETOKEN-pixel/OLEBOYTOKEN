@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PlayerDisplay {
@@ -13,6 +13,10 @@ interface PlayerDisplay {
 export const LeaderboardSection = () => {
   const [players, setPlayers] = useState<PlayerDisplay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handlePrev = useCallback(() => setCurrentIndex((prev) => Math.max(prev - 1, 0)), []);
+  const handleNext = useCallback(() => setCurrentIndex((prev) => Math.min(prev + 1, 2)), []);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -96,8 +100,12 @@ export const LeaderboardSection = () => {
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <img className="w-[63.11px] h-[63.11px]" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
-          <img className="w-[63.11px] h-[63.11px]" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
+          <button onClick={handlePrev} className="cursor-pointer bg-transparent border-none p-0">
+            <img className="w-[63.11px] h-[63.11px]" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
+          </button>
+          <button onClick={handleNext} className="cursor-pointer bg-transparent border-none p-0">
+            <img className="w-[63.11px] h-[63.11px]" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
+          </button>
         </div>
 
         {/* Right side — star + CTA */}

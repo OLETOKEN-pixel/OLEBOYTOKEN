@@ -1,0 +1,160 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const imgStarShape = 'https://www.figma.com/api/mcp/asset/50759456-8916-49b1-98a8-03612e4d8d3b';
+const imgArrowStroke = 'https://www.figma.com/api/mcp/asset/c452c283-8775-4e6a-ada3-00be56e5d8d4';
+const imgBwArrow = 'https://www.figma.com/api/mcp/asset/27aaba43-4ef7-4ffc-bf6a-785b0e7c2e0f';
+const imgFwArrow = 'https://www.figma.com/api/mcp/asset/e10ac569-b0b8-4c76-85c7-b0f3cb77b37a';
+const imgSpaccatoTitle = 'https://www.figma.com/api/mcp/asset/a327d7c7-285e-4f37-9d04-139374b4c3a2';
+const imgCoinIcon = 'https://www.figma.com/api/mcp/asset/002291fe-553e-47e2-a5df-845347009dc1';
+const imgVipIcon = 'https://www.figma.com/api/mcp/asset/2c2850c1-7e3a-4056-921d-beaa34d30348';
+const imgCosmetic1 = 'https://www.figma.com/api/mcp/asset/41f2c132-6f3c-4c33-af53-d1cab717672d';
+const imgCosmetic2 = 'https://www.figma.com/api/mcp/asset/ae00fbac-90c2-49f0-84c2-fdc9c635d1e9';
+const imgCosmetic3 = 'https://www.figma.com/api/mcp/asset/5c45a669-03d0-4588-bf89-8d1c8c031d99';
+
+interface ShopItem {
+  type: 'cosmetic' | 'vip';
+  image: string;
+  price: string;
+  label?: string;
+  sublabel?: string;
+}
+
+const shopItems: ShopItem[] = [
+  { type: 'cosmetic', image: imgCosmetic1, price: '500' },
+  { type: 'cosmetic', image: imgCosmetic2, price: '300' },
+  { type: 'cosmetic', image: imgCosmetic3, price: '999' },
+  { type: 'vip', image: imgVipIcon, price: '€9,99', label: 'VIP', sublabel: '1 MONTH' },
+];
+
+const CARD_WIDTH = 227;
+const CARD_GAP = 60;
+
+export const ShopSection = () => {
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  const handleNext = () =>
+    setCurrentIndex((prev) => Math.min(prev + 1, shopItems.length - 1));
+
+  return (
+    <div id="s-shop" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
+      <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
+
+        {/* Nav arrows */}
+        <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
+          <button onClick={handlePrev} className="cursor-pointer bg-transparent border-none p-0">
+            <img className="w-[63.11px] h-[63.11px]" alt="Previous" src={imgBwArrow} />
+          </button>
+          <button onClick={handleNext} className="cursor-pointer bg-transparent border-none p-0">
+            <img className="w-[63.11px] h-[63.11px]" alt="Next" src={imgFwArrow} />
+          </button>
+        </div>
+
+        {/* Right side — star + CTA */}
+        <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
+          <img
+            className="absolute top-[102px] left-[47px] w-[760px] h-[388px] rotate-[-15.44deg]"
+            alt=""
+            src={imgStarShape}
+          />
+
+          <button
+            onClick={() => navigate('/buy')}
+            className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex items-center justify-center bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040] cursor-pointer"
+          >
+            <div className="flex items-center gap-[11px]">
+              <span className="w-[167px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
+                SHOP
+              </span>
+              <img className="mt-[7px] w-8 h-[23px] rotate-[-90deg]" alt="" src={imgArrowStroke} />
+            </div>
+          </button>
+
+          <p className="absolute top-[196px] left-[118px] h-[171px] [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-right tracking-[0] leading-[normal]">
+            Cosmetics, coins, VIP.<br />Everything you need<br />to set you up!
+          </p>
+        </div>
+
+        {/* Shop item carousel */}
+        <div className="absolute top-[311px] left-0 w-[623px] h-[272px] overflow-hidden">
+          <div
+            className="flex h-[272px] gap-[60px] transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(calc(-${currentIndex} * ${CARD_WIDTH + CARD_GAP}px))` }}
+          >
+            {shopItems.map((item, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 relative bg-[#3a0000] rounded-[17px] overflow-hidden"
+                style={{ width: `${CARD_WIDTH}px`, height: '272px' }}
+              >
+                {item.type === 'cosmetic' ? (
+                  <>
+                    <img
+                      src={item.image}
+                      alt="Cosmetic"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    {/* Bottom fade */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[154px] bg-gradient-to-t from-[#3a0000] to-transparent" />
+                    {/* Price */}
+                    <div className="absolute bottom-[14px] left-[14px] flex items-center gap-2">
+                      <img src={imgCoinIcon} alt="coin" className="w-[24px] h-[24px]" />
+                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[31px] leading-[normal]">
+                        {item.price}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* VIP card */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <img src={item.image} alt="VIP" className="w-[76px] h-[63px] mb-3" />
+                      <span
+                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[31px] leading-[normal]"
+                        style={{
+                          background: 'linear-gradient(to bottom, #ff1654, #3a0000)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      <span
+                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[14px] mt-1"
+                        style={{
+                          background: 'linear-gradient(to bottom, white, #0f0404)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                        }}
+                      >
+                        {item.sublabel}
+                      </span>
+                    </div>
+                    {/* Price */}
+                    <div className="absolute bottom-[14px] left-[14px]">
+                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[31px] leading-[normal]">
+                        {item.price}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Carousel gradient overlays */}
+        <div className="absolute top-[311px] left-[338px] w-[285px] h-[272px] bg-[linear-gradient(270deg,rgba(15,4,4,1)_0%,rgba(15,4,4,0)_100%)] pointer-events-none" />
+        <div className="absolute top-[311px] left-0 w-[249px] h-[272px] bg-[linear-gradient(270deg,rgba(15,4,4,0)_0%,rgba(15,4,4,1)_100%)] pointer-events-none" />
+
+        {/* Section title */}
+        <img className="left-0 w-[553px] absolute top-0 h-[207px]" alt="" src={imgSpaccatoTitle} />
+        <div className="absolute top-[86px] left-[79px] w-[797px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
+          SHOP
+        </div>
+      </div>
+    </div>
+  );
+};

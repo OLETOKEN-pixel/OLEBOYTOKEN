@@ -90,8 +90,8 @@ export default {
         full: "9999px",
       },
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-        display: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+        sans: ["Base Neue Trial", "Base Neue", "Inter", "system-ui", "sans-serif"],
+        display: ["Base Neue Trial", "Base Neue", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
         teko: ["Teko", "system-ui", "sans-serif"],
       },
