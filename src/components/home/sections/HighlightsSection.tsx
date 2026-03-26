@@ -1,31 +1,24 @@
 import { useState } from 'react';
 
 const videoItems = [
-  { href: 'https://youtu.be/HxRTrHyWB0Y?si=VdsoQIswI9eOlHG5', src: 'https://c.animaapp.com/cjSO5wtV/img/piz-montage-1-1@2x.png', alt: 'Piz montage' },
-  { href: 'https://youtu.be/SDIys2MtwnA?si=Tba7ZE_Uda0qphNI', src: 'https://c.animaapp.com/cjSO5wtV/img/maxresdefault-1@2x.png', alt: 'Maxresdefault' },
-  { href: 'https://youtu.be/YcUuHL9i_7c?si=rHCyzj47PmRRa_ph', src: 'https://c.animaapp.com/cjSO5wtV/img/piz-montage-2-3@2x.png', alt: 'Piz montage' },
-  { href: 'https://youtu.be/HxRTrHyWB0Y?si=VdsoQIswI9eOlHG5', src: 'https://c.animaapp.com/cjSO5wtV/img/piz-montage-2-3@2x.png', alt: 'Piz montage' },
-  { href: 'https://youtu.be/SDIys2MtwnA?si=Tba7ZE_Uda0qphNI', src: 'https://c.animaapp.com/cjSO5wtV/img/piz-montage-2-3@2x.png', alt: 'Maxresdefault' },
-  { href: 'https://youtu.be/YcUuHL9i_7c?si=rHCyzj47PmRRa_ph', src: 'https://c.animaapp.com/cjSO5wtV/img/piz-montage-2-3@2x.png', alt: 'Piz montage' },
+  { href: 'https://youtu.be/HxRTrHyWB0Y?si=VdsoQIswI9eOlHG5', src: '/showreel/highlight-video-1.png', alt: 'Piz montage 1' },
+  { href: 'https://youtu.be/SDIys2MtwnA?si=Tba7ZE_Uda0qphNI', src: '/showreel/highlight-video-2.png', alt: 'Maxresdefault' },
+  { href: 'https://youtu.be/YcUuHL9i_7c?si=rHCyzj47PmRRa_ph', src: '/showreel/highlight-video-3.png', alt: 'Piz montage 2' },
 ];
 
 export const HighlightsSection = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  const handleNext = () => setCurrentIndex((prev) => Math.min(prev + 1, videoItems.length - 1));
 
   return (
     <div id="s-highlights" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
-        {/* Nav arrows */}
+        {/* Nav arrows (Decorative) */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <button onClick={handlePrev} className="cursor-pointer bg-transparent border-none p-0">
+          <div className="bg-transparent border-none p-0 opacity-50 cursor-default">
             <img className="w-[63.11px] h-[63.11px]" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
-          </button>
-          <button onClick={handleNext} className="cursor-pointer bg-transparent border-none p-0">
+          </div>
+          <div className="bg-transparent border-none p-0 opacity-50 cursor-default">
             <img className="w-[63.11px] h-[63.11px]" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
-          </button>
+          </div>
         </div>
 
         {/* Right side — star + CTA */}
@@ -49,14 +42,11 @@ export const HighlightsSection = () => {
         </div>
 
         {/* Video carousel */}
-        <div className="absolute top-[311px] left-0 w-[675px] h-[229px] overflow-hidden">
-          <div
-            className="flex h-[229px] gap-[52px] transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(calc(-${currentIndex} * (408px + 52px)))` }}
-          >
-            {videoItems.map((item, index) => (
-              <a key={index} href={item.href} rel="noopener noreferrer" target="_blank" className="flex-shrink-0">
-                <img className="w-[408px] h-[229px] object-cover block" alt={item.alt} src={item.src} />
+        <div className="absolute top-[311px] left-0 w-[675px] h-[229px] overflow-hidden group">
+          <div className="flex h-[229px] gap-[52px] w-max animate-marquee group-hover:[animation-play-state:paused]">
+            {[...videoItems, ...videoItems, ...videoItems].map((item, index) => (
+              <a key={index} href={item.href} rel="noopener noreferrer" target="_blank" className="flex-shrink-0 block w-[408px] h-[229px] rounded-[11px] overflow-hidden">
+                <img className="w-full h-full object-cover" alt={item.alt} src={item.src} />
               </a>
             ))}
           </div>

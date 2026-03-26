@@ -8,10 +8,6 @@ const imgFwArrow = 'https://www.figma.com/api/mcp/asset/e10ac569-b0b8-4c76-85c7-
 const imgSpaccatoTitle = 'https://www.figma.com/api/mcp/asset/a327d7c7-285e-4f37-9d04-139374b4c3a2';
 const imgCoinIcon = 'https://www.figma.com/api/mcp/asset/002291fe-553e-47e2-a5df-845347009dc1';
 const imgVipIcon = 'https://www.figma.com/api/mcp/asset/2c2850c1-7e3a-4056-921d-beaa34d30348';
-const imgCosmetic1 = 'https://www.figma.com/api/mcp/asset/41f2c132-6f3c-4c33-af53-d1cab717672d';
-const imgCosmetic2 = 'https://www.figma.com/api/mcp/asset/ae00fbac-90c2-49f0-84c2-fdc9c635d1e9';
-const imgCosmetic3 = 'https://www.figma.com/api/mcp/asset/5c45a669-03d0-4588-bf89-8d1c8c031d99';
-
 interface ShopItem {
   type: 'cosmetic' | 'vip';
   image: string;
@@ -21,10 +17,10 @@ interface ShopItem {
 }
 
 const shopItems: ShopItem[] = [
-  { type: 'cosmetic', image: imgCosmetic1, price: '500' },
-  { type: 'cosmetic', image: imgCosmetic2, price: '300' },
-  { type: 'cosmetic', image: imgCosmetic3, price: '999' },
-  { type: 'vip', image: imgVipIcon, price: '€9,99', label: 'VIP', sublabel: '1 MONTH' },
+  { type: 'cosmetic', image: '/showreel/shop-item-1.png', price: '500' },
+  { type: 'cosmetic', image: '/showreel/shop-item-2.png', price: '300' },
+  { type: 'cosmetic', image: '/showreel/shop-item-3.png', price: '999' },
+  { type: 'vip', image: '/showreel/vip-icon.svg', price: '€9,99', label: 'VIP', sublabel: '1 MONTH' },
 ];
 
 const CARD_WIDTH = 227;
@@ -32,24 +28,19 @@ const CARD_GAP = 60;
 
 export const ShopSection = () => {
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  const handleNext = () =>
-    setCurrentIndex((prev) => Math.min(prev + 1, shopItems.length - 1));
 
   return (
     <div id="s-shop" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
 
-        {/* Nav arrows */}
+        {/* Nav arrows (Decorative) */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <button onClick={handlePrev} className="cursor-pointer bg-transparent border-none p-0">
+          <div className="bg-transparent border-none p-0 opacity-50 cursor-default">
             <img className="w-[63.11px] h-[63.11px]" alt="Previous" src={imgBwArrow} />
-          </button>
-          <button onClick={handleNext} className="cursor-pointer bg-transparent border-none p-0">
+          </div>
+          <div className="bg-transparent border-none p-0 opacity-50 cursor-default">
             <img className="w-[63.11px] h-[63.11px]" alt="Next" src={imgFwArrow} />
-          </button>
+          </div>
         </div>
 
         {/* Right side — star + CTA */}
@@ -72,18 +63,17 @@ export const ShopSection = () => {
             </div>
           </button>
 
-          <p className="absolute top-[196px] left-[118px] h-[171px] [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-right tracking-[0] leading-[normal]">
-            Cosmetics, coins, VIP.<br />Everything you need<br />to set you up!
-          </p>
+          <div className="absolute top-[196px] left-[118px] w-[600px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
+            <span>Cosmetics, coins, VIP.</span>
+            <span>Everything you need</span>
+            <span>to set you up!</span>
+          </div>
         </div>
 
-        {/* Shop item carousel */}
-        <div className="absolute top-[311px] left-0 w-[623px] h-[272px] overflow-hidden">
-          <div
-            className="flex h-[272px] gap-[60px] transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(calc(-${currentIndex} * ${CARD_WIDTH + CARD_GAP}px))` }}
-          >
-            {shopItems.map((item, index) => (
+        {/* Shop item carousel (Infinite Marquee) */}
+        <div className="absolute top-[311px] left-0 w-[623px] h-[272px] overflow-hidden group">
+          <div className="flex h-[272px] gap-[60px] w-max animate-marquee group-hover:[animation-play-state:paused]">
+            {[...shopItems, ...shopItems, ...shopItems].map((item, index) => (
               <div
                 key={index}
                 className="flex-shrink-0 relative bg-[#3a0000] rounded-[17px] overflow-hidden"
@@ -100,7 +90,7 @@ export const ShopSection = () => {
                     <div className="absolute bottom-0 left-0 right-0 h-[154px] bg-gradient-to-t from-[#3a0000] to-transparent" />
                     {/* Price */}
                     <div className="absolute bottom-[14px] left-[14px] flex items-center gap-2">
-                      <img src={imgCoinIcon} alt="coin" className="w-[24px] h-[24px]" />
+                      <img src="/showreel/coin-icon.svg" alt="coin" className="w-[24px] h-[24px]" />
                       <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[31px] leading-[normal]">
                         {item.price}
                       </span>
