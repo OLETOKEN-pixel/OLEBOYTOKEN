@@ -121,9 +121,11 @@ export const ChallengesSection = () => {
             </div>
           </div>
 
-          <p className="absolute top-[217px] left-12 w-[651px] h-[171px] [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-5xl text-right tracking-[0] leading-[normal]">
-            Complete the tasks.<br />Get rewarded with<br />XP and OBC!
-          </p>
+          <div className="absolute top-[217px] left-12 w-[651px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
+            <span>Complete the tasks.</span>
+            <span>Get rewarded with</span>
+            <span>XP and OBC!</span>
+          </div>
         </div>
 
         {/* Challenge card */}

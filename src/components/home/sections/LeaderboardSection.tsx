@@ -119,9 +119,11 @@ export const LeaderboardSection = () => {
             </div>
           </div>
 
-          <p className="absolute top-[217px] left-[135px] h-[171px] [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-5xl text-right tracking-[0] leading-[normal]">
-            Get on top of the<br />leaderboard.<br />Weekly rewards!
-          </p>
+          <div className="absolute top-[217px] left-[135px] w-[600px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
+            <span>Get on top of the</span>
+            <span>leaderboard.</span>
+            <span>Weekly rewards!</span>
+          </div>
         </div>
 
         {/* Player cards */}

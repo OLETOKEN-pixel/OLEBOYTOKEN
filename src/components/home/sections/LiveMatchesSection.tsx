@@ -83,13 +83,11 @@ export const LiveMatchesSection = () => {
             </div>
           </div>
 
-          <p className="absolute top-[215px] left-[136px] h-[171px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-5xl text-right tracking-[0] leading-[48px]">
-            <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-5xl tracking-[0]">
-              Find an opponent. Let&apos;s see who&apos;s{' '}
-            </span>
-            <span className="leading-[50.4px]">built different</span>
-            <span className="text-[55px] leading-[57.7px]">!</span>
-          </p>
+          <div className="absolute top-[215px] left-[136px] w-[600px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
+            <span>Find an opponent.</span>
+            <span>Let&apos;s see who&apos;s</span>
+            <span>built different!</span>
+          </div>
         </div>
 
         {/* Match cards */}

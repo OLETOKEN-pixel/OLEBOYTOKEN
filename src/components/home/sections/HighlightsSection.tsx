@@ -41,13 +41,11 @@ export const HighlightsSection = () => {
             </div>
           </div>
 
-          <p className="absolute top-[216px] left-[118px] h-[167px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-5xl text-right tracking-[0] leading-[48px]">
-            <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-5xl tracking-[0]">
-              Publish and vote. The most liked will<br />
-            </span>
-            <span className="leading-[50.4px]">get extra OBC</span>
-            <span className="text-[52px] leading-[54.6px]">!</span>
-          </p>
+          <div className="absolute top-[216px] left-[118px] w-[600px] h-[167px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
+            <span>Publish and vote.</span>
+            <span>The most liked will</span>
+            <span>get extra OBC!</span>
+          </div>
         </div>
 
         {/* Video carousel */}
