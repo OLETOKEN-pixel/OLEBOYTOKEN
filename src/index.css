@@ -1,77 +1,107 @@
-@import url('https://fonts.cdnfonts.com/css/base-neue');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Teko:wght@400;500;600;700&display=swap');
 
-/* Base Neue font - from Figma design */
+/* ============================================================
+   BASE NEUE TRIAL — Exact Figma font-family names
+   These match the className selectors like:
+   font-['Base_Neue_Trial:Expanded_Bold',sans-serif]
+   ============================================================ */
+
+/* Regular */
 @font-face {
-  font-family: 'Base Neue';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-Regular.woff') format('woff');
-}
-@font-face {
-  font-family: 'Base Neue';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-Bold.woff') format('woff');
-}
-@font-face {
-  font-family: 'Base Neue';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-Black.woff') format('woff');
-}
-/* Alias for Figma's 'Base Neue Trial' reference */
-@font-face {
-  font-family: 'Base Neue Trial';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-Regular.woff') format('woff');
-}
-@font-face {
-  font-family: 'Base Neue Trial';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-Bold.woff') format('woff');
-}
-@font-face {
-  font-family: 'Base Neue Trial';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-Black.woff') format('woff');
-}
-/* Expanded variants — matching Figma's 'Base Neue Trial: Expanded Black Oblique' & 'Expanded Bold' */
-@font-face {
-  font-family: 'Base Neue Expanded';
-  font-style: oblique;
-  font-weight: 900;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff');
-}
-@font-face {
-  font-family: 'Base Neue Expanded';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/BaseNeue-ExpandedBold.woff') format('woff');
+  font-family: 'Base_Neue_Trial:Regular';
+  src: url('/fonts/BaseNeueTrial-Regular.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
 }
 
-/* Anima font-family aliases — font-style: normal so browser loads them without requiring
-   explicit font-style: oblique in components. Oblique/expanded appearance comes from the file. */
-@font-face { font-family: 'Base_Neue_Trial-Regular'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/BaseNeue-Regular.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-RegularOblique'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/BaseNeue-Regular.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-Bold'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/BaseNeue-Bold.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-Black'; font-style: normal; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-Black.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-WideBlack'; font-style: normal; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack_Oblique'; font-style: normal; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack Oblique'; font-style: normal; font-weight: 900; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBlackOblique.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-ExpandedBold'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBold.woff') format('woff'); }
-@font-face { font-family: 'Base_Neue_Trial-Expanded'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/BaseNeue-ExpandedBold.woff') format('woff'); }
+/* Regular Oblique */
+@font-face {
+  font-family: 'Base_Neue_Trial:Regular_Oblique';
+  src: url('/fonts/BaseNeueTrial-RegularOblique.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Bold */
+@font-face {
+  font-family: 'Base_Neue_Trial:Bold';
+  src: url('/fonts/BaseNeueTrial-Bold.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Bold Oblique */
+@font-face {
+  font-family: 'Base_Neue_Trial:Bold_Oblique';
+  src: url('/fonts/BaseNeueTrial-BoldOblique.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Expanded (Regular width variant) */
+@font-face {
+  font-family: 'Base_Neue_Trial:Expanded';
+  src: url('/fonts/BaseNeueTrial-Expanded.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Expanded Bold */
+@font-face {
+  font-family: 'Base_Neue_Trial:Expanded_Bold';
+  src: url('/fonts/BaseNeueTrial-ExpandedBold.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Expanded Black Oblique (most prominent heading style) */
+@font-face {
+  font-family: 'Base_Neue_Trial:Expanded_Black_Oblique';
+  src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Wide Black (used on CTA buttons like PLAY, RANK UP, TEAM UP) */
+@font-face {
+  font-family: 'Base_Neue_Trial:Wide_Black';
+  src: url('/fonts/BaseNeue-WideBlack.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Wide Bold (used on nav LVL element) */
+@font-face {
+  font-family: 'Base_Neue_Trial:Wide_Bold';
+  src: url('/fonts/BaseNeue-WideBold.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* ============================================================
+   BASE NEUE — Generic fallback weights (body, UI chrome)
+   ============================================================ */
+@font-face {
+  font-family: 'Base Neue';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/fonts/BaseNeueTrial-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Base Neue';
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url('/fonts/BaseNeueTrial-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Base Neue';
+  font-style: normal; font-weight: 900; font-display: swap;
+  src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Base Neue Trial';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/fonts/BaseNeueTrial-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Base Neue Trial';
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url('/fonts/BaseNeueTrial-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Base Neue Trial';
+  font-style: normal; font-weight: 900; font-display: swap;
+  src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
+}
 
 @tailwind base;
 @tailwind components;
