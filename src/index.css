@@ -51,14 +51,14 @@
 /* Expanded Black Oblique (most prominent heading style) */
 @font-face {
   font-family: 'Base_Neue_Trial:Expanded_Black_Oblique';
-  src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
+  src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype');
   font-weight: normal; font-style: normal; font-display: swap;
 }
 
 /* Wide Black (used on CTA buttons like PLAY, RANK UP, TEAM UP) */
 @font-face {
   font-family: 'Base_Neue_Trial:Wide_Black';
-  src: url('/fonts/BaseNeue-WideBlack.ttf') format('truetype');
+  src: url('/fonts/BaseNeueTrial-WideBlack.ttf') format('truetype');
   font-weight: normal; font-style: normal; font-display: swap;
 }
 
@@ -85,7 +85,7 @@
 @font-face {
   font-family: 'Base Neue';
   font-style: normal; font-weight: 900; font-display: swap;
-  src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
+  src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Base Neue Trial';
@@ -100,22 +100,39 @@
 @font-face {
   font-family: 'Base Neue Trial';
   font-style: normal; font-weight: 900; font-display: swap;
-  src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
+  src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype');
 }
 
 /* ============================================================
-   HYPHEN-STYLE ALIASES — match the Anima-generated component code
-   e.g. [font-family:'Base_Neue_Trial-Bold',Helvetica]
+   HYPHEN-STYLE & TAILWIND SPACE ALIASES
+   e.g. Tailwind arbitary class [font-family:'Base_Neue_Trial-Bold']
+   compiles down to `font-family: 'Base Neue Trial-Bold'` (replaces `_` with space)
    ============================================================ */
 @font-face { font-family: 'Base_Neue_Trial-Regular'; src: url('/fonts/BaseNeueTrial-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-Regular'; src: url('/fonts/BaseNeueTrial-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
 @font-face { font-family: 'Base_Neue_Trial-RegularOblique'; src: url('/fonts/BaseNeueTrial-RegularOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-RegularOblique'; src: url('/fonts/BaseNeueTrial-RegularOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
 @font-face { font-family: 'Base_Neue_Trial-Bold'; src: url('/fonts/BaseNeueTrial-Bold.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Base_Neue_Trial-Black'; src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-Bold'; src: url('/fonts/BaseNeueTrial-Bold.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
+@font-face { font-family: 'Base_Neue_Trial-Black'; src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-Black'; src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
 @font-face { font-family: 'Base_Neue_Trial-ExpandedBold'; src: url('/fonts/BaseNeueTrial-ExpandedBold.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack_Oblique'; src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack Oblique'; src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Base_Neue_Trial-WideBlack'; src: url('/fonts/BaseNeue-WideBlack.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-ExpandedBold'; src: url('/fonts/BaseNeueTrial-ExpandedBold.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack_Oblique'; src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack Oblique'; src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-ExpandedBlack Oblique'; src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-ExpandedBlack_Oblique'; src: url('/fonts/BaseNeueTrial-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
+@font-face { font-family: 'Base_Neue_Trial-WideBlack'; src: url('/fonts/BaseNeueTrial-WideBlack.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-WideBlack'; src: url('/fonts/BaseNeueTrial-WideBlack.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
 @font-face { font-family: 'Base_Neue_Trial-Expanded'; src: url('/fonts/BaseNeueTrial-Expanded.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base Neue Trial-Expanded'; src: url('/fonts/BaseNeueTrial-Expanded.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
 
 @tailwind base;
 @tailwind components;
