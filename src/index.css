@@ -103,6 +103,20 @@
   src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype');
 }
 
+/* ============================================================
+   HYPHEN-STYLE ALIASES — match the Anima-generated component code
+   e.g. [font-family:'Base_Neue_Trial-Bold',Helvetica]
+   ============================================================ */
+@font-face { font-family: 'Base_Neue_Trial-Regular'; src: url('/fonts/BaseNeueTrial-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-RegularOblique'; src: url('/fonts/BaseNeueTrial-RegularOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-Bold'; src: url('/fonts/BaseNeueTrial-Bold.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-Black'; src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBold'; src: url('/fonts/BaseNeueTrial-ExpandedBold.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack_Oblique'; src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-ExpandedBlack Oblique'; src: url('/fonts/BaseNeue-ExpandedBlackOblique.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-WideBlack'; src: url('/fonts/BaseNeue-WideBlack.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Base_Neue_Trial-Expanded'; src: url('/fonts/BaseNeueTrial-Expanded.ttf') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

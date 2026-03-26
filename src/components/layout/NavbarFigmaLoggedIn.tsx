@@ -156,8 +156,8 @@ export function NavbarFigmaLoggedIn() {
             />
             <span
               style={{
-                fontFamily: F,
-                fontWeight: 700,
+                fontFamily: "'Base_Neue_Trial-ExpandedBold', 'Base Neue Trial', sans-serif",
+                fontWeight: 'normal',
                 fontSize: '24px',
                 lineHeight: 'normal',
                 color: '#ffffff',
@@ -225,15 +225,15 @@ export function NavbarFigmaLoggedIn() {
               position: 'absolute',
               left: '245px',
               top: '11px',
-              fontFamily: F,
-              fontWeight: 700,
-              fontSize: '24px',
+              fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif",
+              fontWeight: 'normal',
+              fontSize: '15px',
               lineHeight: 'normal',
               color: '#ffffff',
               whiteSpace: 'nowrap',
             }}
           >
-            LVL.{level}
+            LVL<span style={{ fontFamily: "'Base_Neue_Trial-ExpandedBold', 'Base Neue Trial', sans-serif", fontSize: '24px' }}>.{level}</span>
           </span>
 
           {/* PFP — 50x50 circle at left:347.54 (extends 3.54px beyond TAB right edge) */}
