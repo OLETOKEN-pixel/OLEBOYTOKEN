@@ -93,9 +93,9 @@ export const LiveMatchesSection = () => {
         {/* Match cards */}
         <div className="absolute w-[625px] h-[400px] top-56 left-[3px] flex gap-[92px]">
           {/* Main match card */}
-          <div className="w-[300px] h-[400px] relative bg-[#111111] rounded-xl border border-solid border-[#ff1654]">
+          <div className="w-[300px] h-[400px] relative bg-[#272727] rounded-xl border border-solid border-[#ff1654]">
             <div className="absolute top-[335px] left-[26px] w-[249px] h-11">
-              <div className="absolute top-0 left-0 w-[247px] h-11 bg-[#ff1654] rounded-full" />
+              <div className="absolute top-0 left-0 w-[247px] h-11 bg-[#ff1654] rounded-lg" />
               <div className="absolute top-2.5 left-10 [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-xl text-right tracking-[0] leading-[normal] whitespace-nowrap">
                 Accept token
               </div>
@@ -145,9 +145,9 @@ export const LiveMatchesSection = () => {
           </div>
 
           {/* Secondary match card (blurred) */}
-          <div className="mt-[89px] w-[233.48px] h-[311.3px] relative bg-[#111111] rounded-[9.34px] border-[0.78px] border-solid border-[#ff1654] shadow-[inset_0px_-319px_4px_#00000040] blur-[1.35px]">
+          <div className="mt-[89px] w-[233.48px] h-[311.3px] relative bg-[#272727] rounded-[9.34px] border-[0.78px] border-solid border-[#ff1654] shadow-[inset_0px_-319px_4px_#00000040] blur-[1.35px]">
             <div className="absolute top-[261px] left-5 w-[194px] h-[34px]">
-              <div className="absolute top-px left-0 w-48 h-[34px] bg-[#ff1654] rounded-full" />
+              <div className="absolute top-px left-0 w-48 h-[34px] bg-[#ff1654] rounded-[6.23px]" />
               <div className="absolute top-2 left-[31px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[15.6px] text-right tracking-[0] leading-[normal]">Accept token</div>
             </div>
 
