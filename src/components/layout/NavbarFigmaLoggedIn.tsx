@@ -14,6 +14,20 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
+const NAV_SECTIONS: Record<string, string> = {
+  matches: 's-matches',
+  leaderboard: 's-leaderboard',
+  challenges: 's-challenges',
+  hls: 's-highlights',
+  teams: 's-teams',
+  shop: 's-shop',
+};
+
+function scrollToSection(sectionId: string) {
+  const el = document.getElementById(sectionId);
+  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+}
+
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
 export function NavbarFigmaLoggedIn() {
@@ -91,22 +105,25 @@ export function NavbarFigmaLoggedIn() {
             flex: 1,
           }}
         >
-          {['matches', 'leaderboard', 'challenges', 'hls', 'teams', 'shop'].map((item) => (
-            <Link
+          {(Object.keys(NAV_SECTIONS) as Array<keyof typeof NAV_SECTIONS>).map((item) => (
+            <button
               key={item}
-              to={item === 'hls' ? '/highlights' : `/${item}`}
+              onClick={() => scrollToSection(NAV_SECTIONS[item])}
               style={{
                 fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', 'Base Neue', sans-serif",
                 fontWeight: 700,
                 fontSize: '24px',
                 lineHeight: 'normal',
                 color: '#ffffff',
-                textDecoration: 'none',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
                 whiteSpace: 'nowrap',
               }}
             >
               {item}
-            </Link>
+            </button>
           ))}
         </div>
 
