@@ -65,6 +65,23 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <AuthenticatedGlobalListeners />
+            {/* Fixed bottom neon — always visible on all pages, matches Figma node 205:855 */}
+            <img
+              aria-hidden="true"
+              src="/figma-assets/figma-neon.png"
+              alt=""
+              style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                width: '100vw',
+                height: '146px',
+                objectFit: 'cover',
+                pointerEvents: 'none',
+                zIndex: 7,
+                transform: 'scaleY(-1)',
+              }}
+            />
             <AppLoadingGuard>
               <Routes>
                 <Route path="/" element={<Index />} />
