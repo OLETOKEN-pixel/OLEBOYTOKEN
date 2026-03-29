@@ -1,10 +1,18 @@
 {
   "permissions": {
     "allow": [
+<<<<<<< Updated upstream
       "Bash(find /c/Users/OleBoy/Desktop/OLEBOYTOKEN/OLEBOYTOKEN -type f \\\\\\(-name *discord* -o -name *auth* \\\\\\) \\\\\\(-name *.ts -o -name *.js \\\\\\))",
       "mcp__plugin_figma_figma__get_design_context",
       "mcp__plugin_figma_figma__get_screenshot",
       "mcp__plugin_figma_figma__get_metadata"
+=======
+      "Bash(find c:UsersOleBoyDesktopOLEBOYTOKEN -type f -name *.js -o -name *.jsx -o -name *.tsx -o -name *.ts -o -name *.html -o -name *.css)",
+      "Bash(xargs grep:*)",
+      "mcp__plugin_figma_figma__get_design_context",
+      "mcp__plugin_figma_figma__get_metadata",
+      "mcp__figma-desktop__get_metadata"
+>>>>>>> Stashed changes
     ]
   }
 }
