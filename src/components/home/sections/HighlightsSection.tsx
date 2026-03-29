@@ -9,14 +9,14 @@ export const HighlightsSection = () => {
   return (
     <div id="s-highlights" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
-        {/* Nav arrows (Decorative) */}
+        {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <div className="bg-transparent border-none p-0 opacity-50 cursor-default">
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-challenges')?.scrollIntoView({ behavior: 'smooth' })}>
             <img className="w-[63.11px] h-[63.11px]" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
-          </div>
-          <div className="bg-transparent border-none p-0 opacity-50 cursor-default">
+          </button>
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-teams')?.scrollIntoView({ behavior: 'smooth' })}>
             <img className="w-[63.11px] h-[63.11px]" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
-          </div>
+          </button>
         </div>
 
         {/* Right side — star + CTA */}

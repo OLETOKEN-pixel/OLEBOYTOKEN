@@ -70,10 +70,10 @@ export const TeamsSection = () => {
 
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <button className="cursor-pointer bg-transparent border-none p-0">
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-highlights')?.scrollIntoView({ behavior: 'smooth' })}>
             <img className="w-[63.11px] h-[63.11px]" alt="Previous" src={imgBwArrow} />
           </button>
-          <button className="cursor-pointer bg-transparent border-none p-0">
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-shop')?.scrollIntoView({ behavior: 'smooth' })}>
             <img className="w-[63.11px] h-[63.11px]" alt="Next" src={imgFwArrow} />
           </button>
         </div>

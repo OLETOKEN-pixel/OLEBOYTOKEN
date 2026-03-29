@@ -13,10 +13,9 @@ interface PlayerDisplay {
 export const LeaderboardSection = () => {
   const [players, setPlayers] = useState<PlayerDisplay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const handlePrev = useCallback(() => setCurrentIndex((prev) => Math.max(prev - 1, 0)), []);
-  const handleNext = useCallback(() => setCurrentIndex((prev) => Math.min(prev + 1, 2)), []);
+  const handlePrev = useCallback(() => document.getElementById('s-matches')?.scrollIntoView({ behavior: 'smooth' }), []);
+  const handleNext = useCallback(() => document.getElementById('s-challenges')?.scrollIntoView({ behavior: 'smooth' }), []);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {

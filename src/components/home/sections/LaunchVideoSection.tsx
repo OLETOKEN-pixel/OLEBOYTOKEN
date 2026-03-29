@@ -16,7 +16,7 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
   };
 
   return (
-    <div className="z-[5] w-[1920px] h-[955px] flex flex-col bg-[#0f0404] bg-[url(https://c.animaapp.com/cjSO5wtV/img/zaps.png)] bg-[100%_100%]">
+    <div id="s-launch" className="z-[5] w-[1920px] h-[955px] flex flex-col bg-[#0f0404] bg-[url(https://c.animaapp.com/cjSO5wtV/img/zaps.png)] bg-[100%_100%]">
       <div className="ml-[191px] w-[876px] h-[99px] relative mt-[174px]">
         <p className="absolute top-[5px] left-8 [font-family:'Base_Neue_Trial-Bold',Helvetica] font-normal text-white text-[50px] text-center tracking-[0] leading-[normal]">
           <span className="font-bold">Welcome</span>
