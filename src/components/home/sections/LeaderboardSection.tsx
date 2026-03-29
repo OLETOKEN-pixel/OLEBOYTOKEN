@@ -134,11 +134,10 @@ export const LeaderboardSection = () => {
             <div className="absolute top-6 left-[26px]">
               <Avatar url={third.avatarUrl} alt={third.username} size="w-[116px] h-[116px]" />
             </div>
-            <p className="absolute top-[150px] left-[23px] [font-family:'Base_Neue_Trial-Black',Helvetica] font-normal text-transparent text-[22px] text-center leading-[normal]">
-              <span className="tracking-[0.63px] font-black text-[#ff1654]">3</span>
-              <span className="font-black text-[#ff1654] text-2xl tracking-[0]">°</span>
-              <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white tracking-[0]"> {third.username}</span>
-            </p>
+            <div className="absolute top-[150px] left-0 right-0 text-center px-2">
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">3°</div>
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[22px] leading-normal truncate">{third.username}</div>
+            </div>
           </div>
 
           {/* 2nd place — left */}
@@ -147,11 +146,10 @@ export const LeaderboardSection = () => {
             <div className="absolute top-6 left-[26px]">
               <Avatar url={second.avatarUrl} alt={second.username} size="w-[116px] h-[116px]" />
             </div>
-            <p className="absolute top-[150px] left-[33px] [font-family:'Base_Neue_Trial-Black',Helvetica] font-normal text-transparent text-xl text-center leading-[normal]">
-              <span className="tracking-[0.52px] font-black text-[#ff1654]">2</span>
-              <span className="font-black text-[#ff1654] text-[22px] tracking-[0]">°</span>
-              <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white tracking-[0]"> {second.username}</span>
-            </p>
+            <div className="absolute top-[150px] left-0 right-0 text-center px-2">
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[20px] leading-normal">2°</div>
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[20px] leading-normal truncate">{second.username}</div>
+            </div>
           </div>
 
           {/* 1st place — center, larger */}
@@ -162,55 +160,66 @@ export const LeaderboardSection = () => {
             </div>
 
             {/* 1st place stats */}
-            <div className="absolute top-[265px] left-48 w-[147px] h-[70px] flex">
-              <div className="w-[89px] h-[70px] flex flex-col gap-2">
-                <div className="w-[61px] h-[18px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap">Win rate</div>
-                <div className="w-[83px] h-[18px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap">Rounds won</div>
-                <div className="w-[61px] h-[18px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap">Earnings</div>
+            <div className="absolute top-[265px] left-48 w-[147px] flex flex-col gap-[6px]">
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[15px]">Win rate</span>
+                <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[15px]">{first.winRate}</span>
               </div>
-              <div className="mt-[55px] w-[11px] h-[11px] ml-[9px] bg-[#ff1654] rounded-[5.5px]" />
-              <div className="w-[39px] h-[70px] ml-[5px] flex flex-col gap-2">
-                <div className="ml-[5px] w-[27px] h-[18px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[15px] tracking-[0] leading-[normal] whitespace-nowrap">{first.winRate}</div>
-                <div className="ml-[9px] w-[23px] h-[18px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[15px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{first.roundsWon}</div>
-                <div className="w-[33px] h-[18px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[15px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{first.earnings}</div>
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[15px]">Rounds won</span>
+                <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[15px]">{first.roundsWon}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[15px]">Earnings</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-[11px] h-[11px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                  <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[15px]">{first.earnings}</span>
+                </div>
               </div>
             </div>
 
             {/* 2nd place small stats */}
-            <div className="left-0 flex absolute top-[294px] w-[111px] h-[52px]">
-              <div className="w-[69px] h-[52.27px] flex flex-col gap-[6.6px]">
-                <div className="w-[46px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Win rate</div>
-                <div className="w-[63px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Rounds won</div>
-                <div className="w-[46px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Earnings</div>
+            <div className="left-0 absolute top-[294px] w-[111px] flex flex-col gap-[6.6px]">
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Win rate</span>
+                <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{second.winRate}</span>
               </div>
-              <div className="mt-[41.5px] w-[8.31px] h-[8.31px] ml-[5px] bg-[#ff1654] rounded-[4.15px]" />
-              <div className="mt-0 w-[31px] h-[52.27px] ml-[3.8px] flex flex-col gap-[6.6px]">
-                <div className="ml-[3.8px] w-[21px] h-[13px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[11.3px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{second.winRate}</div>
-                <div className="ml-[7.8px] w-[17px] h-[13px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[11.3px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{second.roundsWon}</div>
-                <div className="ml-0 w-[25px] h-[13px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[11.3px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{second.earnings}</div>
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Rounds won</span>
+                <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{second.roundsWon}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Earnings</span>
+                <div className="flex items-center gap-0.5">
+                  <div className="w-[8.31px] h-[8.31px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                  <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{second.earnings}</span>
+                </div>
               </div>
             </div>
 
             {/* 3rd place small stats */}
-            <div className="left-[417px] absolute top-[294px] w-[111px] h-[52px]">
-              <div className="absolute top-[42px] left-[82px] w-2 h-2 bg-[#ff1654] rounded-[4.15px]" />
-              <div className="absolute top-0 left-[90px] w-[27px] h-[52px] flex flex-col gap-[6.6px]">
-                <div className="w-[21px] h-[13px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[11.3px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{third.winRate}</div>
-                <div className="ml-[4px] w-[17px] h-[13px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[11.3px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{third.roundsWon}</div>
-                <div className="ml-[4.2px] w-[17px] h-[13px] [font-family:'Base_Neue_Trial-RegularOblique',Helvetica] font-normal text-[#ff1654] text-[11.3px] text-right tracking-[0] leading-[normal] whitespace-nowrap">{third.earnings}</div>
+            <div className="left-[417px] absolute top-[294px] w-[111px] flex flex-col gap-[6.6px]">
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Win rate</span>
+                <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{third.winRate}</span>
               </div>
-              <div className="absolute top-0 left-0 w-[69px] h-[52px] flex flex-col gap-[6.6px]">
-                <div className="w-[46px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Win rate</div>
-                <div className="w-[63px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Rounds won</div>
-                <div className="w-[46px] h-[13px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[11.3px] tracking-[0] leading-[normal] whitespace-nowrap">Earnings</div>
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Rounds won</span>
+                <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{third.roundsWon}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Earnings</span>
+                <div className="flex items-center gap-0.5">
+                  <div className="w-[8.31px] h-[8.31px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                  <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{third.earnings}</span>
+                </div>
               </div>
             </div>
 
-            <p className="absolute top-[189px] left-48 w-[146px] [font-family:'Base_Neue_Trial-Black',Helvetica] font-normal text-transparent text-[22px] text-center leading-[normal]">
-              <span className="tracking-[0.63px] font-black text-[#ff1654]">1</span>
-              <span className="font-black text-[#ff1654] text-2xl tracking-[0]">°</span>
-              <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[21px] tracking-[0]"> {first.username}</span>
-            </p>
+            <div className="absolute top-[189px] left-[158px] w-[212px] text-center px-2">
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">1°</div>
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[21px] leading-normal truncate">{first.username}</div>
+            </div>
           </div>
         </div>
 
