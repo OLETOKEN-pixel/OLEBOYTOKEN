@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
-import { LayoutDebugOverlay } from '@/components/dev/LayoutDebugOverlay';
 import { useSoundNotifications } from '@/hooks/useSoundNotifications';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -66,7 +65,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {isMobile && <BottomNav />}
 
-      <LayoutDebugOverlay />
     </div>
   );
 }
