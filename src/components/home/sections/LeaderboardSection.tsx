@@ -216,7 +216,7 @@ export const LeaderboardSection = () => {
 
         {/* Section title */}
         <img className="left-0 w-[1277px] absolute top-0 h-[207px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/spaccato-title-2.png" />
-        <div className="absolute top-[86px] left-[79px] w-[890px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal]">
+        <div className="absolute top-[65px] left-[79px] w-[890px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal]">
           LEADERBOARD
         </div>
       </div>

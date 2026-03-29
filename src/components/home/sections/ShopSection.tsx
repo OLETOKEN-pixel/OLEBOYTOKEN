@@ -143,7 +143,7 @@ export const ShopSection = () => {
 
         {/* Section title */}
         <img className="left-0 w-[553px] absolute top-0 h-[207px]" alt="" src={imgSpaccatoTitle} />
-        <div className="absolute top-[86px] left-[79px] w-[797px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
+        <div className="absolute top-[65px] left-[79px] w-[797px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
           SHOP
         </div>
       </div>

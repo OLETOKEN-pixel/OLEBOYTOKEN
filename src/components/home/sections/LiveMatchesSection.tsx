@@ -185,7 +185,7 @@ export const LiveMatchesSection = () => {
 
         {/* Section title */}
         <img className="absolute top-0 left-0 w-[1263px] h-[207px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/spaccato-title-3.png" />
-        <div className="absolute top-[86px] left-[79px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
+        <div className="absolute top-[65px] left-[79px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
           LIVE MATCHES
         </div>
       </div>
