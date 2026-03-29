@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const imgStarShape = 'https://www.figma.com/api/mcp/asset/50759456-8916-49b1-98a8-03612e4d8d3b';
@@ -72,12 +71,15 @@ export const ShopSection = () => {
 
         {/* Shop item carousel (Infinite Marquee) */}
         <div className="absolute top-[311px] left-0 w-[623px] h-[272px] overflow-hidden group">
-          <div className="flex h-[272px] gap-[60px] w-max animate-marquee group-hover:[animation-play-state:paused]">
-            {[...shopItems, ...shopItems, ...shopItems].map((item, index) => (
+          <div
+            className="flex h-[272px] w-max animate-marquee group-hover:[animation-play-state:paused]"
+            style={{ animationDuration: '12s', willChange: 'transform' }}
+          >
+            {[...shopItems, ...shopItems].map((item, index) => (
               <div
                 key={index}
                 className="flex-shrink-0 relative bg-[#3a0000] rounded-[17px] overflow-hidden"
-                style={{ width: `${CARD_WIDTH}px`, height: '272px' }}
+                style={{ width: `${CARD_WIDTH}px`, height: '272px', marginRight: `${CARD_GAP}px` }}
               >
                 {item.type === 'cosmetic' ? (
                   <>

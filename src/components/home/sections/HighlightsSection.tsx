@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 const videoItems = [
   { href: 'https://youtu.be/HxRTrHyWB0Y?si=VdsoQIswI9eOlHG5', src: '/showreel/highlight-video-1.png', alt: 'Piz montage 1' },
   { href: 'https://youtu.be/SDIys2MtwnA?si=Tba7ZE_Uda0qphNI', src: '/showreel/highlight-video-2.png', alt: 'Maxresdefault' },
@@ -43,9 +41,12 @@ export const HighlightsSection = () => {
 
         {/* Video carousel */}
         <div className="absolute top-[311px] left-0 w-[675px] h-[229px] overflow-hidden group">
-          <div className="flex h-[229px] gap-[52px] w-max animate-marquee group-hover:[animation-play-state:paused]">
-            {[...videoItems, ...videoItems, ...videoItems].map((item, index) => (
-              <a key={index} href={item.href} rel="noopener noreferrer" target="_blank" className="flex-shrink-0 block w-[408px] h-[229px] rounded-[11px] overflow-hidden">
+          <div
+            className="flex h-[229px] w-max animate-marquee group-hover:[animation-play-state:paused]"
+            style={{ animationDuration: '8s', willChange: 'transform' }}
+          >
+            {[...videoItems, ...videoItems].map((item, index) => (
+              <a key={index} href={item.href} rel="noopener noreferrer" target="_blank" className="flex-shrink-0 block w-[408px] h-[229px] mr-[52px] rounded-[11px] overflow-hidden">
                 <img className="w-full h-full object-cover" alt={item.alt} src={item.src} />
               </a>
             ))}

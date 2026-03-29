@@ -11,6 +11,7 @@ import { ChallengesSection } from './sections/ChallengesSection';
 import { HighlightsSection } from './sections/HighlightsSection';
 import { TeamsSection } from './sections/TeamsSection';
 import { ShopSection } from './sections/ShopSection';
+import { FooterSection } from './sections/FooterSection';
 
 interface HomeRegisteredProps {
   displayName: string;
@@ -18,7 +19,7 @@ interface HomeRegisteredProps {
 
 export function HomeRegistered({ displayName }: HomeRegisteredProps) {
   return (
-    <div className="bg-[#0f0404] w-full min-w-[1920px] min-h-[6685px] flex flex-col">
+    <div className="bg-[#0f0404] w-full min-w-[1920px] min-h-[7321px] flex flex-col">
       <LaunchVideoSection displayName={displayName} />
 
       {/* Top neon gradient overlay — very subtle, matches Figma */}
@@ -30,6 +31,7 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
       <HighlightsSection />
       <TeamsSection />
       <ShopSection />
+      <FooterSection />
     </div>
   );
 }
