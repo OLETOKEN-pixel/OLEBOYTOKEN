@@ -12,10 +12,9 @@ interface PlayerDisplay {
 
 export const LeaderboardSection = () => {
   const [players, setPlayers] = useState<PlayerDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const handlePrev = useCallback(() => document.getElementById('s-matches')?.scrollIntoView({ behavior: 'smooth' }), []);
-  const handleNext = useCallback(() => document.getElementById('s-challenges')?.scrollIntoView({ behavior: 'smooth' }), []);
+  const handlePrev = useCallback(() => { const el = document.getElementById('s-matches'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }, []);
+  const handleNext = useCallback(() => { const el = document.getElementById('s-challenges'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }, []);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -74,8 +73,6 @@ export const LeaderboardSection = () => {
         }
       } catch (err) {
         console.error('Leaderboard fetch error:', err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchLeaderboard();

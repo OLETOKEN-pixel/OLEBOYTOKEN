@@ -66,10 +66,10 @@ export const LiveMatchesSection = () => {
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-launch')?.scrollIntoView({ behavior: 'smooth' })}>
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => { const el = document.getElementById('s-launch'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
             <img className="w-[63.11px] h-[63.11px]" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
           </button>
-          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-leaderboard')?.scrollIntoView({ behavior: 'smooth' })}>
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => { const el = document.getElementById('s-leaderboard'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
             <img className="w-[63.11px] h-[63.11px]" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
           </button>
         </div>

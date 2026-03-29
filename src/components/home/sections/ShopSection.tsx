@@ -5,8 +5,6 @@ const imgArrowStroke = 'https://www.figma.com/api/mcp/asset/c452c283-8775-4e6a-a
 const imgBwArrow = 'https://www.figma.com/api/mcp/asset/27aaba43-4ef7-4ffc-bf6a-785b0e7c2e0f';
 const imgFwArrow = 'https://www.figma.com/api/mcp/asset/e10ac569-b0b8-4c76-85c7-b0f3cb77b37a';
 const imgSpaccatoTitle = 'https://www.figma.com/api/mcp/asset/a327d7c7-285e-4f37-9d04-139374b4c3a2';
-const imgCoinIcon = 'https://www.figma.com/api/mcp/asset/002291fe-553e-47e2-a5df-845347009dc1';
-const imgVipIcon = 'https://www.figma.com/api/mcp/asset/2c2850c1-7e3a-4056-921d-beaa34d30348';
 interface ShopItem {
   type: 'cosmetic' | 'vip';
   image: string;
@@ -34,10 +32,10 @@ export const ShopSection = () => {
 
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-teams')?.scrollIntoView({ behavior: 'smooth' })}>
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => { const el = document.getElementById('s-teams'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
             <img className="w-[63.11px] h-[63.11px]" alt="Previous" src={imgBwArrow} />
           </button>
-          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => document.getElementById('s-footer')?.scrollIntoView({ behavior: 'smooth' })}>
+          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => { const el = document.getElementById('s-footer'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
             <img className="w-[63.11px] h-[63.11px]" alt="Next" src={imgFwArrow} />
           </button>
         </div>

@@ -12,7 +12,7 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
 
   const scrollToMatches = () => {
     const el = document.getElementById('s-matches');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
   };
 
   return (
