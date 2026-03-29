@@ -11,6 +11,7 @@
  * COINS: at left:23px inside TAB
  */
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,7 +35,29 @@ export function NavbarFigmaLoggedIn() {
   const { profile, wallet } = useAuth();
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
-  const level = profile?.level ?? 1;
+  const level = (profile as any)?.level ?? 1;
+
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  useEffect(() => {
+    const sectionIds = Object.values(NAV_SECTIONS);
+    const observers: IntersectionObserver[] = [];
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        },
+        { threshold: 0.3 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
 
   return (
     <nav
@@ -105,26 +128,32 @@ export function NavbarFigmaLoggedIn() {
             flex: 1,
           }}
         >
-          {(Object.keys(NAV_SECTIONS) as Array<keyof typeof NAV_SECTIONS>).map((item) => (
-            <button
-              key={item}
-              onClick={() => scrollToSection(NAV_SECTIONS[item])}
-              style={{
-                fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', 'Base Neue', sans-serif",
-                fontWeight: 700,
-                fontSize: '24px',
-                lineHeight: 'normal',
-                color: '#ffffff',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {item}
-            </button>
-          ))}
+          {(Object.keys(NAV_SECTIONS) as Array<keyof typeof NAV_SECTIONS>).map((item) => {
+            const isActive = activeSection === NAV_SECTIONS[item];
+            return (
+              <button
+                key={item}
+                onClick={() => scrollToSection(NAV_SECTIONS[item])}
+                style={{
+                  fontFamily: isActive
+                    ? "'Base_Neue_Trial:Expanded_Black_Oblique', sans-serif"
+                    : "'Base_Neue_Trial:Expanded', sans-serif",
+                  fontWeight: 'normal',
+                  fontSize: isActive ? '26px' : '24px',
+                  lineHeight: 'normal',
+                  color: isActive ? '#ff1654' : '#ffffff',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  whiteSpace: 'nowrap',
+                  transition: 'color 0.2s, font-size 0.2s',
+                }}
+              >
+                {isActive ? item.toUpperCase() : item}
+              </button>
+            );
+          })}
         </div>
 
         {/* TAB section — 394x50px pill + PFP extending beyond right edge */}
