@@ -83,20 +83,15 @@ export const ChallengesSection = () => {
   }, [user]);
 
   /* ---- helpers for per-row styling ---- */
-  const rowBg = (c: ChallengeDisplay) => {
-    if (c.completed)
-      return 'bg-[linear-gradient(0deg,rgba(255,22,84,0.58)_0%,rgba(255,22,84,0.58)_100%)]';
-    if (c.progress > 0)
-      return `bg-[linear-gradient(90deg,rgba(255,22,84,0.42)_0%,rgba(15,4,4,0.42)_${100 - c.progress}%),linear-gradient(0deg,rgba(15,4,4,0.32)_0%,rgba(15,4,4,0.32)_100%)]`;
-    return 'bg-[linear-gradient(0deg,rgba(15,4,4,0.32)_0%,rgba(15,4,4,0.32)_100%)]';
-  };
-
   const checkBg = (c: ChallengeDisplay) =>
-    c.completed || c.progress > 0
-      ? 'bg-[linear-gradient(0deg,rgba(255,22,84,1)_0%,rgba(255,22,84,1)_100%)]'
-      : 'bg-[#0000006b]';
+    c.completed ? 'bg-[#ff1654]' : 'bg-[rgba(0,0,0,0.42)]';
 
   const level = Math.floor(userXp / 100);
+  const xpInLevel = userXp % 100;
+  const xpToNext = xpInLevel === 0 ? 100 : 100 - xpInLevel;
+  const RING_R = 70;
+  const RING_CIRC = 2 * Math.PI * RING_R;
+  const ringOffset = RING_CIRC * (1 - xpInLevel / 100);
 
   /* Row y-offsets inside the card (5 fixed positions matching the Anima layout) */
   const ROW_Y = [33, 88, 143, 240, 296];
@@ -132,7 +127,7 @@ export const ChallengesSection = () => {
         <div className="absolute top-[254px] left-[3px] w-[675px] h-[382px]">
           <div className="absolute -top-px -left-px w-[677px] h-96 bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
 
-          {/* Level badge — real XP from DB */}
+          {/* Level badge */}
           <div className="absolute top-[215px] left-20 w-[100px] h-[123px]">
             <div className="absolute top-0 left-0 w-24 h-[123px] bg-[#0000006b] rounded" />
             <p className="absolute top-2 left-[17px] w-[61px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[11px] tracking-[0] leading-[normal]">
@@ -141,21 +136,47 @@ export const ChallengesSection = () => {
             </p>
             <div className="top-[42px] left-[26px] w-11 h-11 rounded-[22px] absolute bg-[#ff1654]" />
             <div className="absolute top-[93px] left-[13px] w-[69px] bg-[linear-gradient(90deg,rgba(255,255,255,1)_0%,rgba(255,78,125,1)_100%)] [-webkit-background-clip:text] bg-clip-text [-webkit-text-fill-color:transparent] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-transparent text-sm text-right tracking-[0] leading-[normal]">
-              +{userXp}XP
+              +20OBC
             </div>
           </div>
 
-          {/* Circle progress graphic */}
-          <img className="absolute top-[33px] left-[49px] w-[158px] h-[158px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/circle@2x.png" />
+          {/* Circle progress — dynamic SVG ring */}
+          <div className="absolute top-[33px] left-[49px] w-[158px] h-[158px]">
+            <svg width="158" height="158" viewBox="0 0 158 158">
+              <circle cx="79" cy="79" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="14" />
+              <circle
+                cx="79" cy="79" r={RING_R} fill="none"
+                stroke="#ff1654" strokeWidth="14"
+                strokeLinecap="round"
+                strokeDasharray={RING_CIRC}
+                strokeDashoffset={ringOffset}
+                transform="rotate(-90 79 79)"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+              <span className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-[32px] leading-none">
+                {userXp}
+              </span>
+              <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[11px] leading-normal">
+                {xpToNext}XP left
+              </span>
+            </div>
+          </div>
 
           {/* Challenge rows — dynamically rendered from DB */}
           {challenges.map((c, i) => {
             if (i >= 5) return null;
             const y = ROW_Y[i];
             return (
-              <div key={c.id} className="absolute left-[237px] w-[397px] h-[47px]" style={{ top: `${y}px` }}>
+              <div key={c.id} className="absolute left-[237px] w-[393px] h-[47px]" style={{ top: `${y}px` }}>
                 {/* Row background */}
-                <div className={`absolute top-0 left-0 w-[393px] h-[47px] rounded-[7px] ${rowBg(c)}`} />
+                <div
+                  className={`absolute top-0 left-0 w-[393px] h-[47px] rounded-[7px] ${c.completed ? 'bg-[rgba(255,22,84,0.58)]' : ''}`}
+                  style={!c.completed ? {
+                    backgroundImage:
+                      'linear-gradient(90deg, rgba(255,22,84,0.42) 0%, rgba(15,4,4,0.42) 64.904%), linear-gradient(90deg, rgba(15,4,4,0.32) 0%, rgba(15,4,4,0.32) 100%)',
+                  } : undefined}
+                />
                 {/* Checkbox */}
                 <div className={`absolute top-2.5 left-3.5 w-7 h-7 rounded-[3px] ${checkBg(c)}`} />
                 {/* Checkmark icon (only if completed) */}
@@ -163,29 +184,26 @@ export const ChallengesSection = () => {
                   <img className="absolute top-3.5 left-[18px] w-5 h-5" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-24.svg" />
                 )}
                 {/* Title */}
-                <div className="absolute top-[15px] left-[57px] w-[266px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap">
+                <div className="absolute top-[15px] left-[57px] w-[230px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap overflow-hidden text-ellipsis">
                   {c.title}
                 </div>
-                {/* Reward text */}
+                {/* Reward + dot (dot only if completed) */}
                 {c.reward && (
-                  <div className="absolute top-[15px] right-0 w-[59px] bg-[linear-gradient(90deg,rgba(255,255,255,1)_0%,rgba(255,78,125,1)_100%)] [-webkit-background-clip:text] bg-clip-text [-webkit-text-fill-color:transparent] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-transparent text-[10px] text-right tracking-[0] leading-[normal] whitespace-nowrap">
-                    {c.reward}
-                  </div>
-                )}
-                {/* Progress bar (only if in-progress or completed) */}
-                {c.progress > 0 && (
-                  <>
+                  <div className="absolute top-[15px] right-[6px] flex items-center gap-[4px]">
+                    {c.completed && (
+                      <div className="w-[7px] h-[7px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                    )}
                     <div
-                      className="absolute top-[35px] right-[8px] h-2 rounded-full overflow-hidden"
-                      style={{ width: '41px' }}
+                      className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[10px] text-right leading-normal whitespace-nowrap"
+                      style={{
+                        background: 'linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,78,125,1) 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
                     >
-                      <div
-                        className="h-full bg-white/50 rounded-full"
-                        style={{ width: `${c.progress}%` }}
-                      />
+                      {c.reward}
                     </div>
-                    <div className="absolute top-9 left-[381px] w-[7px] h-[7px] bg-[#ff1654] rounded-[3.5px]" />
-                  </>
+                  </div>
                 )}
               </div>
             );
