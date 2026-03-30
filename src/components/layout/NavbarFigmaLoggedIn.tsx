@@ -142,7 +142,11 @@ export function NavbarFigmaLoggedIn() {
                   fontSize: isActive ? '26px' : '24px',
                   lineHeight: 'normal',
                   color: isActive ? '#ff1654' : '#ffffff',
-                  filter: isActive ? 'drop-shadow(0px 0px 8px rgba(255, 22, 84, 0.85))' : 'none',
+                  WebkitTextStroke: isActive ? '1px #000000' : 'none',
+                  textShadow: isActive
+                    ? '0px 2px 4px rgba(0,0,0,0.55), 0px -1px 3px rgba(180,0,20,0.45)'
+                    : 'none',
+                  filter: isActive ? 'drop-shadow(0px 0px 10px rgba(255, 22, 84, 0.9))' : 'none',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
