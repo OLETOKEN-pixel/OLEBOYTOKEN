@@ -59,6 +59,16 @@ export function NavbarFigmaLoggedIn() {
     return () => observers.forEach((o) => o.disconnect());
   }, []);
 
+  // Clear active section when user scrolls back to top of page
+  useEffect(() => {
+    const clearOnTop = () => {
+      if (window.scrollY < 100) setActiveSection(null);
+    };
+    window.addEventListener('scroll', clearOnTop, { passive: true });
+    clearOnTop(); // run immediately in case page loads at top
+    return () => window.removeEventListener('scroll', clearOnTop);
+  }, []);
+
   return (
     <nav
       style={{
@@ -143,7 +153,7 @@ export function NavbarFigmaLoggedIn() {
                   lineHeight: 'normal',
                   lineHeight: isActive ? '31px' : 'normal',
                   color: isActive ? '#ff1654' : '#ffffff',
-                  WebkitTextStroke: isActive ? '1px #000000' : 'none',
+                  WebkitTextStroke: isActive ? '1px #000000' : '0px transparent',
                   textShadow: 'none',
                   filter: 'none',
                   background: 'none',
