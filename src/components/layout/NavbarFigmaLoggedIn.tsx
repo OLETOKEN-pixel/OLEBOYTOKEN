@@ -136,8 +136,8 @@ export function NavbarFigmaLoggedIn() {
                 onClick={() => scrollToSection(NAV_SECTIONS[item])}
                 style={{
                   fontFamily: isActive
-                    ? "'Base_Neue_Trial:Expanded_Black_Oblique', sans-serif"
-                    : "'Base_Neue_Trial:Expanded', sans-serif",
+                    ? "'Base_Neue_Trial-ExpandedBlack_Oblique', sans-serif"
+                    : "'Base_Neue_Trial-Expanded', sans-serif",
                   fontWeight: 'normal',
                   fontSize: isActive ? '26px' : '24px',
                   lineHeight: 'normal',
