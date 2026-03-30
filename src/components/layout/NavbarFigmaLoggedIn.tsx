@@ -142,6 +142,7 @@ export function NavbarFigmaLoggedIn() {
                   fontSize: isActive ? '26px' : '24px',
                   lineHeight: 'normal',
                   color: isActive ? '#ff1654' : '#ffffff',
+                  filter: isActive ? 'drop-shadow(0px 0px 8px rgba(255, 22, 84, 0.85))' : 'none',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
