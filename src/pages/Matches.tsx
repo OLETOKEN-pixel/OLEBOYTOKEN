@@ -1,380 +1,299 @@
-/**
- * Matches page — standalone route /matches
- * Based on Figma node 205:271 (MATCHES frame)
- *
- * Frame: 1920x955 (but rendered as scrollable page, not fixed height)
- * Background: #0F0404
- * Title "LIVE MATCHES": Base Neue Trial 900, 80px
- * Filter bar: 4 pill buttons at y~369
- * Cards grid: 300x400 cards starting y~463
- */
-
 import { useEffect, useState } from 'react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { MatchCard } from '@/components/matches/MatchCard';
+import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
 import { supabase } from '@/integrations/supabase/client';
-import type { Match } from '@/types';
+import type { Match, Platform } from '@/types';
 
-interface MatchDisplay {
-  id: string;
-  title: string;
-  firstTo: string;
-  platform: string;
-  entryFee: string;
-  prize: string;
-  expiresIn: string;
+type TeamSizeFilter = 'all' | '1' | '2' | '3' | '4';
+type PlatformFilter = 'all' | Platform;
+type ModeFilter = 'all' | 'Box Fight' | 'Build Fight' | 'Realistic' | 'Zone Wars';
+
+const TEAM_SIZE_OPTIONS: Array<{ value: TeamSizeFilter; label: string }> = [
+  { value: 'all', label: 'TEAM SIZE' },
+  { value: '1', label: '1V1' },
+  { value: '2', label: '2V2' },
+  { value: '3', label: '3V3' },
+  { value: '4', label: '4V4' },
+];
+
+const PLATFORM_OPTIONS: Array<{ value: PlatformFilter; label: string }> = [
+  { value: 'all', label: 'PLATFORM' },
+  { value: 'PC', label: 'PC' },
+  { value: 'Console', label: 'CONSOLE' },
+  { value: 'Mobile', label: 'MOBILE' },
+  { value: 'All', label: 'CROSS-PLATFORM' },
+];
+
+const MODE_OPTIONS: Array<{ value: ModeFilter; label: string }> = [
+  { value: 'all', label: 'MODE' },
+  { value: 'Box Fight', label: 'BOX FIGHT' },
+  { value: 'Build Fight', label: 'BUILD FIGHT' },
+  { value: 'Realistic', label: 'REALISTIC' },
+  { value: 'Zone Wars', label: 'ZONE WARS' },
+];
+
+function formatTimeLeft(expiresAt: string, now: number): string {
+  const expiresAtMs = new Date(expiresAt).getTime();
+  const diff = expiresAtMs - now;
+
+  if (!Number.isFinite(expiresAtMs) || diff <= 0) {
+    return '00:00';
+  }
+
+  const totalSeconds = Math.floor(diff / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-function formatTimeLeft(expiresAt: string): string {
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  if (diff <= 0) return '00:00';
-  const mins = Math.floor(diff / 60000);
-  const secs = Math.floor((diff % 60000) / 1000);
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+function formatPlatform(platform: Match['platform']): string {
+  if (platform === 'Console') {
+    return 'PS5';
+  }
+
+  return String(platform ?? 'ALL').toUpperCase();
 }
 
-function matchToDisplay(m: Match): MatchDisplay {
-  const fee = m.entry_fee ?? 0;
-  const prize = fee * 2 * 0.95;
-  return {
-    id: m.id,
-    title: m.mode === 'Box Fight' ? 'BOX FIGHT' : m.mode === 'Build Fight' ? 'BUILD FIGHT' : m.mode === 'Realistic' ? 'REALISTIC 1V1' : m.mode?.toUpperCase() ?? 'MATCH',
-    firstTo: `${m.first_to}+2`,
-    platform: m.platform === 'Console' ? 'PS5' : m.platform,
-    entryFee: fee.toFixed(2),
-    prize: prize.toFixed(2),
-    expiresIn: formatTimeLeft(m.expires_at),
-  };
+function formatTitle(match: Match): string {
+  const rawMode = String(match.mode ?? '').trim();
+
+  if (rawMode === 'Realistic') {
+    return `REALISTIC ${match.team_size}v${match.team_size}`;
+  }
+
+  if (rawMode.length === 0) {
+    return 'MATCH';
+  }
+
+  return rawMode.toUpperCase();
 }
 
-const F = "'Base Neue Trial', 'Base Neue', sans-serif";
+function formatFirstTo(match: Match): string {
+  const firstTo = Number(match.first_to ?? 5);
+  return `${firstTo}+2`;
+}
 
-/* Chevron down arrow for filter dropdowns */
-function ChevronDown() {
+function formatPrize(match: Match): string {
+  const entryFee = Number(match.entry_fee ?? 0);
+  const totalPot = entryFee * Math.max(Number(match.team_size ?? 1), 1) * 2;
+  return (totalPot * 0.95).toFixed(2);
+}
+
+interface MatchesFilterSelectProps {
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  width: 'wide' | 'narrow';
+  onChange: (value: string) => void;
+}
+
+function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterSelectProps) {
+  const activeOption = options.find((option) => option.value === value) ?? options[0];
+
   return (
-    <svg width="12" height="7" viewBox="0 0 12 7" fill="none" style={{ flexShrink: 0 }}>
-      <path d="M1 1L6 6L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+    <div className={`matches-page__filter matches-page__filter--${width}`}>
+      <span className="matches-page__filter-label">{activeOption?.label}</span>
 
-/* Plus icon for CREATE button */
-function PlusIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0 }}>
-      <line x1="9" y1="0" x2="9" y2="18" stroke="white" strokeWidth="3" strokeLinecap="round" />
-      <line x1="0" y1="9" x2="18" y2="9" stroke="white" strokeWidth="3" strokeLinecap="round" />
-    </svg>
+      <select
+        className="matches-page__filter-native"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={options[0]?.label ?? 'Filter'}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <img
+        className="matches-page__filter-chevron"
+        src="/figma-assets/matches-filter-chevron.svg"
+        alt=""
+        aria-hidden="true"
+      />
+    </div>
   );
 }
 
 export default function Matches() {
-  const [matches, setMatches] = useState<MatchDisplay[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [teamSizeFilter, setTeamSizeFilter] = useState<TeamSizeFilter>('all');
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
+  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+    const timer = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
 
-      if (!error && data) {
-        setMatches(data.map(matchToDisplay));
-      }
-      setLoading(false);
+    return () => {
+      window.clearInterval(timer);
     };
-    fetchMatches();
   }, []);
 
-  // Update timers every second
   useEffect(() => {
-    if (matches.length === 0) return;
-    const interval = setInterval(async () => {
-      const { data } = await supabase
+    let isActive = true;
+
+    const fetchMatches = async () => {
+      const nowIso = new Date().toISOString();
+      let query = supabase
         .from('matches')
         .select('*')
         .eq('status', 'open')
+        .gt('expires_at', nowIso)
         .order('created_at', { ascending: false });
-      if (data) setMatches(data.map(matchToDisplay));
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [matches.length]);
+
+      if (teamSizeFilter !== 'all') {
+        query = query.eq('team_size', Number(teamSizeFilter));
+      }
+
+      if (platformFilter !== 'all') {
+        query = query.eq('platform', platformFilter);
+      }
+
+      if (modeFilter !== 'all') {
+        query = query.eq('mode', modeFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (!isActive) {
+        return;
+      }
+
+      if (error) {
+        console.error('Failed to load live matches', error);
+        setMatches([]);
+      } else {
+        setMatches((data ?? []) as Match[]);
+      }
+
+      setLoading(false);
+    };
+
+    setLoading(true);
+    void fetchMatches();
+
+    const channel = supabase
+      .channel(`matches-page:${teamSizeFilter}:${platformFilter}:${modeFilter}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'matches',
+        },
+        () => {
+          void fetchMatches();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isActive = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [modeFilter, platformFilter, teamSizeFilter]);
 
   return (
     <PublicLayout>
-      <div
-        style={{
-          width: '100%',
-          minHeight: '100vh',
-          background: '#0F0404',
-          overflowX: 'hidden',
-          position: 'relative',
-        }}
-      >
-        {/* Top neon gradient */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '146px',
-            background: 'linear-gradient(to bottom, rgba(255,22,84,0.17), transparent)',
-            pointerEvents: 'none',
-            zIndex: 1,
-          }}
+      <section className="matches-page">
+        <img
+          className="matches-page__top-neon"
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          aria-hidden="true"
         />
 
-        {/* Content container — centered 1532px like navbar */}
-        <div
-          style={{
-            maxWidth: '1532px',
-            margin: '0 auto',
-            padding: '0 50px',
-            position: 'relative',
-            zIndex: 2,
-          }}
-        >
-          {/* LIVE MATCHES title area — top ~156px from page top */}
-          <div style={{ paddingTop: '180px', marginBottom: '40px', position: 'relative' }}>
-            <h1
-              style={{
-                fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', " + F,
-                fontWeight: 900,
-                fontSize: '80px',
-                lineHeight: '95px',
-                color: '#ffffff',
-                margin: 0,
-                marginLeft: '110px',
-                whiteSpace: 'nowrap',
-                position: 'relative',
-                zIndex: 2,
-              }}
-            >
-              LIVE MATCHES
-            </h1>
-            {/* Figma asset: triangles + outline (node 205:271 "spaccato title") */}
+        <div className="matches-page__content">
+          <div className="matches-page__title-block">
             <img
+              className="matches-page__title-art"
               src="/figma-assets/figma-spaccato-title.svg"
               alt=""
               aria-hidden="true"
-              style={{
-                position: 'absolute',
-                top: '-10px',
-                left: '0',
-                width: '1000px',
-                height: 'auto',
-                pointerEvents: 'none',
-                zIndex: 1,
-              }}
             />
+            <h1 className="matches-page__title">LIVE MATCHES</h1>
           </div>
 
-          {/* Filter bar */}
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '16px',
-              marginBottom: '48px',
-              alignItems: 'center',
-            }}
-          >
-            {/* TEAM SIZE */}
-            <button
-              style={{
-                width: '222px',
-                height: '47px',
-                background: '#3C3C3C',
-                border: '1px solid #ffffff',
-                borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'Base_Neue_Trial-Regular', " + F,
-                  fontWeight: 400,
-                  fontSize: '24px',
-                  lineHeight: '29px',
-                  color: '#ffffff',
-                }}
-              >
-                TEAM SIZE
-              </span>
-              <ChevronDown />
-            </button>
+          <div className="matches-page__toolbar">
+            <div className="matches-page__toolbar-left">
+              <MatchesFilterSelect
+                value={teamSizeFilter}
+                options={TEAM_SIZE_OPTIONS}
+                width="wide"
+                onChange={(value) => setTeamSizeFilter(value as TeamSizeFilter)}
+              />
 
-            {/* PLATFORM */}
-            <button
-              style={{
-                width: '222px',
-                height: '47px',
-                background: '#3C3C3C',
-                border: '1px solid #ffffff',
-                borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'Base_Neue_Trial-Regular', " + F,
-                  fontWeight: 400,
-                  fontSize: '24px',
-                  lineHeight: '29px',
-                  color: '#ffffff',
-                }}
-              >
-                PLATFORM
-              </span>
-              <ChevronDown />
-            </button>
+              <MatchesFilterSelect
+                value={platformFilter}
+                options={PLATFORM_OPTIONS}
+                width="wide"
+                onChange={(value) => setPlatformFilter(value as PlatformFilter)}
+              />
 
-            {/* MODE */}
-            <button
-              style={{
-                width: '147px',
-                height: '47px',
-                background: '#3C3C3C',
-                border: '1px solid #ffffff',
-                borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'Base_Neue_Trial-Regular', " + F,
-                  fontWeight: 400,
-                  fontSize: '24px',
-                  lineHeight: '29px',
-                  color: '#ffffff',
-                }}
-              >
-                MODE
-              </span>
-              <ChevronDown />
-            </button>
+              <MatchesFilterSelect
+                value={modeFilter}
+                options={MODE_OPTIONS}
+                width="narrow"
+                onChange={(value) => setModeFilter(value as ModeFilter)}
+              />
+            </div>
 
-            {/* Spacer to push CREATE to the right */}
-            <div style={{ flex: 1 }} />
-
-            {/* CREATE */}
-            <button
-              style={{
-                width: '222px',
-                height: '47px',
-                background: '#FF1654',
-                border: '1px solid #ffffff',
-                borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'Base_Neue_Trial-Regular', " + F,
-                  fontWeight: 400,
-                  fontSize: '24px',
-                  lineHeight: '29px',
-                  color: '#ffffff',
-                }}
-              >
-                CREATE
-              </span>
-              <PlusIcon />
+            <button className="matches-page__create-button" type="button" disabled aria-disabled="true">
+              <img src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
+              <span>CREATE</span>
             </button>
           </div>
 
-          {/* Match cards grid */}
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '40px',
-              paddingBottom: '200px',
-            }}
-          >
-            {loading && (
-              <div
-                style={{
-                  width: '100%',
-                  textAlign: 'center',
-                  padding: '80px 0',
-                  fontFamily: "'Base_Neue_Trial-Regular', " + F,
-                  fontSize: '24px',
-                  color: 'rgba(255,255,255,0.4)',
-                }}
-              >
-                Loading...
-              </div>
-            )}
+          <div className="matches-page__grid" aria-busy={loading}>
+            {loading &&
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="matches-live-card matches-live-card--skeleton" aria-hidden="true">
+                  <div className="matches-live-card__skeleton matches-live-card__skeleton--title" />
+                  <div className="matches-live-card__skeleton matches-live-card__skeleton--divider" />
+                  <div className="matches-live-card__skeleton matches-live-card__skeleton--row" />
+                  <div className="matches-live-card__skeleton matches-live-card__skeleton--row" />
+                  <div className="matches-live-card__skeleton matches-live-card__skeleton--row" />
+                  <div className="matches-live-card__skeleton matches-live-card__skeleton--button" />
+                </div>
+              ))}
+
+            {!loading &&
+              matches.map((match) => (
+                <MatchesLiveCard
+                  key={match.id}
+                  title={formatTitle(match)}
+                  firstTo={formatFirstTo(match)}
+                  platform={formatPlatform(match.platform)}
+                  entryFee={Number(match.entry_fee ?? 0).toFixed(2)}
+                  prize={formatPrize(match)}
+                  expiresIn={formatTimeLeft(match.expires_at, currentTime)}
+                />
+              ))}
 
             {!loading && matches.length === 0 && (
-              <div
-                style={{
-                  width: '100%',
-                  textAlign: 'center',
-                  padding: '80px 0',
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', " + F,
-                    fontWeight: 900,
-                    fontSize: '32px',
-                    color: 'rgba(255,255,255,0.25)',
-                    marginBottom: '12px',
-                  }}
-                >
-                  NO LIVE MATCHES
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'Base_Neue_Trial-Regular', " + F,
-                    fontSize: '20px',
-                    color: 'rgba(255,255,255,0.3)',
-                  }}
-                >
-                  Create a match or check back later
-                </div>
+              <div className="matches-page__empty-state">
+                <p className="matches-page__empty-eyebrow">MATCHES</p>
+                <h2 className="matches-page__empty-title">NO LIVE MATCHES</h2>
+                <p className="matches-page__empty-copy">
+                  This layout is ready to host future live matches. As soon as a match opens, it will appear here
+                  without breaking the grid or the scrollable flow of the page.
+                </p>
               </div>
             )}
-
-            {matches.map((m) => (
-              <MatchCard
-                key={m.id}
-                title={m.title}
-                firstTo={m.firstTo}
-                platform={m.platform}
-                entryFee={m.entryFee}
-                prize={m.prize}
-                expiresIn={m.expiresIn}
-              />
-            ))}
           </div>
         </div>
-      </div>
+      </section>
     </PublicLayout>
   );
 }

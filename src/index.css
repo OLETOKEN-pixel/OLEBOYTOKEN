@@ -850,3 +850,532 @@
   }
 }
 
+.matches-page {
+  --matches-bg: #0f0404;
+  --matches-surface: #282828;
+  --matches-accent: #ff1654;
+  --matches-border: rgba(255, 255, 255, 0.5);
+  --matches-copy: #ffffff;
+  position: relative;
+  min-height: 100vh;
+  background: var(--matches-bg);
+  overflow-x: clip;
+}
+
+.matches-page__top-neon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 0;
+  width: max(100vw, 1920px);
+  height: 146px;
+  transform: translateX(-50%);
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.matches-page__content {
+  position: relative;
+  z-index: 1;
+  width: min(1532px, calc(100vw - 40px));
+  margin: 0 auto;
+  padding-top: 156px;
+  padding-bottom: 200px;
+}
+
+.matches-page__title-block {
+  position: relative;
+  width: min(1263px, calc(100% + 29px));
+  aspect-ratio: 1263 / 207;
+  margin-bottom: 6px;
+  margin-left: -29px;
+}
+
+.matches-page__title-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.matches-page__title {
+  position: absolute;
+  top: 31.4%;
+  left: 6.25%;
+  margin: 0;
+  font-family: 'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif;
+  font-size: clamp(48px, 4.1667vw, 80px);
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.matches-page__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 46px 0 42px;
+  margin-bottom: 47px;
+}
+
+.matches-page__toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 29px;
+}
+
+.matches-page__filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 47px;
+  background: #3d3d3d;
+  border: 1px solid var(--matches-border);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+.matches-page__filter--wide {
+  width: 222px;
+}
+
+.matches-page__filter--narrow {
+  width: 147px;
+}
+
+.matches-page__filter:focus-within {
+  border-color: #fff;
+}
+
+.matches-page__filter-label {
+  font-family: 'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.matches-page__filter-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.matches-page__filter-chevron {
+  position: absolute;
+  top: 20px;
+  right: 13px;
+  width: 12px;
+  height: 7px;
+  pointer-events: none;
+}
+
+.matches-page__create-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 222px;
+  height: 47px;
+  margin-left: auto;
+  background: var(--matches-accent);
+  border: 1px solid var(--matches-border);
+  border-radius: 16px;
+  padding: 0;
+  color: #fff;
+  cursor: default;
+  opacity: 1;
+}
+
+.matches-page__create-button:disabled {
+  opacity: 1;
+}
+
+.matches-page__create-button img {
+  width: 18px;
+  height: 18px;
+}
+
+.matches-page__create-button span {
+  font-family: 'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.matches-page__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 300px);
+  column-gap: 110.6667px;
+  row-gap: 40px;
+  align-items: start;
+}
+
+.matches-page__empty-state {
+  grid-column: 1 / -1;
+  min-height: 400px;
+  background: var(--matches-surface);
+  border: 1px solid var(--matches-accent);
+  border-radius: 12px;
+  padding: 54px 58px;
+  box-sizing: border-box;
+  box-shadow:
+    0 4px 4px -4px rgba(12, 12, 13, 0.05),
+    0 16px 16px -8px rgba(12, 12, 13, 0.1);
+}
+
+.matches-page__empty-eyebrow {
+  margin: 0 0 12px;
+  font-family: 'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.matches-page__empty-title {
+  margin: 0 0 18px;
+  font-family: 'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif;
+  font-size: clamp(34px, 2.5vw, 48px);
+  line-height: 1;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.matches-page__empty-copy {
+  max-width: 760px;
+  margin: 0;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.matches-live-card {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  min-height: 400px;
+  background: var(--matches-surface);
+  border: 1px solid var(--matches-accent);
+  border-radius: 12px;
+  padding: 25px 26px 20px;
+  box-sizing: border-box;
+  box-shadow:
+    0 4px 4px -4px rgba(12, 12, 13, 0.05),
+    0 16px 16px -8px rgba(12, 12, 13, 0.1);
+}
+
+.matches-live-card__header {
+  width: 261px;
+}
+
+.matches-live-card__title {
+  margin: 0;
+  font-family: 'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif;
+  font-size: clamp(28px, 1.6667vw, 32px);
+  line-height: 1;
+  text-align: center;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.matches-live-card__divider {
+  display: block;
+  width: 259px;
+  height: 1px;
+  margin-top: 14px;
+}
+
+.matches-live-card__info-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  grid-template-areas:
+    "first platform"
+    "money money"
+    "expires expires";
+  column-gap: 46px;
+  row-gap: 20px;
+  margin-top: 29px;
+}
+
+.matches-live-card__metric:first-child {
+  grid-area: first;
+}
+
+.matches-live-card__metric--platform {
+  grid-area: platform;
+  text-align: center;
+}
+
+.matches-live-card__metric--money {
+  grid-area: money;
+}
+
+.matches-live-card__metric--expires {
+  grid-area: expires;
+}
+
+.matches-live-card__label {
+  display: block;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.matches-live-card__value-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.matches-live-card__value-row--first-to {
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.matches-live-card__triangles {
+  width: 19px;
+  height: 28.5px;
+  flex: none;
+}
+
+.matches-live-card__value {
+  font-family: 'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.matches-live-card__value--large {
+  font-family: 'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif;
+  font-size: 30px;
+}
+
+.matches-live-card__value--platform {
+  display: block;
+  margin-top: 3px;
+  font-family: 'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+}
+
+.matches-live-card__money-labels {
+  display: flex;
+  justify-content: space-between;
+  padding-right: 37px;
+}
+
+.matches-live-card__money-values {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.matches-live-card__dot {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+
+.matches-live-card__arrow {
+  width: 16px;
+  height: 11px;
+  margin: 0 4px;
+  transform: rotate(-90deg);
+  flex: none;
+}
+
+.matches-live-card__prize-icon {
+  width: 23px;
+  height: 19px;
+  flex: none;
+}
+
+.matches-live-card__accept {
+  width: 247px;
+  height: 44px;
+  margin-top: auto;
+  background: var(--matches-accent);
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  font-family: 'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  cursor: default;
+}
+
+.matches-live-card__accept:disabled {
+  opacity: 1;
+}
+
+.matches-live-card--skeleton {
+  border-color: rgba(255, 22, 84, 0.45);
+}
+
+.matches-live-card__skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.matches-live-card__skeleton--title {
+  width: 72%;
+  height: 32px;
+  margin: 0 auto 14px;
+}
+
+.matches-live-card__skeleton--divider {
+  width: 259px;
+  height: 1px;
+  margin-bottom: 43px;
+}
+
+.matches-live-card__skeleton--row {
+  width: 100%;
+  height: 56px;
+  margin-bottom: 18px;
+}
+
+.matches-live-card__skeleton--button {
+  width: 247px;
+  height: 44px;
+  margin-top: auto;
+}
+
+@media (max-width: 1599px) {
+  .matches-page__content {
+    width: min(1532px, calc(100vw - 48px));
+  }
+
+  .matches-page__toolbar {
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  .matches-page__create-button {
+    margin-left: 0;
+  }
+
+  .matches-page__grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 300px));
+    justify-content: center;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .matches-page__content {
+    width: calc(100vw - 32px);
+    padding-top: 148px;
+    padding-bottom: 176px;
+  }
+
+  .matches-page__title-block {
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 20px;
+  }
+
+  .matches-page__toolbar-left {
+    width: 100%;
+    gap: 16px;
+  }
+
+  .matches-page__filter--wide,
+  .matches-page__filter--narrow {
+    width: calc(50% - 8px);
+  }
+
+  .matches-page__create-button {
+    width: 222px;
+  }
+
+  .matches-page__empty-state {
+    padding: 40px 36px;
+  }
+
+  .matches-page__empty-copy {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 767px) {
+  .matches-page__content {
+    width: calc(100vw - 24px);
+    padding-top: 142px;
+    padding-bottom: 164px;
+  }
+
+  .matches-page__title {
+    top: 30%;
+    left: 8%;
+    font-size: clamp(40px, 11vw, 56px);
+  }
+
+  .matches-page__toolbar {
+    margin-bottom: 32px;
+  }
+
+  .matches-page__toolbar-left {
+    flex-direction: column;
+  }
+
+  .matches-page__filter--wide,
+  .matches-page__filter--narrow,
+  .matches-page__create-button {
+    width: 100%;
+  }
+
+  .matches-page__filter-label,
+  .matches-page__create-button span {
+    font-size: 20px;
+  }
+
+  .matches-page__grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .matches-page__empty-state {
+    min-height: 320px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+
+  .matches-page__empty-copy {
+    font-size: 20px;
+  }
+
+  .matches-live-card {
+    width: min(300px, 100%);
+    margin: 0 auto;
+  }
+
+  .matches-live-card__header,
+  .matches-live-card__divider,
+  .matches-live-card__accept,
+  .matches-live-card__skeleton--divider,
+  .matches-live-card__skeleton--button {
+    width: 100%;
+  }
+
+  .matches-live-card__info-grid {
+    column-gap: 20px;
+  }
+}
