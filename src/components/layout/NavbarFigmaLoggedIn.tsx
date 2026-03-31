@@ -13,8 +13,14 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ProfileSettingsOverlay } from '@/components/profile/ProfileSettingsOverlay';
-import type { ProfileSection } from '@/components/profile/ProfileSettingsView';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 
 const NAV_SECTIONS: Record<string, string> = {
@@ -39,7 +45,7 @@ const NAV_ROUTES: Record<string, string> = {
 };
 
 export function NavbarFigmaLoggedIn() {
-  const { profile, wallet } = useAuth();
+  const { profile, wallet, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
@@ -49,9 +55,6 @@ export function NavbarFigmaLoggedIn() {
   const isOnHome = location.pathname === '/';
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [profileOverlayOpen, setProfileOverlayOpen] = useState(false);
-  const [profileOverlaySection, setProfileOverlaySection] = useState<ProfileSection>('account');
-
   // Determine active nav item from current route (when not on home page)
   const activeRouteItem = !isOnHome
     ? Object.entries(NAV_ROUTES).find(([, path]) => location.pathname === path)?.[0] ?? null
@@ -89,9 +92,13 @@ export function NavbarFigmaLoggedIn() {
     return () => window.removeEventListener('scroll', clearOnTop);
   }, [isOnHome]);
 
-  const openProfileOverlay = (section: ProfileSection) => {
-    setProfileOverlaySection(section);
-    setProfileOverlayOpen(true);
+  const openProfilePage = (path: string) => {
+    navigate(path);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   return (
@@ -271,8 +278,8 @@ export function NavbarFigmaLoggedIn() {
           {/* RECHARGE "+" — Ellipse 16x16 at left:190, top:18 inside TAB */}
           <button
             type="button"
-            onClick={() => openProfileOverlay('payments')}
-            aria-label="Open payments settings"
+            onClick={() => navigate('/wallet')}
+            aria-label="Open wallet page"
             style={{
               position: 'absolute',
               left: '190px',
@@ -339,58 +346,153 @@ export function NavbarFigmaLoggedIn() {
             LVL<span style={{ fontFamily: "'Base_Neue_Trial-ExpandedBold', 'Base Neue Trial', sans-serif", fontSize: '24px' }}>.{level}</span>
           </span>
 
-          <button
-            type="button"
-            aria-label="Open profile settings"
-            aria-haspopup="dialog"
-            onClick={() => openProfileOverlay('account')}
-            style={{
-              position: 'absolute',
-              left: '347px',
-              top: 0,
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              overflow: 'hidden',
-              padding: 0,
-              border: '1px solid rgba(255,255,255,0.18)',
-              background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #3b28cc, #6f5cff)',
-              cursor: 'pointer',
-              boxShadow: '0 0 18px rgba(0,0,0,0.28)',
-            }}
-          >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt="Profile"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open profile menu"
+                aria-haspopup="menu"
                 style={{
-                  display: 'block',
-                  width: '100%',
-                  height: '100%',
+                  position: 'absolute',
+                  left: '347px',
+                  top: 0,
+                  width: '50px',
+                  height: '50px',
                   borderRadius: '50%',
-                  objectFit: 'cover',
+                  overflow: 'hidden',
+                  padding: 0,
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 18px rgba(0,0,0,0.28)',
                 }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
-                }}
-              />
-            )}
-          </button>
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile"
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                    }}
+                  />
+                )}
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              align="end"
+              sideOffset={18}
+              className="w-[336px] rounded-[28px] border border-white/[0.14] bg-[linear-gradient(180deg,rgba(18,11,15,0.97)_0%,rgba(8,6,10,0.94)_100%)] p-2 text-white shadow-[0_4px_4px_-4px_rgba(12,12,13,0.05),0_16px_16px_-8px_rgba(12,12,13,0.1),0_26px_60px_rgba(0,0,0,0.55)] backdrop-blur-[22px]"
+            >
+              <DropdownMenuLabel className="relative overflow-hidden rounded-[22px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-4">
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)]" />
+                <div className="pointer-events-none absolute -left-8 top-1 h-20 w-20 rounded-full bg-[#ff1654]/18 blur-3xl" />
+
+                <div className="relative flex items-center gap-3">
+                  <div className="h-12 w-12 overflow-hidden rounded-full border border-white/[0.14] bg-white/[0.05]">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="block h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-[linear-gradient(135deg,#3b28cc,#6f5cff)]" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff8ead]">My Profile</p>
+                    <p className="mt-1 truncate text-[15px] font-semibold uppercase tracking-[0.08em] text-white">
+                      {profile?.discord_display_name || profile?.username || 'Player'}
+                    </p>
+                    <p className="truncate text-[11px] uppercase tracking-[0.12em] text-white/42">{profile?.email}</p>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+
+              <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
+
+              <DropdownMenuItem
+                className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+                onSelect={() => openProfilePage('/profile')}
+              >
+                <div className="flex w-full items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">My Profile</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Account details and identity</p>
+                  </div>
+                  <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+                onSelect={() => openProfilePage('/profile?tab=game')}
+              >
+                <div className="flex w-full items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">Game Settings</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Epic username and match setup</p>
+                  </div>
+                  <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+                onSelect={() => openProfilePage('/wallet')}
+              >
+                <div className="flex w-full items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">Payments &amp; Bank</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Wallet, Stripe and withdrawals</p>
+                  </div>
+                  <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+                onSelect={() => openProfilePage('/profile?tab=connections')}
+              >
+                <div className="flex w-full items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">Connections</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Discord and linked services</p>
+                  </div>
+                  <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
+
+              <DropdownMenuItem
+                className="rounded-[18px] border border-[#ff1654]/20 bg-[#ff1654]/8 px-3 py-0 text-[#ffc1d1] outline-none transition hover:bg-[#ff1654]/14 focus:bg-[#ff1654]/14"
+                onSelect={() => void handleSignOut()}
+              >
+                <div className="flex w-full items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#ffd0dc]">Sign Out</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#ffc1d1]/60">Close your current session</p>
+                  </div>
+                  <span className="text-xl leading-none text-[#ffc1d1]/45">&rsaquo;</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       </nav>
-
-      <ProfileSettingsOverlay
-        open={profileOverlayOpen}
-        initialSection={profileOverlaySection}
-        onClose={() => setProfileOverlayOpen(false)}
-      />
     </>
   );
 }
