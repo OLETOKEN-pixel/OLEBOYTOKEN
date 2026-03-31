@@ -31,7 +31,7 @@ export const ShopSection = () => {
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
 
         {/* Nav arrows */}
-        <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
+        <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-teams'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
             <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={imgBwArrow} />
           </button>
