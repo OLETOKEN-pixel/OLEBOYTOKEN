@@ -13,6 +13,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ProfileSettingsOverlay } from '@/components/profile/ProfileSettingsOverlay';
+import type { ProfileSection } from '@/components/profile/ProfileSettingsView';
 import { useAuth } from '@/contexts/AuthContext';
 
 const NAV_SECTIONS: Record<string, string> = {
@@ -47,6 +49,8 @@ export function NavbarFigmaLoggedIn() {
   const isOnHome = location.pathname === '/';
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [profileOverlayOpen, setProfileOverlayOpen] = useState(false);
+  const [profileOverlaySection, setProfileOverlaySection] = useState<ProfileSection>('account');
 
   // Determine active nav item from current route (when not on home page)
   const activeRouteItem = !isOnHome
@@ -85,18 +89,24 @@ export function NavbarFigmaLoggedIn() {
     return () => window.removeEventListener('scroll', clearOnTop);
   }, [isOnHome]);
 
+  const openProfileOverlay = (section: ProfileSection) => {
+    setProfileOverlaySection(section);
+    setProfileOverlayOpen(true);
+  };
+
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        top: '55px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: 'min(1532px, calc(100% - 100px))',
-        height: '91px',
-        zIndex: 50,
-      }}
-    >
+    <>
+      <nav
+        style={{
+          position: 'fixed',
+          top: '55px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'min(1532px, calc(100% - 100px))',
+          height: '91px',
+          zIndex: 50,
+        }}
+      >
       {/* SVG Bar background */}
       <img
         src="/figma-assets/84-283.svg"
@@ -260,6 +270,9 @@ export function NavbarFigmaLoggedIn() {
 
           {/* RECHARGE "+" — Ellipse 16x16 at left:190, top:18 inside TAB */}
           <button
+            type="button"
+            onClick={() => openProfileOverlay('payments')}
+            aria-label="Open payments settings"
             style={{
               position: 'absolute',
               left: '190px',
@@ -326,36 +339,58 @@ export function NavbarFigmaLoggedIn() {
             LVL<span style={{ fontFamily: "'Base_Neue_Trial-ExpandedBold', 'Base Neue Trial', sans-serif", fontSize: '24px' }}>.{level}</span>
           </span>
 
-          {/* PFP — 50x50 circle at left:347.54 (extends 3.54px beyond TAB right edge) */}
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="Profile"
-              style={{
-                position: 'absolute',
-                left: '347px',
-                top: 0,
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                position: 'absolute',
-                left: '347px',
-                top: 0,
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
-              }}
-            />
-          )}
+          <button
+            type="button"
+            aria-label="Open profile settings"
+            aria-haspopup="dialog"
+            onClick={() => openProfileOverlay('account')}
+            style={{
+              position: 'absolute',
+              left: '347px',
+              top: 0,
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              padding: 0,
+              border: '1px solid rgba(255,255,255,0.18)',
+              background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+              cursor: 'pointer',
+              boxShadow: '0 0 18px rgba(0,0,0,0.28)',
+            }}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                }}
+              />
+            )}
+          </button>
         </div>
       </div>
-    </nav>
+      </nav>
+
+      <ProfileSettingsOverlay
+        open={profileOverlayOpen}
+        initialSection={profileOverlaySection}
+        onClose={() => setProfileOverlayOpen(false)}
+      />
+    </>
   );
 }

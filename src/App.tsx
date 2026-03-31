@@ -20,6 +20,8 @@ import Rules from "./pages/Rules";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Matches from "./pages/Matches";
+import Profile from "./pages/Profile";
+import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +84,8 @@ function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/matches/create" element={<Matches />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/wallet" element={<Wallet />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
