@@ -122,6 +122,63 @@ function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterS
   );
 }
 
+function MatchesPlaceholderCard() {
+  return (
+    <article className="matches-live-card matches-live-card--placeholder" aria-hidden="true">
+      <header className="matches-live-card__header">
+        <div className="matches-live-card__placeholder-bar matches-live-card__placeholder-bar--title" />
+        <div className="matches-live-card__divider matches-live-card__divider--placeholder" />
+      </header>
+
+      <div className="matches-live-card__info-grid">
+        <div className="matches-live-card__metric">
+          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label" />
+          <div className="matches-live-card__value-row matches-live-card__value-row--first-to">
+            <div className="matches-live-card__placeholder-dot" />
+            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value-lg" />
+          </div>
+        </div>
+
+        <div className="matches-live-card__metric matches-live-card__metric--platform">
+          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label matches-live-card__placeholder-line--center" />
+          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--platform" />
+        </div>
+
+        <div className="matches-live-card__metric matches-live-card__metric--money">
+          <div className="matches-live-card__money-labels">
+            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label" />
+            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label matches-live-card__placeholder-line--short" />
+          </div>
+
+          <div className="matches-live-card__money-values">
+            <div className="matches-live-card__value-row">
+              <div className="matches-live-card__placeholder-dot" />
+              <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value" />
+            </div>
+
+            <div className="matches-live-card__placeholder-arrow" />
+
+            <div className="matches-live-card__value-row">
+              <div className="matches-live-card__placeholder-prize" />
+              <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value" />
+            </div>
+          </div>
+        </div>
+
+        <div className="matches-live-card__metric matches-live-card__metric--expires">
+          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label" />
+          <div className="matches-live-card__value-row">
+            <div className="matches-live-card__placeholder-dot" />
+            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value" />
+          </div>
+        </div>
+      </div>
+
+      <div className="matches-live-card__accept matches-live-card__accept--placeholder" />
+    </article>
+  );
+}
+
 export default function Matches() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,10 +272,16 @@ export default function Matches() {
         />
 
         <div className="matches-page__content">
-          <div className="matches-page__title-block">
+          <div className="matches-page__hero">
             <img
-              className="matches-page__title-art"
-              src="/figma-assets/figma-spaccato-title.svg"
+              className="matches-page__hero-triangles"
+              src="/figma-assets/matches-title-triangles.svg"
+              alt=""
+              aria-hidden="true"
+            />
+            <img
+              className="matches-page__title-underline"
+              src="/figma-assets/matches-title-underline.svg"
               alt=""
               aria-hidden="true"
             />
@@ -257,16 +320,7 @@ export default function Matches() {
 
           <div className="matches-page__grid" aria-busy={loading}>
             {loading &&
-              Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="matches-live-card matches-live-card--skeleton" aria-hidden="true">
-                  <div className="matches-live-card__skeleton matches-live-card__skeleton--title" />
-                  <div className="matches-live-card__skeleton matches-live-card__skeleton--divider" />
-                  <div className="matches-live-card__skeleton matches-live-card__skeleton--row" />
-                  <div className="matches-live-card__skeleton matches-live-card__skeleton--row" />
-                  <div className="matches-live-card__skeleton matches-live-card__skeleton--row" />
-                  <div className="matches-live-card__skeleton matches-live-card__skeleton--button" />
-                </div>
-              ))}
+              Array.from({ length: 4 }).map((_, index) => <MatchesPlaceholderCard key={`loading-${index}`} />)}
 
             {!loading &&
               matches.map((match) => (
@@ -281,16 +335,7 @@ export default function Matches() {
                 />
               ))}
 
-            {!loading && matches.length === 0 && (
-              <div className="matches-page__empty-state">
-                <p className="matches-page__empty-eyebrow">MATCHES</p>
-                <h2 className="matches-page__empty-title">NO LIVE MATCHES</h2>
-                <p className="matches-page__empty-copy">
-                  This layout is ready to host future live matches. As soon as a match opens, it will appear here
-                  without breaking the grid or the scrollable flow of the page.
-                </p>
-              </div>
-            )}
+            {!loading && matches.length === 0 && Array.from({ length: 4 }).map((_, index) => <MatchesPlaceholderCard key={`empty-${index}`} />)}
           </div>
         </div>
       </section>
