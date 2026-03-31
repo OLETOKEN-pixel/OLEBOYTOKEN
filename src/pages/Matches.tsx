@@ -49,19 +49,6 @@ function matchToDisplay(m: Match): MatchDisplay {
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
-/* Decorative pink triangles cluster (left of title) */
-function TitleTriangles() {
-  return (
-    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" style={{ flexShrink: 0 }}>
-      <polygon points="8,28 20,50 2,44" fill="#FF1654" />
-      <polygon points="22,16 30,24 26,20" fill="#FF1654" />
-      <polygon points="20,14 22,16 20,16" fill="#FF1654" />
-      <polygon points="6,26 14,28 8,24" fill="#FF1654" />
-      <polygon points="4,6 20,24 0,18" fill="#FF1654" />
-    </svg>
-  );
-}
-
 /* Chevron down arrow for filter dropdowns */
 function ChevronDown() {
   return (
@@ -151,32 +138,36 @@ export default function Matches() {
           }}
         >
           {/* LIVE MATCHES title area — top ~156px from page top */}
-          <div style={{ paddingTop: '180px', marginBottom: '40px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <TitleTriangles />
-              <h1
-                style={{
-                  fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', " + F,
-                  fontWeight: 900,
-                  fontSize: '80px',
-                  lineHeight: '95px',
-                  color: '#ffffff',
-                  margin: 0,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                LIVE MATCHES
-              </h1>
-            </div>
-            {/* Pink underline polygon */}
-            <div
+          <div style={{ paddingTop: '180px', marginBottom: '40px', position: 'relative' }}>
+            <h1
               style={{
-                marginTop: '8px',
-                width: '100%',
-                maxWidth: '1000px',
-                height: '4px',
-                background: '#FF1654',
-                clipPath: 'polygon(0 0, 100% 0, 99% 100%, 1% 100%)',
+                fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', " + F,
+                fontWeight: 900,
+                fontSize: '80px',
+                lineHeight: '95px',
+                color: '#ffffff',
+                margin: 0,
+                marginLeft: '110px',
+                whiteSpace: 'nowrap',
+                position: 'relative',
+                zIndex: 2,
+              }}
+            >
+              LIVE MATCHES
+            </h1>
+            {/* Figma asset: triangles + outline (node 205:271 "spaccato title") */}
+            <img
+              src="/figma-assets/figma-spaccato-title.svg"
+              alt=""
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: '-10px',
+                left: '0',
+                width: '1000px',
+                height: 'auto',
+                pointerEvents: 'none',
+                zIndex: 1,
               }}
             />
           </div>
