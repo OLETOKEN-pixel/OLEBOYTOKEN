@@ -19,6 +19,7 @@ import AdminUserDetail from "./pages/AdminUserDetail";
 import Rules from "./pages/Rules";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Matches from "./pages/Matches";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +80,7 @@ function App() {
                 <Route path="/admin/users/:id" element={<AdminUserDetail />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/matches" element={<Matches />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { Match } from '@/types';
 
@@ -40,6 +41,7 @@ const PLACEHOLDER_MATCHES: MatchDisplay[] = [
 ];
 
 export const LiveMatchesSection = () => {
+  const navigate = useNavigate();
   const [matches, setMatches] = useState<MatchDisplay[]>(PLACEHOLDER_MATCHES);
 
   useEffect(() => {
@@ -78,7 +80,13 @@ export const LiveMatchesSection = () => {
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
           <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/star-shape-3.svg" />
 
-          <div className="absolute top-[406px] left-[311px] w-[214px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/matches')}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/matches'); }}
+            className="absolute top-[406px] left-[311px] w-[214px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040] cursor-pointer"
+          >
             <div className="w-[145px] ml-[35px] gap-[18px] mt-3.5 flex">
               <div className="w-[93px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
                 PLAY

@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 const NAV_SECTIONS: Record<string, string> = {
@@ -31,15 +31,30 @@ function scrollToSection(sectionId: string) {
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
+/* Routes that map nav items to standalone pages instead of home sections */
+const NAV_ROUTES: Record<string, string> = {
+  matches: '/matches',
+};
+
 export function NavbarFigmaLoggedIn() {
   const { profile, wallet } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
   const level = (profile as any)?.level ?? 1;
 
+  const isOnHome = location.pathname === '/';
+
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
+  // Determine active nav item from current route (when not on home page)
+  const activeRouteItem = !isOnHome
+    ? Object.entries(NAV_ROUTES).find(([, path]) => location.pathname === path)?.[0] ?? null
+    : null;
+
   useEffect(() => {
+    if (!isOnHome) return; // Only observe sections on home page
     const sectionIds = Object.values(NAV_SECTIONS);
     const observers: IntersectionObserver[] = [];
 
@@ -57,17 +72,18 @@ export function NavbarFigmaLoggedIn() {
     });
 
     return () => observers.forEach((o) => o.disconnect());
-  }, []);
+  }, [isOnHome]);
 
   // Clear active section when user scrolls back to top of page
   useEffect(() => {
+    if (!isOnHome) return;
     const clearOnTop = () => {
       if (window.scrollY < 100) setActiveSection(null);
     };
     window.addEventListener('scroll', clearOnTop, { passive: true });
-    clearOnTop(); // run immediately in case page loads at top
+    clearOnTop();
     return () => window.removeEventListener('scroll', clearOnTop);
-  }, []);
+  }, [isOnHome]);
 
   return (
     <nav
@@ -139,18 +155,32 @@ export function NavbarFigmaLoggedIn() {
           }}
         >
           {(Object.keys(NAV_SECTIONS) as Array<keyof typeof NAV_SECTIONS>).map((item) => {
-            const isActive = activeSection === NAV_SECTIONS[item];
+            const isActive = activeRouteItem === item || activeSection === NAV_SECTIONS[item];
+            const hasRoute = item in NAV_ROUTES;
+
+            const handleClick = () => {
+              if (hasRoute) {
+                // Navigate to standalone page
+                navigate(NAV_ROUTES[item]);
+              } else if (isOnHome) {
+                // Scroll to section on home page
+                scrollToSection(NAV_SECTIONS[item]);
+              } else {
+                // Navigate to home page then scroll
+                navigate('/', { state: { scrollTo: NAV_SECTIONS[item] } });
+              }
+            };
+
             return (
               <button
                 key={item}
-                onClick={() => scrollToSection(NAV_SECTIONS[item])}
+                onClick={handleClick}
                 style={{
                   fontFamily: isActive
                     ? "'Base_Neue_Trial-ExpandedBlack_Oblique', sans-serif"
                     : "'Base_Neue_Trial-Expanded', sans-serif",
                   fontWeight: 'normal',
                   fontSize: isActive ? '26px' : '24px',
-                  lineHeight: 'normal',
                   lineHeight: isActive ? '31px' : 'normal',
                   color: isActive ? '#ff1654' : '#ffffff',
                   WebkitTextStroke: isActive ? '1px #000000' : '0px transparent',
