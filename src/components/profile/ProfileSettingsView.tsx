@@ -55,6 +55,18 @@ const sections: Array<{ id: ProfileSection; label: string; icon: ComponentType<{
 
 const MIN_WITHDRAWAL = 10;
 const WITHDRAWAL_FEE = 0.5;
+const profilePrimaryButtonClass = "!h-11 !rounded-[14px] !border !border-[#ff6f98]/35 !bg-[#ff1654] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white shadow-[0_14px_30px_rgba(255,22,84,0.26)] hover:!bg-[#ff2d68] hover:shadow-[0_18px_36px_rgba(255,22,84,0.34)] disabled:!cursor-not-allowed disabled:!opacity-45";
+const profileSecondaryButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.14] !bg-white/[0.04] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white hover:!border-[#ff1654]/35 hover:!bg-[#ff1654]/10";
+const profileGhostButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.1] !bg-white/[0.03] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white/72 hover:!border-white/[0.16] hover:!bg-white/[0.06] hover:!text-white";
+const profileDangerButtonClass = "!h-11 !rounded-[14px] !border !border-[#ff1654]/30 !bg-[#ff1654]/10 px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-[#ffc1d1] hover:!bg-[#ff1654]/16 hover:!border-[#ff1654]/44";
+const profileInputClass = "h-11 rounded-[14px] border-white/[0.12] bg-black/20 text-white placeholder:text-white/25 focus-visible:border-[#ff1654]/35 focus-visible:ring-2 focus-visible:ring-[#ff1654]/20";
+const profileSelectTriggerClass = "h-11 rounded-[14px] border-white/[0.12] bg-black/20 text-white focus:border-[#ff1654]/35 focus:ring-2 focus:ring-[#ff1654]/20";
+const profileSelectContentClass = "border-white/[0.1] bg-[linear-gradient(180deg,rgba(18,11,15,0.98)_0%,rgba(8,6,10,0.96)_100%)] text-white shadow-[0_24px_60px_rgba(0,0,0,0.42)] backdrop-blur-[18px]";
+const profileDialogContentClass = "!rounded-[28px] !border !border-white/[0.1] !bg-[linear-gradient(180deg,rgba(18,11,15,0.98)_0%,rgba(10,7,11,0.96)_100%)] !text-white shadow-[0_28px_80px_rgba(0,0,0,0.52)] backdrop-blur-[22px]";
+const profileBadgeBaseClass = "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]";
+const profileBadgeNeutralClass = `${profileBadgeBaseClass} border-white/[0.12] bg-white/[0.05] text-white/82`;
+const profileBadgeAccentClass = `${profileBadgeBaseClass} border-[#ff1654]/30 bg-[#ff1654]/10 text-[#ffbfd1]`;
+const profileBadgeDangerClass = `${profileBadgeBaseClass} border-[#ff6b95]/22 bg-[#ff6b95]/10 text-[#ffb4ca]`;
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -152,10 +164,10 @@ export function ProfileSettingsView({
 
   const withdrawalStatusMap = useMemo(
     () => ({
-      pending: { label: 'Pending', className: 'text-amber-300 border-amber-500/30 bg-amber-500/10' },
-      approved: { label: 'Approved', className: 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' },
-      completed: { label: 'Completed', className: 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' },
-      rejected: { label: 'Rejected', className: 'text-red-300 border-red-500/30 bg-red-500/10' },
+      pending: { label: 'Pending', className: profileBadgeAccentClass },
+      approved: { label: 'Approved', className: profileBadgeNeutralClass },
+      completed: { label: 'Completed', className: profileBadgeNeutralClass },
+      rejected: { label: 'Rejected', className: profileBadgeDangerClass },
     }),
     []
   );
@@ -434,13 +446,13 @@ export function ProfileSettingsView({
 
   return (
     <div className={cn('text-white', mode === 'page' ? 'mx-auto w-full max-w-[1180px]' : 'w-full')}>
-      <div className="rounded-[28px] border border-white/[0.08] bg-[#12080b]/90 shadow-[0_28px_80px_rgba(0,0,0,0.45)]">
+      <div className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(19,10,13,0.98)_0%,rgba(11,6,9,0.96)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.45)]">
         <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-6 py-5 lg:px-8">
           <div>
             <p className="text-xs font-display uppercase tracking-[0.2em] text-[#ff9ab3]">My Profile</p>
             <h1
               className="mt-2 text-[34px] uppercase leading-none text-white lg:text-[42px]"
-              style={{ fontFamily: "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif" }}
+              style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
             >
               Profile Settings
             </h1>
@@ -451,22 +463,18 @@ export function ProfileSettingsView({
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             {mode === 'overlay' && (
-              <Button type="button" className="btn-premium-ghost" onClick={handleOpenProfilePage}>
+              <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
                 Open Page
               </Button>
             )}
 
-            <Button type="button" className="btn-premium-danger" onClick={handleSignOut}>
+            <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </Button>
 
             {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-full border border-white/[0.12] bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white/72 transition hover:bg-white/[0.08] hover:text-white"
-              >
+              <button type="button" onClick={onClose} className={profileGhostButtonClass}>
                 Close
               </button>
             )}
@@ -475,7 +483,7 @@ export function ProfileSettingsView({
 
         <div className="grid gap-6 px-6 py-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 lg:py-8">
           <aside className="space-y-4">
-            <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-5">
+            <div className="rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20 border-2 border-white/[0.08]">
                   <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
@@ -492,7 +500,7 @@ export function ProfileSettingsView({
                       {isVip ? 'VIP' : 'STANDARD'}
                     </span>
                     {!isProfileComplete && (
-                      <span className="inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-200">
+                      <span className="inline-flex rounded-full border border-[#ff1654]/28 bg-[#ff1654]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#ffbfd1]">
                         Epic Missing
                       </span>
                     )}
@@ -501,7 +509,7 @@ export function ProfileSettingsView({
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-2">
+            <div className="rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <nav className="grid gap-1">
                 {sections.map((section) => {
                   const Icon = section.icon;
@@ -528,7 +536,7 @@ export function ProfileSettingsView({
             </div>
           </aside>
 
-          <section className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-5 lg:p-6">
+          <section className="rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:p-6">
             {activeSection === 'account' && (
               <div className="space-y-6">
                 <div>
@@ -551,14 +559,14 @@ export function ProfileSettingsView({
                           setUsername(event.target.value);
                           setUsernameError('');
                         }}
-                        className="border-white/[0.12] bg-black/20 text-white placeholder:text-white/25"
+                        className={profileInputClass}
                         disabled={!isVip}
                       />
                       <Button
                         type="button"
                         onClick={handleSaveUsername}
                         disabled={savingProfile || username === profile.username}
-                        className={cn(isVip ? 'btn-premium-secondary' : 'btn-premium')}
+                        className={cn(isVip ? profileSecondaryButtonClass : profilePrimaryButtonClass)}
                       >
                         {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         {isVip ? 'Save' : 'VIP Only'}
@@ -576,10 +584,10 @@ export function ProfileSettingsView({
                     <div className="space-y-2">
                       <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Preferred Region</Label>
                       <Select value={preferredRegion} onValueChange={(value) => setPreferredRegion(value as Region)}>
-                        <SelectTrigger className="border-white/[0.12] bg-black/20 text-white">
+                        <SelectTrigger className={profileSelectTriggerClass}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="premium-surface">
+                        <SelectContent className={profileSelectContentClass}>
                           {REGIONS.map((regionOption) => (
                             <SelectItem key={regionOption} value={regionOption}>
                               {regionOption}
@@ -592,10 +600,10 @@ export function ProfileSettingsView({
                     <div className="space-y-2">
                       <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Preferred Platform</Label>
                       <Select value={preferredPlatform} onValueChange={(value) => setPreferredPlatform(value as Platform)}>
-                        <SelectTrigger className="border-white/[0.12] bg-black/20 text-white">
+                        <SelectTrigger className={profileSelectTriggerClass}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="premium-surface">
+                        <SelectContent className={profileSelectContentClass}>
                           {PLATFORMS.map((platformOption) => (
                             <SelectItem key={platformOption} value={platformOption}>
                               {platformOption}
@@ -607,7 +615,7 @@ export function ProfileSettingsView({
                   </div>
 
                   <div className="pt-2">
-                    <Button type="button" onClick={handleSaveAccount} disabled={savingProfile} className="btn-premium">
+                    <Button type="button" onClick={handleSaveAccount} disabled={savingProfile} className={profilePrimaryButtonClass}>
                       {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                       Save Account
                     </Button>
@@ -636,12 +644,12 @@ export function ProfileSettingsView({
                     </div>
 
                     {profile.epic_username ? (
-                      <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                      <span className={profileBadgeNeutralClass}>
                         <Check className="mr-1 h-3.5 w-3.5" />
                         Ready
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-amber-200">
+                      <span className={profileBadgeAccentClass}>
                         <AlertCircle className="mr-1 h-3.5 w-3.5" />
                         Missing
                       </span>
@@ -653,9 +661,9 @@ export function ProfileSettingsView({
                       value={epicUsername}
                       onChange={(event) => setEpicUsername(event.target.value)}
                       placeholder="Your Epic username"
-                      className="border-white/[0.12] bg-black/20 text-white placeholder:text-white/25"
+                      className={profileInputClass}
                     />
-                    <Button type="button" onClick={handleSaveEpicUsername} disabled={savingEpic || !epicUsername.trim()} className="btn-premium">
+                    <Button type="button" onClick={handleSaveEpicUsername} disabled={savingEpic || !epicUsername.trim()} className={profilePrimaryButtonClass}>
                       {savingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                       Save
                     </Button>
@@ -663,7 +671,7 @@ export function ProfileSettingsView({
 
                   {profile.epic_username && (
                     <div className="mt-4">
-                      <Button type="button" onClick={() => setShowDisconnectEpicDialog(true)} className="btn-premium-danger">
+                      <Button type="button" onClick={() => setShowDisconnectEpicDialog(true)} className={profileDangerButtonClass}>
                         <Unlink className="mr-2 h-4 w-4" />
                         Remove Epic Username
                       </Button>
@@ -718,12 +726,12 @@ export function ProfileSettingsView({
                     </div>
 
                     {isStripeVerified ? (
-                      <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                      <span className={profileBadgeNeutralClass}>
                         <ShieldCheck className="mr-1 h-3.5 w-3.5" />
                         Verified
                       </span>
                     ) : (
-                      <Button type="button" onClick={handleConnectStripe} disabled={connectingStripe} className="btn-premium-secondary">
+                      <Button type="button" onClick={handleConnectStripe} disabled={connectingStripe} className={profileSecondaryButtonClass}>
                         {connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                         Setup Bank
                       </Button>
@@ -734,12 +742,12 @@ export function ProfileSettingsView({
                     <div className="mt-5">
                       <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
                         <DialogTrigger asChild>
-                          <Button type="button" disabled={!canWithdraw} className="btn-premium">
+                          <Button type="button" disabled={!canWithdraw} className={profilePrimaryButtonClass}>
                             <Wallet className="mr-2 h-4 w-4" />
                             Withdraw
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="premium-card">
+                        <DialogContent className={profileDialogContentClass}>
                           <DialogHeader>
                             <DialogTitle>Request Withdrawal</DialogTitle>
                             <DialogDescription>
@@ -756,7 +764,7 @@ export function ProfileSettingsView({
                               value={withdrawAmount}
                               onChange={(event) => setWithdrawAmount(event.target.value)}
                               placeholder={`${MIN_WITHDRAWAL}.00`}
-                              className="border-white/[0.12] bg-black/20 text-white placeholder:text-white/25"
+                              className={profileInputClass}
                             />
                             <p className="text-sm text-white/52">
                               Net balance after fee must stay non-negative. Your current available balance is €{walletBalance.toFixed(2)}.
@@ -764,10 +772,10 @@ export function ProfileSettingsView({
                           </div>
 
                           <DialogFooter>
-                            <Button type="button" className="btn-premium-ghost" onClick={() => setWithdrawOpen(false)}>
+                            <Button type="button" className={profileGhostButtonClass} onClick={() => setWithdrawOpen(false)}>
                               Cancel
                             </Button>
-                            <Button type="button" className="btn-premium" onClick={handleWithdraw} disabled={submittingWithdrawal}>
+                            <Button type="button" className={profilePrimaryButtonClass} onClick={handleWithdraw} disabled={submittingWithdrawal}>
                               {submittingWithdrawal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                               Confirm Withdrawal
                             </Button>
@@ -782,7 +790,7 @@ export function ProfileSettingsView({
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-sm font-semibold uppercase text-white">Recent Withdrawal Requests</p>
                     {mode === 'overlay' && (
-                      <Button type="button" className="btn-premium-ghost" onClick={() => navigate('/wallet')}>
+                      <Button type="button" className={profileGhostButtonClass} onClick={() => navigate('/wallet')}>
                         Open Wallet Page
                       </Button>
                     )}
@@ -850,7 +858,7 @@ export function ProfileSettingsView({
                       </div>
                     </div>
 
-                    <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                    <span className={profileBadgeNeutralClass}>
                       <Check className="mr-1 h-3.5 w-3.5" />
                       Connected
                     </span>
@@ -867,7 +875,7 @@ export function ProfileSettingsView({
       </div>
 
       <AlertDialog open={showDisconnectEpicDialog} onOpenChange={setShowDisconnectEpicDialog}>
-        <AlertDialogContent className="premium-card">
+        <AlertDialogContent className={profileDialogContentClass}>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Epic username?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -875,10 +883,10 @@ export function ProfileSettingsView({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="btn-premium-ghost" disabled={disconnectingEpic}>
+            <AlertDialogCancel className={profileGhostButtonClass} disabled={disconnectingEpic}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction className="btn-premium-danger" onClick={handleDisconnectEpic} disabled={disconnectingEpic}>
+            <AlertDialogAction className={profileDangerButtonClass} onClick={handleDisconnectEpic} disabled={disconnectingEpic}>
               {disconnectingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Unlink className="mr-2 h-4 w-4" />}
               Remove
             </AlertDialogAction>

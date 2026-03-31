@@ -40,7 +40,7 @@ export default function Wallet() {
 
   return (
     <PublicLayout>
-      <section className="min-h-screen bg-[#0f0404] px-4 pb-24 pt-[148px] lg:px-8 lg:pt-[168px]">
+      <section className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-24 pt-[148px] lg:px-8 lg:pt-[168px]">
         {loading || !user ? <LoadingPage /> : <ProfileSettingsView initialSection="payments" mode="page" />}
       </section>
     </PublicLayout>
