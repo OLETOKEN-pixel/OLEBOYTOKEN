@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
+import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import type { Match, Platform } from '@/types';
 
@@ -235,6 +237,8 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
 }
 
 export default function Matches() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -243,6 +247,7 @@ export default function Matches() {
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const hasActiveFilters =
     teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
+  const isCreateOverlayOpen = location.pathname === '/matches/create';
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -369,7 +374,11 @@ export default function Matches() {
               />
             </div>
 
-            <button className="matches-page__create-button" type="button" disabled aria-disabled="true">
+            <button
+              className="matches-page__create-button"
+              type="button"
+              onClick={() => navigate('/matches/create')}
+            >
               <img src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
               <span>CREATE</span>
             </button>
@@ -395,6 +404,12 @@ export default function Matches() {
             {!loading && matches.length === 0 && <MatchesEmptyState hasActiveFilters={hasActiveFilters} />}
           </div>
         </div>
+
+        <CreateMatchOverlay
+          open={isCreateOverlayOpen}
+          onClose={() => navigate('/matches')}
+          onCreated={() => navigate('/matches', { replace: true })}
+        />
       </section>
     </PublicLayout>
   );

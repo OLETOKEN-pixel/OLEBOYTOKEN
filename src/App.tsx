@@ -80,6 +80,7 @@ function App() {
                 <Route path="/admin/users/:id" element={<AdminUserDetail />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/matches/create" element={<Matches />} />
                 <Route path="/matches" element={<Matches />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="*" element={<NotFound />} />
