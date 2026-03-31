@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Profile is complete if Epic username is set
+  // Profile is complete once the Epic Games display name is linked
   const isProfileComplete = Boolean(profile?.epic_username);
 
   const fetchProfile = async (userId: string) => {

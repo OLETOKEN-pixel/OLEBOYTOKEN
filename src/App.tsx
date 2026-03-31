@@ -3,9 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLoadingGuard } from "@/components/common/AppLoadingGuard";
 import { GlobalMatchEventListener } from "@/components/common/GlobalMatchEventListener";
+import { getCanonicalRedirectUrl } from "@/lib/oauth";
 
 // Pages
 import Index from "./pages/Index";
@@ -45,6 +47,18 @@ function AuthenticatedGlobalListeners() {
   return <GlobalMatchEventListener userId={user.id} />;
 }
 
+function CanonicalDomainRedirect() {
+  useEffect(() => {
+    const canonicalRedirectUrl = getCanonicalRedirectUrl();
+
+    if (canonicalRedirectUrl && window.location.href !== canonicalRedirectUrl) {
+      window.location.replace(canonicalRedirectUrl);
+    }
+  }, []);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -53,6 +67,7 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CanonicalDomainRedirect />
             <AuthenticatedGlobalListeners />
             {/* Fixed bottom neon — always visible on all pages, matches Figma node 205:855 */}
             <img

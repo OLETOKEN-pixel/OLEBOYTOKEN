@@ -145,8 +145,8 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
     if (!isProfileComplete) {
       toast({
-        title: 'Epic username required',
-        description: 'Add your Epic Games username before creating a match.',
+        title: 'Epic Games connection required',
+        description: 'Connect Epic Games in your profile before creating a match.',
         variant: 'destructive',
       });
       return;
@@ -340,9 +340,9 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
                 <div className="mt-6 flex items-start gap-3 rounded-[20px] border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
                   <AlertCircle className="mt-0.5 h-5 w-5 flex-none" />
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.08em]">Epic Username Missing</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.08em]">Epic Games Missing</p>
                     <p className="mt-1 text-sm leading-6 text-amber-100/80">
-                      Match creation still follows the original rule set and requires an Epic Games username on the
+                      Match creation still follows the original rule set and requires an Epic Games connection on your
                       profile before the RPC can proceed.
                     </p>
                   </div>

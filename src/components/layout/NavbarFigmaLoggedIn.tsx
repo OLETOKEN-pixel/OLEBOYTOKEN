@@ -442,7 +442,7 @@ export function NavbarFigmaLoggedIn() {
                 <div className="flex w-full items-center justify-between gap-4 py-3">
                   <div className="min-w-0">
                     <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">Game Settings</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Epic username and match setup</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Epic Games and match setup</p>
                   </div>
                   <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
                 </div>

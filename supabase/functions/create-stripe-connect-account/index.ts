@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { resolveRequestOrigin } from "../_shared/app-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,8 +12,6 @@ const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-STRIPE-CONNECT] ${step}${detailsStr}`);
 };
-
-const PRODUCTION_DOMAIN = "https://oleboytoken.com";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -148,7 +147,7 @@ serve(async (req) => {
     }
 
     // Generate account link for onboarding
-    const origin = req.headers.get("origin") || PRODUCTION_DOMAIN;
+    const origin = resolveRequestOrigin(req.headers.get("origin"));
     
     const accountLink = await stripe.accountLinks.create({
       account: stripeAccountId,

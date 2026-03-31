@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
+import { startEpicAuth } from '@/lib/oauth';
 import { cn } from '@/lib/utils';
 import type { Platform, Region, WithdrawalRequest } from '@/types';
 import { PLATFORMS, REGIONS } from '@/types';
@@ -88,13 +89,12 @@ export function ProfileSettingsView({
 
   const [activeSection, setActiveSection] = useState<ProfileSection>(initialSection);
   const [username, setUsername] = useState('');
-  const [epicUsername, setEpicUsername] = useState('');
   const [preferredRegion, setPreferredRegion] = useState<Region>('EU');
   const [preferredPlatform, setPreferredPlatform] = useState<Platform>('PC');
   const [stripeAccount, setStripeAccount] = useState<StripeConnectedAccount | null>(null);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [savingEpic, setSavingEpic] = useState(false);
+  const [connectingEpic, setConnectingEpic] = useState(false);
   const [usernameError, setUsernameError] = useState('');
   const [showDisconnectEpicDialog, setShowDisconnectEpicDialog] = useState(false);
   const [disconnectingEpic, setDisconnectingEpic] = useState(false);
@@ -113,7 +113,6 @@ export function ProfileSettingsView({
     }
 
     setUsername(profile.username || '');
-    setEpicUsername(profile.epic_username || '');
     setPreferredRegion((profile.preferred_region as Region) || 'EU');
     setPreferredPlatform((profile.preferred_platform as Platform) || 'PC');
   }, [profile]);
@@ -249,45 +248,18 @@ export function ProfileSettingsView({
     }
   };
 
-  const handleSaveEpicUsername = async () => {
-    if (!user) {
-      return;
-    }
-
-    if (!epicUsername.trim()) {
-      toast({
-        title: 'Epic username required',
-        description: 'Enter your Epic username before saving.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setSavingEpic(true);
+  const handleConnectEpic = async () => {
+    setConnectingEpic(true);
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ epic_username: epicUsername.trim() })
-        .eq('user_id', user.id);
-
-      if (error) {
-        throw error;
-      }
-
-      await refreshProfile();
-      toast({
-        title: 'Epic username saved',
-        description: 'Your game settings have been updated.',
-      });
+      await startEpicAuth();
     } catch (error) {
       toast({
-        title: 'Save failed',
-        description: error instanceof Error ? error.message : 'Unable to save Epic username.',
+        title: 'Epic connection failed',
+        description: error instanceof Error ? error.message : 'Unable to start Epic Games login.',
         variant: 'destructive',
       });
-    } finally {
-      setSavingEpic(false);
+      setConnectingEpic(false);
     }
   };
 
@@ -313,10 +285,9 @@ export function ProfileSettingsView({
       }
 
       await refreshProfile();
-      setEpicUsername('');
       toast({
         title: 'Epic disconnected',
-        description: 'Your Epic profile details have been removed.',
+        description: 'Your Epic Games connection has been removed.',
       });
       setShowDisconnectEpicDialog(false);
     } catch (error) {
@@ -457,7 +428,7 @@ export function ProfileSettingsView({
               Profile Settings
             </h1>
             <p className="mt-3 max-w-[760px] text-sm leading-6 text-white/60 lg:text-base">
-              Manage your OBT profile, Epic username, payout setup and linked accounts from one place.
+              Manage your OBT profile, Epic Games connection, payout setup and linked accounts from one place.
             </p>
           </div>
 
@@ -632,7 +603,7 @@ export function ProfileSettingsView({
                     Game Settings
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-white/56">
-                    Keep your Epic identity connected so match creation and join flow stay valid.
+                    Connect Epic Games to sync the display name used inside matches and friend-request flows.
                   </p>
                 </div>
 
@@ -656,27 +627,27 @@ export function ProfileSettingsView({
                     )}
                   </div>
 
-                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                    <Input
-                      value={epicUsername}
-                      onChange={(event) => setEpicUsername(event.target.value)}
-                      placeholder="Your Epic username"
-                      className={profileInputClass}
-                    />
-                    <Button type="button" onClick={handleSaveEpicUsername} disabled={savingEpic || !epicUsername.trim()} className={profilePrimaryButtonClass}>
-                      {savingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      Save
-                    </Button>
+                  <div className="mt-5 rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/42">Match Visibility</p>
+                    <p className="mt-2 text-sm leading-6 text-white/58">
+                      Your Epic display name is shown inside matches so players can add each other without using the
+                      Discord platform identity tied to your OBT account.
+                    </p>
                   </div>
 
-                  {profile.epic_username && (
-                    <div className="mt-4">
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {profile.epic_username ? (
                       <Button type="button" onClick={() => setShowDisconnectEpicDialog(true)} className={profileDangerButtonClass}>
                         <Unlink className="mr-2 h-4 w-4" />
-                        Remove Epic Username
+                        Disconnect Epic Games
                       </Button>
-                    </div>
-                  )}
+                    ) : (
+                      <Button type="button" onClick={handleConnectEpic} disabled={connectingEpic} className={profilePrimaryButtonClass}>
+                        {connectingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                        Connect Epic Games
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -877,9 +848,9 @@ export function ProfileSettingsView({
       <AlertDialog open={showDisconnectEpicDialog} onOpenChange={setShowDisconnectEpicDialog}>
         <AlertDialogContent className={profileDialogContentClass}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Epic username?</AlertDialogTitle>
+            <AlertDialogTitle>Disconnect Epic Games?</AlertDialogTitle>
             <AlertDialogDescription>
-              You will need to add it again before creating or joining new matches.
+              You will need to reconnect Epic Games before creating or joining new matches again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
