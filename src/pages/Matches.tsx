@@ -179,6 +179,61 @@ function MatchesPlaceholderCard() {
   );
 }
 
+interface MatchesEmptyStateProps {
+  hasActiveFilters: boolean;
+}
+
+function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
+  const eyebrow = hasActiveFilters ? 'FILTERED VIEW' : 'ARENA STANDBY';
+  const title = hasActiveFilters ? 'NO MATCHES FOR THIS SETUP' : 'NO LIVE MATCHES RIGHT NOW';
+  const description = hasActiveFilters
+    ? 'Nothing is live for the selected team size, platform or mode. Widen the filters and the board will refresh as soon as a matching arena opens.'
+    : 'The board is quiet for now. The second a player opens the next live arena, the first match card lands here in real time.';
+  const status = hasActiveFilters ? 'FILTERS ARE NARROWING THE BOARD' : 'WAITING FOR THE NEXT LIVE DROP';
+  const panelCopy = hasActiveFilters
+    ? 'Your filters are active, so only matching live cards can appear here. Change the setup and the feed updates instantly.'
+    : 'This section is ready for real matches only. When the first lobby goes live, the feed wakes up automatically.';
+  const tags = hasActiveFilters
+    ? ['TEAM SIZE', 'PLATFORM', 'MODE']
+    : ['REAL-TIME FEED', 'AUTO REFRESH', 'READY FOR THE NEXT ARENA'];
+
+  return (
+    <section className="matches-page__empty-state" aria-live="polite">
+      <img
+        className="matches-page__empty-triangles"
+        src="/figma-assets/matches-title-triangles.svg"
+        alt=""
+        aria-hidden="true"
+      />
+
+      <div className="matches-page__empty-copy">
+        <span className="matches-page__empty-kicker">{eyebrow}</span>
+        <h2 className="matches-page__empty-title">{title}</h2>
+        <p className="matches-page__empty-description">{description}</p>
+      </div>
+
+      <aside className="matches-page__empty-panel">
+        <span className="matches-page__empty-panel-kicker">LIVE BOARD</span>
+
+        <div className="matches-page__empty-status">
+          <span className="matches-page__empty-status-dot" aria-hidden="true" />
+          <span>{status}</span>
+        </div>
+
+        <p className="matches-page__empty-panel-copy">{panelCopy}</p>
+
+        <div className="matches-page__empty-tags">
+          {tags.map((tag) => (
+            <span key={tag} className="matches-page__empty-tag">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </aside>
+    </section>
+  );
+}
+
 export default function Matches() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,6 +241,8 @@ export default function Matches() {
   const [teamSizeFilter, setTeamSizeFilter] = useState<TeamSizeFilter>('all');
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  const hasActiveFilters =
+    teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -335,7 +392,7 @@ export default function Matches() {
                 />
               ))}
 
-            {!loading && matches.length === 0 && Array.from({ length: 4 }).map((_, index) => <MatchesPlaceholderCard key={`empty-${index}`} />)}
+            {!loading && matches.length === 0 && <MatchesEmptyState hasActiveFilters={hasActiveFilters} />}
           </div>
         </div>
       </section>
