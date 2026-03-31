@@ -32,11 +32,11 @@ export const ShopSection = () => {
 
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px]">
-          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => { const el = document.getElementById('s-teams'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px]" alt="Previous" src={imgBwArrow} />
+          <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-teams'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={imgBwArrow} />
           </button>
-          <button className="cursor-pointer bg-transparent border-none p-0" onClick={() => { const el = document.getElementById('s-footer'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px]" alt="Next" src={imgFwArrow} />
+          <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-footer'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src={imgFwArrow} />
           </button>
         </div>
 
