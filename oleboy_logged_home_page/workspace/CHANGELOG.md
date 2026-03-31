@@ -18,6 +18,11 @@ You MUST maintain this file to track your work across messages. This is NON-NEGO
 </instructions>
 
 <changelog>
+## 2026-03-31
+- Refined `src/pages/Matches.tsx` and `src/index.css` after visual QA against Figma node `205:271`
+- Replaced the scaled title block with coordinate-anchored hero pieces and switched the empty state to placeholder shells
+- Added frame-specific assets in `public/figma-assets/` for title triangles and underline to keep desktop alignment tighter to Figma
+
 ## 2026-03-23
 - Rewrote `NavigationBarSection.jsx` to fix failed font-warning replacements
 - Replaced `Base_Neue_Trial-Expanded`, `Base_Neue_Trial-ExpandedBold`, `Base_Neue_Trial-Regular` with `Base_Neue_Trial-Bold`
