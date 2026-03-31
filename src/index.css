@@ -1005,12 +1005,18 @@
   border-radius: 16px;
   padding: 0 0 0 33px;
   color: #fff;
-  cursor: default;
+  cursor: pointer;
   opacity: 1;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease;
+  box-shadow: 0 0 24px rgba(255, 22, 84, 0.18);
 }
 
-.matches-page__create-button:disabled {
-  opacity: 1;
+.matches-page__create-button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 .matches-page__create-button img {
