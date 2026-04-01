@@ -1,4 +1,4 @@
-project_id = "xiofbauhzbqmienrjljb"
+project_id = "cqpazuydpoxpcayerwxi"
 
 [functions.create-checkout]
 verify_jwt = false
@@ -22,4 +22,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-stripe-payout]
+verify_jwt = false
+
+[functions.epic-auth-start]
+verify_jwt = false
+
+[functions.epic-auth-callback]
 verify_jwt = false
