@@ -294,9 +294,15 @@ serve(async (req) => {
         ? "Payout non riuscito. I fondi sono stati rimessi nel wallet."
         : "Payout non riuscito. Il tentativo di storno automatico non e' riuscito e serve una verifica manuale.";
 
+      const normalizedErrorMessage = errorMessage.toLowerCase();
+      const payoutUserMessage =
+        normalizedErrorMessage.includes("transfers") || normalizedErrorMessage.includes("capabilities")
+          ? "La piattaforma Stripe non e' ancora autorizzata ai trasferimenti live per questo setup. I fondi sono stati lasciati o rimessi nel wallet."
+          : userMessage;
+
       return jsonResponse(
         {
-          error: userMessage,
+          error: payoutUserMessage,
           details: errorMessage,
           code: typedPayoutError.code ?? "STRIPE_PAYOUT_FAILED",
           stripeRequestId: (payoutError as { requestId?: string }).requestId ?? null,
@@ -309,6 +315,7 @@ serve(async (req) => {
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const normalizedErrorMessage = errorMessage.toLowerCase();
     const stripeError = error as { requestId?: string; code?: string };
 
     logStep("ERROR", {
@@ -318,10 +325,12 @@ serve(async (req) => {
     });
 
     let userMessage = "Impossibile completare il payout. Riprova piu' tardi.";
-    if (errorMessage.includes("insufficient")) {
+    if (normalizedErrorMessage.includes("insufficient")) {
       userMessage = "Saldo piattaforma Stripe insufficiente per completare il payout.";
-    } else if (errorMessage.includes("external")) {
+    } else if (normalizedErrorMessage.includes("external")) {
       userMessage = "Configura o aggiorna il tuo metodo payout nel dashboard Stripe prima di riprovare.";
+    } else if (normalizedErrorMessage.includes("capabilities") || normalizedErrorMessage.includes("transfers")) {
+      userMessage = "La piattaforma Stripe non e' ancora abilitata ai trasferimenti live per questo setup o paese.";
     }
 
     return jsonResponse(

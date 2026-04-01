@@ -26,6 +26,55 @@ function getRedirectUri(): string {
   return `${CANONICAL_APP_URL}/auth/discord/callback`;
 }
 
+function sanitizeDiscordProfileUsername(rawName: string | null | undefined, discordId: string) {
+  const cleaned = (rawName || "")
+    .replace(/[^a-zA-Z0-9_]/g, "")
+    .slice(0, 20);
+
+  if (cleaned.length >= 3) {
+    return cleaned;
+  }
+
+  return `user${discordId.substring(0, 6)}`;
+}
+
+async function resolveUniqueProfileUsername(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  desiredUsername: string,
+  currentUserId?: string
+) {
+  const cleanedUsername = desiredUsername
+    .replace(/[^a-zA-Z0-9_]/g, "")
+    .slice(0, 20);
+  const baseUsername = cleanedUsername.length >= 3 ? cleanedUsername : "player";
+  let candidate = baseUsername;
+  let suffix = 0;
+
+  while (suffix < 10000) {
+    const { data: existingProfiles, error } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .ilike("username", candidate)
+      .limit(2);
+
+    if (error) {
+      throw error;
+    }
+
+    const isTakenByAnotherUser = (existingProfiles ?? []).some((profile) => profile.user_id !== currentUserId);
+    if (!isTakenByAnotherUser) {
+      return candidate;
+    }
+
+    suffix += 1;
+    const suffixText = String(suffix);
+    const maxBaseLength = Math.max(3, 20 - suffixText.length);
+    candidate = `${baseUsername.slice(0, maxBaseLength)}${suffixText}`;
+  }
+
+  throw new Error("Unable to generate a unique username for this Discord account.");
+}
+
 // Generate a deterministic password for Discord users
 async function generateUserPassword(discordId: string, serviceKey: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -211,16 +260,23 @@ serve(async (req) => {
     }
 
     userEmail = discordUser.email;
-    const displayName =
-      (discordUser.global_name || discordUser.username).replace(/[^a-zA-Z0-9_]/g, "").slice(0, 20) || "user";
+    const preferredDisplayName = sanitizeDiscordProfileUsername(
+      discordUser.global_name || discordUser.username,
+      discordUser.id
+    );
 
     if (existingProfile) {
       userId = existingProfile.user_id;
+      const resolvedUsername = await resolveUniqueProfileUsername(
+        supabaseAdmin,
+        preferredDisplayName,
+        userId
+      );
 
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({
-          username: displayName,
+          username: resolvedUsername,
           discord_user_id: discordUser.id,
           discord_username: discordUser.username,
           discord_display_name: discordUser.global_name || discordUser.username,
@@ -246,13 +302,18 @@ serve(async (req) => {
       if (matchingAuthUser) {
         userId = matchingAuthUser.id;
         logStep("Found auth user without profile, creating profile", { userId, email: userEmail });
+        const resolvedUsername = await resolveUniqueProfileUsername(
+          supabaseAdmin,
+          preferredDisplayName,
+          userId
+        );
 
         const { error: insertError } = await supabaseAdmin
           .from("profiles")
           .insert({
             user_id: userId,
             email: discordUser.email,
-            username: displayName,
+            username: resolvedUsername,
             discord_user_id: discordUser.id,
             discord_username: discordUser.username,
             discord_display_name: discordUser.global_name || discordUser.username,
@@ -276,29 +337,10 @@ serve(async (req) => {
         logStep("Created profile for existing auth user", { userId });
       } else {
         logStep("Creating new user");
-
-        let baseUsername = discordUser.username.replace(/[^a-zA-Z0-9_]/g, "");
-        if (baseUsername.length < 3) {
-          baseUsername = "user" + discordUser.id.substring(0, 6);
-        }
-
-        let finalUsername = baseUsername;
-        let counter = 1;
-        while (true) {
-          const { data: existingUsername } = await supabaseAdmin
-            .from("profiles")
-            .select("id")
-            .eq("username", finalUsername)
-            .maybeSingle();
-
-          if (!existingUsername) break;
-          finalUsername = `${baseUsername}${counter}`;
-          counter++;
-          if (counter > 100) {
-            finalUsername = `${baseUsername}${Date.now().toString().slice(-6)}`;
-            break;
-          }
-        }
+        const finalUsername = await resolveUniqueProfileUsername(
+          supabaseAdmin,
+          preferredDisplayName
+        );
 
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
           email: discordUser.email,
@@ -403,13 +445,23 @@ serve(async (req) => {
       userId,
     });
   } catch (error: unknown) {
+    const typedError = error as { code?: string; message?: string; details?: string };
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logStep("Error", { error: errorMessage });
+    const normalizedMessage = errorMessage.toLowerCase();
+    let userMessage = "Discord login failed while finalizing your account.";
+    let errorCode = typedError.code || "DISCORD_CALLBACK_FAILED";
+
+    if (typedError.code === "23505" && normalizedMessage.includes("profiles_username_unique")) {
+      userMessage = "Questo nome Discord e' gia' in uso. Riprova: useremo automaticamente un username unico.";
+      errorCode = "DISCORD_USERNAME_CONFLICT";
+    }
+
+    logStep("Error", { error: errorMessage, code: typedError.code ?? null });
     return jsonResponse(
       {
-        error: "Discord login failed while finalizing your account.",
+        error: userMessage,
         details: errorMessage,
-        code: "DISCORD_CALLBACK_FAILED",
+        code: errorCode,
       },
       500
     );

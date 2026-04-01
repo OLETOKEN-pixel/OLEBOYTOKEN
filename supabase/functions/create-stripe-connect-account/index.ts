@@ -57,7 +57,7 @@ function classifyStripeConnectError(error: unknown) {
     message = "Chiave API Stripe non valida o non autorizzata. Contatta il supporto.";
     code = stripeError.code || "STRIPE_INVALID_API_KEY";
   } else if (normalized.includes("capabilities") || normalized.includes("transfers")) {
-    message = "Account Stripe non abilitato ai trasferimenti per questo paese o setup.";
+    message = "Il setup live di Stripe Connect non e' ancora autorizzato ai trasferimenti per questo paese o configurazione.";
     code = stripeError.code || "STRIPE_CAPABILITY_ERROR";
   } else if (normalized.includes("country")) {
     message = "Il paese payout selezionato non e' disponibile per questo setup Stripe.";
@@ -174,9 +174,6 @@ serve(async (req) => {
         type: "express",
         country: effectiveCountry,
         email: user.email,
-        capabilities: {
-          transfers: { requested: true },
-        },
         metadata: {
           supabase_user_id: user.id,
           payout_country: effectiveCountry,
