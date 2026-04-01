@@ -3,9 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLoadingGuard } from "@/components/common/AppLoadingGuard";
 import { GlobalMatchEventListener } from "@/components/common/GlobalMatchEventListener";
+import { getCanonicalRedirectUrl } from "@/lib/oauth";
 
 // Pages
 import Index from "./pages/Index";
@@ -20,6 +22,8 @@ import Rules from "./pages/Rules";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Matches from "./pages/Matches";
+import Profile from "./pages/Profile";
+import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +47,18 @@ function AuthenticatedGlobalListeners() {
   return <GlobalMatchEventListener userId={user.id} />;
 }
 
+function CanonicalDomainRedirect() {
+  useEffect(() => {
+    const canonicalRedirectUrl = getCanonicalRedirectUrl();
+
+    if (canonicalRedirectUrl && window.location.href !== canonicalRedirectUrl) {
+      window.location.replace(canonicalRedirectUrl);
+    }
+  }, []);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -51,6 +67,7 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CanonicalDomainRedirect />
             <AuthenticatedGlobalListeners />
             {/* Fixed bottom neon — always visible on all pages, matches Figma node 205:855 */}
             <img
@@ -80,7 +97,10 @@ function App() {
                 <Route path="/admin/users/:id" element={<AdminUserDetail />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/matches/create" element={<Matches />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/wallet" element={<Wallet />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCanonicalAuthRedirect } from "../_shared/app-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,9 +21,9 @@ serve(async (req) => {
     logStep("Function started");
 
     const clientId = Deno.env.get("DISCORD_CLIENT_ID");
-    const redirectUri = Deno.env.get("DISCORD_REDIRECT_URI");
+    const redirectUri = getCanonicalAuthRedirect("/auth/discord/callback", "DISCORD_REDIRECT_URI");
 
-    if (!clientId || !redirectUri) {
+    if (!clientId) {
       logStep("Missing Discord credentials", { hasClientId: !!clientId, hasRedirectUri: !!redirectUri });
       return new Response(
         JSON.stringify({ error: "Discord OAuth not configured" }),

@@ -14,7 +14,8 @@
  */
 
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON          = '/figma-assets/figma-neon.png';
@@ -53,14 +54,12 @@ const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
 
 export function HomeNotRegistered() {
   const handleSignUp = useCallback(async () => {
-    const origin = window.location.origin;
-    await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${origin}/auth/discord/callback`,
-        scopes: 'identify email guilds.join',
-      },
-    });
+    try {
+      await startDiscordAuth(getCurrentPathWithQueryAndHash());
+    } catch (error) {
+      console.error('Discord sign-up error:', error);
+      toast.error('Unable to start Discord login. Please try again.');
+    }
   }, []);
 
   const scrollTo = useCallback((i: number) => {

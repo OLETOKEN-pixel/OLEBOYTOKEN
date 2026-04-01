@@ -4,7 +4,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { startDiscordAuth } from '@/lib/oauth';
 import mascotOleboy from '@/assets/mascot-oleboy.png';
 
 function DiscordIcon({ className }: { className?: string }) {
@@ -42,19 +42,7 @@ export default function Auth() {
   const handleDiscordSignIn = async () => {
     setIsSubmitting(true);
     try {
-      localStorage.setItem('auth_redirect', redirectTo);
-
-      // Use custom OAuth flow via edge function (ensures server-side auto-join)
-      const { data, error } = await supabase.functions.invoke('discord-auth-start', {
-        body: { redirectAfter: redirectTo },
-      });
-
-      if (error || !data?.authUrl) {
-        throw new Error(error?.message || 'Failed to start Discord auth');
-      }
-
-      // Redirect to Discord authorization page
-      window.location.href = data.authUrl;
+      await startDiscordAuth(redirectTo);
     } catch (err) {
       console.error('Discord sign-in error:', err);
       toast({
