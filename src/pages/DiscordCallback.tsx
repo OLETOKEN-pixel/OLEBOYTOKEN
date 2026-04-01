@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { extractFunctionErrorMessage } from '@/lib/oauth';
 
 export default function DiscordCallback() {
   const navigate = useNavigate();
@@ -9,6 +11,11 @@ export default function DiscordCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      const goHome = (msg?: string) => {
+        if (msg) toast.error(msg);
+        navigate('/', { replace: true });
+      };
+
       try {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
@@ -16,49 +23,60 @@ export default function DiscordCallback() {
         const errorDescription = searchParams.get('error_description');
 
         if (errorParam) {
-          console.error('[Discord Auth] Error from Discord:', errorParam, errorDescription);
-          toast.error(errorDescription || 'Discord authorization failed.');
-          navigate('/', { replace: true });
+          console.error('[Discord Auth] Discord error:', errorParam, errorDescription);
+          goHome(errorDescription || 'Discord authorization failed.');
           return;
         }
 
         if (!code || !state) {
-          // Check if already logged in
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
             navigate('/', { replace: true });
             return;
           }
-          console.error('[Discord Auth] Missing code or state params');
-          toast.error('Missing authorization parameters. Please try again.');
-          navigate('/', { replace: true });
+          console.error('[Discord Auth] Missing code or state');
+          goHome('Missing authorization parameters. Please try again.');
           return;
         }
 
-        console.info('[Discord Auth] Exchanging code for session...');
+        console.info('[Discord Auth] Exchanging code for session...', {
+          codeLength: code.length,
+          statePrefix: state.substring(0, 8),
+        });
 
         const { data, error } = await supabase.functions.invoke('discord-auth-callback', {
           body: { code, state },
         });
 
         if (error) {
-          console.error('[Discord Auth] Edge function error:', error);
-          toast.error('Login failed. Please try again.');
-          navigate('/', { replace: true });
+          let detail = 'Login failed. Please try again.';
+          if (error instanceof FunctionsHttpError) {
+            try {
+              const body = await error.context.json();
+              detail = body?.error || body?.message || detail;
+              console.error('[Discord Auth] Edge function HTTP error:', {
+                status: error.context.status,
+                body,
+              });
+            } catch {
+              console.error('[Discord Auth] Edge function error (no JSON body):', error.message);
+            }
+          } else {
+            console.error('[Discord Auth] Edge function error:', error.message || error);
+          }
+          goHome(detail);
           return;
         }
 
         if (data?.error) {
-          console.error('[Discord Auth] Auth error:', data.error);
-          toast.error(data.error);
-          navigate('/', { replace: true });
+          console.error('[Discord Auth] Auth error from function:', data.error);
+          goHome(data.error);
           return;
         }
 
         if (!data?.accessToken || !data?.refreshToken) {
-          console.error('[Discord Auth] No session tokens returned');
-          toast.error('Session not created. Please try again.');
-          navigate('/', { replace: true });
+          console.error('[Discord Auth] No tokens returned. Data:', JSON.stringify(data));
+          goHome('Session not created. Please try again.');
           return;
         }
 
@@ -69,9 +87,8 @@ export default function DiscordCallback() {
         });
 
         if (sessionError) {
-          console.error('[Discord Auth] Session set error:', sessionError);
-          toast.error('Session error. Please try again.');
-          navigate('/', { replace: true });
+          console.error('[Discord Auth] setSession error:', sessionError);
+          goHome('Session error. Please try again.');
           return;
         }
 
@@ -91,7 +108,6 @@ export default function DiscordCallback() {
     handleCallback();
   }, [navigate, searchParams]);
 
-  // Fullscreen loading spinner matching site theme
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a]">
       <div className="text-center">
