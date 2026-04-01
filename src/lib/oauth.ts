@@ -61,7 +61,7 @@ export function getCanonicalRedirectUrl(locationLike: LocationLike = window.loca
   return `${CANONICAL_APP_ORIGIN}${pathname}${search}${hash}`;
 }
 
-async function extractFunctionErrorMessage(error: unknown, fallbackMessage: string) {
+export async function extractFunctionErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof FunctionsHttpError) {
     try {
       const errorPayload = await error.context.json();

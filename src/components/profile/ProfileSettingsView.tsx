@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
-import { startEpicAuth } from '@/lib/oauth';
+import { extractFunctionErrorMessage, startEpicAuth } from '@/lib/oauth';
 import {
   describeStripeDestination,
   getStripePayoutCountryLabel,
@@ -394,9 +394,10 @@ export function ProfileSettingsView({
         description: 'Your payout account is already configured.',
       });
     } catch (error) {
+      const message = await extractFunctionErrorMessage(error, 'Unable to start Stripe onboarding.');
       toast({
         title: 'Stripe error',
-        description: error instanceof Error ? error.message : 'Unable to start Stripe onboarding.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -420,9 +421,10 @@ export function ProfileSettingsView({
 
       window.location.href = data.url;
     } catch (error) {
+      const message = await extractFunctionErrorMessage(error, 'Unable to open the Stripe payout dashboard.');
       toast({
         title: 'Stripe dashboard unavailable',
-        description: error instanceof Error ? error.message : 'Unable to open the Stripe payout dashboard.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -479,9 +481,10 @@ export function ProfileSettingsView({
         description: 'Stripe is processing your payout and the status will update automatically.',
       });
     } catch (error) {
+      const message = await extractFunctionErrorMessage(error, 'Unable to complete the withdrawal.');
       toast({
         title: 'Withdrawal failed',
-        description: error instanceof Error ? error.message : 'Unable to complete the withdrawal.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
