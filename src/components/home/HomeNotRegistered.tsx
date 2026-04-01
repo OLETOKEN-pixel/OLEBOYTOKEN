@@ -58,7 +58,7 @@ export function HomeNotRegistered() {
       await startDiscordAuth(getCurrentPathWithQueryAndHash());
     } catch (error) {
       console.error('Discord sign-up error:', error);
-      toast.error('Unable to start Discord login. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Unable to start Discord login. Please try again.');
     }
   }, []);
 

@@ -47,7 +47,7 @@ export default function Auth() {
       console.error('Discord sign-in error:', err);
       toast({
         title: 'Error',
-        description: 'Unable to start Discord login. Please try again.',
+        description: err instanceof Error ? err.message : 'Unable to start Discord login. Please try again.',
         variant: 'destructive',
       });
       setIsSubmitting(false);
