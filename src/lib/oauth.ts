@@ -1,3 +1,8 @@
+import {
+  FunctionsFetchError,
+  FunctionsHttpError,
+  FunctionsRelayError,
+} from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 export const CANONICAL_APP_ORIGIN = 'https://www.oleboytoken.com';
@@ -56,32 +61,64 @@ export function getCanonicalRedirectUrl(locationLike: LocationLike = window.loca
   return `${CANONICAL_APP_ORIGIN}${pathname}${search}${hash}`;
 }
 
+async function extractFunctionErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const errorPayload = await error.context.json();
+
+      if (typeof errorPayload?.error === 'string' && errorPayload.error.trim()) {
+        return errorPayload.error;
+      }
+
+      if (typeof errorPayload?.message === 'string' && errorPayload.message.trim()) {
+        return errorPayload.message;
+      }
+    } catch {
+      return fallbackMessage;
+    }
+  }
+
+  if (error instanceof FunctionsRelayError || error instanceof FunctionsFetchError) {
+    return error.message || fallbackMessage;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
 export async function startDiscordAuth(redirectAfter = '/') {
   const previousRedirect = readStoredRedirect();
   writeStoredRedirect(redirectAfter);
 
   try {
-    const { data, error } = await supabase.functions.invoke('discord-auth-start', {
+    const { data } = await supabase.functions.invoke('discord-auth-start', {
       body: { redirectAfter },
     });
 
-    if (error || !data?.authUrl) {
-      throw new Error(error?.message || 'Failed to start Discord auth');
+    if (!data?.authUrl) {
+      throw new Error('Failed to start Discord auth');
     }
 
     window.location.assign(data.authUrl);
   } catch (error) {
     writeStoredRedirect(previousRedirect);
-    throw error;
+    throw new Error(await extractFunctionErrorMessage(error, 'Failed to start Discord auth'));
   }
 }
 
 export async function startEpicAuth() {
-  const { data, error } = await supabase.functions.invoke('epic-auth-start');
+  try {
+    const { data } = await supabase.functions.invoke('epic-auth-start');
 
-  if (error || !data?.authUrl) {
-    throw new Error(error?.message || 'Failed to start Epic auth');
+    if (!data?.authUrl) {
+      throw new Error('Failed to start Epic auth');
+    }
+
+    window.location.assign(data.authUrl);
+  } catch (error) {
+    throw new Error(await extractFunctionErrorMessage(error, 'Failed to start Epic auth'));
   }
-
-  window.location.assign(data.authUrl);
 }

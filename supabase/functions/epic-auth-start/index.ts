@@ -31,24 +31,23 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client with user auth
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      logStep("Missing auth header");
       return new Response(
         JSON.stringify({ error: "Authorization required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       logStep("Auth error", { error: authError?.message });
       return new Response(
@@ -61,10 +60,6 @@ serve(async (req) => {
 
     // Generate random state for CSRF protection
     const state = crypto.randomUUID();
-
-    // Use service role to insert state (bypasses RLS)
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Clean up any existing states for this user first
     await supabaseAdmin
@@ -83,7 +78,10 @@ serve(async (req) => {
 
     if (stateError) {
       logStep("State insert error", { error: stateError.message });
-      throw stateError;
+      return new Response(
+        JSON.stringify({ error: `Epic OAuth state setup failed: ${stateError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     logStep("State saved", { state: state.substring(0, 8) + "..." });
@@ -116,7 +114,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logStep("Error", { error: errorMessage });
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: errorMessage || "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
