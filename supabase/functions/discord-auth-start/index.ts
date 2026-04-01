@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getCanonicalAuthRedirect } from "../_shared/app-url.ts";
+
+const CANONICAL_APP_URL = "https://www.oleboytoken.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,14 @@ const corsHeaders = {
 const logStep = (step: string, details?: unknown) => {
   console.log(`[DISCORD-AUTH-START] ${step}`, details ? JSON.stringify(details) : "");
 };
+
+function getRedirectUri(): string {
+  const envUri = Deno.env.get("DISCORD_REDIRECT_URI");
+  if (envUri) {
+    return envUri;
+  }
+  return `${CANONICAL_APP_URL}/auth/discord/callback`;
+}
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -21,7 +30,7 @@ serve(async (req) => {
     logStep("Function started");
 
     const clientId = Deno.env.get("DISCORD_CLIENT_ID");
-    const redirectUri = getCanonicalAuthRedirect("/auth/discord/callback", "DISCORD_REDIRECT_URI");
+    const redirectUri = getRedirectUri();
 
     if (!clientId) {
       logStep("Missing Discord credentials", { hasClientId: !!clientId, hasRedirectUri: !!redirectUri });
