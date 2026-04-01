@@ -86,25 +86,44 @@ async function findWithdrawalRequest(
 
 serve(async (req) => {
   const signature = req.headers.get("Stripe-Signature");
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const webhookSecrets = [
+    Deno.env.get("STRIPE_WEBHOOK_SECRET"),
+    Deno.env.get("STRIPE_CONNECT_WEBHOOK_SECRET"),
+  ].filter((secret): secret is string => Boolean(secret));
 
-  if (!signature || !webhookSecret) {
+  if (!signature || webhookSecrets.length === 0) {
     return new Response("Missing signature or webhook secret", { status: 400 });
   }
 
   const body = await req.text();
-  let event: Stripe.Event;
+  let event: Stripe.Event | null = null;
+  let verified = false;
 
-  try {
-    event = await stripe.webhooks.constructEventAsync(
-      body,
-      signature,
-      webhookSecret,
-      undefined,
-      cryptoProvider
-    );
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+  for (const webhookSecret of webhookSecrets) {
+    try {
+      event = await stripe.webhooks.constructEventAsync(
+        body,
+        signature,
+        webhookSecret,
+        undefined,
+        cryptoProvider
+      );
+      verified = true;
+      break;
+    } catch {
+      // Try the next configured webhook secret. Account and Connect destinations
+      // use different signing secrets even if they point to the same endpoint.
+    }
+  }
+
+  if (!verified) {
+    const errorMessage = "No configured Stripe webhook secret matched this delivery";
+    logStep("Webhook signature verification failed", { error: errorMessage });
+    return new Response(`Webhook Error: ${errorMessage}`, { status: 400 });
+  }
+
+  if (!event) {
+    const errorMessage = "Stripe event verification failed";
     logStep("Webhook signature verification failed", { error: errorMessage });
     return new Response(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
