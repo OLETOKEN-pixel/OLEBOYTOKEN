@@ -111,7 +111,21 @@ export async function startDiscordAuth(redirectAfter = '/') {
 
 export async function startEpicAuth() {
   try {
-    const { data } = await supabase.functions.invoke('epic-auth-start');
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.access_token) {
+      throw new Error('You must be logged in to connect Epic Games');
+    }
+
+    const { data, error } = await supabase.functions.invoke('epic-auth-start', {
+      body: {},
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
 
     if (!data?.authUrl) {
       throw new Error('Failed to start Epic auth');
