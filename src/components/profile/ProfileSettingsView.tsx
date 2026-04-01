@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   Check,
@@ -9,7 +9,6 @@ import {
   Loader2,
   LogOut,
   Save,
-  ShieldCheck,
   Unlink,
   User,
   Wallet,
@@ -17,7 +16,7 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,33 +28,16 @@ import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { extractFunctionErrorInfo, startEpicAuth } from '@/lib/oauth';
 import {
-  describeStripeDestination,
-  getStripePayoutCountryLabel,
-  MIN_STRIPE_WITHDRAWAL,
-  STRIPE_PAYOUT_COUNTRIES,
-  STRIPE_WITHDRAWAL_FEE,
-  type StripePayoutStatus,
-  type WithdrawalDestinationSnapshot,
-} from '@/lib/stripePayouts';
+  describePayPalDestination,
+  isValidPayPalEmail,
+  MIN_PAYPAL_WITHDRAWAL,
+  PAYPAL_WITHDRAWAL_FEE,
+} from '@/lib/paypalPayouts';
 import { cn } from '@/lib/utils';
-import type { Platform, Region, WithdrawalRequest } from '@/types';
+import type { Platform, Region, WithdrawalDestinationSnapshot, WithdrawalRequest } from '@/types';
 import { PLATFORMS, REGIONS } from '@/types';
 
 export type ProfileSection = 'account' | 'game' | 'payments' | 'connections';
-
-interface StripeConnectedAccount {
-  onboarding_complete: boolean | null;
-  payouts_enabled: boolean | null;
-  charges_enabled: boolean | null;
-  details_submitted: boolean | null;
-  country: string | null;
-  payouts_status: StripePayoutStatus | null;
-  requirements_due: string[] | null;
-  requirements_pending_verification: string[] | null;
-  external_account_present: boolean | null;
-  external_account_types: string[] | null;
-  stripe_account_id: string;
-}
 
 interface ProfileSettingsViewProps {
   initialSection?: ProfileSection;
@@ -97,7 +79,6 @@ export function ProfileSettingsView({
   onClose,
 }: ProfileSettingsViewProps) {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, profile, wallet, loading, refreshProfile, refreshWallet, isProfileComplete, signOut } = useAuth();
   const { isVip, changeUsername } = useVipStatus();
@@ -106,51 +87,34 @@ export function ProfileSettingsView({
   const [username, setUsername] = useState('');
   const [preferredRegion, setPreferredRegion] = useState<Region>('EU');
   const [preferredPlatform, setPreferredPlatform] = useState<Platform>('PC');
-  const [stripeAccount, setStripeAccount] = useState<StripeConnectedAccount | null>(null);
+  const [paypalEmail, setPaypalEmail] = useState('');
+  const [paypalEmailError, setPaypalEmailError] = useState('');
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPayPal, setSavingPayPal] = useState(false);
   const [connectingEpic, setConnectingEpic] = useState(false);
   const [usernameError, setUsernameError] = useState('');
   const [showDisconnectEpicDialog, setShowDisconnectEpicDialog] = useState(false);
   const [disconnectingEpic, setDisconnectingEpic] = useState(false);
-  const [connectingStripe, setConnectingStripe] = useState(false);
-  const [managingStripe, setManagingStripe] = useState(false);
-  const [payoutCountry, setPayoutCountry] = useState('IT');
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submittingWithdrawal, setSubmittingWithdrawal] = useState(false);
-  const [processingStripeReturn, setProcessingStripeReturn] = useState(false);
 
   const loadPaymentData = useCallback(async (targetUserId: string) => {
-    const [stripeRes, withdrawalsRes] = await Promise.all([
-      supabase
-        .from('stripe_connected_accounts')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .maybeSingle(),
-      supabase
-        .from('withdrawal_requests')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .order('created_at', { ascending: false })
-        .limit(6),
-    ]);
+    const { data, error } = await supabase
+      .from('withdrawal_requests')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .order('created_at', { ascending: false })
+      .limit(6);
 
-    if (stripeRes.data) {
-      const connectedAccount = stripeRes.data as StripeConnectedAccount;
-      setStripeAccount(connectedAccount);
-      if (connectedAccount.country) {
-        setPayoutCountry(connectedAccount.country);
-      }
-    } else {
-      setStripeAccount(null);
-    }
-
-    if (withdrawalsRes.data) {
-      setWithdrawals(withdrawalsRes.data as WithdrawalRequest[]);
-    } else {
+    if (error) {
+      console.error('[Payments] Unable to load withdrawals', error);
       setWithdrawals([]);
+      return;
     }
+
+    setWithdrawals((data as WithdrawalRequest[] | null) ?? []);
   }, []);
 
   useEffect(() => {
@@ -165,6 +129,8 @@ export function ProfileSettingsView({
     setUsername(profile.username || '');
     setPreferredRegion((profile.preferred_region as Region) || 'EU');
     setPreferredPlatform((profile.preferred_platform as Platform) || 'PC');
+    setPaypalEmail(profile.paypal_email || '');
+    setPaypalEmailError('');
   }, [profile]);
 
   useEffect(() => {
@@ -178,13 +144,9 @@ export function ProfileSettingsView({
   const walletBalance = wallet?.balance ?? 0;
   const lockedBalance = wallet?.locked_balance ?? 0;
   const totalBalance = walletBalance + lockedBalance;
-  const stripeStatus = stripeAccount?.payouts_status ?? 'missing';
-  const isStripeVerified = stripeStatus === 'enabled' && stripeAccount?.external_account_present === true;
-  const canWithdraw = isStripeVerified && walletBalance >= MIN_STRIPE_WITHDRAWAL + STRIPE_WITHDRAWAL_FEE;
-  const stripeCountryLabel = getStripePayoutCountryLabel(stripeAccount?.country || payoutCountry);
-  const stripeRequirementsDue = stripeAccount?.requirements_due?.length ?? 0;
-  const stripeRequirementsPending = stripeAccount?.requirements_pending_verification?.length ?? 0;
-  const hasStripeAccount = Boolean(stripeAccount?.stripe_account_id);
+  const normalizedPayPalEmail = paypalEmail.trim().toLowerCase();
+  const hasValidPayPalEmail = isValidPayPalEmail(normalizedPayPalEmail);
+  const canWithdraw = hasValidPayPalEmail && walletBalance >= MIN_PAYPAL_WITHDRAWAL + PAYPAL_WITHDRAWAL_FEE;
   const discordDisplayName = profile?.discord_display_name || profile?.discord_username || profile?.username || 'User';
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || undefined;
 
@@ -200,42 +162,7 @@ export function ProfileSettingsView({
     []
   );
 
-  const stripeStatusPresentation = useMemo(() => {
-    switch (stripeStatus) {
-      case 'enabled':
-        return {
-          label: 'Ready',
-          className: profileBadgeNeutralClass,
-          description: 'Stripe can now pay out to the default bank account or supported debit card linked to this account.',
-        };
-      case 'restricted':
-        return {
-          label: 'Action required',
-          className: profileBadgeDangerClass,
-          description: 'Stripe still needs extra verification or payout method updates before withdrawals can be completed.',
-        };
-      case 'pending':
-        return {
-          label: 'Pending',
-          className: profileBadgeAccentClass,
-          description: 'Stripe onboarding is in progress. Finish setup and add a payout method to unlock withdrawals.',
-        };
-      case 'disabled':
-        return {
-          label: 'Unavailable',
-          className: profileBadgeDangerClass,
-          description: 'Stripe payout controls are currently unavailable for this account.',
-        };
-      default:
-        return {
-          label: 'Missing',
-          className: profileBadgeAccentClass,
-          description: 'Create your Stripe payout account to receive withdrawals from your OBT wallet.',
-        };
-    }
-  }, [stripeStatus]);
-
-  const logStripeFunctionError = useCallback(
+  const logPayPalFunctionError = useCallback(
     (
       context: string,
       info: {
@@ -246,7 +173,7 @@ export function ProfileSettingsView({
       },
       error: unknown
     ) => {
-      console.error(`[Stripe] ${context}`, {
+      console.error(`[PayPal] ${context}`, {
         message: info.message,
         details: info.details,
         code: info.code,
@@ -256,183 +183,6 @@ export function ProfileSettingsView({
     },
     []
   );
-
-  const clearPaymentsQueryFlags = useCallback(() => {
-    const nextSearchParams = new URLSearchParams(searchParams);
-    nextSearchParams.delete('stripe_onboarding');
-    nextSearchParams.delete('stripe_refresh');
-    nextSearchParams.set('tab', 'payments');
-    setSearchParams(nextSearchParams, { replace: true });
-  }, [searchParams, setSearchParams]);
-
-  const syncStripeConnectedAccount = useCallback(async () => {
-    const { data, error } = await supabase.functions.invoke('sync-stripe-connected-account');
-
-    if (error) {
-      const info = await extractFunctionErrorInfo(error, 'Unable to sync Stripe account status.');
-      logStripeFunctionError('sync-connected-account', info, error);
-      throw new Error(info.message);
-    }
-
-    if (!data?.success) {
-      console.error('[Stripe] sync-connected-account', {
-        message: data?.error || 'Unable to sync Stripe account status.',
-        details: data?.details ?? null,
-        code: data?.code ?? null,
-        requestId: data?.stripeRequestId ?? null,
-      });
-      throw new Error(data?.error || 'Unable to sync Stripe account status.');
-    }
-
-    if (user?.id) {
-      await Promise.all([
-        loadPaymentData(user.id),
-        refreshWallet(),
-      ]);
-    }
-
-    return data;
-  }, [loadPaymentData, logStripeFunctionError, refreshWallet, user?.id]);
-
-  const startStripeOnboarding = useCallback(
-    async ({ suppressReadyToast = false }: { suppressReadyToast?: boolean } = {}) => {
-      if (!hasStripeAccount && !payoutCountry) {
-        throw new Error('Choose the payout country before continuing with Stripe.');
-      }
-
-      setConnectingStripe(true);
-
-      try {
-        const { data, error } = await supabase.functions.invoke('create-stripe-connect-account', {
-          body: { country: payoutCountry },
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data?.url) {
-          window.location.href = data.url;
-          return { redirected: true, data };
-        }
-
-        if (user?.id) {
-          await loadPaymentData(user.id);
-        }
-
-        if (!suppressReadyToast) {
-          toast({
-            title: 'Stripe ready',
-            description: data?.alreadyConnected
-              ? 'Your payout account is already configured.'
-              : 'Your Stripe payout account is ready.',
-          });
-        }
-
-        return { redirected: false, data };
-      } catch (error) {
-        const info = await extractFunctionErrorInfo(error, 'Unable to start Stripe onboarding.');
-        logStripeFunctionError('connect-account', info, error);
-        throw new Error(info.message);
-      } finally {
-        setConnectingStripe(false);
-      }
-    },
-    [hasStripeAccount, loadPaymentData, logStripeFunctionError, payoutCountry, toast, user?.id]
-  );
-
-  useEffect(() => {
-    if (mode !== 'page' || !user || processingStripeReturn) {
-      return;
-    }
-
-    const stripeOnboarding = searchParams.get('stripe_onboarding');
-    const stripeRefresh = searchParams.get('stripe_refresh');
-
-    if (stripeOnboarding !== 'complete' && stripeRefresh !== 'true') {
-      return;
-    }
-
-    let cancelled = false;
-
-    const handleStripeReturn = async () => {
-      let shouldClearQueryFlags = true;
-      setProcessingStripeReturn(true);
-      setActiveSection('payments');
-
-      try {
-        if (stripeRefresh === 'true') {
-          const result = await startStripeOnboarding({ suppressReadyToast: true });
-          if (result?.redirected) {
-            shouldClearQueryFlags = false;
-          }
-          return;
-        }
-
-        const synced = await syncStripeConnectedAccount();
-        if (cancelled) {
-          return;
-        }
-
-        const requirementsOpen =
-          (synced?.requirementsDue?.length ?? 0) +
-          (synced?.requirementsPendingVerification?.length ?? 0);
-
-        if (synced?.payoutsEnabled && synced?.externalAccountPresent) {
-          toast({
-            title: 'Stripe connected',
-            description: 'Your payout account is active and ready for withdrawals.',
-          });
-        } else if (!synced?.externalAccountPresent) {
-          toast({
-            title: 'Add payout method',
-            description: 'Finish the setup in Stripe Express and add a bank account or supported debit card.',
-          });
-        } else if (requirementsOpen > 0) {
-          toast({
-            title: 'Stripe needs a final check',
-            description: `Stripe still has ${requirementsOpen} open requirement(s) before payouts can be completed.`,
-          });
-        } else {
-          toast({
-            title: 'Stripe setup updated',
-            description: 'Your payout account status has been refreshed.',
-          });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          const message = error instanceof Error ? error.message : 'Unable to refresh Stripe account status.';
-          toast({
-            title: 'Stripe sync failed',
-            description: message,
-            variant: 'destructive',
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          if (shouldClearQueryFlags) {
-            clearPaymentsQueryFlags();
-          }
-          setProcessingStripeReturn(false);
-        }
-      }
-    };
-
-    void handleStripeReturn();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    clearPaymentsQueryFlags,
-    mode,
-    processingStripeReturn,
-    searchParams,
-    startStripeOnboarding,
-    syncStripeConnectedAccount,
-    toast,
-    user,
-  ]);
 
   const handleSaveAccount = async () => {
     if (!user) {
@@ -564,54 +314,65 @@ export function ProfileSettingsView({
     }
   };
 
-  const handleConnectStripe = async () => {
-    try {
-      await startStripeOnboarding();
-    } catch (error) {
-      toast({
-        title: 'Stripe error',
-        description: error instanceof Error ? error.message : 'Unable to start Stripe onboarding.',
-        variant: 'destructive',
-      });
+  const handleSavePayPalEmail = async () => {
+    if (!user) {
+      return;
     }
-  };
 
-  const handleManageStripe = async () => {
-    setManagingStripe(true);
+    if (!hasValidPayPalEmail) {
+      setPaypalEmailError('Insert a valid PayPal email to receive withdrawals.');
+      return;
+    }
+
+    setSavingPayPal(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-stripe-connect-login-link');
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          paypal_email: normalizedPayPalEmail,
+        })
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;
       }
 
-      if (!data?.url) {
-        throw new Error('Unable to open Stripe Express dashboard.');
-      }
-
-      window.location.href = data.url;
-    } catch (error) {
-      const info = await extractFunctionErrorInfo(error, 'Unable to open the Stripe payout dashboard.');
-      logStripeFunctionError('manage-stripe', info, error);
+      await refreshProfile();
+      setPaypalEmail(normalizedPayPalEmail);
+      setPaypalEmailError('');
       toast({
-        title: 'Stripe dashboard unavailable',
-        description: info.message,
+        title: 'PayPal saved',
+        description: 'Your PayPal email is ready for future withdrawals.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Save failed',
+        description: error instanceof Error ? error.message : 'Unable to save the PayPal email.',
         variant: 'destructive',
       });
     } finally {
-      setManagingStripe(false);
+      setSavingPayPal(false);
     }
   };
 
   const handleWithdraw = async () => {
     const amount = Number.parseFloat(withdrawAmount);
-    const totalDeduction = amount + STRIPE_WITHDRAWAL_FEE;
+    const totalDeduction = amount + PAYPAL_WITHDRAWAL_FEE;
 
-    if (!Number.isFinite(amount) || amount < MIN_STRIPE_WITHDRAWAL) {
+    if (!hasValidPayPalEmail) {
+      toast({
+        title: 'PayPal email required',
+        description: 'Save a valid PayPal email before requesting a withdrawal.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount < MIN_PAYPAL_WITHDRAWAL) {
       toast({
         title: 'Invalid amount',
-        description: `Minimum withdrawal is €${MIN_STRIPE_WITHDRAWAL}.`,
+        description: `Minimum withdrawal is €${MIN_PAYPAL_WITHDRAWAL}.`,
         variant: 'destructive',
       });
       return;
@@ -620,7 +381,7 @@ export function ProfileSettingsView({
     if (totalDeduction > walletBalance) {
       toast({
         title: 'Insufficient balance',
-        description: `You need €${totalDeduction.toFixed(2)} including the €${STRIPE_WITHDRAWAL_FEE.toFixed(2)} fee.`,
+        description: `You need €${totalDeduction.toFixed(2)} including the €${PAYPAL_WITHDRAWAL_FEE.toFixed(2)} fee.`,
         variant: 'destructive',
       });
       return;
@@ -629,8 +390,16 @@ export function ProfileSettingsView({
     setSubmittingWithdrawal(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-stripe-payout', {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.access_token) {
+        throw new Error('You must be logged in to request a withdrawal.');
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-paypal-payout', {
         body: { amount },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
       });
 
       if (error) {
@@ -650,11 +419,14 @@ export function ProfileSettingsView({
 
       toast({
         title: 'Withdrawal registered',
-        description: 'Stripe is processing your payout and the status will update automatically.',
+        description:
+          data?.status === 'completed'
+            ? 'Your PayPal payout completed immediately.'
+            : 'PayPal is processing your payout and the status will update automatically.',
       });
     } catch (error) {
       const info = await extractFunctionErrorInfo(error, 'Unable to complete the withdrawal.');
-      logStripeFunctionError('create-payout', info, error);
+      logPayPalFunctionError('create-payout', info, error);
       toast({
         title: 'Withdrawal failed',
         description: info.message,
@@ -697,7 +469,7 @@ export function ProfileSettingsView({
               Profile Settings
             </h1>
             <p className="mt-3 max-w-[760px] text-sm leading-6 text-white/60 lg:text-base">
-              Manage your OBT profile, Epic Games connection, payout setup and linked accounts from one place.
+              Manage your OBT profile, Epic Games connection, withdrawal destination and linked accounts from one place.
             </p>
           </div>
 
@@ -929,8 +701,8 @@ export function ProfileSettingsView({
                     Payments & Payouts
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-white/56">
-                    Configure Stripe Connect, review your wallet status and withdraw winnings to the default payout
-                    method managed in Stripe.
+                    Review your wallet status and withdraw winnings to your saved PayPal email. Stripe stays active
+                    only for deposits.
                   </p>
                 </div>
 
@@ -958,60 +730,69 @@ export function ProfileSettingsView({
                 <div className="rounded-[20px] border border-white/[0.08] bg-black/20 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold uppercase text-white">Stripe Connect</p>
+                      <p className="text-sm font-semibold uppercase text-white">PayPal Withdrawals</p>
                       <p className="mt-1 text-sm text-white/52">
-                        {stripeStatusPresentation.description}
+                        Save one PayPal email and OBT will send payouts there automatically whenever you request a
+                        withdrawal.
                       </p>
                     </div>
 
-                    <span className={stripeStatusPresentation.className}>
-                      <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                      {stripeStatusPresentation.label}
+                    <span className={hasValidPayPalEmail ? profileBadgeNeutralClass : profileBadgeAccentClass}>
+                      {hasValidPayPalEmail ? <Check className="mr-1 h-3.5 w-3.5" /> : <AlertCircle className="mr-1 h-3.5 w-3.5" />}
+                      {hasValidPayPalEmail ? 'Ready' : 'Missing'}
                     </span>
                   </div>
 
                   <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Payout Country</Label>
-                      <Select value={payoutCountry} onValueChange={setPayoutCountry} disabled={hasStripeAccount}>
-                        <SelectTrigger className={profileSelectTriggerClass}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className={profileSelectContentClass}>
-                          {STRIPE_PAYOUT_COUNTRIES.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
-                              {country.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-xs uppercase tracking-[0.16em] text-white/42">PayPal Email</Label>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <Input
+                          type="email"
+                          value={paypalEmail}
+                          onChange={(event) => {
+                            setPaypalEmail(event.target.value);
+                            setPaypalEmailError('');
+                          }}
+                          placeholder="wallet@paypal.com"
+                          className={profileInputClass}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleSavePayPalEmail}
+                          disabled={savingPayPal || normalizedPayPalEmail === (profile.paypal_email || '').trim().toLowerCase()}
+                          className={profileSecondaryButtonClass}
+                        >
+                          {savingPayPal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                          Save Email
+                        </Button>
+                      </div>
+                      {paypalEmailError && <p className="text-sm text-red-300">{paypalEmailError}</p>}
                       <p className="text-sm text-white/48">
-                        {hasStripeAccount
-                          ? `Locked to ${stripeCountryLabel}. Stripe account countries can't be changed after creation.`
-                          : 'Choose the country where Stripe should onboard and pay out this account. The country locks after account creation.'}
+                        We use this email as the destination for every automatic withdrawal. Change it here anytime
+                        before requesting a payout.
                       </p>
                     </div>
 
                     <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-white/42">Payout Readiness</p>
+                      <p className="text-xs uppercase tracking-[0.16em] text-white/42">Withdrawal Rules</p>
                       <div className="mt-3 space-y-3 text-sm leading-6 text-white/58">
                         <p>
-                          Country: <span className="text-white/82">{stripeCountryLabel}</span>
-                        </p>
-                        <p>
-                          Method on file:{' '}
+                          Destination:{' '}
                           <span className="text-white/82">
-                            {stripeAccount?.external_account_present
-                              ? 'Stripe has a payout destination ready'
-                              : 'No payout destination configured yet'}
+                            {hasValidPayPalEmail ? normalizedPayPalEmail : 'No PayPal email saved yet'}
                           </span>
                         </p>
                         <p>
-                          Requirements:{' '}
+                          Minimum:{' '}
                           <span className="text-white/82">
-                            {stripeRequirementsDue + stripeRequirementsPending > 0
-                              ? `${stripeRequirementsDue + stripeRequirementsPending} item(s) still open`
-                              : 'No open Stripe requirements'}
+                            €{MIN_PAYPAL_WITHDRAWAL.toFixed(2)}
+                          </span>
+                        </p>
+                        <p>
+                          Fee:{' '}
+                          <span className="text-white/82">
+                            €{PAYPAL_WITHDRAWAL_FEE.toFixed(2)} per withdrawal
                           </span>
                         </p>
                       </div>
@@ -1021,79 +802,50 @@ export function ProfileSettingsView({
                   <div className="mt-5 rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-white/42">Withdrawals</p>
                     <p className="mt-2 text-sm leading-6 text-white/58">
-                      Withdrawals are sent automatically to the default bank account or eligible debit card configured
-                      inside Stripe Express. OBT does not store those payout details directly.
+                      Withdrawals are sent automatically to the PayPal email saved above. OBT keeps Stripe only for
+                      deposits and does not require any Stripe payout onboarding for withdrawals.
                     </p>
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
-                    {!hasStripeAccount && (
-                      <Button
-                        type="button"
-                        onClick={handleConnectStripe}
-                        disabled={connectingStripe || processingStripeReturn}
-                        className={profilePrimaryButtonClass}
-                      >
-                        {connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                        Setup Stripe Payouts
-                      </Button>
-                    )}
-
-                    {hasStripeAccount && (
-                      <Button
-                        type="button"
-                        onClick={stripeAccount?.external_account_present ? handleConnectStripe : handleManageStripe}
-                        disabled={managingStripe || connectingStripe || processingStripeReturn}
-                        className={profilePrimaryButtonClass}
-                      >
-                        {managingStripe || connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
-                        {stripeAccount?.external_account_present ? 'Continue Stripe Setup' : 'Add Payout Method'}
-                      </Button>
-                    )}
-
-                    {hasStripeAccount && (
-                      <Button
-                        type="button"
-                        onClick={stripeAccount?.external_account_present ? handleManageStripe : handleConnectStripe}
-                        disabled={managingStripe || connectingStripe || processingStripeReturn}
-                        className={profileSecondaryButtonClass}
-                      >
-                        {managingStripe || connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                        {stripeAccount?.external_account_present ? 'Manage Payout Method' : 'Continue Stripe Setup'}
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      disabled={!canWithdraw}
+                      className={profilePrimaryButtonClass}
+                      onClick={() => setWithdrawOpen(true)}
+                    >
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Withdraw to PayPal
+                    </Button>
                   </div>
 
-                  {isStripeVerified && (
-                    <div className="mt-5">
-                      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
-                        <DialogTrigger asChild>
-                          <Button type="button" disabled={!canWithdraw} className={profilePrimaryButtonClass}>
-                            <Wallet className="mr-2 h-4 w-4" />
-                            Withdraw
-                          </Button>
-                        </DialogTrigger>
+                  <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
                         <DialogContent className={profileDialogContentClass}>
                           <DialogHeader>
-                            <DialogTitle>Request Withdrawal</DialogTitle>
+                            <DialogTitle>Withdraw to PayPal</DialogTitle>
                             <DialogDescription>
-                              Minimum €{MIN_STRIPE_WITHDRAWAL} and a fee of €{STRIPE_WITHDRAWAL_FEE.toFixed(2)} per withdrawal.
+                              Minimum €{MIN_PAYPAL_WITHDRAWAL} and a fee of €{PAYPAL_WITHDRAWAL_FEE.toFixed(2)} per withdrawal.
                             </DialogDescription>
                           </DialogHeader>
 
                           <div className="space-y-3 py-2">
+                            <div className="rounded-[16px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                              <p className="text-xs uppercase tracking-[0.16em] text-white/42">PayPal Destination</p>
+                              <p className="mt-2 text-sm text-white/76">{normalizedPayPalEmail}</p>
+                            </div>
                             <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Amount</Label>
                             <Input
                               type="number"
-                              min={MIN_STRIPE_WITHDRAWAL}
-                              max={Math.max(0, walletBalance - STRIPE_WITHDRAWAL_FEE)}
+                              min={MIN_PAYPAL_WITHDRAWAL}
+                              max={Math.max(0, walletBalance - PAYPAL_WITHDRAWAL_FEE)}
                               value={withdrawAmount}
                               onChange={(event) => setWithdrawAmount(event.target.value)}
-                              placeholder={`${MIN_STRIPE_WITHDRAWAL}.00`}
+                              placeholder={`${MIN_PAYPAL_WITHDRAWAL}.00`}
                               className={profileInputClass}
                             />
                             <p className="text-sm text-white/52">
-                              Stripe will use your default payout method. Your current available balance is €{walletBalance.toFixed(2)} and the total deduction will include the €{STRIPE_WITHDRAWAL_FEE.toFixed(2)} fee.
+                              Your current available balance is €{walletBalance.toFixed(2)} and the total deduction
+                              will include the €{PAYPAL_WITHDRAWAL_FEE.toFixed(2)} fee.
                             </p>
                           </div>
 
@@ -1107,9 +859,7 @@ export function ProfileSettingsView({
                             </Button>
                           </DialogFooter>
                         </DialogContent>
-                      </Dialog>
-                    </div>
-                  )}
+                  </Dialog>
                 </div>
 
                 <div className="rounded-[20px] border border-white/[0.08] bg-black/20 p-5">
@@ -1128,9 +878,14 @@ export function ProfileSettingsView({
                     <div className="mt-4 space-y-3">
                       {withdrawals.map((withdrawal) => {
                         const status = withdrawalStatusMap[withdrawal.status] ?? withdrawalStatusMap.pending;
-                        const destination = describeStripeDestination(
-                          (withdrawal.payout_destination_snapshot as WithdrawalDestinationSnapshot | null | undefined) ?? null
-                        );
+                        const destination =
+                          withdrawal.payment_method === 'paypal'
+                            ? describePayPalDestination(
+                                (withdrawal.payout_destination_snapshot as WithdrawalDestinationSnapshot | null | undefined) ?? null,
+                                withdrawal.payment_details
+                              )
+                            : 'Legacy payout method';
+                        const failureMessage = withdrawal.paypal_error_message || withdrawal.stripe_error_message;
 
                         return (
                           <div
@@ -1147,11 +902,11 @@ export function ProfileSettingsView({
                                 })}
                               </p>
                               <p className="mt-1 text-xs text-white/44">
-                                Fee €{(withdrawal.fee_amount ?? STRIPE_WITHDRAWAL_FEE).toFixed(2)} • {destination}
+                                {withdrawal.payment_method.toUpperCase()} • Fee €{(withdrawal.fee_amount ?? PAYPAL_WITHDRAWAL_FEE).toFixed(2)} • {destination}
                               </p>
-                              {withdrawal.status === 'failed' && withdrawal.stripe_error_message && (
+                              {withdrawal.status === 'failed' && failureMessage && (
                                 <p className="mt-2 max-w-[480px] text-xs leading-5 text-[#ffb4ca]">
-                                  {withdrawal.stripe_error_message}
+                                  {failureMessage}
                                 </p>
                               )}
                             </div>

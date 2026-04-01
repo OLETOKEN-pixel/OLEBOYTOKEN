@@ -67,7 +67,7 @@ export default function Privacy() {
               <li><strong>Account data:</strong> email address, username, password (stored in encrypted/hashed form where applicable).</li>
               <li><strong>Profile settings:</strong> region/platform preferences and linked gaming identifiers (e.g., your Epic Games display name) when you connect them.</li>
               <li><strong>Support communications:</strong> messages you send to us via email or other support channels, including attachments you provide as evidence in disputes.</li>
-              <li><strong>Payment/withdrawal information:</strong> Stripe Connect account for withdrawals and payment-related identifiers needed for processing (note: we do not store full card details).</li>
+              <li><strong>Payment/withdrawal information:</strong> payment-related identifiers needed for processing deposits, your saved PayPal payout email, and payout metadata needed to complete withdrawals.</li>
             </ul>
 
             <h3>3.2. Data collected automatically</h3>
@@ -87,10 +87,10 @@ export default function Privacy() {
 
             <h3>3.4. Data from third parties</h3>
             <ul className="space-y-2">
-              <li>Payment processors (e.g., Stripe) may provide us with confirmation of successful/failed payments and limited transaction metadata.</li>
-              <li>Stripe Connect may provide data necessary to confirm withdrawal processing status.</li>
+              <li>Payment processors (e.g., Stripe) may provide us with confirmation of successful/failed deposits and limited transaction metadata.</li>
+              <li>PayPal may provide us with payout processing status, payout identifiers, and limited error details needed to reconcile withdrawals.</li>
             </ul>
-            <p>We do not receive your full payment card details from Stripe.</p>
+            <p>We do not receive your full payment card details from Stripe and we do not store full PayPal account credentials.</p>
 
             <h2>4. Why We Use Your Data (Purposes)</h2>
             <p>We use your personal data to:</p>

@@ -83,6 +83,8 @@ export async function extractFunctionErrorInfo(error: unknown, fallbackMessage: 
         code: typeof errorPayload?.code === 'string' && errorPayload.code.trim() ? errorPayload.code : null,
         requestId:
           (typeof errorPayload?.stripeRequestId === 'string' && errorPayload.stripeRequestId.trim()) ||
+          (typeof errorPayload?.paypalDebugId === 'string' && errorPayload.paypalDebugId.trim()) ||
+          (typeof errorPayload?.debugId === 'string' && errorPayload.debugId.trim()) ||
           (typeof errorPayload?.requestId === 'string' && errorPayload.requestId.trim()) ||
           null,
       };

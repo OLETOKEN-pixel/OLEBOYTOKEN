@@ -94,19 +94,13 @@ export default function Terms() {
               <li>If a match is canceled due to technical issues or rule violations, we may refund the entry fee to the wallet and/or manage the match according to the integrity rules in Section 11.</li>
             </ul>
 
-            <h2>9. Withdrawals (Stripe Connect)</h2>
+            <h2>9. Withdrawals (PayPal)</h2>
             <ul className="space-y-2">
-              <li>Withdrawals are processed via Stripe Connect directly to your bank account.</li>
+              <li>Withdrawals are processed to the PayPal email saved in your profile settings.</li>
               <li>Minimum withdrawal: €10. Withdrawal fee: €0.50 per transaction.</li>
-              <li>Processing time: withdrawals are normally processed within 1-3 business days. Delays may occur due to anti-fraud checks, verification requirements, Stripe/bank issues, holidays, or technical problems.</li>
-              <li>Verification: to protect users and the Platform, Stripe may require identity verification (KYC) before enabling payouts, including:
-                <ul className="mt-2 space-y-1">
-                  <li>confirming identity via government-issued ID;</li>
-                  <li>verifying bank account ownership;</li>
-                  <li>additional checks for higher amounts or suspicious activity.</li>
-                </ul>
-              </li>
-              <li>We may block, delay, or deny withdrawals if we detect suspicious activity, Terms violations, or non-cooperation with verification.</li>
+              <li>Processing time depends on PayPal and the recipient account status. Some withdrawals can complete quickly, while others may remain pending or be returned by PayPal.</li>
+              <li>You are responsible for keeping a valid PayPal email on file and ensuring that the destination can accept the payout.</li>
+              <li>We may block, delay, or deny withdrawals if we detect suspicious activity, Terms violations, account mismatches, or payout failures reported by PayPal.</li>
             </ul>
 
             <h2>10. No Refunds</h2>

@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.paypal-webhook]
 verify_jwt = false
+
+[functions.create-paypal-payout]
+verify_jwt = false

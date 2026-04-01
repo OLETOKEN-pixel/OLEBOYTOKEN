@@ -169,7 +169,7 @@ export default function Admin() {
     setWithdrawingPlatform(false);
   };
 
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
+  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending' && w.payment_method !== 'paypal');
   const disputedCount = matches.filter(m => m.status === 'disputed').length;
 
   const paymentLogs = transactions.filter(t => {
@@ -438,10 +438,18 @@ export default function Admin() {
                           </Avatar>
                           <div>
                             <p className="font-bold text-sm">{wd.profiles?.username}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{wd.amount.toFixed(2)}€ via {wd.payment_method}</p>
+                            <p className="text-xs text-muted-foreground font-mono">
+                              {wd.amount.toFixed(2)}€ via {wd.payment_method}
+                              {wd.payment_method === 'paypal' ? ` • ${wd.payment_details}` : ''}
+                            </p>
+                            {wd.status === 'failed' && (wd.paypal_error_message || wd.stripe_error_message) && (
+                              <p className="mt-1 max-w-[420px] text-xs text-[hsl(var(--error))]">
+                                {wd.paypal_error_message || wd.stripe_error_message}
+                              </p>
+                            )}
                           </div>
                         </div>
-                        {wd.status === 'pending' ? (
+                        {wd.status === 'pending' && wd.payment_method !== 'paypal' ? (
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => openProcessDialog(wd, 'reject')} className="btn-premium-danger text-xs px-3 rounded-lg">
                               <XCircle className="w-4 h-4 mr-1" /> Reject
@@ -455,6 +463,8 @@ export default function Admin() {
                             "inline-flex items-center px-2.5 py-1 text-[10px] font-semibold rounded-full border",
                             wd.status === 'completed'
                               ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20"
+                              : wd.status === 'processing'
+                              ? "bg-[#FFC805]/10 text-[#FFC805] border-[#FFC805]/20"
                               : "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))] border-[hsl(var(--error))]/20"
                           )}>
                             {wd.status?.toUpperCase()}

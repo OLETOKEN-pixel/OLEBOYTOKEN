@@ -63,9 +63,7 @@ export interface Profile {
   preferred_platform: Platform;
   role: UserRole;
   is_banned: boolean;
-  /** @deprecated Legacy field, payouts now use Stripe Connect */
   paypal_email: string | null;
-  /** @deprecated Legacy field, payouts now use Stripe Connect */
   iban: string | null;
   created_at: string;
   updated_at: string;
@@ -88,7 +86,8 @@ export interface ProfileSummary {
 export type WithdrawalStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'failed' | 'completed';
 
 export interface WithdrawalDestinationSnapshot {
-  type?: 'bank_account' | 'card' | 'unknown';
+  type?: 'paypal' | 'bank_account' | 'card' | 'unknown';
+  email?: string | null;
   brand?: string | null;
   bank_name?: string | null;
   country?: string | null;
@@ -101,12 +100,17 @@ export interface WithdrawalRequest {
   id: string;
   user_id: string;
   amount: number;
-  payment_method: 'stripe';
+  payment_method: 'paypal' | 'bank' | 'stripe';
   payment_details: string;
   status: WithdrawalStatus;
   admin_notes: string | null;
   fee_amount: number;
   currency: string;
+  paypal_batch_id: string | null;
+  paypal_item_id: string | null;
+  paypal_item_status: string | null;
+  paypal_error_name: string | null;
+  paypal_error_message: string | null;
   stripe_transfer_id: string | null;
   stripe_payout_id: string | null;
   stripe_transfer_reversal_id: string | null;

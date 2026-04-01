@@ -1567,6 +1567,11 @@ export type Database = {
           currency: string
           fee_amount: number
           id: string
+          paypal_batch_id: string | null
+          paypal_error_message: string | null
+          paypal_error_name: string | null
+          paypal_item_id: string | null
+          paypal_item_status: string | null
           payment_details: string
           payment_method: string
           payout_destination_snapshot: Json | null
@@ -1588,6 +1593,11 @@ export type Database = {
           currency?: string
           fee_amount?: number
           id?: string
+          paypal_batch_id?: string | null
+          paypal_error_message?: string | null
+          paypal_error_name?: string | null
+          paypal_item_id?: string | null
+          paypal_item_status?: string | null
           payment_details: string
           payment_method: string
           payout_destination_snapshot?: Json | null
@@ -1609,6 +1619,11 @@ export type Database = {
           currency?: string
           fee_amount?: number
           id?: string
+          paypal_batch_id?: string | null
+          paypal_error_message?: string | null
+          paypal_error_name?: string | null
+          paypal_item_id?: string | null
+          paypal_item_status?: string | null
           payment_details?: string
           payment_method?: string
           payout_destination_snapshot?: Json | null
@@ -1904,6 +1919,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_paypal_withdrawal_request: {
+        Args: {
+          p_amount: number
+          p_currency?: string
+          p_destination_snapshot?: Json
+          p_fee_amount?: number
+          p_payment_details?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       declare_match_result: {
         Args: { p_i_won: boolean; p_match_id: string }
         Returns: Json
@@ -2122,6 +2148,19 @@ export type Database = {
           p_stripe_payout_id?: string
           p_stripe_transfer_id?: string
           p_stripe_transfer_reversal_id?: string
+          p_withdrawal_id: string
+        }
+        Returns: Json
+      }
+      sync_paypal_withdrawal_request: {
+        Args: {
+          p_error_message?: string
+          p_error_name?: string
+          p_paypal_batch_id?: string
+          p_paypal_item_id?: string
+          p_paypal_item_status?: string
+          p_restore_funds?: boolean
+          p_status: string
           p_withdrawal_id: string
         }
         Returns: Json
