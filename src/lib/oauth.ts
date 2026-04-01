@@ -15,6 +15,13 @@ const LEGACY_HOSTNAMES = new Set([
 
 type LocationLike = Pick<Location, 'hostname' | 'pathname' | 'search' | 'hash'>;
 
+export interface FunctionErrorInfo {
+  message: string;
+  details: string | null;
+  code: string | null;
+  requestId: string | null;
+}
+
 function readStoredRedirect() {
   try {
     return localStorage.getItem('auth_redirect');
@@ -61,32 +68,63 @@ export function getCanonicalRedirectUrl(locationLike: LocationLike = window.loca
   return `${CANONICAL_APP_ORIGIN}${pathname}${search}${hash}`;
 }
 
-export async function extractFunctionErrorMessage(error: unknown, fallbackMessage: string) {
+export async function extractFunctionErrorInfo(error: unknown, fallbackMessage: string): Promise<FunctionErrorInfo> {
   if (error instanceof FunctionsHttpError) {
     try {
       const errorPayload = await error.context.json();
+      const message =
+        (typeof errorPayload?.error === 'string' && errorPayload.error.trim()) ||
+        (typeof errorPayload?.message === 'string' && errorPayload.message.trim()) ||
+        fallbackMessage;
 
-      if (typeof errorPayload?.error === 'string' && errorPayload.error.trim()) {
-        return errorPayload.error;
-      }
-
-      if (typeof errorPayload?.message === 'string' && errorPayload.message.trim()) {
-        return errorPayload.message;
-      }
+      return {
+        message,
+        details: typeof errorPayload?.details === 'string' && errorPayload.details.trim() ? errorPayload.details : null,
+        code: typeof errorPayload?.code === 'string' && errorPayload.code.trim() ? errorPayload.code : null,
+        requestId:
+          (typeof errorPayload?.stripeRequestId === 'string' && errorPayload.stripeRequestId.trim()) ||
+          (typeof errorPayload?.requestId === 'string' && errorPayload.requestId.trim()) ||
+          null,
+      };
     } catch {
-      return fallbackMessage;
+      return {
+        message: fallbackMessage,
+        details: null,
+        code: null,
+        requestId: null,
+      };
     }
   }
 
   if (error instanceof FunctionsRelayError || error instanceof FunctionsFetchError) {
-    return error.message || fallbackMessage;
+    return {
+      message: error.message || fallbackMessage,
+      details: null,
+      code: null,
+      requestId: null,
+    };
   }
 
   if (error instanceof Error && error.message) {
-    return error.message;
+    return {
+      message: error.message,
+      details: null,
+      code: null,
+      requestId: null,
+    };
   }
 
-  return fallbackMessage;
+  return {
+    message: fallbackMessage,
+    details: null,
+    code: null,
+    requestId: null,
+  };
+}
+
+export async function extractFunctionErrorMessage(error: unknown, fallbackMessage: string) {
+  const info = await extractFunctionErrorInfo(error, fallbackMessage);
+  return info.message;
 }
 
 export async function startDiscordAuth(redirectAfter = '/') {
@@ -94,9 +132,13 @@ export async function startDiscordAuth(redirectAfter = '/') {
   writeStoredRedirect(redirectAfter);
 
   try {
-    const { data } = await supabase.functions.invoke('discord-auth-start', {
+    const { data, error } = await supabase.functions.invoke('discord-auth-start', {
       body: { redirectAfter },
     });
+
+    if (error) {
+      throw error;
+    }
 
     if (!data?.authUrl) {
       throw new Error('Failed to start Discord auth');

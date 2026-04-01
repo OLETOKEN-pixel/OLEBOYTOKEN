@@ -4,6 +4,7 @@ import { LoadingPage } from '@/components/common/LoadingSpinner';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { ProfileSettingsView, type ProfileSection } from '@/components/profile/ProfileSettingsView';
 import { useAuth } from '@/contexts/AuthContext';
+import { getCurrentPathWithQueryAndHash } from '@/lib/oauth';
 
 const PROFILE_TABS: ProfileSection[] = ['account', 'game', 'payments', 'connections'];
 
@@ -14,7 +15,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate(`/auth?next=${encodeURIComponent('/profile')}`, { replace: true });
+      navigate(`/auth?next=${encodeURIComponent(getCurrentPathWithQueryAndHash())}`, { replace: true });
     }
   }, [loading, navigate, user]);
 

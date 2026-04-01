@@ -22,7 +22,6 @@ const cleanupLegacyStorage = () => {
   const legacyKeys = [
     'sb-auth-token',
     'supabase.auth.token',
-    'auth_redirect',
     'legacy_auth_version',
   ];
   legacyKeys.forEach(key => {

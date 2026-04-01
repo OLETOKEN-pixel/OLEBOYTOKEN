@@ -21,7 +21,13 @@ verify_jwt = false
 [functions.create-stripe-connect-account]
 verify_jwt = false
 
+[functions.create-stripe-connect-login-link]
+verify_jwt = false
+
 [functions.create-stripe-payout]
+verify_jwt = false
+
+[functions.sync-stripe-connected-account]
 verify_jwt = false
 
 [functions.epic-auth-start]

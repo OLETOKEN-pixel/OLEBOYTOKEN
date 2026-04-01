@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { extractFunctionErrorMessage } from '@/lib/oauth';
+import { extractFunctionErrorInfo } from '@/lib/oauth';
 
 export default function DiscordCallback() {
   const navigate = useNavigate();
@@ -49,27 +48,24 @@ export default function DiscordCallback() {
         });
 
         if (error) {
-          let detail = 'Login failed. Please try again.';
-          if (error instanceof FunctionsHttpError) {
-            try {
-              const body = await error.context.json();
-              detail = body?.error || body?.message || detail;
-              console.error('[Discord Auth] Edge function HTTP error:', {
-                status: error.context.status,
-                body,
-              });
-            } catch {
-              console.error('[Discord Auth] Edge function error (no JSON body):', error.message);
-            }
-          } else {
-            console.error('[Discord Auth] Edge function error:', error.message || error);
-          }
-          goHome(detail);
+          const info = await extractFunctionErrorInfo(error, 'Login failed. Please try again.');
+          console.error('[Discord Auth] Edge function error:', {
+            message: info.message,
+            details: info.details,
+            code: info.code,
+            requestId: info.requestId,
+            error,
+          });
+          goHome(info.message);
           return;
         }
 
         if (data?.error) {
-          console.error('[Discord Auth] Auth error from function:', data.error);
+          console.error('[Discord Auth] Auth error from function:', {
+            message: data.error,
+            details: data.details ?? null,
+            code: data.code ?? null,
+          });
           goHome(data.error);
           return;
         }
@@ -95,7 +91,7 @@ export default function DiscordCallback() {
         console.info('[Discord Auth] Login successful!');
         toast.success('Login successful!');
 
-        const storedRedirect = localStorage.getItem('auth_redirect') || '/';
+        const storedRedirect = data?.redirectTo || localStorage.getItem('auth_redirect') || '/';
         localStorage.removeItem('auth_redirect');
         navigate(storedRedirect, { replace: true });
       } catch (err) {

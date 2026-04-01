@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   Check,
@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
-import { extractFunctionErrorMessage, startEpicAuth } from '@/lib/oauth';
+import { extractFunctionErrorInfo, startEpicAuth } from '@/lib/oauth';
 import {
   describeStripeDestination,
   getStripePayoutCountryLabel,
@@ -97,6 +97,7 @@ export function ProfileSettingsView({
   onClose,
 }: ProfileSettingsViewProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, profile, wallet, loading, refreshProfile, refreshWallet, isProfileComplete, signOut } = useAuth();
   const { isVip, changeUsername } = useVipStatus();
@@ -118,8 +119,9 @@ export function ProfileSettingsView({
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submittingWithdrawal, setSubmittingWithdrawal] = useState(false);
+  const [processingStripeReturn, setProcessingStripeReturn] = useState(false);
 
-  const loadPaymentData = async (targetUserId: string) => {
+  const loadPaymentData = useCallback(async (targetUserId: string) => {
     const [stripeRes, withdrawalsRes] = await Promise.all([
       supabase
         .from('stripe_connected_accounts')
@@ -149,7 +151,7 @@ export function ProfileSettingsView({
     } else {
       setWithdrawals([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setActiveSection(initialSection);
@@ -171,7 +173,7 @@ export function ProfileSettingsView({
     }
 
     void loadPaymentData(user.id);
-  }, [user]);
+  }, [loadPaymentData, user]);
 
   const walletBalance = wallet?.balance ?? 0;
   const lockedBalance = wallet?.locked_balance ?? 0;
@@ -232,6 +234,205 @@ export function ProfileSettingsView({
         };
     }
   }, [stripeStatus]);
+
+  const logStripeFunctionError = useCallback(
+    (
+      context: string,
+      info: {
+        message: string;
+        details: string | null;
+        code: string | null;
+        requestId: string | null;
+      },
+      error: unknown
+    ) => {
+      console.error(`[Stripe] ${context}`, {
+        message: info.message,
+        details: info.details,
+        code: info.code,
+        requestId: info.requestId,
+        error,
+      });
+    },
+    []
+  );
+
+  const clearPaymentsQueryFlags = useCallback(() => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('stripe_onboarding');
+    nextSearchParams.delete('stripe_refresh');
+    nextSearchParams.set('tab', 'payments');
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const syncStripeConnectedAccount = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke('sync-stripe-connected-account');
+
+    if (error) {
+      const info = await extractFunctionErrorInfo(error, 'Unable to sync Stripe account status.');
+      logStripeFunctionError('sync-connected-account', info, error);
+      throw new Error(info.message);
+    }
+
+    if (!data?.success) {
+      console.error('[Stripe] sync-connected-account', {
+        message: data?.error || 'Unable to sync Stripe account status.',
+        details: data?.details ?? null,
+        code: data?.code ?? null,
+        requestId: data?.stripeRequestId ?? null,
+      });
+      throw new Error(data?.error || 'Unable to sync Stripe account status.');
+    }
+
+    if (user?.id) {
+      await Promise.all([
+        loadPaymentData(user.id),
+        refreshWallet(),
+      ]);
+    }
+
+    return data;
+  }, [loadPaymentData, logStripeFunctionError, refreshWallet, user?.id]);
+
+  const startStripeOnboarding = useCallback(
+    async ({ suppressReadyToast = false }: { suppressReadyToast?: boolean } = {}) => {
+      if (!hasStripeAccount && !payoutCountry) {
+        throw new Error('Choose the payout country before continuing with Stripe.');
+      }
+
+      setConnectingStripe(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('create-stripe-connect-account', {
+          body: { country: payoutCountry },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.url) {
+          window.location.href = data.url;
+          return { redirected: true, data };
+        }
+
+        if (user?.id) {
+          await loadPaymentData(user.id);
+        }
+
+        if (!suppressReadyToast) {
+          toast({
+            title: 'Stripe ready',
+            description: data?.alreadyConnected
+              ? 'Your payout account is already configured.'
+              : 'Your Stripe payout account is ready.',
+          });
+        }
+
+        return { redirected: false, data };
+      } catch (error) {
+        const info = await extractFunctionErrorInfo(error, 'Unable to start Stripe onboarding.');
+        logStripeFunctionError('connect-account', info, error);
+        throw new Error(info.message);
+      } finally {
+        setConnectingStripe(false);
+      }
+    },
+    [hasStripeAccount, loadPaymentData, logStripeFunctionError, payoutCountry, toast, user?.id]
+  );
+
+  useEffect(() => {
+    if (mode !== 'page' || !user || processingStripeReturn) {
+      return;
+    }
+
+    const stripeOnboarding = searchParams.get('stripe_onboarding');
+    const stripeRefresh = searchParams.get('stripe_refresh');
+
+    if (stripeOnboarding !== 'complete' && stripeRefresh !== 'true') {
+      return;
+    }
+
+    let cancelled = false;
+
+    const handleStripeReturn = async () => {
+      let shouldClearQueryFlags = true;
+      setProcessingStripeReturn(true);
+      setActiveSection('payments');
+
+      try {
+        if (stripeRefresh === 'true') {
+          const result = await startStripeOnboarding({ suppressReadyToast: true });
+          if (result?.redirected) {
+            shouldClearQueryFlags = false;
+          }
+          return;
+        }
+
+        const synced = await syncStripeConnectedAccount();
+        if (cancelled) {
+          return;
+        }
+
+        const requirementsOpen =
+          (synced?.requirementsDue?.length ?? 0) +
+          (synced?.requirementsPendingVerification?.length ?? 0);
+
+        if (synced?.payoutsEnabled && synced?.externalAccountPresent) {
+          toast({
+            title: 'Stripe connected',
+            description: 'Your payout account is active and ready for withdrawals.',
+          });
+        } else if (!synced?.externalAccountPresent) {
+          toast({
+            title: 'Add payout method',
+            description: 'Finish the setup in Stripe Express and add a bank account or supported debit card.',
+          });
+        } else if (requirementsOpen > 0) {
+          toast({
+            title: 'Stripe needs a final check',
+            description: `Stripe still has ${requirementsOpen} open requirement(s) before payouts can be completed.`,
+          });
+        } else {
+          toast({
+            title: 'Stripe setup updated',
+            description: 'Your payout account status has been refreshed.',
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Unable to refresh Stripe account status.';
+          toast({
+            title: 'Stripe sync failed',
+            description: message,
+            variant: 'destructive',
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          if (shouldClearQueryFlags) {
+            clearPaymentsQueryFlags();
+          }
+          setProcessingStripeReturn(false);
+        }
+      }
+    };
+
+    void handleStripeReturn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    clearPaymentsQueryFlags,
+    mode,
+    processingStripeReturn,
+    searchParams,
+    startStripeOnboarding,
+    syncStripeConnectedAccount,
+    toast,
+    user,
+  ]);
 
   const handleSaveAccount = async () => {
     if (!user) {
@@ -364,44 +565,14 @@ export function ProfileSettingsView({
   };
 
   const handleConnectStripe = async () => {
-    if (!hasStripeAccount && !payoutCountry) {
-      toast({
-        title: 'Select a payout country',
-        description: 'Choose the country where Stripe will onboard your payout account before continuing.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setConnectingStripe(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('create-stripe-connect-account', {
-        body: { country: payoutCountry },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      toast({
-        title: 'Stripe ready',
-        description: 'Your payout account is already configured.',
-      });
+      await startStripeOnboarding();
     } catch (error) {
-      const message = await extractFunctionErrorMessage(error, 'Unable to start Stripe onboarding.');
       toast({
         title: 'Stripe error',
-        description: message,
+        description: error instanceof Error ? error.message : 'Unable to start Stripe onboarding.',
         variant: 'destructive',
       });
-    } finally {
-      setConnectingStripe(false);
     }
   };
 
@@ -421,10 +592,11 @@ export function ProfileSettingsView({
 
       window.location.href = data.url;
     } catch (error) {
-      const message = await extractFunctionErrorMessage(error, 'Unable to open the Stripe payout dashboard.');
+      const info = await extractFunctionErrorInfo(error, 'Unable to open the Stripe payout dashboard.');
+      logStripeFunctionError('manage-stripe', info, error);
       toast({
         title: 'Stripe dashboard unavailable',
-        description: message,
+        description: info.message,
         variant: 'destructive',
       });
     } finally {
@@ -481,10 +653,11 @@ export function ProfileSettingsView({
         description: 'Stripe is processing your payout and the status will update automatically.',
       });
     } catch (error) {
-      const message = await extractFunctionErrorMessage(error, 'Unable to complete the withdrawal.');
+      const info = await extractFunctionErrorInfo(error, 'Unable to complete the withdrawal.');
+      logStripeFunctionError('create-payout', info, error);
       toast({
         title: 'Withdrawal failed',
-        description: message,
+        description: info.message,
         variant: 'destructive',
       });
     } finally {
@@ -854,15 +1027,39 @@ export function ProfileSettingsView({
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <Button type="button" onClick={handleConnectStripe} disabled={connectingStripe} className={profilePrimaryButtonClass}>
-                      {connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                      {hasStripeAccount ? 'Continue Stripe Setup' : 'Setup Stripe Payouts'}
-                    </Button>
+                    {!hasStripeAccount && (
+                      <Button
+                        type="button"
+                        onClick={handleConnectStripe}
+                        disabled={connectingStripe || processingStripeReturn}
+                        className={profilePrimaryButtonClass}
+                      >
+                        {connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                        Setup Stripe Payouts
+                      </Button>
+                    )}
 
                     {hasStripeAccount && (
-                      <Button type="button" onClick={handleManageStripe} disabled={managingStripe} className={profileSecondaryButtonClass}>
-                        {managingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
-                        Manage Payout Method
+                      <Button
+                        type="button"
+                        onClick={stripeAccount?.external_account_present ? handleConnectStripe : handleManageStripe}
+                        disabled={managingStripe || connectingStripe || processingStripeReturn}
+                        className={profilePrimaryButtonClass}
+                      >
+                        {managingStripe || connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                        {stripeAccount?.external_account_present ? 'Continue Stripe Setup' : 'Add Payout Method'}
+                      </Button>
+                    )}
+
+                    {hasStripeAccount && (
+                      <Button
+                        type="button"
+                        onClick={stripeAccount?.external_account_present ? handleManageStripe : handleConnectStripe}
+                        disabled={managingStripe || connectingStripe || processingStripeReturn}
+                        className={profileSecondaryButtonClass}
+                      >
+                        {managingStripe || connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                        {stripeAccount?.external_account_present ? 'Manage Payout Method' : 'Continue Stripe Setup'}
                       </Button>
                     )}
                   </div>

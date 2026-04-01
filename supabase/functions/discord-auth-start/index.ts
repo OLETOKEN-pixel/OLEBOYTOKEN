@@ -12,6 +12,12 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[DISCORD-AUTH-START] ${step}`, details ? JSON.stringify(details) : "");
 };
 
+const jsonResponse = (body: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 function getRedirectUri(): string {
   const envUri = Deno.env.get("DISCORD_REDIRECT_URI");
   if (envUri) {
@@ -30,13 +36,24 @@ serve(async (req) => {
     logStep("Function started");
 
     const clientId = Deno.env.get("DISCORD_CLIENT_ID");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const redirectUri = getRedirectUri();
+    const missingEnv = [
+      !clientId ? "DISCORD_CLIENT_ID" : null,
+      !supabaseUrl ? "SUPABASE_URL" : null,
+      !serviceRoleKey ? "SUPABASE_SERVICE_ROLE_KEY" : null,
+    ].filter((value): value is string => Boolean(value));
 
-    if (!clientId) {
-      logStep("Missing Discord credentials", { hasClientId: !!clientId, hasRedirectUri: !!redirectUri });
-      return new Response(
-        JSON.stringify({ error: "Discord OAuth not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    if (missingEnv.length > 0) {
+      logStep("Missing Discord credentials", { missingEnv, hasRedirectUri: !!redirectUri });
+      return jsonResponse(
+        {
+          error: "Discord OAuth non configurato correttamente.",
+          details: `Missing environment variables: ${missingEnv.join(", ")}`,
+          code: "DISCORD_CONFIG_MISSING",
+        },
+        500
       );
     }
 
@@ -52,9 +69,7 @@ serve(async (req) => {
     }
 
     // Create Supabase admin client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const supabaseAdmin = createClient(supabaseUrl!, serviceRoleKey!);
 
     // Generate random state for CSRF protection
     const state = crypto.randomUUID();
@@ -97,16 +112,17 @@ serve(async (req) => {
       scope: "identify email guilds.join"
     });
 
-    return new Response(
-      JSON.stringify({ authUrl: authUrl.toString() }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ authUrl: authUrl.toString() });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logStep("Error", { error: errorMessage });
-    return new Response(
-      JSON.stringify({ error: `Unable to initialize Discord auth: ${errorMessage}` }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    return jsonResponse(
+      {
+        error: "Unable to initialize Discord auth.",
+        details: errorMessage,
+        code: "DISCORD_AUTH_START_FAILED",
+      },
+      500
     );
   }
 });
