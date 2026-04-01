@@ -25,13 +25,13 @@ export default function Wallet() {
     if (stripeOnboarding === 'complete') {
       toast({
         title: 'Stripe connected',
-        description: 'Your bank payout setup is complete.',
+        description: 'Your Stripe payout setup is complete.',
       });
       navigate('/wallet', { replace: true });
     } else if (stripeRefresh === 'true') {
       toast({
         title: 'Stripe setup incomplete',
-        description: 'Finish the Stripe onboarding flow to enable withdrawals.',
+        description: 'Finish the Stripe onboarding flow to unlock payouts.',
         variant: 'destructive',
       });
       navigate('/wallet', { replace: true });

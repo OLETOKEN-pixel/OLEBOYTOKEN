@@ -2,6 +2,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { resolveRequestOrigin } from "../_shared/app-url.ts";
+import {
+  buildExternalAccountSnapshot,
+  getStripePayoutStatus,
+  isSupportedStripePayoutCountry,
+  listExternalAccountTypes,
+  normalizeStripeCountryCode,
+} from "../_shared/stripe-payout-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,9 +16,63 @@ const corsHeaders = {
 };
 
 const logStep = (step: string, details?: unknown) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[CREATE-STRIPE-CONNECT] ${step}${detailsStr}`);
 };
+
+async function ensureManualPayoutSchedule(stripe: Stripe, stripeAccountId: string) {
+  await stripe.accounts.update(stripeAccountId, {
+    settings: {
+      payouts: {
+        schedule: {
+          interval: "manual",
+        },
+      },
+    },
+  });
+}
+
+async function syncConnectedAccountState(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  account: Stripe.Account,
+  fallbackCountry?: string | null
+) {
+  const externalSnapshot = buildExternalAccountSnapshot(account);
+  const externalAccountPresent = externalSnapshot !== null;
+  const country = normalizeStripeCountryCode(account.country) ?? normalizeStripeCountryCode(fallbackCountry);
+  const payoutsStatus = getStripePayoutStatus(account, externalAccountPresent);
+  const onboardingComplete = (account.payouts_enabled ?? false) && externalAccountPresent;
+
+  const payload = {
+    user_id: userId,
+    stripe_account_id: account.id,
+    country,
+    onboarding_complete: onboardingComplete,
+    charges_enabled: account.charges_enabled ?? false,
+    payouts_enabled: account.payouts_enabled ?? false,
+    details_submitted: account.details_submitted ?? false,
+    payouts_status: payoutsStatus,
+    requirements_due: account.requirements?.currently_due ?? [],
+    requirements_pending_verification: account.requirements?.pending_verification ?? [],
+    external_account_present: externalAccountPresent,
+    external_account_types: listExternalAccountTypes(account),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("stripe_connected_accounts")
+    .upsert(payload, { onConflict: "user_id" });
+
+  if (error) {
+    logStep("Failed to sync Stripe connected account", { userId, error });
+  }
+
+  return {
+    ...payload,
+    external_snapshot: externalSnapshot,
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,47 +83,30 @@ serve(async (req) => {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    
+
     if (!stripeKey) {
-      logStep("CRITICAL: STRIPE_SECRET_KEY not configured");
       return new Response(
         JSON.stringify({ error: "Sistema pagamenti non configurato. Contatta il supporto." }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Verify it's a valid secret key (sk_live_ or sk_test_)
-    const keyPrefix = stripeKey.substring(0, 8);
-    logStep("Key prefix check", { prefix: keyPrefix });
-
     if (!stripeKey.startsWith("sk_live_") && !stripeKey.startsWith("sk_test_")) {
-      logStep("CRITICAL: Invalid key type", { 
-        prefix: keyPrefix,
-        expected: "sk_live_ or sk_test_",
-        isRestricted: stripeKey.startsWith("rk_"),
-        isPublishable: stripeKey.startsWith("pk_")
-      });
-      
       return new Response(
-        JSON.stringify({ 
-          error: "Configurazione Stripe non valida. Contatta il supporto.",
-          code: "INVALID_KEY_TYPE"
-        }),
+        JSON.stringify({ error: "Configurazione Stripe non valida. Contatta il supporto.", code: "INVALID_KEY_TYPE" }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") || "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
 
-    // Auth
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
-    
+
     if (!token) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
@@ -71,7 +115,6 @@ serve(async (req) => {
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
     if (authError || !user) {
       logStep("Auth error", authError);
       return new Response(
@@ -80,9 +123,9 @@ serve(async (req) => {
       );
     }
 
-    logStep("User authenticated", { userId: user.id });
+    const body = await req.json().catch(() => ({}));
+    const requestedCountry = normalizeStripeCountryCode(body?.country);
 
-    // Check if account already exists
     const { data: existingAccount, error: fetchError } = await supabase
       .from("stripe_connected_accounts")
       .select("*")
@@ -93,62 +136,92 @@ serve(async (req) => {
       logStep("Error fetching existing account", fetchError);
     }
 
-    let stripeAccountId: string;
+    let stripeAccountId = existingAccount?.stripe_account_id ?? null;
+    let effectiveCountry = normalizeStripeCountryCode(existingAccount?.country) ?? requestedCountry;
 
-    if (existingAccount?.stripe_account_id) {
-      stripeAccountId = existingAccount.stripe_account_id;
-      logStep("Using existing Stripe account", { stripeAccountId });
-      
-      // Check if onboarding is complete - if so, just return success
-      if (existingAccount.payouts_enabled) {
+    if (stripeAccountId && existingAccount?.country && requestedCountry && existingAccount.country !== requestedCountry) {
+      return new Response(
+        JSON.stringify({
+          error: "Il paese payout e' bloccato dopo la creazione dell'account Stripe. Se hai scelto il paese sbagliato, contatta il supporto per ricreare l'account.",
+        }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!stripeAccountId) {
+      if (!effectiveCountry || !isSupportedStripePayoutCountry(effectiveCountry)) {
         return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: "Account already verified",
-            payouts_enabled: true 
-          }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Seleziona un paese payout supportato prima di iniziare l'onboarding Stripe." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-    } else {
-      // Create Express account
-      logStep("Creating new Express account");
-      
+
+      logStep("Creating new Express account", { country: effectiveCountry, userId: user.id });
       const account = await stripe.accounts.create({
         type: "express",
-        country: "IT",
+        country: effectiveCountry,
         email: user.email,
         capabilities: {
           transfers: { requested: true },
         },
         metadata: {
           supabase_user_id: user.id,
+          payout_country: effectiveCountry,
         },
       });
 
       stripeAccountId = account.id;
-      logStep("Stripe account created", { stripeAccountId });
-
-      // Save to DB
-      const { error: insertError } = await supabase
-        .from("stripe_connected_accounts")
-        .insert({
-          user_id: user.id,
-          stripe_account_id: account.id,
-          onboarding_complete: false,
-          charges_enabled: false,
-          payouts_enabled: false,
+      try {
+        await ensureManualPayoutSchedule(stripe, stripeAccountId);
+      } catch (scheduleError) {
+        logStep("Unable to preconfigure manual payout schedule", {
+          stripeAccountId,
+          error: scheduleError instanceof Error ? scheduleError.message : "Unknown schedule error",
         });
+      }
 
-      if (insertError) {
-        logStep("Error saving to DB", insertError);
-        // Continue anyway - account exists in Stripe
+      const hydratedAccount = await stripe.accounts.retrieve(stripeAccountId, {
+        expand: ["external_accounts"],
+      });
+
+      await syncConnectedAccountState(supabase, user.id, hydratedAccount, effectiveCountry);
+    } else {
+      try {
+        await ensureManualPayoutSchedule(stripe, stripeAccountId);
+      } catch (scheduleError) {
+        logStep("Unable to refresh manual payout schedule", {
+          stripeAccountId,
+          error: scheduleError instanceof Error ? scheduleError.message : "Unknown schedule error",
+        });
+      }
+
+      const hydratedAccount = await stripe.accounts.retrieve(stripeAccountId, {
+        expand: ["external_accounts"],
+      });
+
+      const syncedAccount = await syncConnectedAccountState(
+        supabase,
+        user.id,
+        hydratedAccount,
+        effectiveCountry
+      );
+
+      effectiveCountry = syncedAccount.country;
+
+      if (syncedAccount.payouts_enabled && syncedAccount.external_account_present) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyConnected: true,
+            payouts_enabled: true,
+            country: effectiveCountry,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 
-    // Generate account link for onboarding
     const origin = resolveRequestOrigin(req.headers.get("origin"));
-    
     const accountLink = await stripe.accountLinks.create({
       account: stripeAccountId,
       refresh_url: `${origin}/wallet?stripe_refresh=true`,
@@ -156,40 +229,42 @@ serve(async (req) => {
       type: "account_onboarding",
     });
 
-    logStep("Account link created", { url: accountLink.url });
+    logStep("Account link created", { stripeAccountId, country: effectiveCountry });
 
     return new Response(
-      JSON.stringify({ url: accountLink.url }),
+      JSON.stringify({
+        url: accountLink.url,
+        stripeAccountId,
+        country: effectiveCountry,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     const stripeError = error as { type?: string; code?: string; requestId?: string };
-    
-    logStep("ERROR", { 
+
+    logStep("ERROR", {
       message: errorMessage,
       type: stripeError.type,
       code: stripeError.code,
-      requestId: stripeError.requestId
+      requestId: stripeError.requestId,
     });
-    
-    // User-friendly message based on error type
-    let userMessage = "Impossibile avviare la verifica. Riprova più tardi.";
-    
-    if (errorMessage.includes("does not have the required permissions")) {
-      userMessage = "Configurazione Stripe incompleta. Contatta il supporto.";
+
+    let userMessage = "Impossibile avviare la verifica Stripe. Riprova piu' tardi.";
+
+    if (errorMessage.includes("country")) {
+      userMessage = "Il paese payout selezionato non e' disponibile per questo setup Stripe.";
     } else if (errorMessage.includes("Invalid API Key")) {
       userMessage = "Chiave API Stripe non valida. Contatta il supporto.";
-    } else if (errorMessage.includes("transfers") || errorMessage.includes("capabilities")) {
-      userMessage = "Account Stripe non abilitato ai trasferimenti. Completa la verifica.";
+    } else if (errorMessage.includes("capabilities")) {
+      userMessage = "Account Stripe non abilitato ai trasferimenti. Contatta il supporto.";
     }
-    
+
     return new Response(
-      JSON.stringify({ 
-        error: userMessage, 
+      JSON.stringify({
+        error: userMessage,
         details: errorMessage,
-        stripeRequestId: stripeError.requestId || null
+        stripeRequestId: stripeError.requestId || null,
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

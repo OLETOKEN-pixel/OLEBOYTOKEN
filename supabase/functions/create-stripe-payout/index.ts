@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  buildExternalAccountSnapshot,
+  getStripePayoutStatus,
+  MIN_STRIPE_WITHDRAWAL,
+  STRIPE_PAYOUT_CURRENCY,
+  STRIPE_WITHDRAWAL_FEE,
+  listExternalAccountTypes,
+} from "../_shared/stripe-payout-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,12 +16,66 @@ const corsHeaders = {
 };
 
 const logStep = (step: string, details?: unknown) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[CREATE-STRIPE-PAYOUT] ${step}${detailsStr}`);
 };
 
-const MIN_WITHDRAWAL = 10; // Minimum €10
-const WITHDRAWAL_FEE = 0.50; // Fixed €0.50 fee
+async function ensureManualPayoutSchedule(stripe: Stripe, stripeAccountId: string) {
+  await stripe.accounts.update(stripeAccountId, {
+    settings: {
+      payouts: {
+        schedule: {
+          interval: "manual",
+        },
+      },
+    },
+  });
+}
+
+async function syncConnectedAccountState(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  account: Stripe.Account
+) {
+  const externalSnapshot = buildExternalAccountSnapshot(account);
+  const externalAccountPresent = externalSnapshot !== null;
+  const payload = {
+    user_id: userId,
+    stripe_account_id: account.id,
+    country: account.country ?? null,
+    onboarding_complete: (account.payouts_enabled ?? false) && externalAccountPresent,
+    charges_enabled: account.charges_enabled ?? false,
+    payouts_enabled: account.payouts_enabled ?? false,
+    details_submitted: account.details_submitted ?? false,
+    payouts_status: getStripePayoutStatus(account, externalAccountPresent),
+    requirements_due: account.requirements?.currently_due ?? [],
+    requirements_pending_verification: account.requirements?.pending_verification ?? [],
+    external_account_present: externalAccountPresent,
+    external_account_types: listExternalAccountTypes(account),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("stripe_connected_accounts")
+    .upsert(payload, { onConflict: "user_id" });
+
+  if (error) {
+    logStep("Failed to sync Stripe connected account", { userId, error });
+  }
+
+  return {
+    ...payload,
+    externalSnapshot,
+  };
+}
+
+function formatFunctionError(result: { success?: boolean; error?: string } | null) {
+  if (!result) {
+    return "Unexpected Stripe payout state";
+  }
+
+  return typeof result.error === "string" && result.error ? result.error : "Unexpected Stripe payout state";
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,50 +83,31 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
-
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    
+
     if (!stripeKey) {
-      logStep("CRITICAL: STRIPE_SECRET_KEY not configured");
       return new Response(
         JSON.stringify({ error: "Sistema pagamenti non configurato. Contatta il supporto." }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Verify it's a valid secret key (sk_live_ or sk_test_)
-    const keyPrefix = stripeKey.substring(0, 8);
-    logStep("Key prefix check", { prefix: keyPrefix });
-
     if (!stripeKey.startsWith("sk_live_") && !stripeKey.startsWith("sk_test_")) {
-      logStep("CRITICAL: Invalid key type", { 
-        prefix: keyPrefix,
-        expected: "sk_live_ or sk_test_",
-        isRestricted: stripeKey.startsWith("rk_"),
-        isPublishable: stripeKey.startsWith("pk_")
-      });
-      
       return new Response(
-        JSON.stringify({ 
-          error: "Configurazione Stripe non valida. Contatta il supporto.",
-          code: "INVALID_KEY_TYPE"
-        }),
+        JSON.stringify({ error: "Configurazione Stripe non valida. Contatta il supporto.", code: "INVALID_KEY_TYPE" }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") || "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
 
-    // Auth
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
-    
+
     if (!token) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
@@ -73,178 +116,239 @@ serve(async (req) => {
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
     if (authError || !user) {
-      logStep("Auth error", authError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    logStep("User authenticated", { userId: user.id });
+    const body = await req.json();
+    const requestedAmount = Number.parseFloat(String(body?.amount ?? ""));
+    const amount = Number.isFinite(requestedAmount)
+      ? Math.round(requestedAmount * 100) / 100
+      : NaN;
 
-    const { amount } = await req.json();
-
-    // Validation: minimum withdrawal
-    if (!amount || amount < MIN_WITHDRAWAL) {
-      logStep("Invalid amount", { amount, minRequired: MIN_WITHDRAWAL });
+    if (!Number.isFinite(amount) || amount < MIN_STRIPE_WITHDRAWAL) {
       return new Response(
-        JSON.stringify({ error: `Minimo prelievo: €${MIN_WITHDRAWAL}` }),
+        JSON.stringify({ error: `Minimo prelievo: €${MIN_STRIPE_WITHDRAWAL}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const totalDeduction = amount + WITHDRAWAL_FEE;
-    logStep("Withdrawal request", { amount, fee: WITHDRAWAL_FEE, totalDeduction });
-
-    // Check wallet balance with FOR UPDATE lock
-    const { data: wallet, error: walletError } = await supabase
-      .from("wallets")
-      .select("balance")
-      .eq("user_id", user.id)
-      .single();
-
-    if (walletError || !wallet) {
-      logStep("Error fetching wallet", walletError);
-      return new Response(
-        JSON.stringify({ error: "Wallet non trovato" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (wallet.balance < totalDeduction) {
-      logStep("Insufficient balance", { balance: wallet.balance, required: totalDeduction });
-      return new Response(
-        JSON.stringify({ error: "Saldo insufficiente (inclusa commissione €0,50)" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get Stripe connected account
     const { data: connectedAccount, error: accountError } = await supabase
       .from("stripe_connected_accounts")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (accountError || !connectedAccount) {
-      logStep("No connected account found", accountError);
+    if (accountError || !connectedAccount?.stripe_account_id) {
       return new Response(
-        JSON.stringify({ error: "Completa la verifica Stripe per prelevare" }),
+        JSON.stringify({ error: "Completa la configurazione Stripe prima di richiedere un payout." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!connectedAccount.payouts_enabled) {
-      logStep("Payouts not enabled", { 
-        onboarding_complete: connectedAccount.onboarding_complete,
-        payouts_enabled: connectedAccount.payouts_enabled
+    const stripeAccountId = connectedAccount.stripe_account_id;
+    await ensureManualPayoutSchedule(stripe, stripeAccountId);
+
+    const liveAccount = await stripe.accounts.retrieve(stripeAccountId, {
+      expand: ["external_accounts"],
+    });
+
+    const syncedAccount = await syncConnectedAccountState(supabase, user.id, liveAccount);
+
+    if (!syncedAccount.external_account_present) {
+      return new Response(
+        JSON.stringify({ error: "Aggiungi prima un conto bancario o una carta di debito supportata nel dashboard Stripe." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!syncedAccount.payouts_enabled) {
+      return new Response(
+        JSON.stringify({ error: "Il tuo account Stripe non e' ancora pronto ai payout. Completa i requisiti richiesti da Stripe." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const reserveResult = await supabase.rpc("create_stripe_withdrawal_request", {
+      p_user_id: user.id,
+      p_amount: amount,
+      p_fee_amount: STRIPE_WITHDRAWAL_FEE,
+      p_currency: STRIPE_PAYOUT_CURRENCY,
+      p_payment_details: stripeAccountId,
+      p_destination_snapshot: syncedAccount.externalSnapshot ?? {},
+    });
+
+    if (reserveResult.error) {
+      throw reserveResult.error;
+    }
+
+    const reservePayload = reserveResult.data as {
+      success?: boolean;
+      error?: string;
+      withdrawal_id?: string;
+      new_balance?: number;
+    } | null;
+
+    if (!reservePayload?.success || !reservePayload.withdrawal_id) {
+      return new Response(
+        JSON.stringify({ error: formatFunctionError(reservePayload) }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const withdrawalId = reservePayload.withdrawal_id;
+    let transfer: Stripe.Transfer | null = null;
+    let payout: Stripe.Payout | null = null;
+
+    try {
+      transfer = await stripe.transfers.create(
+        {
+          amount: Math.round(amount * 100),
+          currency: STRIPE_PAYOUT_CURRENCY,
+          destination: stripeAccountId,
+          metadata: {
+            user_id: user.id,
+            withdrawal_request_id: withdrawalId,
+          },
+        },
+        {
+          idempotencyKey: `withdrawal:${withdrawalId}:transfer`,
+        }
+      );
+
+      payout = await stripe.payouts.create(
+        {
+          amount: Math.round(amount * 100),
+          currency: STRIPE_PAYOUT_CURRENCY,
+          metadata: {
+            user_id: user.id,
+            withdrawal_request_id: withdrawalId,
+            stripe_transfer_id: transfer.id,
+          },
+        },
+        {
+          stripeAccount: stripeAccountId,
+          idempotencyKey: `withdrawal:${withdrawalId}:payout`,
+        }
+      );
+
+      const syncResult = await supabase.rpc("sync_stripe_withdrawal_request", {
+        p_withdrawal_id: withdrawalId,
+        p_status: "processing",
+        p_restore_funds: false,
+        p_stripe_transfer_id: transfer.id,
+        p_stripe_payout_id: payout.id,
       });
+
+      if (syncResult.error) {
+        throw syncResult.error;
+      }
+
       return new Response(
-        JSON.stringify({ error: "Verifica Stripe non completata. Completa l'onboarding." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: true,
+          withdrawalId,
+          stripeTransferId: transfer.id,
+          stripePayoutId: payout.id,
+          amount,
+          fee: STRIPE_WITHDRAWAL_FEE,
+          status: "processing",
+          newBalance: reservePayload.new_balance,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (payoutError: unknown) {
+      const errorMessage = payoutError instanceof Error ? payoutError.message : "Unknown payout error";
+      const typedPayoutError = payoutError as { code?: string };
+      let transferReversalId: string | null = null;
+      let restoreFunds = false;
+
+      if (transfer?.id) {
+        try {
+          const reversal = await stripe.transfers.createReversal(
+            transfer.id,
+            {
+              metadata: {
+                withdrawal_request_id: withdrawalId,
+                cause: "payout_creation_failed",
+              },
+            },
+            {
+              idempotencyKey: `withdrawal:${withdrawalId}:reversal`,
+            }
+          );
+
+          transferReversalId = reversal.id;
+          restoreFunds = true;
+        } catch (reversalError) {
+          const reversalMessage = reversalError instanceof Error ? reversalError.message : "Unknown reversal error";
+          logStep("Transfer reversal failed", {
+            withdrawalId,
+            transferId: transfer.id,
+            error: reversalMessage,
+          });
+        }
+      } else {
+        restoreFunds = true;
+      }
+
+      const syncResult = await supabase.rpc("sync_stripe_withdrawal_request", {
+        p_withdrawal_id: withdrawalId,
+        p_status: "failed",
+        p_restore_funds: restoreFunds,
+        p_stripe_transfer_id: transfer?.id ?? null,
+        p_stripe_payout_id: payout?.id ?? null,
+        p_stripe_transfer_reversal_id: transferReversalId,
+        p_error_code: typedPayoutError.code ?? null,
+        p_error_message: restoreFunds
+          ? errorMessage
+          : `${errorMessage}. Transfer reversal failed and requires manual review.`,
+      });
+
+      if (syncResult.error) {
+        logStep("Failed to sync failed withdrawal request", { withdrawalId, error: syncResult.error });
+      }
+
+      const userMessage = restoreFunds
+        ? "Payout non riuscito. I fondi sono stati rimessi nel wallet."
+        : "Payout non riuscito. Il tentativo di storno automatico non e' riuscito e serve una verifica manuale.";
+
+      return new Response(
+        JSON.stringify({
+          error: userMessage,
+          details: errorMessage,
+          withdrawalId,
+          stripeTransferId: transfer?.id ?? null,
+          stripePayoutId: payout?.id ?? null,
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    logStep("Creating transfer", { 
-      destination: connectedAccount.stripe_account_id, 
-      amount,
-      amountCents: Math.round(amount * 100)
-    });
-
-    // Create transfer to connected account
-    const transfer = await stripe.transfers.create({
-      amount: Math.round(amount * 100), // Cents
-      currency: "eur",
-      destination: connectedAccount.stripe_account_id,
-      metadata: {
-        user_id: user.id,
-        withdrawal_amount: amount.toString(),
-        fee: WITHDRAWAL_FEE.toString(),
-      },
-    });
-
-    logStep("Transfer created", { transferId: transfer.id });
-
-    // Deduct from wallet (amount + fee)
-    const newBalance = wallet.balance - totalDeduction;
-    const { error: updateError } = await supabase
-      .from("wallets")
-      .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq("user_id", user.id);
-
-    if (updateError) {
-      logStep("Error updating wallet", updateError);
-      // Transfer was already created - log this issue
-      // In production, you'd want to handle this edge case
-    }
-
-    logStep("Wallet updated", { previousBalance: wallet.balance, newBalance });
-
-    // Create withdrawal request record
-    await supabase.from("withdrawal_requests").insert({
-      user_id: user.id,
-      amount: amount,
-      payment_method: "stripe",
-      payment_details: connectedAccount.stripe_account_id,
-      status: "completed",
-    });
-
-    // Log transaction
-    await supabase.from("transactions").insert({
-      user_id: user.id,
-      type: "payout",
-      amount: -totalDeduction,
-      description: `Prelievo €${amount} (+ €${WITHDRAWAL_FEE} commissione)`,
-      provider: "stripe",
-      status: "completed",
-    });
-
-    logStep("Withdrawal completed successfully", { transferId: transfer.id, amount });
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        transferId: transfer.id,
-        amount,
-        fee: WITHDRAWAL_FEE,
-        newBalance 
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    const stripeError = error as { type?: string; code?: string; requestId?: string };
-    
-    logStep("ERROR", { 
+    const stripeError = error as { requestId?: string; code?: string };
+
+    logStep("ERROR", {
       message: errorMessage,
-      type: stripeError.type,
+      requestId: stripeError.requestId,
       code: stripeError.code,
-      requestId: stripeError.requestId
     });
-    
-    // User-friendly message based on error type
-    let userMessage = "Impossibile completare il prelievo. Riprova più tardi.";
-    
-    if (errorMessage.includes("does not have the required permissions")) {
-      userMessage = "Configurazione Stripe incompleta. Contatta il supporto.";
-    } else if (errorMessage.includes("Invalid API Key")) {
-      userMessage = "Chiave API Stripe non valida. Contatta il supporto.";
-    } else if (errorMessage.includes("insufficient")) {
-      userMessage = "Fondi insufficienti per il trasferimento.";
-    } else if (errorMessage.includes("transfers") || errorMessage.includes("capabilities")) {
-      userMessage = "Account Stripe non abilitato ai trasferimenti. Completa la verifica.";
-    } else if (errorMessage.includes("destination account")) {
-      userMessage = "Il tuo account Stripe richiede verifica aggiuntiva.";
+
+    let userMessage = "Impossibile completare il payout. Riprova piu' tardi.";
+    if (errorMessage.includes("insufficient")) {
+      userMessage = "Saldo piattaforma Stripe insufficiente per completare il payout.";
+    } else if (errorMessage.includes("external")) {
+      userMessage = "Configura o aggiorna il tuo metodo payout nel dashboard Stripe prima di riprovare.";
     }
-    
+
     return new Response(
-      JSON.stringify({ 
-        error: userMessage, 
+      JSON.stringify({
+        error: userMessage,
         details: errorMessage,
-        stripeRequestId: stripeError.requestId || null
+        stripeRequestId: stripeError.requestId || null,
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

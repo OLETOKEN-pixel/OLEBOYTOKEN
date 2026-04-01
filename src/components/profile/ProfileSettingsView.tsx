@@ -28,6 +28,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { startEpicAuth } from '@/lib/oauth';
+import {
+  describeStripeDestination,
+  getStripePayoutCountryLabel,
+  MIN_STRIPE_WITHDRAWAL,
+  STRIPE_PAYOUT_COUNTRIES,
+  STRIPE_WITHDRAWAL_FEE,
+  type StripePayoutStatus,
+  type WithdrawalDestinationSnapshot,
+} from '@/lib/stripePayouts';
 import { cn } from '@/lib/utils';
 import type { Platform, Region, WithdrawalRequest } from '@/types';
 import { PLATFORMS, REGIONS } from '@/types';
@@ -38,6 +47,13 @@ interface StripeConnectedAccount {
   onboarding_complete: boolean | null;
   payouts_enabled: boolean | null;
   charges_enabled: boolean | null;
+  details_submitted: boolean | null;
+  country: string | null;
+  payouts_status: StripePayoutStatus | null;
+  requirements_due: string[] | null;
+  requirements_pending_verification: string[] | null;
+  external_account_present: boolean | null;
+  external_account_types: string[] | null;
   stripe_account_id: string;
 }
 
@@ -54,8 +70,6 @@ const sections: Array<{ id: ProfileSection; label: string; icon: ComponentType<{
   { id: 'connections', label: 'Connections', icon: Link2 },
 ];
 
-const MIN_WITHDRAWAL = 10;
-const WITHDRAWAL_FEE = 0.5;
 const profilePrimaryButtonClass = "!h-11 !rounded-[14px] !border !border-[#ff6f98]/35 !bg-[#ff1654] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white shadow-[0_14px_30px_rgba(255,22,84,0.26)] hover:!bg-[#ff2d68] hover:shadow-[0_18px_36px_rgba(255,22,84,0.34)] disabled:!cursor-not-allowed disabled:!opacity-45";
 const profileSecondaryButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.14] !bg-white/[0.04] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white hover:!border-[#ff1654]/35 hover:!bg-[#ff1654]/10";
 const profileGhostButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.1] !bg-white/[0.03] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white/72 hover:!border-white/[0.16] hover:!bg-white/[0.06] hover:!text-white";
@@ -99,9 +113,43 @@ export function ProfileSettingsView({
   const [showDisconnectEpicDialog, setShowDisconnectEpicDialog] = useState(false);
   const [disconnectingEpic, setDisconnectingEpic] = useState(false);
   const [connectingStripe, setConnectingStripe] = useState(false);
+  const [managingStripe, setManagingStripe] = useState(false);
+  const [payoutCountry, setPayoutCountry] = useState('IT');
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submittingWithdrawal, setSubmittingWithdrawal] = useState(false);
+
+  const loadPaymentData = async (targetUserId: string) => {
+    const [stripeRes, withdrawalsRes] = await Promise.all([
+      supabase
+        .from('stripe_connected_accounts')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .maybeSingle(),
+      supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('created_at', { ascending: false })
+        .limit(6),
+    ]);
+
+    if (stripeRes.data) {
+      const connectedAccount = stripeRes.data as StripeConnectedAccount;
+      setStripeAccount(connectedAccount);
+      if (connectedAccount.country) {
+        setPayoutCountry(connectedAccount.country);
+      }
+    } else {
+      setStripeAccount(null);
+    }
+
+    if (withdrawalsRes.data) {
+      setWithdrawals(withdrawalsRes.data as WithdrawalRequest[]);
+    } else {
+      setWithdrawals([]);
+    }
+  };
 
   useEffect(() => {
     setActiveSection(initialSection);
@@ -122,54 +170,68 @@ export function ProfileSettingsView({
       return;
     }
 
-    const fetchPaymentData = async () => {
-      const [stripeRes, withdrawalsRes] = await Promise.all([
-        supabase
-          .from('stripe_connected_accounts')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle(),
-        supabase
-          .from('withdrawal_requests')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(6),
-      ]);
-
-      if (stripeRes.data) {
-        setStripeAccount(stripeRes.data as StripeConnectedAccount);
-      } else {
-        setStripeAccount(null);
-      }
-
-      if (withdrawalsRes.data) {
-        setWithdrawals(withdrawalsRes.data as WithdrawalRequest[]);
-      } else {
-        setWithdrawals([]);
-      }
-    };
-
-    void fetchPaymentData();
+    void loadPaymentData(user.id);
   }, [user]);
 
   const walletBalance = wallet?.balance ?? 0;
   const lockedBalance = wallet?.locked_balance ?? 0;
   const totalBalance = walletBalance + lockedBalance;
-  const isStripeVerified = stripeAccount?.payouts_enabled === true;
-  const canWithdraw = walletBalance >= MIN_WITHDRAWAL + WITHDRAWAL_FEE;
+  const stripeStatus = stripeAccount?.payouts_status ?? 'missing';
+  const isStripeVerified = stripeStatus === 'enabled' && stripeAccount?.external_account_present === true;
+  const canWithdraw = isStripeVerified && walletBalance >= MIN_STRIPE_WITHDRAWAL + STRIPE_WITHDRAWAL_FEE;
+  const stripeCountryLabel = getStripePayoutCountryLabel(stripeAccount?.country || payoutCountry);
+  const stripeRequirementsDue = stripeAccount?.requirements_due?.length ?? 0;
+  const stripeRequirementsPending = stripeAccount?.requirements_pending_verification?.length ?? 0;
+  const hasStripeAccount = Boolean(stripeAccount?.stripe_account_id);
   const discordDisplayName = profile?.discord_display_name || profile?.discord_username || profile?.username || 'User';
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || undefined;
 
   const withdrawalStatusMap = useMemo(
     () => ({
-      pending: { label: 'Pending', className: profileBadgeAccentClass },
+      pending: { label: 'Queued', className: profileBadgeAccentClass },
+      processing: { label: 'Processing', className: profileBadgeNeutralClass },
       approved: { label: 'Approved', className: profileBadgeNeutralClass },
-      completed: { label: 'Completed', className: profileBadgeNeutralClass },
+      completed: { label: 'Paid', className: profileBadgeNeutralClass },
+      failed: { label: 'Failed', className: profileBadgeDangerClass },
       rejected: { label: 'Rejected', className: profileBadgeDangerClass },
     }),
     []
   );
+
+  const stripeStatusPresentation = useMemo(() => {
+    switch (stripeStatus) {
+      case 'enabled':
+        return {
+          label: 'Ready',
+          className: profileBadgeNeutralClass,
+          description: 'Stripe can now pay out to the default bank account or supported debit card linked to this account.',
+        };
+      case 'restricted':
+        return {
+          label: 'Action required',
+          className: profileBadgeDangerClass,
+          description: 'Stripe still needs extra verification or payout method updates before withdrawals can be completed.',
+        };
+      case 'pending':
+        return {
+          label: 'Pending',
+          className: profileBadgeAccentClass,
+          description: 'Stripe onboarding is in progress. Finish setup and add a payout method to unlock withdrawals.',
+        };
+      case 'disabled':
+        return {
+          label: 'Unavailable',
+          className: profileBadgeDangerClass,
+          description: 'Stripe payout controls are currently unavailable for this account.',
+        };
+      default:
+        return {
+          label: 'Missing',
+          className: profileBadgeAccentClass,
+          description: 'Create your Stripe payout account to receive withdrawals from your OBT wallet.',
+        };
+    }
+  }, [stripeStatus]);
 
   const handleSaveAccount = async () => {
     if (!user) {
@@ -302,10 +364,21 @@ export function ProfileSettingsView({
   };
 
   const handleConnectStripe = async () => {
+    if (!hasStripeAccount && !payoutCountry) {
+      toast({
+        title: 'Select a payout country',
+        description: 'Choose the country where Stripe will onboard your payout account before continuing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setConnectingStripe(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-stripe-connect-account');
+      const { data, error } = await supabase.functions.invoke('create-stripe-connect-account', {
+        body: { country: payoutCountry },
+      });
 
       if (error) {
         throw error;
@@ -331,14 +404,40 @@ export function ProfileSettingsView({
     }
   };
 
+  const handleManageStripe = async () => {
+    setManagingStripe(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-connect-login-link');
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.url) {
+        throw new Error('Unable to open Stripe Express dashboard.');
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      toast({
+        title: 'Stripe dashboard unavailable',
+        description: error instanceof Error ? error.message : 'Unable to open the Stripe payout dashboard.',
+        variant: 'destructive',
+      });
+    } finally {
+      setManagingStripe(false);
+    }
+  };
+
   const handleWithdraw = async () => {
     const amount = Number.parseFloat(withdrawAmount);
-    const totalDeduction = amount + WITHDRAWAL_FEE;
+    const totalDeduction = amount + STRIPE_WITHDRAWAL_FEE;
 
-    if (!Number.isFinite(amount) || amount < MIN_WITHDRAWAL) {
+    if (!Number.isFinite(amount) || amount < MIN_STRIPE_WITHDRAWAL) {
       toast({
         title: 'Invalid amount',
-        description: `Minimum withdrawal is €${MIN_WITHDRAWAL}.`,
+        description: `Minimum withdrawal is €${MIN_STRIPE_WITHDRAWAL}.`,
         variant: 'destructive',
       });
       return;
@@ -347,7 +446,7 @@ export function ProfileSettingsView({
     if (totalDeduction > walletBalance) {
       toast({
         title: 'Insufficient balance',
-        description: `You need €${totalDeduction.toFixed(2)} including the €${WITHDRAWAL_FEE.toFixed(2)} fee.`,
+        description: `You need €${totalDeduction.toFixed(2)} including the €${STRIPE_WITHDRAWAL_FEE.toFixed(2)} fee.`,
         variant: 'destructive',
       });
       return;
@@ -369,21 +468,15 @@ export function ProfileSettingsView({
       }
 
       await refreshWallet();
-
-      const { data: withdrawalsRes } = await supabase
-        .from('withdrawal_requests')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      setWithdrawals((withdrawalsRes as WithdrawalRequest[]) ?? []);
+      if (user?.id) {
+        await loadPaymentData(user.id);
+      }
       setWithdrawOpen(false);
       setWithdrawAmount('');
 
       toast({
         title: 'Withdrawal registered',
-        description: 'Your payout request has been sent to Stripe.',
+        description: 'Stripe is processing your payout and the status will update automatically.',
       });
     } catch (error) {
       toast({
@@ -657,10 +750,11 @@ export function ProfileSettingsView({
                 <div>
                   <h2 className="flex items-center gap-2 text-xl font-semibold uppercase text-white">
                     <CreditCard className="h-5 w-5 text-[#ff1654]" />
-                    Payments & Bank
+                    Payments & Payouts
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-white/56">
-                    Configure Stripe payouts, review your wallet status and withdraw winnings to your bank account.
+                    Configure Stripe Connect, review your wallet status and withdraw winnings to the default payout
+                    method managed in Stripe.
                   </p>
                 </div>
 
@@ -690,21 +784,82 @@ export function ProfileSettingsView({
                     <div>
                       <p className="text-sm font-semibold uppercase text-white">Stripe Connect</p>
                       <p className="mt-1 text-sm text-white/52">
-                        {isStripeVerified
-                          ? 'Your payout account is verified and ready for bank withdrawals.'
-                          : 'Complete Stripe onboarding to connect your bank account and unlock payouts.'}
+                        {stripeStatusPresentation.description}
                       </p>
                     </div>
 
-                    {isStripeVerified ? (
-                      <span className={profileBadgeNeutralClass}>
-                        <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                        Verified
-                      </span>
-                    ) : (
-                      <Button type="button" onClick={handleConnectStripe} disabled={connectingStripe} className={profileSecondaryButtonClass}>
-                        {connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                        Setup Bank
+                    <span className={stripeStatusPresentation.className}>
+                      <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                      {stripeStatusPresentation.label}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Payout Country</Label>
+                      <Select value={payoutCountry} onValueChange={setPayoutCountry} disabled={hasStripeAccount}>
+                        <SelectTrigger className={profileSelectTriggerClass}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className={profileSelectContentClass}>
+                          {STRIPE_PAYOUT_COUNTRIES.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-white/48">
+                        {hasStripeAccount
+                          ? `Locked to ${stripeCountryLabel}. Stripe account countries can't be changed after creation.`
+                          : 'Choose the country where Stripe should onboard and pay out this account. The country locks after account creation.'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-white/42">Payout Readiness</p>
+                      <div className="mt-3 space-y-3 text-sm leading-6 text-white/58">
+                        <p>
+                          Country: <span className="text-white/82">{stripeCountryLabel}</span>
+                        </p>
+                        <p>
+                          Method on file:{' '}
+                          <span className="text-white/82">
+                            {stripeAccount?.external_account_present
+                              ? 'Stripe has a payout destination ready'
+                              : 'No payout destination configured yet'}
+                          </span>
+                        </p>
+                        <p>
+                          Requirements:{' '}
+                          <span className="text-white/82">
+                            {stripeRequirementsDue + stripeRequirementsPending > 0
+                              ? `${stripeRequirementsDue + stripeRequirementsPending} item(s) still open`
+                              : 'No open Stripe requirements'}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/42">Withdrawals</p>
+                    <p className="mt-2 text-sm leading-6 text-white/58">
+                      Withdrawals are sent automatically to the default bank account or eligible debit card configured
+                      inside Stripe Express. OBT does not store those payout details directly.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Button type="button" onClick={handleConnectStripe} disabled={connectingStripe} className={profilePrimaryButtonClass}>
+                      {connectingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                      {hasStripeAccount ? 'Continue Stripe Setup' : 'Setup Stripe Payouts'}
+                    </Button>
+
+                    {hasStripeAccount && (
+                      <Button type="button" onClick={handleManageStripe} disabled={managingStripe} className={profileSecondaryButtonClass}>
+                        {managingStripe ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                        Manage Payout Method
                       </Button>
                     )}
                   </div>
@@ -722,7 +877,7 @@ export function ProfileSettingsView({
                           <DialogHeader>
                             <DialogTitle>Request Withdrawal</DialogTitle>
                             <DialogDescription>
-                              Minimum €{MIN_WITHDRAWAL} and a fee of €{WITHDRAWAL_FEE.toFixed(2)} per withdrawal.
+                              Minimum €{MIN_STRIPE_WITHDRAWAL} and a fee of €{STRIPE_WITHDRAWAL_FEE.toFixed(2)} per withdrawal.
                             </DialogDescription>
                           </DialogHeader>
 
@@ -730,15 +885,15 @@ export function ProfileSettingsView({
                             <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Amount</Label>
                             <Input
                               type="number"
-                              min={MIN_WITHDRAWAL}
-                              max={walletBalance - WITHDRAWAL_FEE}
+                              min={MIN_STRIPE_WITHDRAWAL}
+                              max={Math.max(0, walletBalance - STRIPE_WITHDRAWAL_FEE)}
                               value={withdrawAmount}
                               onChange={(event) => setWithdrawAmount(event.target.value)}
-                              placeholder={`${MIN_WITHDRAWAL}.00`}
+                              placeholder={`${MIN_STRIPE_WITHDRAWAL}.00`}
                               className={profileInputClass}
                             />
                             <p className="text-sm text-white/52">
-                              Net balance after fee must stay non-negative. Your current available balance is €{walletBalance.toFixed(2)}.
+                              Stripe will use your default payout method. Your current available balance is €{walletBalance.toFixed(2)} and the total deduction will include the €{STRIPE_WITHDRAWAL_FEE.toFixed(2)} fee.
                             </p>
                           </div>
 
@@ -773,6 +928,9 @@ export function ProfileSettingsView({
                     <div className="mt-4 space-y-3">
                       {withdrawals.map((withdrawal) => {
                         const status = withdrawalStatusMap[withdrawal.status] ?? withdrawalStatusMap.pending;
+                        const destination = describeStripeDestination(
+                          (withdrawal.payout_destination_snapshot as WithdrawalDestinationSnapshot | null | undefined) ?? null
+                        );
 
                         return (
                           <div
@@ -788,6 +946,14 @@ export function ProfileSettingsView({
                                   year: 'numeric',
                                 })}
                               </p>
+                              <p className="mt-1 text-xs text-white/44">
+                                Fee €{(withdrawal.fee_amount ?? STRIPE_WITHDRAWAL_FEE).toFixed(2)} • {destination}
+                              </p>
+                              {withdrawal.status === 'failed' && withdrawal.stripe_error_message && (
+                                <p className="mt-2 max-w-[480px] text-xs leading-5 text-[#ffb4ca]">
+                                  {withdrawal.stripe_error_message}
+                                </p>
+                              )}
                             </div>
 
                             <span className={cn('inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]', status.className)}>

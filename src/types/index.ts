@@ -85,7 +85,17 @@ export interface ProfileSummary {
   epic_username?: string | null;
 }
 
-export type WithdrawalStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+export type WithdrawalStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'failed' | 'completed';
+
+export interface WithdrawalDestinationSnapshot {
+  type?: 'bank_account' | 'card' | 'unknown';
+  brand?: string | null;
+  bank_name?: string | null;
+  country?: string | null;
+  currency?: string | null;
+  last4?: string | null;
+  default_for_currency?: boolean | null;
+}
 
 export interface WithdrawalRequest {
   id: string;
@@ -95,6 +105,15 @@ export interface WithdrawalRequest {
   payment_details: string;
   status: WithdrawalStatus;
   admin_notes: string | null;
+  fee_amount: number;
+  currency: string;
+  stripe_transfer_id: string | null;
+  stripe_payout_id: string | null;
+  stripe_transfer_reversal_id: string | null;
+  stripe_error_code: string | null;
+  stripe_error_message: string | null;
+  payout_destination_snapshot: WithdrawalDestinationSnapshot | null;
+  transaction_id: string | null;
   created_at: string;
   processed_at: string | null;
   processed_by: string | null;

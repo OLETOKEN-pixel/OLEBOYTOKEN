@@ -1048,10 +1048,16 @@ export type Database = {
         Row: {
           charges_enabled: boolean | null
           created_at: string | null
+          country: string | null
+          details_submitted: boolean | null
+          external_account_present: boolean | null
+          external_account_types: Json | null
           id: string
           onboarding_complete: boolean | null
           payouts_enabled: boolean | null
+          payouts_status: string | null
           requirements_due: Json | null
+          requirements_pending_verification: Json | null
           stripe_account_id: string
           updated_at: string | null
           user_id: string
@@ -1059,10 +1065,16 @@ export type Database = {
         Insert: {
           charges_enabled?: boolean | null
           created_at?: string | null
+          country?: string | null
+          details_submitted?: boolean | null
+          external_account_present?: boolean | null
+          external_account_types?: Json | null
           id?: string
           onboarding_complete?: boolean | null
           payouts_enabled?: boolean | null
+          payouts_status?: string | null
           requirements_due?: Json | null
+          requirements_pending_verification?: Json | null
           stripe_account_id: string
           updated_at?: string | null
           user_id: string
@@ -1070,10 +1082,16 @@ export type Database = {
         Update: {
           charges_enabled?: boolean | null
           created_at?: string | null
+          country?: string | null
+          details_submitted?: boolean | null
+          external_account_present?: boolean | null
+          external_account_types?: Json | null
           id?: string
           onboarding_complete?: boolean | null
           payouts_enabled?: boolean | null
+          payouts_status?: string | null
           requirements_due?: Json | null
+          requirements_pending_verification?: Json | null
           stripe_account_id?: string
           updated_at?: string | null
           user_id?: string
@@ -1546,36 +1564,63 @@ export type Database = {
           admin_notes: string | null
           amount: number
           created_at: string | null
+          currency: string
+          fee_amount: number
           id: string
           payment_details: string
           payment_method: string
+          payout_destination_snapshot: Json | null
           processed_at: string | null
           processed_by: string | null
+          stripe_error_code: string | null
+          stripe_error_message: string | null
+          stripe_payout_id: string | null
+          stripe_transfer_id: string | null
+          stripe_transfer_reversal_id: string | null
           status: string
+          transaction_id: string | null
           user_id: string
         }
         Insert: {
           admin_notes?: string | null
           amount: number
           created_at?: string | null
+          currency?: string
+          fee_amount?: number
           id?: string
           payment_details: string
           payment_method: string
+          payout_destination_snapshot?: Json | null
           processed_at?: string | null
           processed_by?: string | null
+          stripe_error_code?: string | null
+          stripe_error_message?: string | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+          stripe_transfer_reversal_id?: string | null
           status?: string
+          transaction_id?: string | null
           user_id: string
         }
         Update: {
           admin_notes?: string | null
           amount?: number
           created_at?: string | null
+          currency?: string
+          fee_amount?: number
           id?: string
           payment_details?: string
           payment_method?: string
+          payout_destination_snapshot?: Json | null
           processed_at?: string | null
           processed_by?: string | null
+          stripe_error_code?: string | null
+          stripe_error_message?: string | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+          stripe_transfer_reversal_id?: string | null
           status?: string
+          transaction_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1848,6 +1893,17 @@ export type Database = {
             }
             Returns: Json
           }
+      create_stripe_withdrawal_request: {
+        Args: {
+          p_amount: number
+          p_currency?: string
+          p_destination_snapshot?: Json
+          p_fee_amount?: number
+          p_payment_details?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       declare_match_result: {
         Args: { p_i_won: boolean; p_match_id: string }
         Returns: Json
@@ -2056,6 +2112,19 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      sync_stripe_withdrawal_request: {
+        Args: {
+          p_error_code?: string
+          p_error_message?: string
+          p_restore_funds?: boolean
+          p_status: string
+          p_stripe_payout_id?: string
+          p_stripe_transfer_id?: string
+          p_stripe_transfer_reversal_id?: string
+          p_withdrawal_id: string
+        }
+        Returns: Json
       }
       search_users_for_invite: {
         Args: { p_search_term: string; p_team_id: string }
