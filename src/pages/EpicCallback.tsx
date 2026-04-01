@@ -1,25 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { LoadingPage } from '@/components/common/LoadingSpinner';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-type Status = 'loading' | 'success' | 'error';
+const PROFILE_GAME_ROUTE = '/profile?tab=game';
 
 export default function EpicCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
-  const [status, setStatus] = useState<Status>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [epicUsername, setEpicUsername] = useState('');
+  const { user, loading, refreshProfile } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
+      if (loading) {
+        return;
+      }
+
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
@@ -34,22 +33,22 @@ export default function EpicCallback() {
 
       // Handle user cancellation or error from Epic
       if (error) {
-        setStatus('error');
-        setErrorMessage(errorDescription || 'Connection canceled');
+        toast.error(errorDescription || 'Epic Games connection canceled.');
+        navigate(PROFILE_GAME_ROUTE, { replace: true });
         return;
       }
 
       // Validate required params
       if (!code || !state) {
-        setStatus('error');
-        setErrorMessage('Missing authorization parameters. Please try again.');
+        toast.error('Missing Epic Games authorization parameters. Please try again.');
+        navigate(PROFILE_GAME_ROUTE, { replace: true });
         return;
       }
 
       // Check if user is authenticated
       if (!user) {
-        setStatus('error');
-        setErrorMessage('Session expired. Please log in and try again.');
+        toast.error('Session expired. Please log in and try again.');
+        navigate(`/auth?next=${encodeURIComponent(PROFILE_GAME_ROUTE)}`, { replace: true });
         return;
       }
 
@@ -70,82 +69,27 @@ export default function EpicCallback() {
           throw new Error(data?.error || 'Connection failed');
         }
 
-        // Success!
-        setEpicUsername(data.epicUsername);
-        setStatus('success');
-        
         // Refresh profile to get updated epic_username
         await refreshProfile();
         
         toast.success(`Epic Games connected: ${data.epicUsername}`);
-
-        // Auto-redirect after 2 seconds
-        setTimeout(() => {
-          navigate('/profile?tab=game');
-        }, 2000);
+        navigate(PROFILE_GAME_ROUTE, { replace: true });
       } catch (err: unknown) {
         console.error('[EpicCallback] Error:', err);
         const message = err instanceof Error ? err.message : 'Unknown error';
-        setStatus('error');
-        setErrorMessage(message);
+        toast.error(message || 'Epic Games connection failed.');
+        navigate(PROFILE_GAME_ROUTE, { replace: true });
       }
     };
 
     handleCallback();
-  }, [searchParams, user, navigate, refreshProfile]);
+  }, [loading, navigate, refreshProfile, searchParams, user]);
 
   return (
-    <MainLayout showChat={false}>
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-8 pb-6 text-center">
-            {status === 'loading' && (
-              <>
-                <Loader2 className="w-16 h-16 text-primary mx-auto mb-4 animate-spin" />
-                <h1 className="text-2xl font-bold mb-2">Connecting...</h1>
-                <p className="text-muted-foreground">
-                  Verifying your Epic Games account
-                </p>
-              </>
-            )}
-
-            {status === 'success' && (
-              <>
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold mb-2">Epic Games Connected!</h1>
-                <p className="text-muted-foreground mb-4">
-                  Your account is now linked as <strong>{epicUsername}</strong>
-                </p>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Redirecting to profile...
-                </p>
-                <Button asChild className="w-full">
-                  <Link to="/profile?tab=game">Go to Profile</Link>
-                </Button>
-              </>
-            )}
-
-            {status === 'error' && (
-              <>
-                <XCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
-                <h1 className="text-2xl font-bold mb-2">Connection Failed</h1>
-                <p className="text-muted-foreground mb-6">{errorMessage}</p>
-                <div className="flex flex-col gap-3">
-                  <Button asChild variant="default" className="w-full">
-                    <Link to="/profile?tab=game">
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Try Again
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link to="/">Back to Home</Link>
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </MainLayout>
+    <PublicLayout>
+      <section className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-24 pt-[148px] lg:px-8 lg:pt-[168px]">
+        <LoadingPage />
+      </section>
+    </PublicLayout>
   );
 }
