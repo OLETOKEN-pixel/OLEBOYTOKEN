@@ -24,14 +24,12 @@ export default function Profile() {
   const initialSection = PROFILE_TABS.includes(requestedTab as ProfileSection)
     ? (requestedTab as ProfileSection)
     : 'account';
-  const isPaymentsTab = initialSection === 'payments';
 
   return (
     <PublicLayout>
       <section
         className={cn(
-          'min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4',
-          isPaymentsTab ? 'pb-14 pt-[132px] lg:px-6 lg:pb-10 lg:pt-[144px]' : 'pb-24 pt-[148px] lg:px-8 lg:pt-[168px]'
+          'min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-16 pt-[138px] lg:h-screen lg:overflow-hidden lg:px-6 lg:pb-8 lg:pt-[144px]'
         )}
       >
         {loading || !user ? <LoadingPage /> : <ProfileSettingsView initialSection={initialSection} mode="page" />}

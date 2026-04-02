@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowUpRight,
   Check,
   Clock3,
-  CreditCard,
   Gamepad2,
   Link2,
   Loader2,
@@ -13,9 +12,7 @@ import {
   Mail,
   Save,
   ShieldCheck,
-  Sparkles,
   Unlink,
-  User,
   Wallet,
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -60,27 +57,91 @@ interface PaymentsActivityItem {
   state: PaymentsActivityState;
 }
 
-const sections: Array<{ id: ProfileSection; label: string; icon: ComponentType<{ className?: string }> }> = [
-  { id: 'account', label: 'Account', icon: User },
-  { id: 'game', label: 'Game', icon: Gamepad2 },
-  { id: 'payments', label: 'Payments', icon: CreditCard },
+const PROFILE_TRIANGLES_ASSET = '/figma-profile/profile-triangles.svg';
+const PROFILE_UNDERLINE_ASSET = '/figma-profile/profile-underline.svg';
+const PROFILE_EPIC_LOGO_ASSET = '/figma-profile/epic-logo.svg';
+const PROFILE_ACCOUNT_ICON_ASSET = '/figma-profile/nav-icon-account.svg';
+const PROFILE_GAME_ICON_ASSET = '/figma-profile/nav-icon-game.svg';
+const PROFILE_WITHDRAW_ICON_ASSET = '/figma-profile/nav-icon-withdraw.svg';
+const PROFILE_PFP_FALLBACK_ASSET = '/figma-assets/marv-pfp.png';
+
+const sections: Array<{
+  id: ProfileSection;
+  label: string;
+  assetSrc?: string;
+  icon?: ComponentType<{ className?: string }>;
+}> = [
+  { id: 'account', label: 'Account', assetSrc: PROFILE_ACCOUNT_ICON_ASSET },
+  { id: 'game', label: 'Game', assetSrc: PROFILE_GAME_ICON_ASSET },
+  { id: 'payments', label: 'Withdraw', assetSrc: PROFILE_WITHDRAW_ICON_ASSET },
   { id: 'connections', label: 'Connections', icon: Link2 },
 ];
 
-const profilePrimaryButtonClass = "!h-11 !rounded-[14px] !border !border-[#ff6f98]/35 !bg-[#ff1654] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white shadow-[0_14px_30px_rgba(255,22,84,0.26)] hover:!bg-[#ff2d68] hover:shadow-[0_18px_36px_rgba(255,22,84,0.34)] disabled:!cursor-not-allowed disabled:!opacity-45";
 const profileSecondaryButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.14] !bg-white/[0.04] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white hover:!border-[#ff1654]/35 hover:!bg-[#ff1654]/10";
 const profileGhostButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.1] !bg-white/[0.03] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white/72 hover:!border-white/[0.16] hover:!bg-white/[0.06] hover:!text-white";
 const profileDangerButtonClass = "!h-11 !rounded-[14px] !border !border-[#ff1654]/30 !bg-[#ff1654]/10 px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-[#ffc1d1] hover:!bg-[#ff1654]/16 hover:!border-[#ff1654]/44";
-const profileInputClass = "h-11 rounded-[14px] border-white/[0.12] bg-black/20 text-white placeholder:text-white/25 focus-visible:border-[#ff1654]/35 focus-visible:ring-2 focus-visible:ring-[#ff1654]/20";
-const profileSelectTriggerClass = "h-11 rounded-[14px] border-white/[0.12] bg-black/20 text-white focus:border-[#ff1654]/35 focus:ring-2 focus:ring-[#ff1654]/20";
 const profileSelectContentClass = "border-white/[0.1] bg-[linear-gradient(180deg,rgba(18,11,15,0.98)_0%,rgba(8,6,10,0.96)_100%)] text-white shadow-[0_24px_60px_rgba(0,0,0,0.42)] backdrop-blur-[18px]";
 const profileDialogContentClass = "!rounded-[28px] !border !border-white/[0.1] !bg-[linear-gradient(180deg,rgba(18,11,15,0.98)_0%,rgba(10,7,11,0.96)_100%)] !text-white shadow-[0_28px_80px_rgba(0,0,0,0.52)] backdrop-blur-[22px]";
-const profileBadgeBaseClass = "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]";
-const profileBadgeNeutralClass = `${profileBadgeBaseClass} border-white/[0.12] bg-white/[0.05] text-white/82`;
-const profileBadgeAccentClass = `${profileBadgeBaseClass} border-[#ff1654]/30 bg-[#ff1654]/10 text-[#ffbfd1]`;
-const profileBadgeDangerClass = `${profileBadgeBaseClass} border-[#ff6b95]/22 bg-[#ff6b95]/10 text-[#ffb4ca]`;
 const paypalPrimaryButtonClass = "!h-12 !rounded-[18px] !border !border-[#79d3ff]/26 !bg-[linear-gradient(135deg,#003087_0%,#005ea6_56%,#009cde_100%)] px-6 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white shadow-[0_18px_42px_rgba(0,112,186,0.36)] transition hover:!brightness-110 hover:shadow-[0_22px_50px_rgba(0,112,186,0.46)] disabled:!cursor-not-allowed disabled:!border-white/[0.08] disabled:!bg-white/[0.06] disabled:!text-white/34 disabled:!shadow-none";
 const paypalSecondaryButtonClass = "!h-11 !rounded-[16px] !border !border-[#58c8ff]/18 !bg-[linear-gradient(180deg,rgba(0,112,186,0.22)_0%,rgba(0,48,135,0.22)_100%)] px-4 text-[11px] font-semibold uppercase tracking-[0.12em] !text-[#dcf2ff] hover:!border-[#7fd7ff]/36 hover:!bg-[linear-gradient(180deg,rgba(0,112,186,0.3)_0%,rgba(0,48,135,0.3)_100%)] disabled:!opacity-45";
+const figmaMainStageClass = 'relative overflow-hidden rounded-[18px] border border-[#ff1654] bg-[#2c2c2c] shadow-[0_6px_22px_rgba(0,0,0,0.34)]';
+const figmaPinkCardClass = 'rounded-[16px] border-[3px] border-black bg-[#ff1654] shadow-[0_6px_18px_rgba(0,0,0,0.25)]';
+const figmaDarkInsetClass = 'rounded-[16px] border border-white/10 bg-black/18 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
+const figmaPinkActionButtonClass = '!h-12 !rounded-[16px] !border !border-white/40 !bg-[#ff1654] px-5 text-[13px] font-semibold uppercase tracking-[0.08em] !text-white shadow-[0_16px_36px_rgba(255,22,84,0.32)] hover:!bg-[#ff2b68] hover:shadow-[0_20px_42px_rgba(255,22,84,0.4)] disabled:!cursor-not-allowed disabled:!opacity-45';
+const figmaRailButtonBaseClass = 'relative flex h-[54px] w-full items-center gap-3 rounded-[16px] border border-white/30 bg-[#ff1654] px-4 text-left text-white shadow-[0_4px_8px_rgba(0,0,0,0.25)] transition';
+const figmaSectionTitleClass = 'text-[36px] uppercase leading-[0.94] text-white lg:text-[44px]';
+
+function SectionRailIcon({
+  assetSrc,
+  icon: Icon,
+  className,
+}: {
+  assetSrc?: string;
+  icon?: ComponentType<{ className?: string }>;
+  className?: string;
+}) {
+  if (assetSrc) {
+    return <img src={assetSrc} alt="" aria-hidden className={cn('h-6 w-6 object-contain', className)} />;
+  }
+
+  if (Icon) {
+    return <Icon className={className} />;
+  }
+
+  return null;
+}
+
+function FigmaStatusBadge({
+  tone,
+  children,
+  icon,
+}: {
+  tone: 'green' | 'red' | 'dark' | 'blue';
+  children: string;
+  icon?: ReactNode;
+}) {
+  const toneClass =
+    tone === 'green'
+      ? 'bg-[#2cf804] border-white/40 text-white'
+      : tone === 'red'
+        ? 'bg-[#ff0409] border-white/40 text-white'
+        : tone === 'blue'
+          ? 'bg-[#123b73] border-white/20 text-[#dff4ff]'
+          : 'bg-[#282828] border-white/16 text-white/88';
+
+  return (
+    <span
+      className={cn(
+        'inline-flex h-[40px] items-center gap-2 rounded-[14px] border px-4 text-[15px] font-semibold uppercase tracking-[0.04em] shadow-[0_4px_8px_rgba(0,0,0,0.2)]',
+        toneClass
+      )}
+      style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+    >
+      {icon}
+      {children}
+    </span>
+  );
+}
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -97,7 +158,7 @@ export function ProfileSettingsView({
 }: ProfileSettingsViewProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, wallet, loading, refreshProfile, refreshWallet, isProfileComplete, signOut } = useAuth();
+  const { user, profile, wallet, loading, refreshProfile, refreshWallet, signOut } = useAuth();
   const { isVip, changeUsername } = useVipStatus();
 
   const [activeSection, setActiveSection] = useState<ProfileSection>(initialSection);
@@ -164,39 +225,28 @@ export function ProfileSettingsView({
   const minimumUnlockedBalance = MIN_PAYPAL_WITHDRAWAL + PAYPAL_WITHDRAWAL_FEE;
   const canWithdraw = hasValidPayPalEmail && walletBalance >= minimumUnlockedBalance;
   const discordDisplayName = profile?.discord_display_name || profile?.discord_username || profile?.username || 'User';
-  const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || undefined;
-  const isPaymentsSection = activeSection === 'payments';
-  const isPaymentsDenseLayout = isPaymentsSection && mode === 'page';
+  const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || PROFILE_PFP_FALLBACK_ASSET;
+  const isDesktopFigmaShell = mode === 'page';
   const parsedWithdrawAmount = Number.parseFloat(withdrawAmount);
   const previewTotalDeduction =
     (Number.isFinite(parsedWithdrawAmount) && parsedWithdrawAmount > 0 ? parsedWithdrawAmount : MIN_PAYPAL_WITHDRAWAL) +
     PAYPAL_WITHDRAWAL_FEE;
   const remainingToUnlock = Math.max(0, minimumUnlockedBalance - walletBalance);
-
-  const payoutHeadline = 'Withdraw to PayPal';
-
-  const payoutDescription = canWithdraw
-    ? `Your PayPal email is saved and your balance is ready. Tap the blue button, choose the amount, and confirm the payout.`
-    : hasValidPayPalEmail
-      ? `Your PayPal email is already saved as ${normalizedPayPalEmail}. Reach €${minimumUnlockedBalance.toFixed(2)} available and then tap Withdraw to PayPal.`
-      : 'Start by saving your PayPal email. After that, every withdrawal happens from this page.';
-
-  const payoutReadiness = canWithdraw
-    ? {
-        label: 'Ready to withdraw',
-        className: 'border-[#71d1ff]/26 bg-[#0a5ca1]/20 text-[#d8f2ff]',
-      }
+  const epicConnected = Boolean(profile.epic_username);
+  const savedPayPalAddress = hasValidPayPalEmail ? normalizedPayPalEmail : 'No PayPal email saved yet';
+  const withdrawStatus = canWithdraw
+    ? { tone: 'green' as const, label: 'Ready', copy: 'Your cashout lane is live. Choose the amount and withdraw right now.' }
     : hasValidPayPalEmail
       ? {
-          label: 'PayPal saved',
-          className: 'border-white/[0.14] bg-white/[0.06] text-white/82',
+          tone: 'dark' as const,
+          label: 'Low balance',
+          copy: `Your PayPal email is saved. You need €${remainingToUnlock.toFixed(2)} more available balance before cashout unlocks.`,
         }
       : {
-          label: 'Save PayPal email',
-          className: 'border-[#ff1654]/28 bg-[#ff1654]/10 text-[#ffc2d2]',
+          tone: 'red' as const,
+          label: 'Setup needed',
+          copy: 'Save your PayPal email first. After that, every withdrawal starts from this screen.',
         };
-
-  const withdrawActionLabel = canWithdraw ? 'Withdraw to PayPal' : 'Withdraw to PayPal';
 
   const paymentsActivity = useMemo<PaymentsActivityItem[]>(() => {
     const mapped = withdrawals
@@ -516,6 +566,540 @@ export function ProfileSettingsView({
     navigate('/');
   };
 
+  const renderStageHeader = (icon: ReactNode, title: string, subtitle: string) => (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-white/12 bg-black/20">
+          {icon}
+        </span>
+        <h2 className={figmaSectionTitleClass} style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}>
+          {title}
+        </h2>
+      </div>
+      <p className="max-w-[780px] text-[15px] leading-6 text-white/68">{subtitle}</p>
+    </div>
+  );
+
+  const renderAccountSection = () => (
+    <div className="space-y-5">
+      {renderStageHeader(
+        <img src={PROFILE_ACCOUNT_ICON_ASSET} alt="" aria-hidden className="h-6 w-6 object-contain" />,
+        'ACCOUNT SETTINGS',
+        'Tune your competitive identity, lock your preferred region, and keep the main account lane ready.'
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_280px]">
+        <div className={cn(figmaPinkCardClass, 'p-5 lg:p-6')}>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[11px] uppercase tracking-[0.18em] text-white/82">Username</Label>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Input
+                    value={username}
+                    onChange={(event) => {
+                      setUsername(event.target.value);
+                      setUsernameError('');
+                    }}
+                    className="h-12 rounded-[16px] border border-black/20 bg-black/12 text-white placeholder:text-white/32 focus-visible:border-black/25 focus-visible:ring-2 focus-visible:ring-black/10"
+                    disabled={!isVip}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleSaveUsername}
+                    disabled={savingProfile || username === profile.username}
+                    className={isVip ? profileSecondaryButtonClass : figmaPinkActionButtonClass}
+                  >
+                    {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isVip ? 'Save' : 'VIP only'}
+                  </Button>
+                </div>
+                {usernameError && <p className="text-sm text-[#3a0911]">{usernameError}</p>}
+                {!isVip && (
+                  <p className="text-sm leading-6 text-[#3a0911]">
+                    Username changes are locked to VIP members. Your base identity stays synced from Discord.
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-[11px] uppercase tracking-[0.18em] text-white/82">Preferred Region</Label>
+                  <Select value={preferredRegion} onValueChange={(value) => setPreferredRegion(value as Region)}>
+                    <SelectTrigger className="h-12 rounded-[16px] border border-black/20 bg-black/12 text-white focus:border-black/25 focus:ring-2 focus:ring-black/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className={profileSelectContentClass}>
+                      {REGIONS.map((regionOption) => (
+                        <SelectItem key={regionOption} value={regionOption}>
+                          {regionOption}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[11px] uppercase tracking-[0.18em] text-white/82">Preferred Platform</Label>
+                  <Select value={preferredPlatform} onValueChange={(value) => setPreferredPlatform(value as Platform)}>
+                    <SelectTrigger className="h-12 rounded-[16px] border border-black/20 bg-black/12 text-white focus:border-black/25 focus:ring-2 focus:ring-black/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className={profileSelectContentClass}>
+                      {PLATFORMS.map((platformOption) => (
+                        <SelectItem key={platformOption} value={platformOption}>
+                          {platformOption}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Discord source</p>
+                <p className="mt-2 text-lg font-semibold uppercase text-white">{discordDisplayName}</p>
+                <p className="mt-1 break-all text-sm text-white/66">{profile.email}</p>
+              </div>
+
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Profile status</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <FigmaStatusBadge tone="dark" icon={<ShieldCheck className="h-4 w-4" />}>
+                    {isVip ? 'VIP' : 'Standard'}
+                  </FigmaStatusBadge>
+                  <FigmaStatusBadge tone={epicConnected ? 'green' : 'red'} icon={epicConnected ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}>
+                    {epicConnected ? 'Epic ready' : 'Epic missing'}
+                  </FigmaStatusBadge>
+                </div>
+              </div>
+
+              <Button type="button" onClick={handleSaveAccount} disabled={savingProfile} className={figmaPinkActionButtonClass}>
+                {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Save account
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 content-start">
+          <div className={cn(figmaDarkInsetClass, 'p-4')}>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Main lane</p>
+            <p className="mt-2 text-base font-semibold uppercase text-white">Account identity</p>
+            <p className="mt-2 text-sm leading-6 text-white/64">Your profile controls your match preferences and keeps the settings lane synced across the site.</p>
+          </div>
+          <div className={cn(figmaDarkInsetClass, 'p-4')}>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Current setup</p>
+            <p className="mt-2 text-sm leading-6 text-white/72">
+              Region: <span className="font-semibold text-white">{preferredRegion}</span>
+              <br />
+              Platform: <span className="font-semibold text-white">{preferredPlatform}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderGameSection = () => (
+    <div className="space-y-5">
+      {renderStageHeader(
+        <img src={PROFILE_GAME_ICON_ASSET} alt="" aria-hidden className="h-6 w-6 object-contain" />,
+        'GAME SETTINGS',
+        'Connect Epic Games to sync the display name used inside matches and friend-request flows.'
+      )}
+
+      <div className={cn(figmaPinkCardClass, 'p-5 lg:p-6')}>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-[30px] font-semibold uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif" }}>
+              EPIC GAMES
+            </p>
+            <p className="mt-2 text-sm text-[#3a0911]">
+              {epicConnected ? `Connected as ${profile.epic_username}` : 'Not connected yet'}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <FigmaStatusBadge tone={epicConnected ? 'green' : 'red'} icon={epicConnected ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}>
+              {epicConnected ? 'Ready' : 'Missing'}
+            </FigmaStatusBadge>
+            <FigmaStatusBadge tone="dark" icon={<Gamepad2 className="h-4 w-4" />}>
+              {epicConnected ? 'Live ID' : 'Connect lane'}
+            </FigmaStatusBadge>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-end">
+          <div className="rounded-[18px] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+            <img src={PROFILE_EPIC_LOGO_ASSET} alt="Epic Games" className="h-[150px] w-full object-contain" />
+          </div>
+
+          <div className="space-y-4">
+            <div className={cn(figmaDarkInsetClass, 'p-4')}>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Match visibility</p>
+              <p className="mt-2 text-sm leading-6 text-white/72">
+                Your Epic display name is shown inside matches so players can add each other without using the Discord
+                platform identity tied to your OBT account.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {epicConnected ? (
+                <Button type="button" onClick={() => setShowDisconnectEpicDialog(true)} className={profileDangerButtonClass}>
+                  <Unlink className="mr-2 h-4 w-4" />
+                  Disconnect Epic Games
+                </Button>
+              ) : (
+                <Button type="button" onClick={handleConnectEpic} disabled={connectingEpic} className={figmaPinkActionButtonClass}>
+                  {connectingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                  Connect Epic Games
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPaymentsSection = () => (
+    <div className="flex h-full min-h-0 flex-col gap-5">
+      {renderStageHeader(
+        <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-white">
+          <img src="/paypal/pp258.png" alt="" aria-hidden className="h-5 w-5 object-contain" />
+        </span>,
+        'WITHDRAW',
+        'Save one PayPal email, hit the blue cashout button, and move your available balance out from here.'
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_280px]">
+        <div className={cn(figmaPinkCardClass, 'p-5 lg:p-6')}>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+                  <img src="/paypal/pp258.png" alt="PayPal" className="h-8 w-8 object-contain" />
+                </span>
+                <div>
+                  <p className="text-[28px] font-semibold uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif" }}>
+                    PAYPAL CASHOUT
+                  </p>
+                  <p className="mt-1 text-sm text-[#3a0911]">{savedPayPalAddress}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <FigmaStatusBadge tone={withdrawStatus.tone} icon={canWithdraw ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}>
+                {withdrawStatus.label}
+              </FigmaStatusBadge>
+              <FigmaStatusBadge tone="blue" icon={<Wallet className="h-4 w-4" />}>
+                €{walletBalance.toFixed(2)} available
+              </FigmaStatusBadge>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
+            <div className="space-y-4">
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <Label className="text-[11px] uppercase tracking-[0.18em] text-white/48">PayPal email</Label>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <div className="relative flex-1">
+                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7bd8ff]" />
+                    <Input
+                      type="email"
+                      value={paypalEmail}
+                      onChange={(event) => {
+                        setPaypalEmail(event.target.value);
+                        setPaypalEmailError('');
+                      }}
+                      placeholder="wallet@paypal.com"
+                      className="h-12 rounded-[16px] border border-[#0a3d71]/18 bg-black/18 pl-11 text-white placeholder:text-white/26 focus-visible:border-[#0a5ca1]/28 focus-visible:ring-2 focus-visible:ring-[#009cde]/16"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleSavePayPalEmail}
+                    disabled={savingPayPal || normalizedPayPalEmail === (profile.paypal_email || '').trim().toLowerCase()}
+                    className={paypalSecondaryButtonClass}
+                  >
+                    {savingPayPal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save email
+                  </Button>
+                </div>
+                {paypalEmailError && <p className="pt-2 text-sm text-white">{paypalEmailError}</p>}
+              </div>
+
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Cashout flow</p>
+                <p className="mt-2 text-sm leading-6 text-white/72">{withdrawStatus.copy}</p>
+              </div>
+            </div>
+
+            <div className={cn(figmaDarkInsetClass, 'flex flex-col justify-between p-4')}>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Available right now</p>
+                <CoinDisplay amount={walletBalance} size="lg" className="mt-3 text-[34px] text-white" />
+              </div>
+              <div className="mt-4 space-y-3">
+                <Button
+                  type="button"
+                  disabled={!canWithdraw}
+                  className={cn(paypalPrimaryButtonClass, 'w-full')}
+                  onClick={() => setWithdrawOpen(true)}
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Withdraw to PayPal
+                </Button>
+                <p className="text-xs leading-5 text-white/54">
+                  Minimum €{MIN_PAYPAL_WITHDRAWAL.toFixed(2)} + €{PAYPAL_WITHDRAWAL_FEE.toFixed(2)} fee.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 content-start">
+          <div className={cn(figmaDarkInsetClass, 'p-4')}>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Minimum</p>
+            <p className="mt-2 text-[26px] font-semibold leading-none text-white">€{MIN_PAYPAL_WITHDRAWAL.toFixed(2)}</p>
+          </div>
+          <div className={cn(figmaDarkInsetClass, 'p-4')}>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Fee</p>
+            <p className="mt-2 text-[26px] font-semibold leading-none text-white">€{PAYPAL_WITHDRAWAL_FEE.toFixed(2)}</p>
+          </div>
+          <div className={cn(figmaDarkInsetClass, 'p-4')}>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Unlock amount</p>
+            <p className="mt-2 text-[26px] font-semibold leading-none text-white">€{minimumUnlockedBalance.toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={cn(figmaDarkInsetClass, 'flex min-h-0 flex-1 flex-col p-5')}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/48">Payout reel</p>
+            <p className="mt-2 text-sm text-white/64">Only live and completed cashouts stay in this reel.</p>
+          </div>
+        </div>
+
+        {paymentsActivity.length === 0 ? (
+          <div className={cn(figmaPinkCardClass, 'mt-4 flex flex-1 items-center p-5')}>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
+              <div>
+                <p className="text-[30px] font-semibold uppercase leading-[0.92] text-white" style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}>
+                  Your clean cashouts land here.
+                </p>
+                <p className="mt-3 max-w-[520px] text-sm leading-6 text-[#3a0911]">
+                  Save the PayPal email, tap withdraw, and this reel will only show payouts that are actually moving or already completed.
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Step 1</p>
+                  <p className="mt-2 text-sm font-semibold uppercase text-white">Save PayPal email</p>
+                </div>
+                <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Step 2</p>
+                  <p className="mt-2 text-sm font-semibold uppercase text-white">Tap withdraw</p>
+                </div>
+                <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Step 3</p>
+                  <p className="mt-2 text-sm font-semibold uppercase text-white">Track it here</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 grid min-h-0 gap-3 overflow-y-auto pr-1 xl:grid-cols-3">
+            {paymentsActivity.map((withdrawal) => {
+              const isCompleted = withdrawal.state === 'completed';
+              const dateLabel = new Date(withdrawal.createdAt).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+              });
+
+              return (
+                <div
+                  key={withdrawal.id}
+                  className={cn(
+                    'rounded-[18px] border p-4 shadow-[0_4px_8px_rgba(0,0,0,0.22)]',
+                    isCompleted ? 'border-[#0a5ca1]/26 bg-[linear-gradient(180deg,rgba(0,94,166,0.28)_0%,rgba(8,19,30,0.94)_100%)]' : 'border-white/10 bg-black/18'
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">{dateLabel}</p>
+                      <p className="mt-2 text-[30px] font-semibold leading-none text-white">€{withdrawal.amount.toFixed(2)}</p>
+                    </div>
+                    <FigmaStatusBadge tone={isCompleted ? 'green' : 'dark'} icon={isCompleted ? <Check className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}>
+                      {isCompleted ? 'Completed' : 'Processing'}
+                    </FigmaStatusBadge>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Destination</p>
+                    <p className="mt-2 truncate text-sm text-white/76">{withdrawal.destination}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+        <DialogContent className={cn(profileDialogContentClass, '!max-w-[560px] !overflow-hidden !border-[#ff1654]/22')}>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(255,22,84,0.22),transparent_48%)]" />
+
+          <DialogHeader className="relative">
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-white">
+                <img src="/paypal/pp258.png" alt="PayPal icon" className="h-7 w-7 object-contain" />
+              </span>
+              <div>
+                <DialogTitle className="text-left text-[24px] uppercase text-white">Withdraw to PayPal</DialogTitle>
+                <DialogDescription className="text-left text-white/58">
+                  Confirm the amount and send the payout to your saved PayPal email.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="relative space-y-4 py-2">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Available</p>
+                <p className="mt-2 text-lg font-semibold text-white">€{walletBalance.toFixed(2)}</p>
+              </div>
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Fee</p>
+                <p className="mt-2 text-lg font-semibold text-white">€{PAYPAL_WITHDRAWAL_FEE.toFixed(2)}</p>
+              </div>
+              <div className={cn(figmaDarkInsetClass, 'p-4')}>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Total deduction</p>
+                <p className="mt-2 text-lg font-semibold text-white">€{previewTotalDeduction.toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className={cn(figmaPinkCardClass, 'p-4')}>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/82">PayPal destination</p>
+              <p className="mt-2 text-sm text-white">{normalizedPayPalEmail}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Amount</Label>
+              <Input
+                type="number"
+                min={MIN_PAYPAL_WITHDRAWAL}
+                max={Math.max(0, walletBalance - PAYPAL_WITHDRAWAL_FEE)}
+                value={withdrawAmount}
+                onChange={(event) => setWithdrawAmount(event.target.value)}
+                placeholder={`${MIN_PAYPAL_WITHDRAWAL}.00`}
+                className="h-12 rounded-[16px] border-white/[0.12] bg-black/20 text-white placeholder:text-white/24 focus-visible:border-[#ff1654]/35 focus-visible:ring-2 focus-visible:ring-[#ff1654]/18"
+              />
+              <p className="text-sm leading-6 text-white/54">
+                The payout sends the amount above to PayPal. Your wallet deduction includes the €{PAYPAL_WITHDRAWAL_FEE.toFixed(2)} fee.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" className={profileGhostButtonClass} onClick={() => setWithdrawOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" className={paypalPrimaryButtonClass} onClick={handleWithdraw} disabled={submittingWithdrawal}>
+              {submittingWithdrawal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowUpRight className="mr-2 h-4 w-4" />}
+              Confirm withdrawal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  const renderConnectionsSection = () => (
+    <div className="space-y-5">
+      {renderStageHeader(
+        <Link2 className="h-5 w-5 text-white" />,
+        'CONNECTIONS',
+        'Review the identities and payout lanes currently attached to your OBT profile.'
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_280px]">
+        <div className={cn(figmaPinkCardClass, 'p-5 lg:p-6')}>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className={cn(figmaDarkInsetClass, 'p-4')}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12 border border-white/10">
+                    <AvatarImage src={profile.discord_avatar_url || undefined} alt={discordDisplayName} />
+                    <AvatarFallback className="bg-[#5865F2] text-white">
+                      <DiscordIcon className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-white">Discord</p>
+                    <p className="text-sm text-white/60">{profile.discord_username || discordDisplayName}</p>
+                  </div>
+                </div>
+                <FigmaStatusBadge tone="green" icon={<Check className="h-4 w-4" />}>
+                  Connected
+                </FigmaStatusBadge>
+              </div>
+            </div>
+
+            <div className={cn(figmaDarkInsetClass, 'p-4')}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img src={PROFILE_EPIC_LOGO_ASSET} alt="Epic Games" className="h-12 w-12 rounded-[10px] bg-white p-1.5 object-contain" />
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-white">Epic Games</p>
+                    <p className="text-sm text-white/60">{profile.epic_username || 'Not connected'}</p>
+                  </div>
+                </div>
+                <FigmaStatusBadge tone={epicConnected ? 'green' : 'red'} icon={epicConnected ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}>
+                  {epicConnected ? 'Ready' : 'Missing'}
+                </FigmaStatusBadge>
+              </div>
+            </div>
+
+            <div className={cn(figmaDarkInsetClass, 'p-4 lg:col-span-2')}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-white">
+                    <img src="/paypal/pp258.png" alt="PayPal" className="h-7 w-7 object-contain" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-white">PayPal payout lane</p>
+                    <p className="text-sm text-white/60">{savedPayPalAddress}</p>
+                  </div>
+                </div>
+                <FigmaStatusBadge tone={hasValidPayPalEmail ? 'green' : 'red'} icon={hasValidPayPalEmail ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}>
+                  {hasValidPayPalEmail ? 'Saved' : 'Missing'}
+                </FigmaStatusBadge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 content-start">
+          <div className={cn(figmaDarkInsetClass, 'p-4')}>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Primary identity</p>
+            <p className="mt-2 text-sm leading-6 text-white/72">
+              Discord is the primary identity provider for your OBT account. If you need to switch accounts, sign out and log in again with a different Discord user.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return <LoadingPage />;
   }
@@ -525,671 +1109,125 @@ export function ProfileSettingsView({
   }
 
   return (
-    <div className={cn('text-white', mode === 'page' ? cn('mx-auto w-full', isPaymentsDenseLayout ? 'max-w-[1320px]' : 'max-w-[1180px]') : 'w-full')}>
+    <div className={cn('text-white', mode === 'page' ? 'mx-auto w-full max-w-[1560px]' : 'w-full')}>
       <div
         className={cn(
-          'overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(19,10,13,0.98)_0%,rgba(11,6,9,0.96)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.45)]',
-          isPaymentsDenseLayout && 'lg:flex lg:h-[calc(100vh-176px)] lg:flex-col'
+          'relative overflow-hidden rounded-[28px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(24,7,9,0.98)_0%,rgba(11,4,5,0.98)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.42)]',
+          isDesktopFigmaShell ? 'lg:h-[calc(100vh-194px)]' : 'lg:h-full'
         )}
       >
-        <div className={cn('flex items-center justify-between gap-4 border-b border-white/[0.08] px-6 py-5 lg:px-8', isPaymentsDenseLayout && 'lg:px-7 lg:py-4')}>
-          <div>
-            <p className="text-xs font-display uppercase tracking-[0.2em] text-[#ff9ab3]">My Profile</p>
-            <h1
-              className={cn('mt-2 text-[34px] uppercase leading-none text-white lg:text-[42px]', isPaymentsDenseLayout && 'lg:text-[34px]')}
-              style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
-            >
-              Profile Settings
-            </h1>
-            <p className={cn('mt-3 max-w-[760px] text-sm leading-6 text-white/60 lg:text-base', isPaymentsDenseLayout && 'max-w-[620px] lg:mt-2 lg:text-[14px] lg:leading-6')}>
-              {isPaymentsSection
-                ? 'Shape your payout lane, keep PayPal locked in, and move wins through a cleaner premium cashout flow.'
-                : 'Manage your OBT profile, Epic Games connection, withdrawal destination and linked accounts from one place.'}
-            </p>
-          </div>
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[146px] bg-[radial-gradient(circle_at_top,rgba(255,22,84,0.16),transparent_48%)]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[146px] w-full bg-[radial-gradient(circle_at_bottom,rgba(255,22,84,0.18),transparent_52%)]" />
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {mode === 'overlay' && (
-              <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
-                Open Page
+        <div className="relative flex h-full min-h-0 flex-col px-5 pb-5 pt-5 lg:px-8 lg:pb-6 lg:pt-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="relative max-w-[760px] pl-10 pt-2">
+              <img
+                src={PROFILE_TRIANGLES_ASSET}
+                alt=""
+                aria-hidden
+                className="pointer-events-none absolute -left-3 -top-1 h-[108px] w-[76px] object-contain"
+              />
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#ff96ad]">MY PROFILE</p>
+              <h1
+                className="mt-1 text-[48px] uppercase leading-[0.92] text-white sm:text-[58px] lg:text-[64px]"
+                style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+              >
+                PROFILE SETTINGS
+              </h1>
+              <img src={PROFILE_UNDERLINE_ASSET} alt="" aria-hidden className="mt-2 h-[18px] w-[520px] max-w-full object-contain" />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+              {mode === 'overlay' && (
+                <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
+                  Open Page
+                </Button>
+              )}
+              <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
               </Button>
-            )}
-
-            <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-
-            {onClose && (
-              <button type="button" onClick={onClose} className={profileGhostButtonClass}>
-                Close
-              </button>
-            )}
+              {onClose && (
+                <Button type="button" className={profileGhostButtonClass} onClick={onClose}>
+                  Close
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div
-          className={cn(
-            'grid gap-6 px-6 py-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 lg:py-8',
-            isPaymentsDenseLayout && 'lg:min-h-0 lg:flex-1 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-4 lg:px-6 lg:py-5'
-          )}
-        >
-          <aside className={cn('space-y-4', isPaymentsDenseLayout && 'lg:space-y-3')}>
-            <div className={cn('rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]', isPaymentsDenseLayout && 'lg:p-4 lg:opacity-90')}>
-              <div className="flex items-center gap-4">
-                <Avatar className={cn('h-20 w-20 border-2 border-white/[0.08]', isPaymentsDenseLayout && 'lg:h-16 lg:w-16')}>
-                  <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
-                  <AvatarFallback className="bg-white/[0.08] text-xl uppercase text-white">
-                    {discordDisplayName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+          <div className="relative mt-4 flex min-h-0 flex-1 flex-col">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[82px] hidden bg-[#ff1654] shadow-[0_20px_60px_rgba(255,22,84,0.18)] lg:block" />
 
-                <div className="min-w-0">
-                    <p className={cn('truncate text-lg font-semibold uppercase text-white', isPaymentsDenseLayout && 'lg:text-base')}>{discordDisplayName}</p>
-                    <p className="truncate text-sm text-white/46">{profile.email}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="inline-flex rounded-full border border-white/[0.12] bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/70">
-                      {isVip ? 'VIP' : 'STANDARD'}
-                    </span>
-                    {!isProfileComplete && (
-                      <span className="inline-flex rounded-full border border-[#ff1654]/28 bg-[#ff1654]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#ffbfd1]">
-                        Epic Missing
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div className="relative grid min-h-0 flex-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-5">
+              <aside className="space-y-4 pt-2 lg:pt-3">
+                <div className="rounded-[16px] border border-[#ff1654] bg-[#2c2c2c] p-4 shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-[62px] w-[62px] rounded-[18px] border border-white/10">
+                      <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
+                      <AvatarFallback className="bg-black/30 text-white">{discordDisplayName.charAt(0)}</AvatarFallback>
+                    </Avatar>
 
-            <div className={cn('rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]', isPaymentsDenseLayout && 'lg:opacity-82')}>
-              <nav className="grid gap-1">
-                {sections.map((section) => {
-                  const Icon = section.icon;
-                  const isActive = activeSection === section.id;
-
-                  return (
-                    <button
-                      key={section.id}
-                      type="button"
-                      onClick={() => setActiveSection(section.id)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-[16px] px-4 py-3 text-left transition',
-                        isActive
-                          ? 'bg-[#ff1654]/14 text-white shadow-[inset_0_0_0_1px_rgba(255,22,84,0.35)]'
-                          : 'text-white/54 hover:bg-white/[0.05] hover:text-white'
-                      )}
-                    >
-                      <Icon className="h-4 w-4 flex-none" />
-                      <span className="text-sm font-semibold uppercase tracking-[0.08em]">{section.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          </aside>
-
-          <section
-            className={cn(
-              'rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:p-6',
-              isPaymentsDenseLayout && 'lg:min-h-0 lg:p-5'
-            )}
-          >
-            {activeSection === 'account' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-semibold uppercase text-white">
-                    <User className="h-5 w-5 text-[#ff1654]" />
-                    Account Settings
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-white/56">
-                    Update your display preferences and keep your competitive profile ready.
-                  </p>
-                </div>
-
-                <div className="grid gap-5">
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Username</Label>
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                      <Input
-                        value={username}
-                        onChange={(event) => {
-                          setUsername(event.target.value);
-                          setUsernameError('');
-                        }}
-                        className={profileInputClass}
-                        disabled={!isVip}
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleSaveUsername}
-                        disabled={savingProfile || username === profile.username}
-                        className={cn(isVip ? profileSecondaryButtonClass : profilePrimaryButtonClass)}
-                      >
-                        {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        {isVip ? 'Save' : 'VIP Only'}
-                      </Button>
-                    </div>
-                    {usernameError && <p className="text-sm text-red-300">{usernameError}</p>}
-                    {!isVip && (
-                      <p className="text-sm text-white/48">
-                        Username changes are reserved for VIP members. Your base username stays synced from Discord.
+                    <div className="min-w-0">
+                      <p className="truncate text-[30px] font-semibold uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif" }}>
+                        {discordDisplayName}
                       </p>
-                    )}
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Preferred Region</Label>
-                      <Select value={preferredRegion} onValueChange={(value) => setPreferredRegion(value as Region)}>
-                        <SelectTrigger className={profileSelectTriggerClass}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className={profileSelectContentClass}>
-                          {REGIONS.map((regionOption) => (
-                            <SelectItem key={regionOption} value={regionOption}>
-                              {regionOption}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Preferred Platform</Label>
-                      <Select value={preferredPlatform} onValueChange={(value) => setPreferredPlatform(value as Platform)}>
-                        <SelectTrigger className={profileSelectTriggerClass}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className={profileSelectContentClass}>
-                          {PLATFORMS.map((platformOption) => (
-                            <SelectItem key={platformOption} value={platformOption}>
-                              {platformOption}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <Button type="button" onClick={handleSaveAccount} disabled={savingProfile} className={profilePrimaryButtonClass}>
-                      {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      Save Account
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'game' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-semibold uppercase text-white">
-                    <Gamepad2 className="h-5 w-5 text-[#ff1654]" />
-                    Game Settings
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-white/56">
-                    Connect Epic Games to sync the display name used inside matches and friend-request flows.
-                  </p>
-                </div>
-
-                <div className="rounded-[20px] border border-white/[0.08] bg-black/20 p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold uppercase text-white">Epic Games</p>
-                      <p className="mt-1 text-sm text-white/50">{profile.epic_username || 'Not connected yet'}</p>
-                    </div>
-
-                    {profile.epic_username ? (
-                      <span className={profileBadgeNeutralClass}>
-                        <Check className="mr-1 h-3.5 w-3.5" />
-                        Ready
-                      </span>
-                    ) : (
-                      <span className={profileBadgeAccentClass}>
-                        <AlertCircle className="mr-1 h-3.5 w-3.5" />
-                        Missing
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mt-5 rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-white/42">Match Visibility</p>
-                    <p className="mt-2 text-sm leading-6 text-white/58">
-                      Your Epic display name is shown inside matches so players can add each other without using the
-                      Discord platform identity tied to your OBT account.
-                    </p>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    {profile.epic_username ? (
-                      <Button type="button" onClick={() => setShowDisconnectEpicDialog(true)} className={profileDangerButtonClass}>
-                        <Unlink className="mr-2 h-4 w-4" />
-                        Disconnect Epic Games
-                      </Button>
-                    ) : (
-                      <Button type="button" onClick={handleConnectEpic} disabled={connectingEpic} className={profilePrimaryButtonClass}>
-                        {connectingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
-                        Connect Epic Games
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'payments' && (
-              <div className={cn('space-y-6', isPaymentsDenseLayout && 'lg:flex lg:h-full lg:flex-col lg:space-y-4')}>
-                <div className={cn(isPaymentsDenseLayout && 'lg:hidden')}>
-                  <h2 className="flex items-center gap-2 text-xl font-semibold uppercase text-white">
-                    <CreditCard className="h-5 w-5 text-[#ff1654]" />
-                    Payments & Payouts
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-white/56">
-                    Review your wallet status and withdraw winnings to your saved PayPal email. Stripe stays active
-                    only for deposits.
-                  </p>
-                </div>
-
-                <div
-                  className={cn(
-                    'space-y-4',
-                    isPaymentsDenseLayout && 'lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-1 lg:grid-rows-[auto_auto_minmax(0,1fr)] lg:gap-4 lg:space-y-0'
-                  )}
-                >
-                  <div className="relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(145deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.018)_45%,rgba(255,255,255,0.012)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] lg:p-6">
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,112,186,0.26),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(255,22,84,0.16),transparent_34%)]" />
-                    <div className="pointer-events-none absolute -right-20 top-6 h-40 w-40 rounded-full bg-[#009cde]/12 blur-3xl" />
-                    <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-full bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(0,0,0,0.12)_100%)]" />
-
-                    <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_360px]">
-                      <div className="flex flex-col justify-between rounded-[24px] border border-white/[0.08] bg-black/18 p-5 backdrop-blur-[18px]">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-2 rounded-full border border-[#69d3ff]/20 bg-[#003087]/22 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#dff4ff]">
-                              <img src="/paypal/pp258.png" alt="PayPal" className="h-4 w-4 object-contain" />
-                              PayPal payouts
-                            </span>
-                            <span className={cn('inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]', payoutReadiness.className)}>
-                              {hasValidPayPalEmail ? <Check className="mr-1 h-3.5 w-3.5" /> : <AlertCircle className="mr-1 h-3.5 w-3.5" />}
-                              {payoutReadiness.label}
-                            </span>
-                            <span className="inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/72">
-                              <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                              Stripe stays for deposits
-                            </span>
-                          </div>
-
-                          <h2
-                            className="mt-5 max-w-[14ch] text-[34px] uppercase leading-[0.94] text-white sm:text-[42px]"
-                            style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
-                          >
-                            {payoutHeadline}
-                          </h2>
-                          <p className="mt-3 max-w-[620px] text-sm leading-6 text-white/68 lg:text-[15px]">
-                            {payoutDescription}
-                          </p>
-                        </div>
-
-                        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Step 1</p>
-                            <p className="mt-2 text-sm font-semibold text-white">Save your PayPal email</p>
-                            <p className="mt-1 text-xs leading-5 text-white/54">Only once. Every payout uses this email.</p>
-                          </div>
-                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Step 2</p>
-                            <p className="mt-2 text-sm font-semibold text-white">Tap Withdraw to PayPal</p>
-                            <p className="mt-1 text-xs leading-5 text-white/54">Choose the amount and confirm the payout.</p>
-                          </div>
-                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Step 3</p>
-                            <p className="mt-2 text-sm font-semibold text-white">Track payout status below</p>
-                            <p className="mt-1 text-xs leading-5 text-white/54">Only processing and completed payouts appear here.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-[26px] border border-[#69d3ff]/18 bg-[linear-gradient(180deg,rgba(0,48,135,0.3)_0%,rgba(10,15,24,0.82)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_22px_56px_rgba(0,48,135,0.24)]">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-white shadow-[0_14px_34px_rgba(0,48,135,0.24)]">
-                            <img src="/paypal/pp258.png" alt="PayPal" className="h-8 w-8 object-contain" />
-                          </span>
-                          <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#dff4ff]">Saved destination</p>
-                            <p className="mt-1 text-sm text-white/76">{hasValidPayPalEmail ? normalizedPayPalEmail : 'No PayPal email saved yet'}</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 rounded-[20px] border border-white/[0.08] bg-black/20 px-4 py-4">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Available to withdraw</p>
-                          <CoinDisplay amount={walletBalance} size="lg" className="mt-2 text-[34px] text-white" />
-                        </div>
-
-                        <Button
-                          type="button"
-                          disabled={!canWithdraw}
-                          className={cn(paypalPrimaryButtonClass, 'mt-4 !h-14 w-full text-[13px] shadow-[0_22px_50px_rgba(0,112,186,0.42)]')}
-                          onClick={() => setWithdrawOpen(true)}
-                        >
-                          <Wallet className="mr-2 h-4 w-4" />
-                          {withdrawActionLabel}
-                        </Button>
-
-                        <div className="mt-4 rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-4 text-sm leading-6 text-white/64">
-                          {canWithdraw ? (
-                            <p>
-                              You are ready. Tap <span className="font-semibold text-white">Withdraw to PayPal</span>, enter the amount, and confirm.
-                            </p>
-                          ) : hasValidPayPalEmail ? (
-                            <p>
-                              Your PayPal email is saved. You still need <span className="font-semibold text-white">€{remainingToUnlock.toFixed(2)}</span> more available balance before the button unlocks.
-                            </p>
-                          ) : (
-                            <p>
-                              Save your PayPal email first. As soon as it is saved, this blue button becomes your payout action.
-                            </p>
+                      <p className="truncate text-sm text-white/76">{profile.email}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="inline-flex h-[28px] items-center rounded-[999px] border border-white/16 bg-black/18 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-white/82">
+                          {isVip ? 'VIP' : 'STANDARD'}
+                        </span>
+                        <span
+                          className={cn(
+                            'inline-flex h-[28px] items-center rounded-[999px] border px-3 text-[11px] font-semibold uppercase tracking-[0.1em]',
+                            epicConnected ? 'border-[#2cf804]/30 bg-[#2cf804]/12 text-[#d9ffd1]' : 'border-[#ff1654]/32 bg-[#ff1654]/12 text-[#ffc0d0]'
                           )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_320px]">
-                    <div className="rounded-[24px] border border-white/[0.08] bg-black/16 p-5 backdrop-blur-[18px]">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8adfff]">Step 1</p>
-                          <h3 className="mt-2 text-xl font-semibold uppercase text-white">Save your PayPal email</h3>
-                        </div>
-                        <span className="rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/74">
-                          One-time setup
+                        >
+                          {epicConnected ? 'EPIC READY' : 'EPIC MISSING'}
                         </span>
                       </div>
-
-                      <p className="mt-3 text-sm leading-6 text-white/60">
-                        This is the address used for every payout. You can change it here any time before you withdraw.
-                      </p>
-
-                      <div className="mt-4 space-y-2">
-                        <Label className="text-xs uppercase tracking-[0.16em] text-white/48">PayPal email</Label>
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                          <div className="relative flex-1">
-                            <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8adfff]" />
-                            <Input
-                              type="email"
-                              value={paypalEmail}
-                              onChange={(event) => {
-                                setPaypalEmail(event.target.value);
-                                setPaypalEmailError('');
-                              }}
-                              placeholder="wallet@paypal.com"
-                              className="h-12 rounded-[18px] border-[#69d3ff]/14 bg-black/22 pl-11 text-white placeholder:text-white/24 focus-visible:border-[#69d3ff]/36 focus-visible:ring-2 focus-visible:ring-[#009cde]/16"
-                            />
-                          </div>
-
-                          <Button
-                            type="button"
-                            onClick={handleSavePayPalEmail}
-                            disabled={savingPayPal || normalizedPayPalEmail === (profile.paypal_email || '').trim().toLowerCase()}
-                            className={paypalSecondaryButtonClass}
-                          >
-                            {savingPayPal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save Email
-                          </Button>
-                        </div>
-                        {paypalEmailError && <p className="pt-1 text-sm text-red-300">{paypalEmailError}</p>}
-                        <p className="pt-1 text-xs leading-5 text-white/52">
-                          Saved now: <span className="text-white/82">{hasValidPayPalEmail ? normalizedPayPalEmail : 'nothing saved yet'}</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="overflow-hidden rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.02)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                      <div className="flex items-center gap-2">
-                        <Clock3 className="h-4 w-4 text-[#8adfff]" />
-                        <p className="text-sm font-semibold uppercase text-white">Withdrawal Rules</p>
-                      </div>
-
-                      <div className="mt-4 grid gap-3">
-                        <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Minimum</p>
-                          <p className="mt-1 text-lg font-semibold text-white">€{MIN_PAYPAL_WITHDRAWAL.toFixed(2)}</p>
-                        </div>
-                        <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Fee</p>
-                          <p className="mt-1 text-lg font-semibold text-white">€{PAYPAL_WITHDRAWAL_FEE.toFixed(2)}</p>
-                        </div>
-                        <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Total required</p>
-                          <p className="mt-1 text-lg font-semibold text-white">€{minimumUnlockedBalance.toFixed(2)}</p>
-                        </div>
-                        <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Status now</p>
-                          <p className="mt-1 text-sm leading-6 text-white/72">
-                            {canWithdraw
-                              ? 'Ready to withdraw right now.'
-                              : hasValidPayPalEmail
-                                ? `You need €${remainingToUnlock.toFixed(2)} more available balance.`
-                                : 'Save your PayPal email to unlock withdrawals.'}
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.018)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:col-span-2">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold uppercase text-white">Recent Payouts</p>
-                        <p className="mt-1 text-sm text-white/52">
-                          This list only shows payouts that are processing or already completed.
-                        </p>
-                      </div>
-                    </div>
+                <div className="rounded-[16px] border border-[#ff1654] bg-[#2c2c2c] p-4 shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
+                  <nav className="grid gap-4">
+                    {sections.map((section) => {
+                      const isActive = activeSection === section.id;
 
-                    {paymentsActivity.length === 0 ? (
-                      <div className="relative mt-4 overflow-hidden rounded-[24px] border border-[#69d3ff]/14 bg-[linear-gradient(135deg,rgba(0,48,135,0.16)_0%,rgba(255,22,84,0.1)_100%)] px-5 py-5">
-                        <div className="pointer-events-none absolute -left-16 top-0 h-28 w-28 rounded-full bg-[#009cde]/14 blur-3xl" />
-                        <div className="pointer-events-none absolute right-0 top-8 h-24 w-24 rounded-full bg-[#ff1654]/12 blur-3xl" />
-
-                        <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
-                          <div>
-                            <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#dff4ff]">
-                              <Sparkles className="h-3.5 w-3.5 text-[#8adfff]" />
-                              No payouts yet
-                            </span>
-                            <h3 className="mt-4 text-[28px] uppercase leading-[0.96] text-white" style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}>
-                              Your completed withdrawals will appear here.
-                            </h3>
-                            <p className="mt-3 max-w-[540px] text-sm leading-6 text-white/62">
-                              Save your PayPal email, tap the withdrawal button, and this area will show processing and completed payouts only.
-                            </p>
-                          </div>
-
-                          <div className="grid gap-3">
-                            <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Step 1</p>
-                              <p className="mt-2 text-sm font-semibold text-white">Save PayPal email</p>
-                            </div>
-                            <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Step 2</p>
-                              <p className="mt-2 text-sm font-semibold text-white">Tap withdraw</p>
-                            </div>
-                            <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Step 3</p>
-                              <p className="mt-2 text-sm font-semibold text-white">Track live + completed payouts</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-4 grid gap-3 xl:grid-cols-3">
-                        {paymentsActivity.map((withdrawal) => {
-                          const isCompleted = withdrawal.state === 'completed';
-                          const dateLabel = new Date(withdrawal.createdAt).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                          });
-
-                          return (
-                            <div
-                              key={withdrawal.id}
-                              className={cn(
-                                'relative overflow-hidden rounded-[22px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-                                isCompleted
-                                  ? 'border-[#69d3ff]/18 bg-[linear-gradient(180deg,rgba(0,48,135,0.2)_0%,rgba(7,12,20,0.92)_100%)]'
-                                  : 'border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.015)_100%)]'
-                              )}
-                            >
-                              <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-1', isCompleted ? 'bg-[linear-gradient(90deg,#009cde_0%,#61d3ff_100%)]' : 'bg-[linear-gradient(90deg,rgba(255,255,255,0.26)_0%,rgba(255,255,255,0)_100%)]')} />
-
-                              <div className="flex items-start justify-between gap-3">
-                                <div>
-                                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">{dateLabel}</p>
-                                  <p className="mt-2 text-[30px] font-semibold leading-none text-white">€{withdrawal.amount.toFixed(2)}</p>
-                                </div>
-
-                                <span
-                                  className={cn(
-                                    'inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]',
-                                    isCompleted
-                                      ? 'border-[#6ed4ff]/24 bg-[#0a5ca1]/18 text-[#dff4ff]'
-                                      : 'border-white/[0.12] bg-white/[0.06] text-white/78'
-                                  )}
-                                >
-                                  {isCompleted ? <Check className="mr-1 h-3.5 w-3.5" /> : <Clock3 className="mr-1 h-3.5 w-3.5" />}
-                                  {isCompleted ? 'Completed' : 'Processing'}
-                                </span>
-                              </div>
-
-                              <div className="mt-5 space-y-2">
-                                <p className="text-xs uppercase tracking-[0.16em] text-white/40">Destination</p>
-                                <p className="truncate text-sm text-white/76">{withdrawal.destination}</p>
-                              </div>
-
-                              <div className="mt-4 flex items-center justify-between text-xs text-white/48">
-                                <span>PayPal</span>
-                                <span>{isCompleted ? 'Completed' : 'Processing'}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
-                    <DialogContent className={cn(profileDialogContentClass, '!max-w-[560px] !overflow-hidden !border-[#69d3ff]/16')}>
-                      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(0,112,186,0.26),transparent_45%)]" />
-
-                      <DialogHeader className="relative">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-white shadow-[0_14px_34px_rgba(0,48,135,0.24)]">
-                            <img src="/paypal/pp258.png" alt="PayPal icon" className="h-7 w-7 object-contain" />
+                      return (
+                        <button
+                          key={section.id}
+                          type="button"
+                          onClick={() => setActiveSection(section.id)}
+                          className={cn(
+                            figmaRailButtonBaseClass,
+                            isActive
+                              ? 'border-white/50 shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_12px_24px_rgba(255,22,84,0.28)]'
+                              : 'opacity-92 hover:opacity-100 hover:shadow-[0_10px_20px_rgba(255,22,84,0.22)]'
+                          )}
+                        >
+                          <SectionRailIcon assetSrc={section.assetSrc} icon={section.icon} className={cn(section.assetSrc ? 'h-7 w-7' : 'h-5 w-5')} />
+                          <span className="truncate text-[24px] uppercase leading-none" style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}>
+                            {section.label}
                           </span>
-                          <div>
-                            <DialogTitle className="text-left text-[24px] uppercase text-white">Confirm PayPal Withdrawal</DialogTitle>
-                            <DialogDescription className="text-left text-white/58">
-                              Check the destination, enter the amount, and confirm the payout to your saved PayPal email.
-                            </DialogDescription>
-                          </div>
-                        </div>
-                      </DialogHeader>
-
-                      <div className="relative space-y-4 py-2">
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Available</p>
-                            <p className="mt-2 text-lg font-semibold text-white">€{walletBalance.toFixed(2)}</p>
-                          </div>
-                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Fee</p>
-                            <p className="mt-2 text-lg font-semibold text-white">€{PAYPAL_WITHDRAWAL_FEE.toFixed(2)}</p>
-                          </div>
-                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Total deduction</p>
-                            <p className="mt-2 text-lg font-semibold text-white">€{previewTotalDeduction.toFixed(2)}</p>
-                          </div>
-                        </div>
-
-                        <div className="rounded-[18px] border border-[#69d3ff]/14 bg-[linear-gradient(180deg,rgba(0,48,135,0.18)_0%,rgba(13,18,28,0.72)_100%)] px-4 py-4">
-                          <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">PayPal destination</p>
-                          <p className="mt-2 text-sm text-white/82">{normalizedPayPalEmail}</p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-xs uppercase tracking-[0.16em] text-white/42">Amount</Label>
-                          <Input
-                            type="number"
-                            min={MIN_PAYPAL_WITHDRAWAL}
-                            max={Math.max(0, walletBalance - PAYPAL_WITHDRAWAL_FEE)}
-                            value={withdrawAmount}
-                            onChange={(event) => setWithdrawAmount(event.target.value)}
-                            placeholder={`${MIN_PAYPAL_WITHDRAWAL}.00`}
-                            className="h-12 rounded-[18px] border-[#69d3ff]/14 bg-black/22 text-white placeholder:text-white/24 focus-visible:border-[#69d3ff]/36 focus-visible:ring-2 focus-visible:ring-[#009cde]/16"
-                          />
-                          <p className="text-sm leading-6 text-white/54">
-                            You receive the amount above on PayPal. Your wallet deduction includes the €{PAYPAL_WITHDRAWAL_FEE.toFixed(2)} fee.
-                          </p>
-                        </div>
-                      </div>
-
-                      <DialogFooter>
-                        <Button type="button" className={profileGhostButtonClass} onClick={() => setWithdrawOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button type="button" className={paypalPrimaryButtonClass} onClick={handleWithdraw} disabled={submittingWithdrawal}>
-                          {submittingWithdrawal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowUpRight className="mr-2 h-4 w-4" />}
-                          Confirm Withdrawal
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                        </button>
+                      );
+                    })}
+                  </nav>
                 </div>
-              </div>
-            )}
+              </aside>
 
-            {activeSection === 'connections' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-semibold uppercase text-white">
-                    <Link2 className="h-5 w-5 text-[#ff1654]" />
-                    Connected Accounts
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-white/56">
-                    Review the accounts currently attached to your OBT profile.
-                  </p>
+              <section className={cn(figmaMainStageClass, 'min-h-0 overflow-hidden lg:mt-2')}>
+                <div className="h-full min-h-0 overflow-y-auto px-5 py-5 lg:px-6 lg:py-6">
+                  {activeSection === 'account' && renderAccountSection()}
+                  {activeSection === 'game' && renderGameSection()}
+                  {activeSection === 'payments' && renderPaymentsSection()}
+                  {activeSection === 'connections' && renderConnectionsSection()}
                 </div>
-
-                <div className="rounded-[20px] border border-white/[0.08] bg-black/20 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 border border-white/[0.08]">
-                        <AvatarImage src={profile.discord_avatar_url || undefined} alt={discordDisplayName} />
-                        <AvatarFallback className="bg-[#5865F2] text-white">
-                          <DiscordIcon className="h-5 w-5" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-semibold uppercase text-white">Discord</p>
-                        <p className="text-sm text-white/50">{profile.discord_username || discordDisplayName}</p>
-                      </div>
-                    </div>
-
-                    <span className={profileBadgeNeutralClass}>
-                      <Check className="mr-1 h-3.5 w-3.5" />
-                      Connected
-                    </span>
-                  </div>
-                </div>
-
-                <div className="rounded-[20px] border border-white/[0.08] bg-black/20 p-5 text-sm leading-6 text-white/56">
-                  Discord is the primary identity provider for your OBT account. If you need to switch accounts, sign out and log in again with a different Discord user.
-                </div>
-              </div>
-            )}
-          </section>
+              </section>
+            </div>
+          </div>
         </div>
       </div>
 
