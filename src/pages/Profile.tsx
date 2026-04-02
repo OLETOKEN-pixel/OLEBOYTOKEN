@@ -5,6 +5,7 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 import { ProfileSettingsView, type ProfileSection } from '@/components/profile/ProfileSettingsView';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentPathWithQueryAndHash } from '@/lib/oauth';
+import { cn } from '@/lib/utils';
 
 const PROFILE_TABS: ProfileSection[] = ['account', 'game', 'payments', 'connections'];
 
@@ -23,10 +24,16 @@ export default function Profile() {
   const initialSection = PROFILE_TABS.includes(requestedTab as ProfileSection)
     ? (requestedTab as ProfileSection)
     : 'account';
+  const isPaymentsTab = initialSection === 'payments';
 
   return (
     <PublicLayout>
-      <section className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-24 pt-[148px] lg:px-8 lg:pt-[168px]">
+      <section
+        className={cn(
+          'min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4',
+          isPaymentsTab ? 'pb-14 pt-[132px] lg:px-6 lg:pb-10 lg:pt-[144px]' : 'pb-24 pt-[148px] lg:px-8 lg:pt-[168px]'
+        )}
+      >
         {loading || !user ? <LoadingPage /> : <ProfileSettingsView initialSection={initialSection} mode="page" />}
       </section>
     </PublicLayout>
