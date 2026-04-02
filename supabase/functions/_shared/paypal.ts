@@ -5,6 +5,8 @@ export const PAYPAL_WITHDRAWAL_FEE = 0.5;
 type PayPalEnv = "live" | "sandbox";
 
 interface PayPalApiErrorShape {
+  error?: string;
+  error_description?: string;
   name?: string;
   message?: string;
   details?: unknown;
@@ -137,12 +139,17 @@ export async function getPayPalAccessToken() {
 
   if (!response.ok || !payload?.access_token) {
     const errorPayload = payload as PayPalApiErrorShape | null;
-    throw buildPayPalError(errorPayload?.message || "Unable to authenticate with PayPal.", {
-      code: errorPayload?.name || "PAYPAL_AUTH_FAILED",
-      debugId: errorPayload?.debug_id || debugId,
-      details: stringifyPayPalDetails(errorPayload?.details ?? payload),
-      status: response.status,
-    });
+    throw buildPayPalError(
+      errorPayload?.error_description ||
+        errorPayload?.message ||
+        "Unable to authenticate with PayPal.",
+      {
+        code: errorPayload?.error || errorPayload?.name || "PAYPAL_AUTH_FAILED",
+        debugId: errorPayload?.debug_id || debugId,
+        details: stringifyPayPalDetails(errorPayload?.details ?? payload),
+        status: response.status,
+      }
+    );
   }
 
   return {
@@ -319,16 +326,39 @@ export function classifyPayPalPayoutError(error: unknown, fallbackMessage: strin
   const details = typedError.details ?? null;
   const code = typedError.code ?? null;
   const debugId = typedError.debugId ?? null;
-  const normalized = `${message} ${details ?? ""}`.toLowerCase();
+  const normalized = `${code ?? ""} ${message} ${details ?? ""}`.toLowerCase();
 
   let userMessage = fallbackMessage;
 
-  if (normalized.includes("permission") || normalized.includes("not authorized")) {
+  if (normalized.includes("sender_restricted")) {
+    userMessage = "This PayPal business account is restricted from sending payouts.";
+  } else if (
+    normalized.includes("permission") ||
+    normalized.includes("not authorized") ||
+    normalized.includes("not_authorized") ||
+    normalized.includes("explicit deny") ||
+    normalized.includes("authorization")
+  ) {
     userMessage = "PayPal payouts are not enabled for this account yet.";
+  } else if (
+    normalized.includes("payout") &&
+    (normalized.includes("enable") || normalized.includes("eligible") || normalized.includes("supported"))
+  ) {
+    userMessage = "This PayPal account is not enabled for live payouts yet.";
   } else if (normalized.includes("receiver") || normalized.includes("email")) {
     userMessage = "The saved PayPal email cannot receive this payout. Update it and try again.";
   } else if (normalized.includes("insufficient") || normalized.includes("balance")) {
     userMessage = "The payout account does not have enough PayPal balance to complete this withdrawal.";
+  } else if (
+    normalized.includes("could not find the function") ||
+    normalized.includes("create_paypal_withdrawal_request") ||
+    normalized.includes("sync_paypal_withdrawal_request") ||
+    normalized.includes("paypal_batch_id") ||
+    normalized.includes("paypal_item_id") ||
+    normalized.includes("paypal_error_name") ||
+    normalized.includes("paypal_error_message")
+  ) {
+    userMessage = "The PayPal payout database migration is missing or incomplete in production.";
   } else if (normalized.includes("authentication") || normalized.includes("oauth")) {
     userMessage = "PayPal configuration is invalid. Contact support.";
   }

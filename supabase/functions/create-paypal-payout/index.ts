@@ -129,7 +129,23 @@ serve(async (req) => {
     });
 
     if (reserveResult.error) {
-      throw reserveResult.error;
+      logStep("Reserve RPC failed", {
+        message: reserveResult.error.message,
+        details: reserveResult.error.details,
+        hint: reserveResult.error.hint,
+        code: reserveResult.error.code,
+      });
+      return jsonResponse(
+        {
+          error: "PayPal payout database setup is incomplete.",
+          details:
+            reserveResult.error.message ||
+            reserveResult.error.details ||
+            "create_paypal_withdrawal_request failed.",
+          code: reserveResult.error.code || "PAYPAL_DB_RPC_FAILED",
+        },
+        500
+      );
     }
 
     const reservePayload = reserveResult.data as {
@@ -163,7 +179,15 @@ serve(async (req) => {
       });
 
       if (!payout.batchId) {
-        throw new Error("PayPal did not return a payout batch id.");
+        return jsonResponse(
+          {
+            error: "PayPal did not confirm the payout batch.",
+            details: JSON.stringify(payout.raw),
+            code: "PAYPAL_BATCH_ID_MISSING",
+            paypalDebugId: payout.debugId,
+          },
+          502
+        );
       }
 
       const normalizedStatus = (payout.itemStatus || payout.batchStatus || "PENDING").toUpperCase();
@@ -193,7 +217,29 @@ serve(async (req) => {
       });
 
       if (syncResult.error) {
-        throw syncResult.error;
+        logStep("Sync RPC failed after PayPal payout creation", {
+          withdrawalId,
+          message: syncResult.error.message,
+          details: syncResult.error.details,
+          hint: syncResult.error.hint,
+          code: syncResult.error.code,
+          paypalBatchId: payout.batchId,
+          paypalItemId: payout.itemId,
+        });
+        return jsonResponse(
+          {
+            error: "The PayPal payout was created but local status sync failed.",
+            details:
+              syncResult.error.message ||
+              syncResult.error.details ||
+              "sync_paypal_withdrawal_request failed after payout creation.",
+            code: syncResult.error.code || "PAYPAL_DB_SYNC_FAILED",
+            paypalBatchId: payout.batchId,
+            paypalItemId: payout.itemId,
+            paypalDebugId: payout.debugId,
+          },
+          500
+        );
       }
 
       return jsonResponse({
@@ -226,6 +272,9 @@ serve(async (req) => {
         logStep("Failed to roll back reserved withdrawal after PayPal error", {
           withdrawalId,
           error: syncResult.error.message,
+          details: syncResult.error.details,
+          hint: syncResult.error.hint,
+          code: syncResult.error.code,
         });
       }
 
