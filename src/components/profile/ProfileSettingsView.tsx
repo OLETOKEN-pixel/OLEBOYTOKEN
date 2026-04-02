@@ -55,7 +55,6 @@ type PaymentsActivityState = 'processing' | 'completed';
 interface PaymentsActivityItem {
   id: string;
   amount: number;
-  feeAmount: number;
   destination: string;
   createdAt: string;
   state: PaymentsActivityState;
@@ -160,8 +159,6 @@ export function ProfileSettingsView({
   }, [loadPaymentData, user]);
 
   const walletBalance = wallet?.balance ?? 0;
-  const lockedBalance = wallet?.locked_balance ?? 0;
-  const totalBalance = walletBalance + lockedBalance;
   const normalizedPayPalEmail = paypalEmail.trim().toLowerCase();
   const hasValidPayPalEmail = isValidPayPalEmail(normalizedPayPalEmail);
   const minimumUnlockedBalance = MIN_PAYPAL_WITHDRAWAL + PAYPAL_WITHDRAWAL_FEE;
@@ -174,39 +171,32 @@ export function ProfileSettingsView({
   const previewTotalDeduction =
     (Number.isFinite(parsedWithdrawAmount) && parsedWithdrawAmount > 0 ? parsedWithdrawAmount : MIN_PAYPAL_WITHDRAWAL) +
     PAYPAL_WITHDRAWAL_FEE;
+  const remainingToUnlock = Math.max(0, minimumUnlockedBalance - walletBalance);
 
-  const payoutHeadline = canWithdraw
-    ? 'Your payout lane is live.'
-    : hasValidPayPalEmail
-      ? 'Your PayPal lane is set. Build a little more balance.'
-      : 'Save PayPal once. Cash out fast after that.';
+  const payoutHeadline = 'Withdraw to PayPal';
 
   const payoutDescription = canWithdraw
-    ? `Your available balance is ready to move to ${normalizedPayPalEmail} with one clean cashout.`
+    ? `Your PayPal email is saved and your balance is ready. Tap the blue button, choose the amount, and confirm the payout.`
     : hasValidPayPalEmail
-      ? `PayPal is already locked in. Reach €${minimumUnlockedBalance.toFixed(2)} available to unlock the next withdrawal.`
-      : 'Lock in one PayPal email and keep every future withdrawal inside one premium, low-friction flow.';
+      ? `Your PayPal email is already saved as ${normalizedPayPalEmail}. Reach €${minimumUnlockedBalance.toFixed(2)} available and then tap Withdraw to PayPal.`
+      : 'Start by saving your PayPal email. After that, every withdrawal happens from this page.';
 
   const payoutReadiness = canWithdraw
     ? {
-        label: 'Cashout live',
+        label: 'Ready to withdraw',
         className: 'border-[#71d1ff]/26 bg-[#0a5ca1]/20 text-[#d8f2ff]',
       }
     : hasValidPayPalEmail
       ? {
-          label: 'PayPal ready',
+          label: 'PayPal saved',
           className: 'border-white/[0.14] bg-white/[0.06] text-white/82',
         }
       : {
-          label: 'Destination needed',
+          label: 'Save PayPal email',
           className: 'border-[#ff1654]/28 bg-[#ff1654]/10 text-[#ffc2d2]',
         };
 
-  const withdrawActionLabel = canWithdraw
-    ? 'Withdraw to PayPal'
-    : hasValidPayPalEmail
-      ? `Need €${minimumUnlockedBalance.toFixed(2)}`
-      : 'Save PayPal Email';
+  const withdrawActionLabel = canWithdraw ? 'Withdraw to PayPal' : 'Withdraw to PayPal';
 
   const paymentsActivity = useMemo<PaymentsActivityItem[]>(() => {
     const mapped = withdrawals
@@ -227,7 +217,6 @@ export function ProfileSettingsView({
         return {
           id: withdrawal.id,
           amount: withdrawal.amount,
-          feeAmount: withdrawal.fee_amount ?? PAYPAL_WITHDRAWAL_FEE,
           createdAt: withdrawal.created_at,
           destination: describePayPalDestination(
             (withdrawal.payout_destination_snapshot as WithdrawalDestinationSnapshot | null | undefined) ?? null,
@@ -240,23 +229,6 @@ export function ProfileSettingsView({
 
     return mapped.slice(0, 3);
   }, [withdrawals]);
-
-  const hiddenPaymentsActivityCount = useMemo(() => {
-    const eligibleCount = withdrawals.filter((withdrawal) => {
-      if (withdrawal.payment_method !== 'paypal') {
-        return false;
-      }
-
-      return (
-        withdrawal.status === 'completed' ||
-        withdrawal.status === 'pending' ||
-        withdrawal.status === 'processing' ||
-        withdrawal.status === 'approved'
-      );
-    }).length;
-
-    return Math.max(0, eligibleCount - paymentsActivity.length);
-  }, [paymentsActivity.length, withdrawals]);
 
   const logPayPalFunctionError = useCallback(
     (
@@ -822,7 +794,7 @@ export function ProfileSettingsView({
                 <div
                   className={cn(
                     'space-y-4',
-                    isPaymentsDenseLayout && 'lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-4 lg:space-y-0'
+                    isPaymentsDenseLayout && 'lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-1 lg:grid-rows-[auto_auto_minmax(0,1fr)] lg:gap-4 lg:space-y-0'
                   )}
                 >
                   <div className="relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(145deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.018)_45%,rgba(255,255,255,0.012)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] lg:p-6">
@@ -830,114 +802,119 @@ export function ProfileSettingsView({
                     <div className="pointer-events-none absolute -right-20 top-6 h-40 w-40 rounded-full bg-[#009cde]/12 blur-3xl" />
                     <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-full bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(0,0,0,0.12)_100%)]" />
 
-                    <div className="relative flex h-full flex-col justify-between gap-6">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="max-w-[620px]">
-                          <span className="inline-flex items-center gap-2 rounded-full border border-[#69d3ff]/20 bg-[#003087]/22 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#dff4ff]">
-                            <Sparkles className="h-3.5 w-3.5 text-[#8bdfff]" />
-                            PayPal Fast Lane
-                          </span>
-                          <h2
-                            className="mt-4 max-w-[12ch] text-[32px] uppercase leading-[0.92] text-white sm:text-[40px] lg:text-[46px]"
-                            style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
-                          >
-                            {payoutHeadline}
-                          </h2>
-                          <p className="mt-3 max-w-[580px] text-sm leading-6 text-white/68 lg:text-[15px]">
-                            {payoutDescription} Stripe stays on the deposit side only.
-                          </p>
-                        </div>
-
-                        <div className="inline-flex items-center gap-3 rounded-[22px] border border-[#69d3ff]/18 bg-white px-3 py-2.5 shadow-[0_16px_36px_rgba(0,48,135,0.18)]">
-                          <span className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-[#f4f9ff]">
-                            <img src="/paypal/pp258.png" alt="PayPal" className="h-8 w-8 object-contain" />
-                          </span>
-                          <div className="pr-1">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#003087]">PayPal</p>
-                            <p className="text-xs text-[#003087]/72">Official payout rail</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                    <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_360px]">
+                      <div className="flex flex-col justify-between rounded-[24px] border border-white/[0.08] bg-black/18 p-5 backdrop-blur-[18px]">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Available to move</p>
-                          <CoinDisplay amount={walletBalance} size="lg" className="mt-3 text-[40px] sm:text-[46px] lg:text-[54px]" />
-                          <p className="mt-3 text-sm leading-6 text-white/64">
-                            {hasValidPayPalEmail
-                              ? `Current lane: ${normalizedPayPalEmail}`
-                              : 'Save a PayPal email to activate your cashout lane.'}
-                          </p>
-                        </div>
-
-                        <div className="w-full max-w-[320px] space-y-3 rounded-[24px] border border-white/[0.08] bg-black/18 p-4 backdrop-blur-[18px]">
-                          <Button
-                            type="button"
-                            disabled={!canWithdraw}
-                            className={paypalPrimaryButtonClass}
-                            onClick={() => setWithdrawOpen(true)}
-                          >
-                            <Wallet className="mr-2 h-4 w-4" />
-                            {withdrawActionLabel}
-                          </Button>
-
-                          <p className="text-xs leading-5 text-white/54">
-                            One saved PayPal. One tap to cash out. No extra payout onboarding inside OBT.
-                          </p>
-
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-[#69d3ff]/20 bg-[#003087]/22 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#dff4ff]">
+                              <img src="/paypal/pp258.png" alt="PayPal" className="h-4 w-4 object-contain" />
+                              PayPal payouts
+                            </span>
                             <span className={cn('inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]', payoutReadiness.className)}>
                               {hasValidPayPalEmail ? <Check className="mr-1 h-3.5 w-3.5" /> : <AlertCircle className="mr-1 h-3.5 w-3.5" />}
                               {payoutReadiness.label}
                             </span>
                             <span className="inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/72">
                               <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                              Trusted rail
+                              Stripe stays for deposits
                             </span>
+                          </div>
+
+                          <h2
+                            className="mt-5 max-w-[14ch] text-[34px] uppercase leading-[0.94] text-white sm:text-[42px]"
+                            style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+                          >
+                            {payoutHeadline}
+                          </h2>
+                          <p className="mt-3 max-w-[620px] text-sm leading-6 text-white/68 lg:text-[15px]">
+                            {payoutDescription}
+                          </p>
+                        </div>
+
+                        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Step 1</p>
+                            <p className="mt-2 text-sm font-semibold text-white">Save your PayPal email</p>
+                            <p className="mt-1 text-xs leading-5 text-white/54">Only once. Every payout uses this email.</p>
+                          </div>
+                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Step 2</p>
+                            <p className="mt-2 text-sm font-semibold text-white">Tap Withdraw to PayPal</p>
+                            <p className="mt-1 text-xs leading-5 text-white/54">Choose the amount and confirm the payout.</p>
+                          </div>
+                          <div className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Step 3</p>
+                            <p className="mt-2 text-sm font-semibold text-white">Track payout status below</p>
+                            <p className="mt-1 text-xs leading-5 text-white/54">Only processing and completed payouts appear here.</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-[20px] border border-white/[0.08] bg-black/18 px-4 py-4">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Locked</p>
-                          <CoinDisplay amount={lockedBalance} size="lg" className="mt-2 text-[22px] text-white" />
+                      <div className="rounded-[26px] border border-[#69d3ff]/18 bg-[linear-gradient(180deg,rgba(0,48,135,0.3)_0%,rgba(10,15,24,0.82)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_22px_56px_rgba(0,48,135,0.24)]">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-white shadow-[0_14px_34px_rgba(0,48,135,0.24)]">
+                            <img src="/paypal/pp258.png" alt="PayPal" className="h-8 w-8 object-contain" />
+                          </span>
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#dff4ff]">Saved destination</p>
+                            <p className="mt-1 text-sm text-white/76">{hasValidPayPalEmail ? normalizedPayPalEmail : 'No PayPal email saved yet'}</p>
+                          </div>
                         </div>
-                        <div className="rounded-[20px] border border-white/[0.08] bg-black/18 px-4 py-4">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Total</p>
-                          <CoinDisplay amount={totalBalance} size="lg" className="mt-2 text-[22px] text-white" />
+
+                        <div className="mt-5 rounded-[20px] border border-white/[0.08] bg-black/20 px-4 py-4">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Available to withdraw</p>
+                          <CoinDisplay amount={walletBalance} size="lg" className="mt-2 text-[34px] text-white" />
                         </div>
-                        <div className="rounded-[20px] border border-white/[0.08] bg-black/18 px-4 py-4">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Cashout gate</p>
-                          <p className="mt-2 text-[22px] font-semibold text-white">€{minimumUnlockedBalance.toFixed(2)}</p>
-                          <p className="mt-1 text-xs text-white/46">Minimum + fee unlocked</p>
+
+                        <Button
+                          type="button"
+                          disabled={!canWithdraw}
+                          className={cn(paypalPrimaryButtonClass, 'mt-4 !h-14 w-full text-[13px] shadow-[0_22px_50px_rgba(0,112,186,0.42)]')}
+                          onClick={() => setWithdrawOpen(true)}
+                        >
+                          <Wallet className="mr-2 h-4 w-4" />
+                          {withdrawActionLabel}
+                        </Button>
+
+                        <div className="mt-4 rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-4 text-sm leading-6 text-white/64">
+                          {canWithdraw ? (
+                            <p>
+                              You are ready. Tap <span className="font-semibold text-white">Withdraw to PayPal</span>, enter the amount, and confirm.
+                            </p>
+                          ) : hasValidPayPalEmail ? (
+                            <p>
+                              Your PayPal email is saved. You still need <span className="font-semibold text-white">€{remainingToUnlock.toFixed(2)}</span> more available balance before the button unlocks.
+                            </p>
+                          ) : (
+                            <p>
+                              Save your PayPal email first. As soon as it is saved, this blue button becomes your payout action.
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-4 lg:grid-rows-[auto_minmax(0,1fr)]">
-                    <div className="overflow-hidden rounded-[28px] border border-[#69d3ff]/16 bg-[linear-gradient(180deg,rgba(0,48,135,0.18)_0%,rgba(8,14,25,0.55)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_320px]">
+                    <div className="rounded-[24px] border border-white/[0.08] bg-black/16 p-5 backdrop-blur-[18px]">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-white shadow-[0_12px_28px_rgba(0,48,135,0.2)]">
-                            <img src="/paypal/pp258.png" alt="PayPal icon" className="h-7 w-7 object-contain" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold uppercase text-white">PayPal Destination</p>
-                            <p className="mt-1 text-sm text-white/54">Keep one payout email ready and withdraw without extra setup.</p>
-                          </div>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8adfff]">Step 1</p>
+                          <h3 className="mt-2 text-xl font-semibold uppercase text-white">Save your PayPal email</h3>
                         </div>
-
-                        <span className={cn('hidden rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] lg:inline-flex', payoutReadiness.className)}>
-                          {payoutReadiness.label}
+                        <span className="rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/74">
+                          One-time setup
                         </span>
                       </div>
 
-                      <div className="mt-5 space-y-2">
+                      <p className="mt-3 text-sm leading-6 text-white/60">
+                        This is the address used for every payout. You can change it here any time before you withdraw.
+                      </p>
+
+                      <div className="mt-4 space-y-2">
                         <Label className="text-xs uppercase tracking-[0.16em] text-white/48">PayPal email</Label>
-                        <div className="flex flex-col gap-3">
-                          <div className="relative">
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <div className="relative flex-1">
                             <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8adfff]" />
                             <Input
                               type="email"
@@ -958,20 +935,20 @@ export function ProfileSettingsView({
                             className={paypalSecondaryButtonClass}
                           >
                             {savingPayPal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save PayPal Email
+                            Save Email
                           </Button>
                         </div>
                         {paypalEmailError && <p className="pt-1 text-sm text-red-300">{paypalEmailError}</p>}
                         <p className="pt-1 text-xs leading-5 text-white/52">
-                          This is the destination used for every new automatic payout. Update it before you cash out.
+                          Saved now: <span className="text-white/82">{hasValidPayPalEmail ? normalizedPayPalEmail : 'nothing saved yet'}</span>
                         </p>
                       </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.02)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div className="overflow-hidden rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.02)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                       <div className="flex items-center gap-2">
                         <Clock3 className="h-4 w-4 text-[#8adfff]" />
-                        <p className="text-sm font-semibold uppercase text-white">Payout Flow</p>
+                        <p className="text-sm font-semibold uppercase text-white">Withdrawal Rules</p>
                       </div>
 
                       <div className="mt-4 grid gap-3">
@@ -984,13 +961,17 @@ export function ProfileSettingsView({
                           <p className="mt-1 text-lg font-semibold text-white">€{PAYPAL_WITHDRAWAL_FEE.toFixed(2)}</p>
                         </div>
                         <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Next move</p>
-                          <p className="mt-1 text-sm leading-6 text-white/64">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Total required</p>
+                          <p className="mt-1 text-lg font-semibold text-white">€{minimumUnlockedBalance.toFixed(2)}</p>
+                        </div>
+                        <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Status now</p>
+                          <p className="mt-1 text-sm leading-6 text-white/72">
                             {canWithdraw
-                              ? 'Your balance is already high enough to request the next payout.'
+                              ? 'Ready to withdraw right now.'
                               : hasValidPayPalEmail
-                                ? `Add at least €${(minimumUnlockedBalance - walletBalance).toFixed(2)} more available balance to unlock the next cashout.`
-                                : 'Save your PayPal email first, then the lane stays ready for every future withdrawal.'}
+                                ? `You need €${remainingToUnlock.toFixed(2)} more available balance.`
+                                : 'Save your PayPal email to unlock withdrawals.'}
                           </p>
                         </div>
                       </div>
@@ -1000,17 +981,11 @@ export function ProfileSettingsView({
                   <div className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.018)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:col-span-2">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
-                        <p className="text-sm font-semibold uppercase text-white">Payout Reel</p>
+                        <p className="text-sm font-semibold uppercase text-white">Recent Payouts</p>
                         <p className="mt-1 text-sm text-white/52">
-                          Only clean activity stays here: completed payouts and live ones already on the way.
+                          This list only shows payouts that are processing or already completed.
                         </p>
                       </div>
-
-                      {hiddenPaymentsActivityCount > 0 && (
-                        <span className="inline-flex rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/70">
-                          +{hiddenPaymentsActivityCount} more in archive
-                        </span>
-                      )}
                     </div>
 
                     {paymentsActivity.length === 0 ? (
@@ -1022,28 +997,28 @@ export function ProfileSettingsView({
                           <div>
                             <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#dff4ff]">
                               <Sparkles className="h-3.5 w-3.5 text-[#8adfff]" />
-                              Win reel
+                              No payouts yet
                             </span>
                             <h3 className="mt-4 text-[28px] uppercase leading-[0.96] text-white" style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}>
-                              Your clean cashouts will glow here.
+                              Your completed withdrawals will appear here.
                             </h3>
                             <p className="mt-3 max-w-[540px] text-sm leading-6 text-white/62">
-                              The moment a payout starts moving or lands successfully, it shows up here as a cleaner reward receipt, not a backend log.
+                              Save your PayPal email, tap the withdrawal button, and this area will show processing and completed payouts only.
                             </p>
                           </div>
 
                           <div className="grid gap-3">
                             <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
                               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Step 1</p>
-                              <p className="mt-2 text-sm font-semibold text-white">Save your PayPal</p>
+                              <p className="mt-2 text-sm font-semibold text-white">Save PayPal email</p>
                             </div>
                             <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
                               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Step 2</p>
-                              <p className="mt-2 text-sm font-semibold text-white">Tap withdraw when ready</p>
+                              <p className="mt-2 text-sm font-semibold text-white">Tap withdraw</p>
                             </div>
                             <div className="rounded-[18px] border border-white/[0.08] bg-black/18 px-4 py-3">
                               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Step 3</p>
-                              <p className="mt-2 text-sm font-semibold text-white">Track live and completed payouts</p>
+                              <p className="mt-2 text-sm font-semibold text-white">Track live + completed payouts</p>
                             </div>
                           </div>
                         </div>
@@ -1084,7 +1059,7 @@ export function ProfileSettingsView({
                                   )}
                                 >
                                   {isCompleted ? <Check className="mr-1 h-3.5 w-3.5" /> : <Clock3 className="mr-1 h-3.5 w-3.5" />}
-                                  {isCompleted ? 'Paid out' : 'On the way'}
+                                  {isCompleted ? 'Completed' : 'Processing'}
                                 </span>
                               </div>
 
@@ -1095,7 +1070,7 @@ export function ProfileSettingsView({
 
                               <div className="mt-4 flex items-center justify-between text-xs text-white/48">
                                 <span>PayPal</span>
-                                <span>Fee €{withdrawal.feeAmount.toFixed(2)}</span>
+                                <span>{isCompleted ? 'Completed' : 'Processing'}</span>
                               </div>
                             </div>
                           );
@@ -1114,9 +1089,9 @@ export function ProfileSettingsView({
                             <img src="/paypal/pp258.png" alt="PayPal icon" className="h-7 w-7 object-contain" />
                           </span>
                           <div>
-                            <DialogTitle className="text-left text-[24px] uppercase text-white">Withdraw to PayPal</DialogTitle>
+                            <DialogTitle className="text-left text-[24px] uppercase text-white">Confirm PayPal Withdrawal</DialogTitle>
                             <DialogDescription className="text-left text-white/58">
-                              Clean cashout to your saved PayPal destination with one simple confirmation.
+                              Check the destination, enter the amount, and confirm the payout to your saved PayPal email.
                             </DialogDescription>
                           </div>
                         </div>
