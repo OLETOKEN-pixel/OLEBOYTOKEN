@@ -1,7 +1,26 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        { "type": "header", "key": "host", "value": "oleboytoken.com" }
+      ],
+      "destination": "https://www.oleboytoken.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        { "type": "header", "key": "host", "value": "oleboystoken.vercel.app" }
+      ],
+      "destination": "https://www.oleboytoken.com/:path*",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]

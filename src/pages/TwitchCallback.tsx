@@ -4,6 +4,7 @@ import { LoadingPage } from '@/components/common/LoadingSpinner';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { extractFunctionErrorInfo } from '@/lib/oauth';
 import { toast } from 'sonner';
 
 const PROFILE_CONNECTIONS_ROUTE = '/profile?tab=connections';
@@ -59,7 +60,7 @@ export default function TwitchCallback() {
         console.log('[TwitchCallback] Edge function response:', { data, error: invokeError });
 
         if (invokeError) {
-          throw new Error(invokeError.message || 'Connection error');
+          throw invokeError;
         }
 
         if (!data?.success) {
@@ -71,9 +72,15 @@ export default function TwitchCallback() {
         toast.success(`Twitch connected: ${data.twitchUsername}`);
         navigate(PROFILE_CONNECTIONS_ROUTE, { replace: true });
       } catch (err: unknown) {
-        console.error('[TwitchCallback] Error:', err);
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        toast.error(message || 'Twitch connection failed.');
+        const info = await extractFunctionErrorInfo(err, 'Twitch connection failed.');
+        console.error('[TwitchCallback] Error:', {
+          message: info.message,
+          details: info.details,
+          code: info.code,
+          requestId: info.requestId,
+          error: err,
+        });
+        toast.error(info.message);
         navigate(PROFILE_CONNECTIONS_ROUTE, { replace: true });
       }
     };

@@ -12,6 +12,10 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[TWITCH-AUTH-CALLBACK] ${step}`, details ? JSON.stringify(details) : "");
 };
 
+function getClientSecret(): string | undefined {
+  return Deno.env.get("TWITCH_CLIENT_SECRET") ?? Deno.env.get("TWITCH_SECRET") ?? undefined;
+}
+
 function getRedirectUri(): string {
   const envUri = Deno.env.get("TWITCH_REDIRECT_URI");
   if (envUri) {
@@ -29,11 +33,14 @@ serve(async (req) => {
     logStep("Function started");
 
     const clientId = Deno.env.get("TWITCH_CLIENT_ID");
-    const clientSecret = Deno.env.get("TWITCH_CLIENT_SECRET");
+    const clientSecret = getClientSecret();
     const redirectUri = getRedirectUri();
 
     if (!clientId || !clientSecret) {
-      logStep("Missing Twitch credentials");
+      logStep("Missing Twitch credentials", {
+        hasClientId: !!clientId,
+        hasClientSecret: !!clientSecret,
+      });
       return new Response(
         JSON.stringify({ error: "Twitch OAuth not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
