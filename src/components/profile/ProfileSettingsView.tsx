@@ -28,7 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
-import { extractFunctionErrorInfo, startEpicAuth } from '@/lib/oauth';
+import { extractFunctionErrorInfo, startEpicAuth, startTwitterAuth, startTwitchAuth } from '@/lib/oauth';
 import {
   describePayPalDestination,
   isValidPayPalEmail,
@@ -58,11 +58,12 @@ interface PaymentsActivityItem {
 }
 
 const PROFILE_TRIANGLES_ASSET = '/figma-profile/profile-triangles.svg';
-const PROFILE_UNDERLINE_ASSET = '/figma-profile/profile-underline.svg';
+const PROFILE_TITLE_UNDERLINE_ASSET = '/figma-profile/profile-underline-bar.svg';
 const PROFILE_EPIC_LOGO_ASSET = '/figma-profile/epic-logo.svg';
-const PROFILE_ACCOUNT_ICON_ASSET = '/figma-profile/nav-icon-account.svg';
-const PROFILE_GAME_ICON_ASSET = '/figma-profile/nav-icon-game.svg';
-const PROFILE_WITHDRAW_ICON_ASSET = '/figma-profile/nav-icon-withdraw.svg';
+const PROFILE_ACCOUNT_ICON_ASSET = '/figma-profile/nav-icon-user.svg';
+const PROFILE_GAME_ICON_ASSET = '/figma-profile/nav-icon-account.svg';
+const PROFILE_WITHDRAW_ICON_ASSET = '/figma-profile/nav-icon-credit-card.svg';
+const PROFILE_CONNECTIONS_ICON_ASSET = '/figma-profile/nav-icon-connections.svg';
 const PROFILE_PFP_FALLBACK_ASSET = '/figma-assets/marv-pfp.png';
 
 const sections: Array<{
@@ -74,7 +75,7 @@ const sections: Array<{
   { id: 'account', label: 'Account', assetSrc: PROFILE_ACCOUNT_ICON_ASSET },
   { id: 'game', label: 'Game', assetSrc: PROFILE_GAME_ICON_ASSET },
   { id: 'payments', label: 'Withdraw', assetSrc: PROFILE_WITHDRAW_ICON_ASSET },
-  { id: 'connections', label: 'Connections', icon: Link2 },
+  { id: 'connections', label: 'Connections', assetSrc: PROFILE_CONNECTIONS_ICON_ASSET },
 ];
 
 const profileSecondaryButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.14] !bg-white/[0.04] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white hover:!border-[#ff1654]/35 hover:!bg-[#ff1654]/10";
@@ -84,12 +85,12 @@ const profileSelectContentClass = "border-white/[0.1] bg-[linear-gradient(180deg
 const profileDialogContentClass = "!rounded-[28px] !border !border-white/[0.1] !bg-[linear-gradient(180deg,rgba(18,11,15,0.98)_0%,rgba(10,7,11,0.96)_100%)] !text-white shadow-[0_28px_80px_rgba(0,0,0,0.52)] backdrop-blur-[22px]";
 const paypalPrimaryButtonClass = "!h-12 !rounded-[18px] !border !border-[#79d3ff]/26 !bg-[linear-gradient(135deg,#003087_0%,#005ea6_56%,#009cde_100%)] px-6 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white shadow-[0_18px_42px_rgba(0,112,186,0.36)] transition hover:!brightness-110 hover:shadow-[0_22px_50px_rgba(0,112,186,0.46)] disabled:!cursor-not-allowed disabled:!border-white/[0.08] disabled:!bg-white/[0.06] disabled:!text-white/34 disabled:!shadow-none";
 const paypalSecondaryButtonClass = "!h-11 !rounded-[16px] !border !border-[#58c8ff]/18 !bg-[linear-gradient(180deg,rgba(0,112,186,0.22)_0%,rgba(0,48,135,0.22)_100%)] px-4 text-[11px] font-semibold uppercase tracking-[0.12em] !text-[#dcf2ff] hover:!border-[#7fd7ff]/36 hover:!bg-[linear-gradient(180deg,rgba(0,112,186,0.3)_0%,rgba(0,48,135,0.3)_100%)] disabled:!opacity-45";
-const figmaMainStageClass = 'relative overflow-hidden rounded-[18px] border border-[#ff1654] bg-[#2c2c2c] shadow-[0_6px_22px_rgba(0,0,0,0.34)]';
-const figmaPinkCardClass = 'rounded-[16px] border-[3px] border-black bg-[#ff1654] shadow-[0_6px_18px_rgba(0,0,0,0.25)]';
-const figmaDarkInsetClass = 'rounded-[16px] border border-white/10 bg-black/18 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
+const figmaMainStageClass = 'relative overflow-hidden rounded-[16px] border border-[#ff1654] bg-[#2c2c2c] shadow-[0_8px_24px_rgba(0,0,0,0.3)]';
+const figmaPinkCardClass = 'rounded-[16px] border-[3px] border-black bg-[#ff1654] shadow-[0_6px_14px_rgba(0,0,0,0.24)]';
+const figmaDarkInsetClass = 'rounded-[16px] border border-white/10 bg-[rgba(0,0,0,0.14)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]';
 const figmaPinkActionButtonClass = '!h-12 !rounded-[16px] !border !border-white/40 !bg-[#ff1654] px-5 text-[13px] font-semibold uppercase tracking-[0.08em] !text-white shadow-[0_16px_36px_rgba(255,22,84,0.32)] hover:!bg-[#ff2b68] hover:shadow-[0_20px_42px_rgba(255,22,84,0.4)] disabled:!cursor-not-allowed disabled:!opacity-45';
-const figmaRailButtonBaseClass = 'relative flex h-[54px] w-full items-center gap-3 rounded-[16px] border border-white/30 bg-[#ff1654] px-4 text-left text-white shadow-[0_4px_8px_rgba(0,0,0,0.25)] transition';
-const figmaSectionTitleClass = 'text-[36px] uppercase leading-[0.94] text-white lg:text-[44px]';
+const figmaRailButtonBaseClass = 'relative flex h-11 w-full items-center gap-3 rounded-[16px] border border-white/30 bg-[#ff1654] px-4 text-left text-white shadow-[0_4px_8px_rgba(0,0,0,0.25)] transition xl:h-[47px]';
+const figmaSectionTitleClass = 'whitespace-nowrap text-[38px] uppercase leading-[0.92] text-white xl:text-[54px]';
 
 function SectionRailIcon({
   assetSrc,
@@ -174,6 +175,12 @@ export function ProfileSettingsView({
   const [usernameError, setUsernameError] = useState('');
   const [showDisconnectEpicDialog, setShowDisconnectEpicDialog] = useState(false);
   const [disconnectingEpic, setDisconnectingEpic] = useState(false);
+  const [connectingTwitter, setConnectingTwitter] = useState(false);
+  const [showDisconnectTwitterDialog, setShowDisconnectTwitterDialog] = useState(false);
+  const [disconnectingTwitter, setDisconnectingTwitter] = useState(false);
+  const [connectingTwitch, setConnectingTwitch] = useState(false);
+  const [showDisconnectTwitchDialog, setShowDisconnectTwitchDialog] = useState(false);
+  const [disconnectingTwitch, setDisconnectingTwitch] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submittingWithdrawal, setSubmittingWithdrawal] = useState(false);
@@ -233,6 +240,8 @@ export function ProfileSettingsView({
     PAYPAL_WITHDRAWAL_FEE;
   const remainingToUnlock = Math.max(0, minimumUnlockedBalance - walletBalance);
   const epicConnected = Boolean(profile.epic_username);
+  const twitterConnected = Boolean(profile.twitter_username);
+  const twitchConnected = Boolean(profile.twitch_username);
   const savedPayPalAddress = hasValidPayPalEmail ? normalizedPayPalEmail : 'No PayPal email saved yet';
   const withdrawStatus = canWithdraw
     ? { tone: 'green' as const, label: 'Ready', copy: 'Your cashout lane is live. Choose the amount and withdraw right now.' }
@@ -432,6 +441,88 @@ export function ProfileSettingsView({
     }
   };
 
+  const handleConnectTwitter = async () => {
+    setConnectingTwitter(true);
+    try {
+      await startTwitterAuth();
+    } catch (error) {
+      toast({
+        title: 'X (Twitter) connection failed',
+        description: error instanceof Error ? error.message : 'Unable to start X (Twitter) login.',
+        variant: 'destructive',
+      });
+      setConnectingTwitter(false);
+    }
+  };
+
+  const handleDisconnectTwitter = async () => {
+    if (!user) return;
+    setDisconnectingTwitter(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          twitter_account_id: null,
+          twitter_username: null,
+          twitter_linked_at: null,
+        })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast({ title: 'X (Twitter) disconnected', description: 'Your X (Twitter) connection has been removed.' });
+      setShowDisconnectTwitterDialog(false);
+    } catch (error) {
+      toast({
+        title: 'Disconnect failed',
+        description: error instanceof Error ? error.message : 'Unable to remove X (Twitter) details.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDisconnectingTwitter(false);
+    }
+  };
+
+  const handleConnectTwitch = async () => {
+    setConnectingTwitch(true);
+    try {
+      await startTwitchAuth();
+    } catch (error) {
+      toast({
+        title: 'Twitch connection failed',
+        description: error instanceof Error ? error.message : 'Unable to start Twitch login.',
+        variant: 'destructive',
+      });
+      setConnectingTwitch(false);
+    }
+  };
+
+  const handleDisconnectTwitch = async () => {
+    if (!user) return;
+    setDisconnectingTwitch(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          twitch_account_id: null,
+          twitch_username: null,
+          twitch_linked_at: null,
+        })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast({ title: 'Twitch disconnected', description: 'Your Twitch connection has been removed.' });
+      setShowDisconnectTwitchDialog(false);
+    } catch (error) {
+      toast({
+        title: 'Disconnect failed',
+        description: error instanceof Error ? error.message : 'Unable to remove Twitch details.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDisconnectingTwitch(false);
+    }
+  };
+
   const handleSavePayPalEmail = async () => {
     if (!user) {
       return;
@@ -568,15 +659,15 @@ export function ProfileSettingsView({
 
   const renderStageHeader = (icon: ReactNode, title: string, subtitle: string) => (
     <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-white/12 bg-black/20">
+      <div className="flex items-center gap-4">
+        <span className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] border border-white/12 bg-black/18">
           {icon}
         </span>
         <h2 className={figmaSectionTitleClass} style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}>
           {title}
         </h2>
       </div>
-      <p className="max-w-[780px] text-[15px] leading-6 text-white/68">{subtitle}</p>
+      <p className="max-w-[780px] text-[15px] leading-6 text-white/68 lg:pl-[68px]">{subtitle}</p>
     </div>
   );
 
@@ -1026,7 +1117,7 @@ export function ProfileSettingsView({
   const renderConnectionsSection = () => (
     <div className="space-y-5">
       {renderStageHeader(
-        <Link2 className="h-5 w-5 text-white" />,
+        <img src={PROFILE_CONNECTIONS_ICON_ASSET} alt="" aria-hidden className="h-6 w-6 object-contain" />,
         'CONNECTIONS',
         'Review the identities and payout lanes currently attached to your OBT profile.'
       )}
@@ -1069,6 +1160,62 @@ export function ProfileSettingsView({
               </div>
             </div>
 
+            <div className={cn(figmaDarkInsetClass, 'p-4')}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-black">
+                    <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-white">X (Twitter)</p>
+                    <p className="text-sm text-white/60">{twitterConnected ? `@${profile.twitter_username}` : 'Not connected'}</p>
+                  </div>
+                </div>
+                {twitterConnected ? (
+                  <FigmaStatusBadge tone="green" icon={<Check className="h-4 w-4" />}>Ready</FigmaStatusBadge>
+                ) : (
+                  <Button type="button" onClick={handleConnectTwitter} disabled={connectingTwitter} className={profileSecondaryButtonClass}>
+                    {connectingTwitter ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                    Connect
+                  </Button>
+                )}
+              </div>
+              {twitterConnected && (
+                <Button type="button" onClick={() => setShowDisconnectTwitterDialog(true)} className={cn(profileDangerButtonClass, 'mt-3 w-full')}>
+                  <Unlink className="mr-2 h-4 w-4" />
+                  Disconnect
+                </Button>
+              )}
+            </div>
+
+            <div className={cn(figmaDarkInsetClass, 'p-4')}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-[#9146FF]">
+                    <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0 1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-white">Twitch</p>
+                    <p className="text-sm text-white/60">{twitchConnected ? profile.twitch_username : 'Not connected'}</p>
+                  </div>
+                </div>
+                {twitchConnected ? (
+                  <FigmaStatusBadge tone="green" icon={<Check className="h-4 w-4" />}>Ready</FigmaStatusBadge>
+                ) : (
+                  <Button type="button" onClick={handleConnectTwitch} disabled={connectingTwitch} className={profileSecondaryButtonClass}>
+                    {connectingTwitch ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                    Connect
+                  </Button>
+                )}
+              </div>
+              {twitchConnected && (
+                <Button type="button" onClick={() => setShowDisconnectTwitchDialog(true)} className={cn(profileDangerButtonClass, 'mt-3 w-full')}>
+                  <Unlink className="mr-2 h-4 w-4" />
+                  Disconnect
+                </Button>
+              )}
+            </div>
+
             <div className={cn(figmaDarkInsetClass, 'p-4 lg:col-span-2')}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -1100,6 +1247,83 @@ export function ProfileSettingsView({
     </div>
   );
 
+  const renderIdentityCard = (compact = false) => (
+    <div
+      className={cn(
+        'border border-[#ff1654] bg-[#2c2c2c] shadow-[0_4px_10px_rgba(0,0,0,0.28)]',
+        compact ? 'rounded-[16px] p-3 xl:p-4' : 'rounded-[16px] p-3 xl:p-4'
+      )}
+    >
+      <div className="flex items-center gap-3 xl:gap-4">
+        <Avatar className="h-[54px] w-[54px] rounded-[16px] border border-white/10 xl:h-[62px] xl:w-[62px] xl:rounded-[18px]">
+          <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
+          <AvatarFallback className="bg-black/30 text-white">{discordDisplayName.charAt(0)}</AvatarFallback>
+        </Avatar>
+
+        <div className="min-w-0 flex-1">
+          <p
+            className="truncate text-[24px] font-semibold uppercase leading-none text-white xl:text-[30px]"
+            style={{ fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif" }}
+          >
+            {discordDisplayName}
+          </p>
+          <p className="truncate text-[13px] text-white/76 xl:text-sm">{profile.email}</p>
+          <div className="mt-2 flex flex-wrap gap-2 xl:mt-3">
+            <span className="inline-flex h-[25px] items-center rounded-[999px] border border-white/16 bg-black/18 px-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/82 xl:h-[28px] xl:text-[11px]">
+              {isVip ? 'VIP' : 'STANDARD'}
+            </span>
+            <span
+              className={cn(
+                'inline-flex h-[25px] items-center rounded-[999px] border px-3 text-[10px] font-semibold uppercase tracking-[0.1em] xl:h-[28px] xl:text-[11px]',
+                epicConnected ? 'border-[#2cf804]/30 bg-[#2cf804]/12 text-[#d9ffd1]' : 'border-[#ff1654]/32 bg-[#ff1654]/12 text-[#ffc0d0]'
+              )}
+            >
+              {epicConnected ? 'EPIC READY' : 'EPIC MISSING'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSectionRail = () => (
+    <div className="rounded-[16px] border border-[#ff1654] bg-[#2c2c2c] p-3 shadow-[0_4px_10px_rgba(0,0,0,0.28)] xl:p-4">
+      <nav className="grid gap-3 xl:gap-4">
+        {sections.map((section) => {
+          const isActive = activeSection === section.id;
+
+          return (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => setActiveSection(section.id)}
+              className={cn(
+                figmaRailButtonBaseClass,
+                isActive
+                  ? 'border-white/50 shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_10px_18px_rgba(255,22,84,0.24)]'
+                  : 'opacity-92 hover:opacity-100 hover:shadow-[0_10px_20px_rgba(255,22,84,0.2)]'
+              )}
+            >
+              <SectionRailIcon assetSrc={section.assetSrc} icon={section.icon} className={cn(section.assetSrc ? 'h-5 w-5 xl:h-6 xl:w-6' : 'h-5 w-5')} />
+              <span className="truncate text-[22px] uppercase leading-none xl:text-[24px]" style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}>
+                {section.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+
+  const activeSectionContent =
+    activeSection === 'account'
+      ? renderAccountSection()
+      : activeSection === 'game'
+        ? renderGameSection()
+        : activeSection === 'payments'
+          ? renderPaymentsSection()
+          : renderConnectionsSection();
+
   if (loading) {
     return <LoadingPage />;
   }
@@ -1109,125 +1333,90 @@ export function ProfileSettingsView({
   }
 
   return (
-    <div className={cn('text-white', mode === 'page' ? 'mx-auto w-full max-w-[1560px]' : 'w-full')}>
-      <div
-        className={cn(
-          'relative overflow-hidden rounded-[28px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(24,7,9,0.98)_0%,rgba(11,4,5,0.98)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.42)]',
-          isDesktopFigmaShell ? 'lg:h-[calc(100vh-194px)]' : 'lg:h-full'
-        )}
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[146px] bg-[radial-gradient(circle_at_top,rgba(255,22,84,0.16),transparent_48%)]" />
-        <div className="pointer-events-none absolute bottom-0 left-0 h-[146px] w-full bg-[radial-gradient(circle_at_bottom,rgba(255,22,84,0.18),transparent_52%)]" />
+    <div className={cn('w-full text-white', mode === 'page' ? 'mx-auto max-w-[1950px]' : 'w-full')}>
+      <div className="hidden lg:block">
+        <div
+          className={cn(
+            'relative mx-auto w-full max-w-[1950px] lg:aspect-[1950/955]',
+            isDesktopFigmaShell ? 'lg:max-h-[calc(100vh-190px)]' : 'lg:max-h-[955px]'
+          )}
+        >
+          <div className="absolute right-[3.1%] top-[6.9%] z-20 flex items-center gap-2">
+            {mode === 'overlay' && (
+              <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
+                Open Page
+              </Button>
+            )}
+            <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+            {onClose && (
+              <Button type="button" className={profileGhostButtonClass} onClick={onClose}>
+                Close
+              </Button>
+            )}
+          </div>
 
-        <div className="relative flex h-full min-h-0 flex-col px-5 pb-5 pt-5 lg:px-8 lg:pb-6 lg:pt-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="relative max-w-[760px] pl-10 pt-2">
+          <div className="absolute left-[7.8%] top-[7.4%] z-10 w-[60%] xl:w-[58%]">
+            <div className="relative pl-[90px] xl:pl-[112px]">
               <img
                 src={PROFILE_TRIANGLES_ASSET}
                 alt=""
                 aria-hidden
-                className="pointer-events-none absolute -left-3 -top-1 h-[108px] w-[76px] object-contain"
+                className="pointer-events-none absolute left-0 top-[-8px] h-[110px] w-[74px] object-contain xl:top-[-12px] xl:h-[132px] xl:w-[88px]"
               />
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#ff96ad]">MY PROFILE</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-[#ff9ab0]">MY PROFILE</p>
               <h1
-                className="mt-1 text-[48px] uppercase leading-[0.92] text-white sm:text-[58px] lg:text-[64px]"
+                className="mt-1 whitespace-nowrap text-[64px] uppercase leading-[0.92] text-white xl:text-[86px]"
                 style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
               >
-                PROFILE SETTINGS
+                PROFILE SETTING
               </h1>
-              <img src={PROFILE_UNDERLINE_ASSET} alt="" aria-hidden className="mt-2 h-[18px] w-[520px] max-w-full object-contain" />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-              {mode === 'overlay' && (
-                <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
-                  Open Page
-                </Button>
-              )}
-              <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-              {onClose && (
-                <Button type="button" className={profileGhostButtonClass} onClick={onClose}>
-                  Close
-                </Button>
-              )}
+              <img src={PROFILE_TITLE_UNDERLINE_ASSET} alt="" aria-hidden className="mt-4 h-[16px] w-[420px] object-contain xl:mt-5 xl:h-[20px] xl:w-[540px]" />
             </div>
           </div>
 
-          <div className="relative mt-4 flex min-h-0 flex-1 flex-col">
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[82px] hidden bg-[#ff1654] shadow-[0_20px_60px_rgba(255,22,84,0.18)] lg:block" />
-
-            <div className="relative grid min-h-0 flex-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-5">
-              <aside className="space-y-4 pt-2 lg:pt-3">
-                <div className="rounded-[16px] border border-[#ff1654] bg-[#2c2c2c] p-4 shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-[62px] w-[62px] rounded-[18px] border border-white/10">
-                      <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
-                      <AvatarFallback className="bg-black/30 text-white">{discordDisplayName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-[30px] font-semibold uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif" }}>
-                        {discordDisplayName}
-                      </p>
-                      <p className="truncate text-sm text-white/76">{profile.email}</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="inline-flex h-[28px] items-center rounded-[999px] border border-white/16 bg-black/18 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-white/82">
-                          {isVip ? 'VIP' : 'STANDARD'}
-                        </span>
-                        <span
-                          className={cn(
-                            'inline-flex h-[28px] items-center rounded-[999px] border px-3 text-[11px] font-semibold uppercase tracking-[0.1em]',
-                            epicConnected ? 'border-[#2cf804]/30 bg-[#2cf804]/12 text-[#d9ffd1]' : 'border-[#ff1654]/32 bg-[#ff1654]/12 text-[#ffc0d0]'
-                          )}
-                        >
-                          {epicConnected ? 'EPIC READY' : 'EPIC MISSING'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[16px] border border-[#ff1654] bg-[#2c2c2c] p-4 shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
-                  <nav className="grid gap-4">
-                    {sections.map((section) => {
-                      const isActive = activeSection === section.id;
-
-                      return (
-                        <button
-                          key={section.id}
-                          type="button"
-                          onClick={() => setActiveSection(section.id)}
-                          className={cn(
-                            figmaRailButtonBaseClass,
-                            isActive
-                              ? 'border-white/50 shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_12px_24px_rgba(255,22,84,0.28)]'
-                              : 'opacity-92 hover:opacity-100 hover:shadow-[0_10px_20px_rgba(255,22,84,0.22)]'
-                          )}
-                        >
-                          <SectionRailIcon assetSrc={section.assetSrc} icon={section.icon} className={cn(section.assetSrc ? 'h-7 w-7' : 'h-5 w-5')} />
-                          <span className="truncate text-[24px] uppercase leading-none" style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}>
-                            {section.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
-              </aside>
-
-              <section className={cn(figmaMainStageClass, 'min-h-0 overflow-hidden lg:mt-2')}>
-                <div className="h-full min-h-0 overflow-y-auto px-5 py-5 lg:px-6 lg:py-6">
-                  {activeSection === 'account' && renderAccountSection()}
-                  {activeSection === 'game' && renderGameSection()}
-                  {activeSection === 'payments' && renderPaymentsSection()}
-                  {activeSection === 'connections' && renderConnectionsSection()}
-                </div>
-              </section>
+          <div className="absolute left-[11.98%] top-[39.27%] h-[53.09%] w-[82.18%] bg-[#ff1654]">
+            <div className="absolute left-[0.7%] top-[1.58%] h-[22.88%] w-[19.02%]">
+              {renderIdentityCard(true)}
             </div>
+
+            <div className="absolute left-[0.7%] top-[26.63%] h-[70.41%] w-[19.02%]">
+              {renderSectionRail()}
+            </div>
+
+            <section className={cn(figmaMainStageClass, 'absolute left-[22.24%] top-[1.58%] h-[94.48%] w-[67.11%] max-w-[1059px]')}>
+              <div className="h-full min-h-0 overflow-y-auto px-[4.2%] py-[4.4%]">{activeSectionContent}</div>
+            </section>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-5 lg:hidden">
+        <div className="relative pl-12 pt-2">
+          <img
+            src={PROFILE_TRIANGLES_ASSET}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute left-0 top-0 h-[108px] w-[76px] object-contain"
+          />
+          <p className="text-[11px] uppercase tracking-[0.22em] text-[#ff96ad]">MY PROFILE</p>
+          <h1
+            className="mt-1 whitespace-nowrap text-[46px] uppercase leading-[0.92] text-white sm:text-[58px]"
+            style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+          >
+            PROFILE SETTING
+          </h1>
+          <img src={PROFILE_TITLE_UNDERLINE_ASSET} alt="" aria-hidden className="mt-3 h-[14px] w-[220px] object-contain sm:w-[320px]" />
+        </div>
+
+        <div className="space-y-4 bg-[#ff1654] p-3">
+          {renderIdentityCard(true)}
+          {renderSectionRail()}
+          <section className={cn(figmaMainStageClass, 'min-h-0 overflow-hidden')}>
+            <div className="h-full min-h-0 overflow-y-auto px-4 py-4">{activeSectionContent}</div>
+          </section>
         </div>
       </div>
 
@@ -1245,6 +1434,46 @@ export function ProfileSettingsView({
             </AlertDialogCancel>
             <AlertDialogAction className={profileDangerButtonClass} onClick={handleDisconnectEpic} disabled={disconnectingEpic}>
               {disconnectingEpic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Unlink className="mr-2 h-4 w-4" />}
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDisconnectTwitterDialog} onOpenChange={setShowDisconnectTwitterDialog}>
+        <AlertDialogContent className={profileDialogContentClass}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect X (Twitter)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your X (Twitter) account will be unlinked from your OBT profile. You can reconnect it at any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className={profileGhostButtonClass} disabled={disconnectingTwitter}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction className={profileDangerButtonClass} onClick={handleDisconnectTwitter} disabled={disconnectingTwitter}>
+              {disconnectingTwitter ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Unlink className="mr-2 h-4 w-4" />}
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDisconnectTwitchDialog} onOpenChange={setShowDisconnectTwitchDialog}>
+        <AlertDialogContent className={profileDialogContentClass}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect Twitch?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your Twitch account will be unlinked from your OBT profile. You can reconnect it at any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className={profileGhostButtonClass} disabled={disconnectingTwitch}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction className={profileDangerButtonClass} onClick={handleDisconnectTwitch} disabled={disconnectingTwitch}>
+              {disconnectingTwitch ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Unlink className="mr-2 h-4 w-4" />}
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
