@@ -61,7 +61,6 @@ const PROFILE_TITLE_UNDERLINE_ASSET = '/figma-profile/profile-underline-bar.svg'
 const PROFILE_EPIC_LOGO_ASSET = '/figma-profile/epic-logo.svg';
 const PROFILE_ACCOUNT_ICON_ASSET = '/figma-profile/nav-icon-user.svg';
 const PROFILE_GAME_ICON_ASSET = '/figma-profile/nav-icon-game.svg';
-const PROFILE_WITHDRAW_ICON_ASSET = '/figma-profile/nav-icon-withdraw.svg';
 const PROFILE_CONNECTIONS_ICON_ASSET = '/figma-profile/nav-icon-connections.svg';
 const PROFILE_PFP_FALLBACK_ASSET = '/figma-assets/marv-pfp.png';
 const PROFILE_ACCOUNT_CARD_SHELL_ASSET = '/figma-profile/account-setting/account-card-shell.svg';
@@ -78,8 +77,8 @@ const sections: Array<{
 }> = [
   { id: 'account', label: 'Account', railLabel: 'ACCOUNT', assetSrc: PROFILE_ACCOUNT_ICON_ASSET },
   { id: 'game', label: 'Game', railLabel: 'GAME', assetSrc: PROFILE_GAME_ICON_ASSET },
-  { id: 'payments', label: 'Withdraw', railLabel: '', assetSrc: PROFILE_WITHDRAW_ICON_ASSET },
-  { id: 'connections', label: 'Connections', railLabel: 'CONNECTIONS', assetSrc: PROFILE_CONNECTIONS_ICON_ASSET },
+  { id: 'payments', label: 'Withdraw', railLabel: 'WITHDRAW' },
+  { id: 'connections', label: 'Connections', railLabel: 'CONNECTIONS' },
 ];
 
 const profileSecondaryButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.14] !bg-white/[0.04] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white hover:!border-[#ff1654]/35 hover:!bg-[#ff1654]/10";
@@ -735,52 +734,60 @@ export function ProfileSettingsView({
           </p>
         </div>
 
-        <div className="mt-7 flex flex-col gap-4 lg:mt-[42px] lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-          <div className="relative w-full lg:max-w-[434px]">
-            <input
-              value={username}
-              readOnly={!isVip}
-              onChange={(event) => {
-                if (!isVip) {
-                  return;
-                }
+        <div className="mt-8 lg:mt-[48px]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
+            <div className="w-full lg:max-w-[434px]">
+              <p
+                className="mb-3 text-[18px] uppercase leading-none text-white"
+                style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
+              >
+                USERNAME
+              </p>
+              <input
+                value={username}
+                readOnly={!isVip}
+                onChange={(event) => {
+                  if (!isVip) {
+                    return;
+                  }
 
-                setUsername(event.target.value);
-                setUsernameError('');
-              }}
-              onBlur={() => {
-                void handleCommitUsername();
-              }}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter') {
-                  return;
-                }
+                  setUsername(event.target.value);
+                  setUsernameError('');
+                }}
+                onBlur={() => {
+                  void handleCommitUsername();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter') {
+                    return;
+                  }
 
-                event.preventDefault();
-                event.currentTarget.blur();
-              }}
-              aria-label="Username"
-              className={cn(
-                'h-[53px] w-full rounded-[16px] border border-white/50 bg-[#ff1654] px-4 text-[18px] text-white shadow-[0_4px_8px_rgba(0,0,0,0.24)] outline-none transition placeholder:text-white/58 focus:border-white/70',
-                !isVip && 'cursor-default',
-              )}
-              style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
-            />
-          </div>
+                  event.preventDefault();
+                  event.currentTarget.blur();
+                }}
+                aria-label="Username"
+                className={cn(
+                  'h-[53px] w-full rounded-[16px] border border-white/50 bg-[#ff1654] px-4 text-[18px] text-white shadow-[0_4px_8px_rgba(0,0,0,0.24)] outline-none transition placeholder:text-white/58 focus:border-white/70',
+                  !isVip && 'cursor-default',
+                )}
+                style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
+              />
+            </div>
 
-          <div className="flex h-[47px] w-full max-w-[222px] items-center rounded-[16px] border border-white/50 bg-[#ffd700] px-4 shadow-[0_4px_8px_rgba(0,0,0,0.25)]">
-            <img
-              src={PROFILE_ACCOUNT_VIP_CROWN_ASSET}
-              alt=""
-              aria-hidden
-              className="h-[22px] w-[28px] object-contain"
-            />
-            <span
-              className="ml-2 text-[24px] uppercase leading-none text-black"
-              style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
-            >
-              VIP ONLY
-            </span>
+            <div className="flex h-[47px] w-full max-w-[222px] items-center rounded-[16px] border border-white/50 bg-[#ffd700] px-4 shadow-[0_4px_8px_rgba(0,0,0,0.25)] lg:mb-[3px]">
+              <img
+                src={PROFILE_ACCOUNT_VIP_CROWN_ASSET}
+                alt=""
+                aria-hidden
+                className="h-[22px] w-[28px] object-contain"
+              />
+              <span
+                className="ml-2 text-[24px] uppercase leading-none text-black"
+                style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+              >
+                VIP ONLY
+              </span>
+            </div>
           </div>
         </div>
 
@@ -788,52 +795,68 @@ export function ProfileSettingsView({
           <p className="mt-3 text-sm text-[#ffb2c6]">{usernameError}</p>
         )}
 
-        <div className="mt-6 grid gap-4 lg:mt-auto lg:grid-cols-[297px_297px] lg:justify-between lg:gap-12">
-          <Select value={preferredRegion} onValueChange={(value) => void handleRegionSelect(value as Region)} disabled={savingProfile}>
-            <SelectTrigger
-              className="relative h-[53px] rounded-[16px] border-white/50 bg-[#ff1654] px-4 pr-16 text-left text-[18px] text-white shadow-[0_4px_8px_rgba(0,0,0,0.24)] focus:border-white/70 focus:ring-0 [&>svg]:hidden"
+        <div className="mt-8 grid gap-5 lg:mt-[34px] lg:grid-cols-[297px_297px] lg:justify-between lg:gap-12">
+          <div>
+            <p
+              className="mb-3 text-[18px] uppercase leading-none text-white"
               style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
-              aria-label="Preferred Region"
             >
-              <SelectValue placeholder="Select region" />
-              <img
-                src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
-                alt=""
-                aria-hidden
-                className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] -translate-y-1/2 object-contain"
-              />
-            </SelectTrigger>
-            <SelectContent className={profileSelectContentClass}>
-              {REGIONS.map((regionOption) => (
-                <SelectItem key={regionOption} value={regionOption}>
-                  {regionOption}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              PREFERRED REGION
+            </p>
+            <Select value={preferredRegion} onValueChange={(value) => void handleRegionSelect(value as Region)} disabled={savingProfile}>
+              <SelectTrigger
+                className="relative h-[53px] rounded-[16px] border-white/50 bg-[#ff1654] px-4 pr-16 text-left text-[18px] text-white shadow-[0_4px_8px_rgba(0,0,0,0.24)] focus:border-white/70 focus:ring-0 [&>svg]:hidden"
+                style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
+                aria-label="Preferred Region"
+              >
+                <SelectValue placeholder="Select region" />
+                <img
+                  src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
+                  alt=""
+                  aria-hidden
+                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] -translate-y-1/2 object-contain"
+                />
+              </SelectTrigger>
+              <SelectContent className={profileSelectContentClass}>
+                {REGIONS.map((regionOption) => (
+                  <SelectItem key={regionOption} value={regionOption}>
+                    {regionOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select value={preferredPlatform} onValueChange={(value) => void handlePlatformSelect(value as Platform)} disabled={savingProfile}>
-            <SelectTrigger
-              className="relative h-[53px] rounded-[16px] border-white/50 bg-[#ff1654] px-4 pr-16 text-left text-[18px] text-white shadow-[0_4px_8px_rgba(0,0,0,0.24)] focus:border-white/70 focus:ring-0 [&>svg]:hidden"
+          <div>
+            <p
+              className="mb-3 text-[18px] uppercase leading-none text-white"
               style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
-              aria-label="Preferred Platform"
             >
-              <SelectValue placeholder="Select platform" />
-              <img
-                src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
-                alt=""
-                aria-hidden
-                className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] -translate-y-1/2 object-contain"
-              />
-            </SelectTrigger>
-            <SelectContent className={profileSelectContentClass}>
-              {PLATFORMS.map((platformOption) => (
-                <SelectItem key={platformOption} value={platformOption}>
-                  {platformOption}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              PREFERRED PLATFORM
+            </p>
+            <Select value={preferredPlatform} onValueChange={(value) => void handlePlatformSelect(value as Platform)} disabled={savingProfile}>
+              <SelectTrigger
+                className="relative h-[53px] rounded-[16px] border-white/50 bg-[#ff1654] px-4 pr-16 text-left text-[18px] text-white shadow-[0_4px_8px_rgba(0,0,0,0.24)] focus:border-white/70 focus:ring-0 [&>svg]:hidden"
+                style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
+                aria-label="Preferred Platform"
+              >
+                <SelectValue placeholder="Select platform" />
+                <img
+                  src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
+                  alt=""
+                  aria-hidden
+                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] -translate-y-1/2 object-contain"
+                />
+              </SelectTrigger>
+              <SelectContent className={profileSelectContentClass}>
+                {PLATFORMS.map((platformOption) => (
+                  <SelectItem key={platformOption} value={platformOption}>
+                    {platformOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </section>
@@ -1354,13 +1377,19 @@ export function ProfileSettingsView({
                 >
                   {section.railLabel ? (
                     <>
-                      <SectionRailIcon
-                        assetSrc={section.assetSrc}
-                        icon={section.icon}
-                        className={cn(section.assetSrc ? 'h-6 w-6' : 'h-5 w-5')}
-                      />
+                      {section.assetSrc && (
+                        <SectionRailIcon
+                          assetSrc={section.assetSrc}
+                          icon={section.icon}
+                          className="h-5 w-5"
+                        />
+                      )}
                       <span
-                        className={cn('ml-2 truncate text-[24px] uppercase leading-none', section.id === 'connections' && 'text-[22px]')}
+                        className={cn(
+                          section.assetSrc ? 'ml-2' : '',
+                          'truncate text-[18px] uppercase leading-none',
+                          section.id === 'connections' && 'text-[17px]',
+                        )}
                         style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
                       >
                         {section.railLabel}
@@ -1392,13 +1421,19 @@ export function ProfileSettingsView({
               >
                 {section.railLabel ? (
                   <>
-                    <SectionRailIcon
-                      assetSrc={section.assetSrc}
-                      icon={section.icon}
-                      className={cn(section.assetSrc ? 'h-6 w-6' : 'h-5 w-5')}
-                    />
+                    {section.assetSrc && (
+                      <SectionRailIcon
+                        assetSrc={section.assetSrc}
+                        icon={section.icon}
+                        className="h-5 w-5"
+                      />
+                    )}
                     <span
-                      className={cn('ml-2 truncate text-[22px] uppercase leading-none', section.id === 'connections' && 'text-[20px]')}
+                      className={cn(
+                        section.assetSrc ? 'ml-2' : '',
+                        'truncate text-[18px] uppercase leading-none',
+                        section.id === 'connections' && 'text-[16px]',
+                      )}
                       style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
                     >
                       {section.railLabel}
@@ -1431,38 +1466,85 @@ export function ProfileSettingsView({
   }
 
   return (
-    <div className={cn('w-full text-white', mode === 'page' ? 'mx-auto max-w-[1450px]' : 'w-full')}>
-      <div className="mx-auto max-w-[1392px]">
-        {(mode === 'overlay' || onClose) && (
-          <div className="mb-6 flex flex-wrap justify-end gap-2">
-            {mode === 'overlay' && (
-              <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
-                Open Page
-              </Button>
-            )}
-            {mode === 'overlay' && (
-              <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            )}
-            {onClose && (
-              <Button type="button" className={profileGhostButtonClass} onClick={onClose}>
-                Close
-              </Button>
-            )}
-          </div>
-        )}
+    <div className={cn('w-full text-white', mode === 'page' ? 'mx-auto max-w-[1950px]' : 'w-full')}>
+      <div className="hidden lg:block">
+        <div className="relative mx-auto w-full max-w-[1950px] lg:aspect-[1950/955] lg:max-h-[955px]">
+          {(mode === 'overlay' || onClose) && (
+            <div className="absolute right-[3.4%] top-[7.2%] z-20 flex items-center gap-2">
+              {mode === 'overlay' && (
+                <Button type="button" className={profileGhostButtonClass} onClick={handleOpenProfilePage}>
+                  Open Page
+                </Button>
+              )}
+              {mode === 'overlay' && (
+                <Button type="button" className={profileGhostButtonClass} onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              )}
+              {onClose && (
+                <Button type="button" className={profileGhostButtonClass} onClick={onClose}>
+                  Close
+                </Button>
+              )}
+            </div>
+          )}
 
-        <div className="relative pl-[62px] sm:pl-[78px] lg:pl-[92px]">
+          <div className="absolute left-[9.2%] top-[10.2%] z-10 w-[56%]">
+            <div className="relative pl-[92px] xl:pl-[106px]">
+              <img
+                src={PROFILE_TRIANGLES_ASSET}
+                alt=""
+                aria-hidden
+                className="pointer-events-none absolute left-0 top-[-6px] h-[114px] w-[76px] object-contain xl:top-[-10px] xl:h-[132px] xl:w-[88px]"
+              />
+              <h1
+                className="mt-1 whitespace-nowrap text-[68px] uppercase leading-[0.92] text-white xl:text-[82px]"
+                style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+              >
+                PROFILE SETTING
+              </h1>
+              <img
+                src={PROFILE_TITLE_UNDERLINE_ASSET}
+                alt=""
+                aria-hidden
+                className="mt-4 h-[18px] w-[500px] object-fill xl:h-[20px] xl:w-[620px]"
+              />
+            </div>
+          </div>
+
+          <div className="absolute left-[10.8%] top-[40.7%] h-[52.5%] w-[80.2%]">
+            <div className="absolute left-0 top-0 h-[22.8%] w-[19.8%]">
+              {renderIdentityCard(true)}
+            </div>
+
+            <div className="absolute left-0 top-[26.7%] h-[70.5%] w-[19.8%]">
+              {renderSectionRail()}
+            </div>
+
+            <div className="absolute left-[22.7%] top-0 h-full w-[75.2%] max-w-[1068px]">
+              {activeSection === 'account' ? (
+                renderAccountSection()
+              ) : (
+                <section className={cn(figmaMainStageClass, 'h-full overflow-hidden')}>
+                  <div className="h-full min-h-0 overflow-y-auto px-[4.2%] py-[4.4%]">{activeSectionContent}</div>
+                </section>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-5 lg:hidden">
+        <div className="relative pl-[62px] pt-2">
           <img
             src={PROFILE_TRIANGLES_ASSET}
             alt=""
             aria-hidden
-            className="pointer-events-none absolute left-0 top-[-8px] h-[96px] w-[64px] object-contain sm:h-[118px] sm:w-[76px] lg:top-[-10px] lg:h-[132px] lg:w-[88px]"
+            className="pointer-events-none absolute left-0 top-0 h-[102px] w-[70px] object-contain"
           />
           <h1
-            className="mt-1 whitespace-nowrap text-[46px] uppercase leading-[0.92] text-white sm:text-[58px] lg:text-[80px]"
+            className="mt-1 whitespace-nowrap text-[46px] uppercase leading-[0.92] text-white sm:text-[58px]"
             style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
           >
             PROFILE SETTING
@@ -1471,28 +1553,11 @@ export function ProfileSettingsView({
             src={PROFILE_TITLE_UNDERLINE_ASSET}
             alt=""
             aria-hidden
-            className="mt-4 h-[12px] w-[220px] object-contain sm:h-[16px] sm:w-[360px] lg:h-[20px] lg:w-[540px]"
+            className="mt-3 h-[14px] w-[260px] object-fill sm:w-[360px]"
           />
         </div>
 
-        <div className="mt-7 hidden items-start gap-5 lg:grid lg:grid-cols-[304px_minmax(0,1fr)]">
-          <div className="space-y-[18px]">
-            {renderIdentityCard(true)}
-            {renderSectionRail()}
-          </div>
-
-          <div className="min-w-0">
-            {activeSection === 'account' ? (
-              renderAccountSection()
-            ) : (
-              <section className={cn(figmaMainStageClass, 'min-h-[520px] overflow-hidden')}>
-                <div className="h-full min-h-0 overflow-y-auto px-6 py-6">{activeSectionContent}</div>
-              </section>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-4 lg:hidden">
+        <div className="space-y-4">
           {renderIdentityCard(true)}
           {renderSectionRail()}
           {activeSection === 'account' ? (
