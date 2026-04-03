@@ -180,3 +180,59 @@ export async function startEpicAuth() {
     throw new Error(await extractFunctionErrorMessage(error, 'Failed to start Epic auth'));
   }
 }
+
+export async function startTwitterAuth() {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.access_token) {
+      throw new Error('You must be logged in to connect X (Twitter)');
+    }
+
+    const { data, error } = await supabase.functions.invoke('twitter-auth-start', {
+      body: {},
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data?.authUrl) {
+      throw new Error('Failed to start Twitter auth');
+    }
+
+    window.location.assign(data.authUrl);
+  } catch (error) {
+    throw new Error(await extractFunctionErrorMessage(error, 'Failed to start Twitter auth'));
+  }
+}
+
+export async function startTwitchAuth() {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.access_token) {
+      throw new Error('You must be logged in to connect Twitch');
+    }
+
+    const { data, error } = await supabase.functions.invoke('twitch-auth-start', {
+      body: {},
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data?.authUrl) {
+      throw new Error('Failed to start Twitch auth');
+    }
+
+    window.location.assign(data.authUrl);
+  } catch (error) {
+    throw new Error(await extractFunctionErrorMessage(error, 'Failed to start Twitch auth'));
+  }
+}
