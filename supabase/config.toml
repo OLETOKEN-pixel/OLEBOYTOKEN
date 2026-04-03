@@ -41,3 +41,15 @@ verify_jwt = false
 
 [functions.create-paypal-payout]
 verify_jwt = false
+
+[functions.twitter-auth-start]
+verify_jwt = false
+
+[functions.twitter-auth-callback]
+verify_jwt = false
+
+[functions.twitch-auth-start]
+verify_jwt = false
+
+[functions.twitch-auth-callback]
+verify_jwt = false

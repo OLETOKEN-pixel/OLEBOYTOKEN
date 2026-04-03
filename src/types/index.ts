@@ -59,6 +59,14 @@ export interface Profile {
   epic_username: string | null;
   epic_account_id: string | null;
   epic_linked_at: string | null;
+  // Twitter (X) fields
+  twitter_account_id: string | null;
+  twitter_username: string | null;
+  twitter_linked_at: string | null;
+  // Twitch fields
+  twitch_account_id: string | null;
+  twitch_username: string | null;
+  twitch_linked_at: string | null;
   preferred_region: Region;
   preferred_platform: Platform;
   role: UserRole;

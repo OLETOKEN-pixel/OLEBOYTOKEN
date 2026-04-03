@@ -14,6 +14,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import EpicCallback from "./pages/EpicCallback";
+import TwitterCallback from "./pages/TwitterCallback";
+import TwitchCallback from "./pages/TwitchCallback";
 import DiscordCallback from "./pages/DiscordCallback";
 import Admin from "./pages/Admin";
 import AdminMatchDetail from "./pages/AdminMatchDetail";
@@ -91,6 +93,8 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/epic/callback" element={<EpicCallback />} />
+                <Route path="/auth/twitter/callback" element={<TwitterCallback />} />
+                <Route path="/auth/twitch/callback" element={<TwitchCallback />} />
                 <Route path="/auth/discord/callback" element={<DiscordCallback />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/matches/:id" element={<AdminMatchDetail />} />

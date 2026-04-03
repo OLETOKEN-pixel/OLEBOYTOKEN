@@ -982,6 +982,12 @@ export type Database = {
           preferred_platform: string | null
           preferred_region: string | null
           role: string | null
+          twitch_account_id: string | null
+          twitch_linked_at: string | null
+          twitch_username: string | null
+          twitter_account_id: string | null
+          twitter_linked_at: string | null
+          twitter_username: string | null
           updated_at: string | null
           user_id: string
           username: string
@@ -1006,6 +1012,12 @@ export type Database = {
           preferred_platform?: string | null
           preferred_region?: string | null
           role?: string | null
+          twitch_account_id?: string | null
+          twitch_linked_at?: string | null
+          twitch_username?: string | null
+          twitter_account_id?: string | null
+          twitter_linked_at?: string | null
+          twitter_username?: string | null
           updated_at?: string | null
           user_id: string
           username: string
@@ -1030,6 +1042,12 @@ export type Database = {
           preferred_platform?: string | null
           preferred_region?: string | null
           role?: string | null
+          twitch_account_id?: string | null
+          twitch_linked_at?: string | null
+          twitch_username?: string | null
+          twitter_account_id?: string | null
+          twitter_linked_at?: string | null
+          twitter_username?: string | null
           updated_at?: string | null
           user_id?: string
           username?: string
