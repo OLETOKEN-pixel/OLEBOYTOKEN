@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
@@ -16,7 +15,6 @@ import {
   formatMatchTitle,
   formatFirstTo,
   formatPlatform,
-  formatPrize,
   formatEntryFee,
 } from '@/lib/matchFormatters';
 import { PLATFORM_FEE } from '@/types';
@@ -51,12 +49,6 @@ export default function MatchDetail() {
   const setPlayerReady = useSetPlayerReady();
   const submitResult = useSubmitResult();
   const cancelMatch = useCancelMatch();
-  const [currentTime, setCurrentTime] = useState(() => Date.now());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const match = matchRaw as Match | null;
 
@@ -178,7 +170,6 @@ export default function MatchDetail() {
           <div className="match-detail__header">
             <h1 className="match-detail__title">
               {formatMatchTitle(match)}
-              {isTeamMatch && ` ${teamSize}V${teamSize}`}
             </h1>
             <span className={`match-detail__status match-detail__status--${getStatusClass(status)}`}>
               <span className="match-detail__status-dot" />

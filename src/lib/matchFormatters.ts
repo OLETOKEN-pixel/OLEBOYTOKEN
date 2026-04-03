@@ -1,18 +1,16 @@
-import type { Match, Platform } from '@/types';
+import type { Match } from '@/types';
 import { PLATFORM_FEE } from '@/types';
 
 export function formatMatchTitle(match: Match): string {
   const rawMode = String(match.mode ?? '').trim();
-
-  if (rawMode === 'Realistic') {
-    return `REALISTIC ${match.team_size}v${match.team_size}`;
-  }
+  const size = Number(match.team_size ?? 1);
+  const sizeTag = size > 1 ? ` ${size}V${size}` : '';
 
   if (rawMode.length === 0) {
-    return 'MATCH';
+    return `MATCH${sizeTag}`;
   }
 
-  return rawMode.toUpperCase();
+  return `${rawMode.toUpperCase()}${sizeTag}`;
 }
 
 export function formatFirstTo(match: Match): string {

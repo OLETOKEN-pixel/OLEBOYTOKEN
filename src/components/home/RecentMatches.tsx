@@ -26,7 +26,7 @@ export function RecentMatches() {
         .from('matches')
         .select(`
           *,
-          creator:profiles!matches_creator_id_fkey(*),
+          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
           participants:match_participants(*)
         `)
         .eq('status', 'open')

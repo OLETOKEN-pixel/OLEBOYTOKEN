@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
 import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
@@ -388,18 +388,35 @@ export default function Matches() {
               Array.from({ length: 4 }).map((_, index) => <MatchesPlaceholderCard key={`loading-${index}`} />)}
 
             {!loading &&
-              matches.map((match) => (
-                <MatchesLiveCard
-                  key={match.id}
-                  title={formatMatchTitle(match)}
-                  firstTo={formatFirstTo(match)}
-                  platform={formatPlatform(match.platform)}
-                  entryFee={formatEntryFee(match)}
-                  prize={formatPrize(match)}
-                  expiresIn={formatTimeLeft(match.expires_at, currentTime)}
-                  onAccept={() => handleAccept(match)}
-                />
-              ))}
+              matches.map((match) => {
+                const isOwn = !!user && match.creator_id === user.id;
+                if (isOwn) {
+                  return (
+                    <Link key={match.id} to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
+                      <MatchesLiveCard
+                        title={formatMatchTitle(match)}
+                        firstTo={formatFirstTo(match)}
+                        platform={formatPlatform(match.platform)}
+                        entryFee={formatEntryFee(match)}
+                        prize={formatPrize(match)}
+                        expiresIn={formatTimeLeft(match.expires_at, currentTime)}
+                      />
+                    </Link>
+                  );
+                }
+                return (
+                  <MatchesLiveCard
+                    key={match.id}
+                    title={formatMatchTitle(match)}
+                    firstTo={formatFirstTo(match)}
+                    platform={formatPlatform(match.platform)}
+                    entryFee={formatEntryFee(match)}
+                    prize={formatPrize(match)}
+                    expiresIn={formatTimeLeft(match.expires_at, currentTime)}
+                    onAccept={() => handleAccept(match)}
+                  />
+                );
+              })}
 
             {!loading && matches.length === 0 && <MatchesEmptyState hasActiveFilters={hasActiveFilters} />}
           </div>

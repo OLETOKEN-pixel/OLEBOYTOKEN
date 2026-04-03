@@ -360,11 +360,10 @@ export function useSubmitResult() {
       result: 'WIN' | 'LOSS';
       isTeam: boolean;
     }) => {
-      const rpcName = isTeam ? 'submit_team_declaration' : 'submit_match_result';
-      const { data, error } = await supabase.rpc(rpcName, {
-        p_match_id: matchId,
-        p_result: result,
-      });
+      const params = { p_match_id: matchId, p_result: result };
+      const { data, error } = isTeam
+        ? await supabase.rpc('submit_team_declaration', params)
+        : await supabase.rpc('submit_match_result', params);
       if (error) throw error;
       const res = data as { success: boolean; error?: string; status?: string; message?: string } | null;
       if (!res?.success) throw new Error(res?.error || res?.message || 'Failed to submit result');
