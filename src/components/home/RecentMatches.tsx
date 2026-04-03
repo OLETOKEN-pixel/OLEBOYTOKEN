@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MatchCard } from '@/components/matches/MatchCard';
+import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
+import {
+  formatMatchTitle,
+  formatFirstTo,
+  formatPlatform,
+  formatPrize,
+  formatEntryFee,
+  formatTimeLeft,
+} from '@/lib/matchFormatters';
 import { supabase } from '@/integrations/supabase/client';
 import type { Match } from '@/types';
 
@@ -93,7 +101,16 @@ export function RecentMatches() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {matches.map((match) => (
-            <MatchCard key={match.id} match={match} />
+            <Link key={match.id} to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
+              <MatchesLiveCard
+                title={formatMatchTitle(match)}
+                firstTo={formatFirstTo(match)}
+                platform={formatPlatform(match.platform)}
+                entryFee={formatEntryFee(match)}
+                prize={formatPrize(match)}
+                expiresIn={formatTimeLeft(match.expires_at, Date.now())}
+              />
+            </Link>
           ))}
         </div>
       )}

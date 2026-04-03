@@ -3,8 +3,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
 import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
+import { TeamSelectDialog } from '@/components/matches/TeamSelectDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { useJoinMatch } from '@/hooks/useMatches';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { Match, Platform } from '@/types';
+import {
+  formatMatchTitle,
+  formatFirstTo,
+  formatPlatform,
+  formatPrize,
+  formatEntryFee,
+  formatTimeLeft,
+} from '@/lib/matchFormatters';
+import type { Match, Platform, PaymentMode } from '@/types';
 
 type TeamSizeFilter = 'all' | '1' | '2' | '3' | '4';
 type PlatformFilter = 'all' | Platform;
@@ -33,59 +45,6 @@ const MODE_OPTIONS: Array<{ value: ModeFilter; label: string }> = [
   { value: 'Realistic', label: 'REALISTIC' },
   { value: 'Zone Wars', label: 'ZONE WARS' },
 ];
-
-function formatTimeLeft(expiresAt: string, now: number): string {
-  const expiresAtMs = new Date(expiresAt).getTime();
-  const diff = expiresAtMs - now;
-
-  if (!Number.isFinite(expiresAtMs) || diff <= 0) {
-    return '00:00';
-  }
-
-  const totalSeconds = Math.floor(diff / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-  }
-
-  return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function formatPlatform(platform: Match['platform']): string {
-  if (platform === 'Console') {
-    return 'PS5';
-  }
-
-  return String(platform ?? 'ALL').toUpperCase();
-}
-
-function formatTitle(match: Match): string {
-  const rawMode = String(match.mode ?? '').trim();
-
-  if (rawMode === 'Realistic') {
-    return `REALISTIC ${match.team_size}v${match.team_size}`;
-  }
-
-  if (rawMode.length === 0) {
-    return 'MATCH';
-  }
-
-  return rawMode.toUpperCase();
-}
-
-function formatFirstTo(match: Match): string {
-  const firstTo = Number(match.first_to ?? 5);
-  return `${firstTo}+2`;
-}
-
-function formatPrize(match: Match): string {
-  const entryFee = Number(match.entry_fee ?? 0);
-  const totalPot = entryFee * Math.max(Number(match.team_size ?? 1), 1) * 2;
-  return (totalPot * 0.95).toFixed(2);
-}
 
 interface MatchesFilterSelectProps {
   value: string;
@@ -239,15 +198,55 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
 export default function Matches() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const joinMatch = useJoinMatch();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [teamSizeFilter, setTeamSizeFilter] = useState<TeamSizeFilter>('all');
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  const [teamSelectMatch, setTeamSelectMatch] = useState<Match | null>(null);
   const hasActiveFilters =
     teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
   const isCreateOverlayOpen = location.pathname === '/matches/create';
+
+  const handleAccept = async (match: Match) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if ((match.team_size ?? 1) > 1) {
+      setTeamSelectMatch(match);
+      return;
+    }
+
+    // 1v1: direct join
+    try {
+      await joinMatch.mutateAsync({ matchId: match.id });
+      navigate(`/matches/${match.id}`);
+    } catch (err: any) {
+      toast({ title: 'Failed to join', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleTeamJoin = async (teamId: string, paymentMode: PaymentMode) => {
+    if (!teamSelectMatch) return;
+    try {
+      await joinMatch.mutateAsync({
+        matchId: teamSelectMatch.id,
+        teamId,
+        paymentMode,
+      });
+      const matchId = teamSelectMatch.id;
+      setTeamSelectMatch(null);
+      navigate(`/matches/${matchId}`);
+    } catch (err: any) {
+      toast({ title: 'Failed to join', description: err.message, variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -392,12 +391,13 @@ export default function Matches() {
               matches.map((match) => (
                 <MatchesLiveCard
                   key={match.id}
-                  title={formatTitle(match)}
+                  title={formatMatchTitle(match)}
                   firstTo={formatFirstTo(match)}
                   platform={formatPlatform(match.platform)}
-                  entryFee={Number(match.entry_fee ?? 0).toFixed(2)}
+                  entryFee={formatEntryFee(match)}
                   prize={formatPrize(match)}
                   expiresIn={formatTimeLeft(match.expires_at, currentTime)}
+                  onAccept={() => handleAccept(match)}
                 />
               ))}
 
@@ -408,8 +408,24 @@ export default function Matches() {
         <CreateMatchOverlay
           open={isCreateOverlayOpen}
           onClose={() => navigate('/matches')}
-          onCreated={() => navigate('/matches', { replace: true })}
+          onCreated={(matchId) => {
+            if (matchId) {
+              navigate(`/matches/${matchId}`, { replace: true });
+            } else {
+              navigate('/matches', { replace: true });
+            }
+          }}
         />
+
+        {teamSelectMatch && (
+          <TeamSelectDialog
+            open={!!teamSelectMatch}
+            match={teamSelectMatch}
+            onClose={() => setTeamSelectMatch(null)}
+            onConfirm={handleTeamJoin}
+            isJoining={joinMatch.isPending}
+          />
+        )}
       </section>
     </PublicLayout>
   );

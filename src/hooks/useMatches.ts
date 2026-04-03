@@ -223,22 +223,181 @@ export function useJoinMatch() {
   const { refreshWallet, user } = useAuth();
 
   return useMutation({
-    mutationFn: async (matchId: string) => {
-      const { data, error } = await supabase.rpc('join_match', { p_match_id: matchId });
+    mutationFn: async ({
+      matchId,
+      teamId,
+      paymentMode,
+    }: {
+      matchId: string;
+      teamId?: string;
+      paymentMode?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('join_match', {
+        p_match_id: matchId,
+        p_team_id: teamId ?? null,
+        p_payment_mode: paymentMode ?? 'cover',
+      });
       if (error) throw error;
-      const result = data as { success: boolean; message?: string; error?: string } | null;
+      const result = data as { success: boolean; message?: string; error?: string; reason_code?: string } | null;
       if (!result?.success) throw new Error(result?.message || result?.error || 'Failed to join match');
     },
     onSuccess: () => {
-      // Avoid invalidating everything under load.
-      // Refresh OPEN lists + the user's matches.
       queryClient.invalidateQueries({
         predicate: (q) => q.queryKey?.[0] === 'matches' && q.queryKey?.[1] === 'open',
       });
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: queryKeys.matches.my(user.id) });
       }
-      // Refresh wallet balance
+      refreshWallet();
+    },
+  });
+}
+
+export function useMatchDetail(matchId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: queryKeys.matches.detail(matchId || ''),
+    queryFn: async () => {
+      if (!matchId) return null;
+
+      const { data, error } = await supabase
+        .from('matches')
+        .select(`
+          *,
+          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+          participants:match_participants(
+            id,
+            match_id,
+            user_id,
+            team_id,
+            team_side,
+            ready,
+            ready_at,
+            result_choice,
+            result_at,
+            status,
+            joined_at,
+            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+          ),
+          result:match_results(*)
+        `)
+        .eq('id', matchId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!matchId,
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
+  });
+
+  useEffect(() => {
+    if (!matchId) return;
+
+    const channel = supabase
+      .channel(`match-detail-${matchId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'match_participants', filter: `match_id=eq.${matchId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'match_results', filter: `match_id=eq.${matchId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [matchId, queryClient]);
+
+  return query;
+}
+
+export function useSetPlayerReady() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (matchId: string) => {
+      const { data, error } = await supabase.rpc('set_player_ready', { p_match_id: matchId });
+      if (error) throw error;
+      const result = data as { success: boolean; error?: string; status?: string; all_ready?: boolean } | null;
+      if (!result?.success) throw new Error(result?.error || 'Failed to ready up');
+      return result;
+    },
+    onSuccess: (_, matchId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
+    },
+  });
+}
+
+export function useSubmitResult() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      matchId,
+      result,
+      isTeam,
+    }: {
+      matchId: string;
+      result: 'WIN' | 'LOSS';
+      isTeam: boolean;
+    }) => {
+      const rpcName = isTeam ? 'submit_team_declaration' : 'submit_match_result';
+      const { data, error } = await supabase.rpc(rpcName, {
+        p_match_id: matchId,
+        p_result: result,
+      });
+      if (error) throw error;
+      const res = data as { success: boolean; error?: string; status?: string; message?: string } | null;
+      if (!res?.success) throw new Error(res?.error || res?.message || 'Failed to submit result');
+      return res;
+    },
+    onSuccess: (_, { matchId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.matches.my(user.id) });
+      }
+    },
+  });
+}
+
+export function useCancelMatch() {
+  const queryClient = useQueryClient();
+  const { refreshWallet, user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (matchId: string) => {
+      const { data, error } = await supabase.rpc('cancel_match_v2', { p_match_id: matchId });
+      if (error) throw error;
+      const result = data as { success: boolean; error?: string } | null;
+      if (!result?.success) throw new Error(result?.error || 'Failed to cancel match');
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        predicate: (q) => q.queryKey?.[0] === 'matches',
+      });
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.matches.my(user.id) });
+      }
       refreshWallet();
     },
   });

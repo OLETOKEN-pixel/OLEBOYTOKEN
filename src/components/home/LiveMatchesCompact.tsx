@@ -4,7 +4,15 @@ import { ArrowRight, Swords, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MatchCard } from '@/components/matches/MatchCard';
+import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
+import {
+  formatMatchTitle,
+  formatFirstTo,
+  formatPlatform,
+  formatPrize,
+  formatEntryFee,
+  formatTimeLeft,
+} from '@/lib/matchFormatters';
 import { supabase } from '@/integrations/supabase/client';
 import type { Match } from '@/types';
 
@@ -114,7 +122,16 @@ export function LiveMatchesCompact() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
-                <MatchCard match={match} />
+                <Link to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
+                  <MatchesLiveCard
+                    title={formatMatchTitle(match)}
+                    firstTo={formatFirstTo(match)}
+                    platform={formatPlatform(match.platform)}
+                    entryFee={formatEntryFee(match)}
+                    prize={formatPrize(match)}
+                    expiresIn={formatTimeLeft(match.expires_at, Date.now())}
+                  />
+                </Link>
               </motion.div>
             ))}
           </div>
