@@ -58,6 +58,7 @@ interface PaymentsActivityItem {
 
 const PROFILE_TRIANGLES_ASSET = '/figma-profile/profile-triangles.svg';
 const PROFILE_TITLE_UNDERLINE_ASSET = '/figma-profile/profile-underline-bar.svg';
+const PROFILE_TITLE_OUTLINE_ASSET = '/figma-profile/profile-underline.svg';
 const PROFILE_EPIC_LOGO_ASSET = '/figma-profile/epic-logo.svg';
 const PROFILE_ACCOUNT_ICON_ASSET = '/figma-profile/nav-icon-user.svg';
 const PROFILE_GAME_ICON_ASSET = '/figma-profile/nav-icon-game.svg';
@@ -696,7 +697,7 @@ export function ProfileSettingsView({
   );
 
   const renderAccountSection = () => (
-    <section className="relative overflow-hidden text-white">
+    <section className="relative h-full overflow-hidden text-white">
       <img
         src={PROFILE_ACCOUNT_PANEL_SHELL_ASSET}
         alt=""
@@ -704,7 +705,7 @@ export function ProfileSettingsView({
         className="pointer-events-none absolute inset-0 h-full w-full object-fill"
       />
 
-      <div className="relative flex min-h-[360px] flex-col px-6 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-7 lg:min-h-[486px] lg:px-[34px] lg:pb-[42px] lg:pt-[34px]">
+      <div className="relative flex h-full min-h-[360px] flex-col px-6 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-7 lg:min-h-[486px] lg:px-[34px] lg:pb-[42px] lg:pt-[34px]">
         {savingProfile && (
           <span className="absolute right-6 top-6 text-white/72 lg:right-8 lg:top-8">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -814,7 +815,8 @@ export function ProfileSettingsView({
                   src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
                   alt=""
                   aria-hidden
-                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] -translate-y-1/2 object-contain"
+                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] object-contain"
+                  style={{ transform: 'translateY(-50%) rotate(-90deg) scaleY(-1)' }}
                 />
               </SelectTrigger>
               <SelectContent className={profileSelectContentClass}>
@@ -845,7 +847,8 @@ export function ProfileSettingsView({
                   src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
                   alt=""
                   aria-hidden
-                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] -translate-y-1/2 object-contain"
+                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] object-contain"
+                  style={{ transform: 'translateY(-50%) rotate(-90deg) scaleY(-1)' }}
                 />
               </SelectTrigger>
               <SelectContent className={profileSelectContentClass}>
@@ -1325,19 +1328,19 @@ export function ProfileSettingsView({
           className="pointer-events-none absolute inset-0 h-full w-full object-fill"
         />
 
-        <Avatar className="absolute left-[5.6%] top-[15.5%] h-[41.4%] w-[15.8%] rounded-full border border-white/8">
+        <Avatar className="absolute left-[1.32%] top-[18.97%] h-[57.76%] w-[22.04%] rounded-full border border-white/8">
           <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
           <AvatarFallback className="bg-black/30 text-white">{discordDisplayName.charAt(0)}</AvatarFallback>
         </Avatar>
 
         <p
-          className="absolute left-[38%] right-[9%] top-[10.5%] truncate text-[clamp(20px,1.9vw,32px)] uppercase leading-none text-white"
+          className="absolute left-[42.11%] right-[8.55%] top-[16.38%] truncate text-[clamp(20px,1.8vw,32px)] uppercase leading-none text-white"
           style={{ fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif" }}
         >
           {discordDisplayName}
         </p>
         <p
-          className="absolute left-[30.5%] right-[8%] top-[62%] truncate text-[clamp(11px,0.9vw,16px)] text-white/82"
+          className="absolute left-[29.28%] right-[7.9%] top-[73.28%] truncate text-[clamp(11px,0.82vw,16px)] text-white/82"
           style={{ fontFamily: "'Base_Neue_Trial-Regular', 'Base Neue Trial', sans-serif" }}
         >
           {profile.email}
@@ -1350,7 +1353,7 @@ export function ProfileSettingsView({
     const desktopOffsets: Record<ProfileSection, string> = {
       account: 'top-[18px]',
       game: 'top-[107px]',
-      payments: 'top-[194px]',
+      payments: 'top-[201px]',
       connections: 'top-[275px]',
     };
 
@@ -1468,7 +1471,10 @@ export function ProfileSettingsView({
   return (
     <div className={cn('w-full text-white', mode === 'page' ? 'mx-auto max-w-[1950px]' : 'w-full')}>
       <div className="hidden lg:block">
-        <div className="relative mx-auto w-full max-w-[1950px] lg:aspect-[1950/955] lg:max-h-[955px]">
+        <div
+          className="relative mx-auto aspect-[1920/809]"
+          style={{ width: 'min(1920px, 100vw, calc((100vh - 146px) * 1920 / 809))' }}
+        >
           {(mode === 'overlay' || onClose) && (
             <div className="absolute right-[3.4%] top-[7.2%] z-20 flex items-center gap-2">
               {mode === 'overlay' && (
@@ -1490,47 +1496,50 @@ export function ProfileSettingsView({
             </div>
           )}
 
-          <div className="absolute left-[9.2%] top-[10.2%] z-10 w-[56%]">
-            <div className="relative pl-[92px] xl:pl-[106px]">
+          <div className="absolute left-[9.79%] top-0 z-10 h-[25.74%] w-[65.57%]">
+            <div className="relative h-full w-full">
               <img
                 src={PROFILE_TRIANGLES_ASSET}
                 alt=""
                 aria-hidden
-                className="pointer-events-none absolute left-0 top-[-6px] h-[114px] w-[76px] object-contain xl:top-[-10px] xl:h-[132px] xl:w-[88px]"
+                className="pointer-events-none absolute left-0 top-0 h-[89.25%] w-[9.84%] object-contain"
               />
               <h1
-                className="mt-1 whitespace-nowrap text-[68px] uppercase leading-[0.92] text-white xl:text-[82px]"
+                className="absolute left-[6.52%] top-[39.39%] whitespace-nowrap text-[clamp(48px,4.15vw,80px)] uppercase leading-[0.92] text-white"
                 style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
               >
                 PROFILE SETTING
               </h1>
-              <img
-                src={PROFILE_TITLE_UNDERLINE_ASSET}
-                alt=""
-                aria-hidden
-                className="mt-4 h-[18px] w-[500px] object-fill xl:h-[20px] xl:w-[620px]"
-              />
+
+              <div className="absolute left-[4.71%] top-[78.87%] flex h-[21.15%] w-[95.29%] items-center justify-center">
+                <div className="origin-center rotate-[89.8deg] scale-y-[-1]">
+                  <img
+                    src={PROFILE_TITLE_OUTLINE_ASSET}
+                    alt=""
+                    aria-hidden
+                    className="block h-[899.67px] w-[34.49px] max-w-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="absolute left-[10.8%] top-[40.7%] h-[52.5%] w-[80.2%]">
-            <div className="absolute left-0 top-0 h-[22.8%] w-[19.8%]">
-              {renderIdentityCard(true)}
-            </div>
+          <div className="absolute left-[12.55%] top-[29.30%] h-[14.34%] w-[15.83%]">
+            {renderIdentityCard(true)}
+          </div>
 
-            <div className="absolute left-0 top-[26.7%] h-[70.5%] w-[19.8%]">
-              {renderSectionRail()}
-            </div>
+          <div className="absolute left-[12.76%] top-[45%] h-[44.13%] w-[15.63%]">
+            {renderSectionRail()}
+          </div>
 
-            <div className="absolute left-[22.7%] top-0 h-full w-[75.2%] max-w-[1068px]">
-              {activeSection === 'account' ? (
-                renderAccountSection()
-              ) : (
-                <section className={cn(figmaMainStageClass, 'h-full overflow-hidden')}>
-                  <div className="h-full min-h-0 overflow-y-auto px-[4.2%] py-[4.4%]">{activeSectionContent}</div>
-                </section>
-              )}
-            </div>
+          <div className="absolute left-[30.43%] top-[28.95%] h-[60.78%] w-[55.55%] max-w-[1068px]">
+            {activeSection === 'account' ? (
+              renderAccountSection()
+            ) : (
+              <section className={cn(figmaMainStageClass, 'h-full overflow-hidden')}>
+                <div className="h-full min-h-0 overflow-y-auto px-[4.2%] py-[4.4%]">{activeSectionContent}</div>
+              </section>
+            )}
           </div>
         </div>
       </div>

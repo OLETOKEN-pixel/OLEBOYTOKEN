@@ -29,7 +29,7 @@ export default function Profile() {
     <PublicLayout>
       <section
         className={cn(
-          'min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-16 pt-[148px] lg:flex lg:min-h-[calc(100vh-146px)] lg:items-start lg:justify-center lg:overflow-hidden lg:px-6 lg:pb-8 lg:pt-[170px]'
+          'min-h-screen bg-[radial-gradient(circle_at_top,rgba(118,12,38,0.24),transparent_30%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-16 pt-[148px] lg:flex lg:h-screen lg:min-h-screen lg:items-start lg:justify-center lg:overflow-hidden lg:px-0 lg:pb-0 lg:pt-[146px]'
         )}
       >
         {loading || !user ? <LoadingPage /> : <ProfileSettingsView initialSection={initialSection} mode="page" />}
