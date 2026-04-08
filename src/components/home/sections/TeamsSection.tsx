@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-const imgStarShape = 'https://www.figma.com/api/mcp/asset/b944e37d-0240-42aa-822c-ac853169e74d';
-const imgArrowStroke = 'https://www.figma.com/api/mcp/asset/ec14e7db-5773-45a0-a2d5-3b8376726351';
-const imgBwArrow = 'https://www.figma.com/api/mcp/asset/e12f7b98-5d06-48c1-af82-b2cf70ff59ba';
-const imgFwArrow = 'https://www.figma.com/api/mcp/asset/5a185007-b402-4f24-b2f4-0ee1ef3191e0';
-const imgSpaccatoTitle = 'https://www.figma.com/api/mcp/asset/639ca509-638c-46fa-adf5-9c3797239b58';
+const imgStarShape = '/figma-assets/figma-star-shape.svg';
+const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
+const imgBwArrow = '/figma-assets/figma-bw-arrow.svg';
+const imgFwArrow = '/figma-assets/figma-fw-arrow.svg';
+const imgSpaccatoTitle = '/figma-assets/figma-spaccato-title1.svg';
 
 interface TeamDisplay {
   rank: number;

@@ -1,0 +1,64 @@
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ShopSection } from '@/components/home/sections/ShopSection';
+import { TeamsSection } from '@/components/home/sections/TeamsSection';
+
+const { limitMock, orderMock, selectMock, fromMock } = vi.hoisted(() => {
+  const limitMock = vi.fn();
+  const orderMock = vi.fn(() => ({ limit: limitMock }));
+  const selectMock = vi.fn(() => ({ order: orderMock }));
+  const fromMock = vi.fn(() => ({ select: selectMock }));
+
+  return { limitMock, orderMock, selectMock, fromMock };
+});
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: fromMock,
+  },
+}));
+
+const getImageSources = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll('img'))
+    .map((img) => img.getAttribute('src'))
+    .filter((src): src is string => Boolean(src));
+
+const renderWithRouter = (ui: React.ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>);
+
+describe('logged home section assets', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    limitMock.mockResolvedValue({ data: [], error: null });
+  });
+
+  it('uses stable local decorative assets in TeamsSection', () => {
+    const { container } = renderWithRouter(<TeamsSection />);
+    const srcs = getImageSources(container);
+
+    expect(srcs).toContain('/figma-assets/figma-spaccato-title1.svg');
+    expect(srcs).toContain('/figma-assets/figma-star-shape.svg');
+    expect(srcs).toContain('/figma-assets/figma-arrow-stroke.svg');
+    expect(srcs).toContain('/figma-assets/figma-bw-arrow.svg');
+    expect(srcs).toContain('/figma-assets/figma-fw-arrow.svg');
+    expect(srcs.some((src) => src.includes('https://www.figma.com/api/mcp/asset/'))).toBe(false);
+  });
+
+  it('keeps ShopSection showreel assets local and removes expiring Figma asset URLs', () => {
+    const { container } = renderWithRouter(<ShopSection />);
+    const srcs = getImageSources(container);
+
+    expect(srcs).toContain('/figma-assets/figma-spaccato-title1.svg');
+    expect(srcs).toContain('/figma-assets/figma-star-shape.svg');
+    expect(srcs).toContain('/figma-assets/figma-arrow-stroke.svg');
+    expect(srcs).toContain('/figma-assets/figma-bw-arrow.svg');
+    expect(srcs).toContain('/figma-assets/figma-fw-arrow.svg');
+    expect(srcs).toContain('/showreel/shop-item-1.png');
+    expect(srcs).toContain('/showreel/shop-item-2.png');
+    expect(srcs).toContain('/showreel/shop-item-3.png');
+    expect(srcs).toContain('/showreel/vip-icon.svg');
+    expect(srcs).toContain('/showreel/coin-icon.svg');
+    expect(srcs.some((src) => src.includes('https://www.figma.com/api/mcp/asset/'))).toBe(false);
+  });
+});

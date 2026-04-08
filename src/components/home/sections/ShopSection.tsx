@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 
-const imgStarShape = 'https://www.figma.com/api/mcp/asset/50759456-8916-49b1-98a8-03612e4d8d3b';
-const imgArrowStroke = 'https://www.figma.com/api/mcp/asset/c452c283-8775-4e6a-ada3-00be56e5d8d4';
-const imgBwArrow = 'https://www.figma.com/api/mcp/asset/27aaba43-4ef7-4ffc-bf6a-785b0e7c2e0f';
-const imgFwArrow = 'https://www.figma.com/api/mcp/asset/e10ac569-b0b8-4c76-85c7-b0f3cb77b37a';
-const imgSpaccatoTitle = 'https://www.figma.com/api/mcp/asset/a327d7c7-285e-4f37-9d04-139374b4c3a2';
+const imgStarShape = '/figma-assets/figma-star-shape.svg';
+const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
+const imgBwArrow = '/figma-assets/figma-bw-arrow.svg';
+const imgFwArrow = '/figma-assets/figma-fw-arrow.svg';
+const imgSpaccatoTitle = '/figma-assets/figma-spaccato-title1.svg';
 interface ShopItem {
   type: 'cosmetic' | 'vip';
   image: string;
