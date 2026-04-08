@@ -43,18 +43,18 @@ export function TeamSelector({
 
   if (eligibleTeams.length === 0) {
     return (
-      <div className="rounded-[18px] border border-[#ff1654]/25 bg-[rgba(0,0,0,0.35)] px-5 py-6">
-        <AlertCircle className="mx-auto mb-3 h-10 w-10 text-[#ff6a8f]" />
-        <h4 className="text-center text-[18px] font-semibold text-white md:text-[20px]">
+      <div className="flex h-full flex-col justify-center rounded-[18px] border border-[#ff1654]/25 bg-[rgba(0,0,0,0.35)] px-5 py-4">
+        <AlertCircle className="mx-auto mb-2 h-8 w-8 text-[#ff6a8f]" />
+        <h4 className="text-center text-[18px] font-semibold text-white">
           No Eligible Teams
         </h4>
-        <p className="mx-auto mt-2 max-w-[420px] text-center text-sm text-white/65 md:text-base">
+        <p className="mx-auto mt-1 max-w-[420px] text-center text-[14px] leading-[1.2] text-white/65">
           You need a team with exactly {teamSize} accepted members for {teamSize}v{teamSize} matches.
         </p>
-        <div className="mt-5 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <Link
             to="/teams"
-            className="inline-flex h-11 items-center justify-center rounded-[14px] border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white transition-colors hover:border-[#ff1654]/40 hover:bg-[#ff1654]/10"
+            className="inline-flex h-10 items-center justify-center rounded-[14px] border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white transition-colors hover:border-[#ff1654]/40 hover:bg-[#ff1654]/10"
           >
             Manage Teams
           </Link>

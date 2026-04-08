@@ -36,6 +36,11 @@ interface CreateMatchOverlayProps {
 
 const FRAME_WIDTH = 903;
 const FRAME_HEIGHT = 800;
+const NAVBAR_TOP = 55;
+const NAVBAR_HEIGHT = 91;
+const MODAL_TOP_GAP = 24;
+const MODAL_BOTTOM_GAP = 24;
+const MODAL_SIDE_GAP = 32;
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
 const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
@@ -218,16 +223,18 @@ function FooterAction({
   onClick,
   disabled,
   loading,
+  spacing = 'default',
 }: {
   label: 'NEXT STEP' | 'CREATE TOKEN';
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  spacing?: 'default' | 'tight';
 }) {
   return (
-    <div className="mt-auto pt-[20px]">
+    <div className={spacing === 'tight' ? 'mt-auto pt-[14px]' : 'mt-auto pt-[20px]'}>
       <div className="mx-auto h-px w-[589px] bg-white/60" />
-      <div className="mt-[19px] flex justify-center">
+      <div className={spacing === 'tight' ? 'mt-[14px] flex justify-center' : 'mt-[19px] flex justify-center'}>
         <button
           type="button"
           onClick={onClick}
@@ -349,8 +356,16 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       ? `You will lock ${formatAmount(teamCostLabel)} OBT for your ${teamSize} players.`
       : `Each team member must hold ${formatAmount(teamCostLabel)} OBT.`;
 
-  const rawScale = Math.min((viewport.width - 32) / FRAME_WIDTH, (viewport.height - 32) / FRAME_HEIGHT);
+  const availableViewportHeight = Math.max(
+    0,
+    viewport.height - (NAVBAR_TOP + NAVBAR_HEIGHT + MODAL_TOP_GAP) - MODAL_BOTTOM_GAP,
+  );
+  const rawScale = Math.min(
+    (viewport.width - MODAL_SIDE_GAP) / FRAME_WIDTH,
+    availableViewportHeight / FRAME_HEIGHT,
+  );
   const frameScale = Math.max(0.1, Math.min(1, rawScale));
+  const frameCenterY = NAVBAR_TOP + NAVBAR_HEIGHT + MODAL_TOP_GAP + availableViewportHeight / 2;
 
   const resetTeamState = (size: number) => {
     setTeamSize(size);
@@ -574,57 +589,59 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
   );
 
   const renderTeamsStep = () => (
-    <div className="mt-[31px] flex flex-1 flex-col">
-      <section>
-        <FigmaSectionLabel>Select team:</FigmaSectionLabel>
-        <div className="mt-[16px] h-[220px] overflow-y-auto pr-2">
-          <TeamSelector
-            teamSize={teamSize}
-            entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
-            selectedTeamId={selectedTeam?.id ?? null}
-            onSelectTeam={(team) => setSelectedTeam(team as SelectedTeam | null)}
-            paymentMode={paymentMode}
-          />
-        </div>
-      </section>
+    <div className="mt-[24px] flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <section className="shrink-0">
+          <FigmaSectionLabel>Select team:</FigmaSectionLabel>
+          <div className="mt-[12px] h-[158px] overflow-y-auto pr-2">
+            <TeamSelector
+              teamSize={teamSize}
+              entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
+              selectedTeamId={selectedTeam?.id ?? null}
+              onSelectTeam={(team) => setSelectedTeam(team as SelectedTeam | null)}
+              paymentMode={paymentMode}
+            />
+          </div>
+        </section>
 
-      <section className="mt-[20px]">
-        <FigmaSectionLabel>Payment mode:</FigmaSectionLabel>
-        <div className="mt-[16px]">
-          <PaymentModeSelector
-            paymentMode={paymentMode}
-            onChangePaymentMode={setPaymentMode}
-            entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
-            teamSize={teamSize}
-            memberBalances={selectedTeam?.memberBalances}
-            userBalance={walletBalance}
-          />
-        </div>
-      </section>
+        <section className="mt-[14px] shrink-0">
+          <FigmaSectionLabel>Payment mode:</FigmaSectionLabel>
+          <div className="mt-[12px]">
+            <PaymentModeSelector
+              paymentMode={paymentMode}
+              onChangePaymentMode={setPaymentMode}
+              entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
+              teamSize={teamSize}
+              memberBalances={selectedTeam?.memberBalances}
+              userBalance={walletBalance}
+            />
+          </div>
+        </section>
 
-      <div className="mt-[18px] rounded-[18px] border border-white/10 bg-black/25 px-4 py-4">
-        <div className="flex items-start gap-3">
-          <Users className="mt-1 h-5 w-5 shrink-0 text-[#ff6a8f]" />
-          <div className="space-y-1">
-            <p className="text-base text-white/95" style={{ fontFamily: FONT_EXPANDED }}>
-              TEAM PAYMENT
-            </p>
-            <p className="text-sm text-white/70" style={{ fontFamily: FONT_REGULAR }}>
-              {teamCostCopy}
-            </p>
+        <div className="mt-[12px] shrink-0 rounded-[18px] border border-white/10 bg-black/25 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#ff6a8f]" />
+            <div className="space-y-1">
+              <p className="text-[15px] text-white/95" style={{ fontFamily: FONT_EXPANDED }}>
+                TEAM PAYMENT
+              </p>
+              <p className="text-[13px] leading-[1.15] text-white/70" style={{ fontFamily: FONT_REGULAR }}>
+                {teamCostCopy}
+              </p>
+            </div>
           </div>
         </div>
+
+        {!teamsStepValid && (
+          <div className="mt-[10px] shrink-0">
+            <StatusNotice>
+              Select a team to unlock the token step for {teamSize}v{teamSize} matches.
+            </StatusNotice>
+          </div>
+        )}
       </div>
 
-      {!teamsStepValid && (
-        <div className="mt-[16px]">
-          <StatusNotice>
-            Select a team to unlock the token step for {teamSize}v{teamSize} matches.
-          </StatusNotice>
-        </div>
-      )}
-
-      <FooterAction label="NEXT STEP" onClick={handleNextStep} disabled={!teamsStepValid} />
+      <FooterAction label="NEXT STEP" onClick={handleNextStep} disabled={!teamsStepValid} spacing="tight" />
     </div>
   );
 
@@ -725,7 +742,7 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
   const renderAuthenticatedFrame = () => (
     <section
-      className="h-full w-full rounded-[18px] border border-[#ff1654] bg-[#282828] shadow-[0_30px_100px_rgba(0,0,0,0.45)]"
+      className="h-full w-full overflow-hidden rounded-[18px] border border-[#ff1654] bg-[#282828] shadow-[0_30px_100px_rgba(0,0,0,0.45)]"
       onMouseDown={(event) => event.stopPropagation()}
       role="dialog"
       aria-modal="true"
@@ -753,7 +770,7 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
   const renderSignedOutFrame = () => (
     <section
-      className="h-full w-full rounded-[18px] border border-[#ff1654] bg-[#282828] shadow-[0_30px_100px_rgba(0,0,0,0.45)]"
+      className="h-full w-full overflow-hidden rounded-[18px] border border-[#ff1654] bg-[#282828] shadow-[0_30px_100px_rgba(0,0,0,0.45)]"
       onMouseDown={(event) => event.stopPropagation()}
       role="dialog"
       aria-modal="true"
@@ -810,10 +827,11 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       />
 
       <div
-        className="absolute left-1/2 top-1/2"
+        className="absolute left-1/2"
         style={{
           width: FRAME_WIDTH,
           height: FRAME_HEIGHT,
+          top: frameCenterY,
           transform: `translate(-50%, -50%) scale(${frameScale})`,
           transformOrigin: 'center center',
         }}

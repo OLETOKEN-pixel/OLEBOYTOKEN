@@ -135,6 +135,7 @@ describe('CreateMatchOverlay', () => {
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
 
     expect(screen.getByRole('tab', { name: 'TEAMS' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: /next step/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /create token/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'TOKENS' }));

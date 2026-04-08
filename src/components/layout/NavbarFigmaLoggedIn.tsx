@@ -57,7 +57,9 @@ export function NavbarFigmaLoggedIn() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   // Determine active nav item from current route (when not on home page)
   const activeRouteItem = !isOnHome
-    ? Object.entries(NAV_ROUTES).find(([, path]) => location.pathname === path)?.[0] ?? null
+    ? Object.entries(NAV_ROUTES).find(([, path]) => {
+        return location.pathname === path || location.pathname.startsWith(`${path}/`);
+      })?.[0] ?? null
     : null;
 
   useEffect(() => {
