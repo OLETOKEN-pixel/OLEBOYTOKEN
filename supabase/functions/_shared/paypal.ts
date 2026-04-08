@@ -1,5 +1,5 @@
 export const PAYPAL_PAYOUT_CURRENCY = "EUR";
-export const MIN_PAYPAL_WITHDRAWAL = 10;
+export const MIN_PAYPAL_WITHDRAWAL = 9;
 export const PAYPAL_WITHDRAWAL_FEE = 0.5;
 
 type PayPalEnv = "live" | "sandbox";
