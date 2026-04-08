@@ -106,7 +106,7 @@ export function TeamSelector({
               </div>
 
               <div className="flex shrink-0 items-center gap-3">
-                <div className="hidden -space-x-2 sm:flex">
+                <div className="flex -space-x-2">
                   {team.members?.slice(0, 4).map((member) => (
                     <Avatar key={member.id} className="h-8 w-8 border-2 border-[#282828]">
                       <AvatarImage src={member.profile?.avatar_url ?? undefined} />

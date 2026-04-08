@@ -25,7 +25,7 @@ export function PaymentModeSelector({
   const canSplit = insufficientMembers.length === 0;
 
   return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+    <div className="grid grid-cols-2 gap-3">
       <button
         type="button"
         aria-pressed={paymentMode === 'cover'}
