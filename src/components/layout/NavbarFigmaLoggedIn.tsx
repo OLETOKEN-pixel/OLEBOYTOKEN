@@ -39,8 +39,8 @@ function scrollToSection(sectionId: string) {
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
-/* Routes that map nav items to standalone pages instead of home sections */
-const NAV_ROUTES: Record<string, string> = {
+/* Standalone routes that should still mark a nav item as active */
+const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   matches: '/matches',
 };
 
@@ -57,7 +57,7 @@ export function NavbarFigmaLoggedIn() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   // Determine active nav item from current route (when not on home page)
   const activeRouteItem = !isOnHome
-    ? Object.entries(NAV_ROUTES).find(([, path]) => {
+    ? Object.entries(ACTIVE_ROUTE_MATCHERS).find(([, path]) => {
         return location.pathname === path || location.pathname.startsWith(`${path}/`);
       })?.[0] ?? null
     : null;
@@ -175,13 +175,9 @@ export function NavbarFigmaLoggedIn() {
         >
           {(Object.keys(NAV_SECTIONS) as Array<keyof typeof NAV_SECTIONS>).map((item) => {
             const isActive = activeRouteItem === item || activeSection === NAV_SECTIONS[item];
-            const hasRoute = item in NAV_ROUTES;
 
             const handleClick = () => {
-              if (hasRoute) {
-                // Navigate to standalone page
-                navigate(NAV_ROUTES[item]);
-              } else if (isOnHome) {
+              if (isOnHome) {
                 // Scroll to section on home page
                 scrollToSection(NAV_SECTIONS[item]);
               } else {
