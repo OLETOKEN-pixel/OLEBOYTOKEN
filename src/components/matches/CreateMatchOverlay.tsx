@@ -36,10 +36,6 @@ interface CreateMatchOverlayProps {
 
 const FRAME_WIDTH = 903;
 const FRAME_HEIGHT = 800;
-const NAVBAR_TOP = 55;
-const NAVBAR_HEIGHT = 91;
-const MODAL_TOP_GAP = 24;
-const MODAL_BOTTOM_GAP = 24;
 const MODAL_SIDE_GAP = 32;
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
@@ -356,16 +352,11 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       ? `You will lock ${formatAmount(teamCostLabel)} OBT for your ${teamSize} players.`
       : `Each team member must hold ${formatAmount(teamCostLabel)} OBT.`;
 
-  const availableViewportHeight = Math.max(
-    0,
-    viewport.height - (NAVBAR_TOP + NAVBAR_HEIGHT + MODAL_TOP_GAP) - MODAL_BOTTOM_GAP,
-  );
   const rawScale = Math.min(
     (viewport.width - MODAL_SIDE_GAP) / FRAME_WIDTH,
-    availableViewportHeight / FRAME_HEIGHT,
+    (viewport.height - MODAL_SIDE_GAP) / FRAME_HEIGHT,
   );
   const frameScale = Math.max(0.1, Math.min(1, rawScale));
-  const frameCenterY = NAVBAR_TOP + NAVBAR_HEIGHT + MODAL_TOP_GAP + availableViewportHeight / 2;
 
   const resetTeamState = (size: number) => {
     setTeamSize(size);
@@ -811,27 +802,24 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
   const overlay = (
     <div
-      className="fixed inset-0 z-40 overflow-hidden"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !creating) {
-          onClose();
-        }
-      }}
+      className="fixed inset-0 z-[70] overflow-hidden"
+      data-testid="create-match-overlay"
     >
-      <div className="absolute inset-0 bg-[rgba(15,4,4,0.7)]" />
-      <img
-        aria-hidden="true"
-        src="/figma-assets/figma-neon.png"
-        alt=""
-        className="pointer-events-none absolute left-0 top-0 h-[146px] w-full object-cover"
+      <div
+        className="absolute inset-0 bg-[rgba(15,4,4,0.7)]"
+        data-testid="create-match-scrim"
+        onMouseDown={() => {
+          if (!creating) {
+            onClose();
+          }
+        }}
       />
 
       <div
-        className="absolute left-1/2"
+        className="absolute left-1/2 top-1/2"
         style={{
           width: FRAME_WIDTH,
           height: FRAME_HEIGHT,
-          top: frameCenterY,
           transform: `translate(-50%, -50%) scale(${frameScale})`,
           transformOrigin: 'center center',
         }}

@@ -116,6 +116,8 @@ describe('CreateMatchOverlay', () => {
   it('keeps 1v1 as a two-step game to tokens flow', async () => {
     renderOverlay();
 
+    expect(screen.getByTestId('create-match-overlay').className).toContain('z-[70]');
+    expect(screen.getByTestId('create-match-scrim')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'GAME' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByRole('tab', { name: 'TEAMS' })).not.toBeInTheDocument();
 
