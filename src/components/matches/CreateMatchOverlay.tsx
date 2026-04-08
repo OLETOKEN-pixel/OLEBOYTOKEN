@@ -1,25 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import {
-  AlertCircle,
-  Coins,
-  Crosshair,
-  Loader2,
-  Lock,
-  MapPin,
-  Monitor,
-  Shield,
-  Target,
-  Users,
-  X,
-} from 'lucide-react';
+import { AlertCircle, ArrowRight, Coins, Loader2, Lock, ShieldCheck, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { CoinDisplay } from '@/components/common/CoinDisplay';
+import { TeamSelector } from '@/components/teams/TeamSelector';
+import { PaymentModeSelector } from '@/components/teams/PaymentModeSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useEligibleTeams } from '@/hooks/useEligibleTeams';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import type {
@@ -32,17 +19,11 @@ import type {
   TeamMember,
   TeamMemberWithBalance,
 } from '@/types';
-import {
-  ENTRY_FEE_PRESETS,
-  FIRST_TO_OPTIONS,
-  GAME_MODES,
-  PLATFORM_FEE,
-  PLATFORMS,
-  REGIONS,
-  TEAM_SIZES,
-} from '@/types';
+import oleboyCoin from '@/assets/oleboy-coin.png';
 
-interface EligibleTeam extends Team {
+type CreateStep = 'game' | 'tokens';
+
+interface SelectedTeam extends Team {
   members: (TeamMember & { profile: Profile })[];
   memberBalances?: TeamMemberWithBalance[];
   acceptedMemberCount: number;
@@ -54,43 +35,123 @@ interface CreateMatchOverlayProps {
   onCreated?: (matchId: string) => void;
 }
 
+const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
+const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED = "'Base_Neue_Trial:Expanded', 'Base Neue Trial-Expanded', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BOLD =
+  "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
+const FONT_WIDE_BLACK = "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial-WideBlack', 'Base Neue Trial', sans-serif";
+
+const MODE_OPTIONS: Array<{ value: GameMode; label: string }> = [
+  { value: 'Realistic', label: 'REALISTIC' },
+  { value: 'Box Fight', label: 'BOX FIGHT' },
+  { value: 'Zone Wars', label: 'ZONE WARS' },
+];
+
+const TEAM_SIZE_OPTIONS = [
+  { value: 1, label: '1v1' },
+  { value: 2, label: '2v2' },
+  { value: 3, label: '3v3' },
+  { value: 4, label: '4v4' },
+] as const;
+
+const PLATFORM_OPTIONS: Array<{ value: Platform; label: string }> = [
+  { value: 'All', label: 'ANY' },
+  { value: 'PC', label: 'PC' },
+  { value: 'Console', label: 'CONSOLE' },
+];
+
+function formatAmount(value: number) {
+  return value.toFixed(2);
+}
+
+function getInitialPlatform(preferredPlatform?: Platform | null): Platform {
+  if (!preferredPlatform || preferredPlatform === 'Mobile') {
+    return 'All';
+  }
+
+  return preferredPlatform;
+}
+
+function FigmaSectionLabel({ children }: { children: string }) {
+  return (
+    <p className="text-[22px] text-white md:text-[24px]" style={{ fontFamily: FONT_EXPANDED }}>
+      {children}
+    </p>
+  );
+}
+
+interface SelectionButtonProps {
+  active: boolean;
+  disabled?: boolean;
+  label: string;
+  onClick?: () => void;
+  className?: string;
+}
+
+function SelectionButton({ active, disabled, label, onClick, className }: SelectionButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'h-[59px] rounded-[18px] border px-4 text-center text-[22px] text-white transition-all duration-200 md:text-[28px]',
+        active
+          ? 'border-[#ff1654] bg-[rgba(255,22,84,0.34)] shadow-[0_0_0_1px_rgba(255,22,84,0.08)]'
+          : 'border-transparent bg-[rgba(0,0,0,0.5)] hover:border-white/10 hover:bg-black/60',
+        disabled && 'cursor-not-allowed opacity-50',
+        className,
+      )}
+      style={{ fontFamily: FONT_EXPANDED_BOLD }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function StatusNotice({
+  variant = 'warning',
+  children,
+}: {
+  variant?: 'warning' | 'error';
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-[18px] border px-4 py-3',
+        variant === 'warning'
+          ? 'border-[#ff1654]/35 bg-[rgba(255,22,84,0.08)]'
+          : 'border-red-500/40 bg-red-500/10',
+      )}
+    >
+      <div className="flex gap-3">
+        <AlertCircle
+          className={cn('mt-0.5 h-5 w-5 shrink-0', variant === 'warning' ? 'text-[#ff6a8f]' : 'text-red-400')}
+        />
+        <div className="text-sm text-white/85" style={{ fontFamily: FONT_REGULAR }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOverlayProps) {
-  const { user, wallet, isProfileComplete, refreshWallet } = useAuth();
+  const { user, profile, wallet, isProfileComplete, refreshWallet } = useAuth();
   const { toast } = useToast();
-
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [entryFee, setEntryFee] = useState<number>(1);
-  const [customFee, setCustomFee] = useState('');
-  const [region, setRegion] = useState<Region>('EU');
-  const [platform, setPlatform] = useState<Platform>('All');
+  const [step, setStep] = useState<CreateStep>('game');
   const [mode, setMode] = useState<GameMode>('Box Fight');
-  const [teamSize, setTeamSize] = useState(1);
-  const [firstTo, setFirstTo] = useState(3);
+  const [teamSize, setTeamSize] = useState<number>(1);
+  const [platform, setPlatform] = useState<Platform>('All');
+  const [region, setRegion] = useState<Region>('EU');
+  const [entryFeeInput, setEntryFeeInput] = useState('1.00');
   const [creating, setCreating] = useState(false);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<SelectedTeam | null>(null);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('cover');
-
-  const parsedCustomFee = Number.parseFloat(customFee);
-  const actualFee =
-    customFee.trim().length > 0 && Number.isFinite(parsedCustomFee) ? parsedCustomFee : entryFee;
-  const isValidFee = Number.isFinite(actualFee) && actualFee >= 0.5;
-  const isTeamMatch = teamSize > 1;
-
-  const { eligibleTeams, loading: teamsLoading } = useEligibleTeams(
-    isTeamMatch ? teamSize : 0,
-    isTeamMatch && isValidFee ? actualFee : undefined
-  );
-
-  const selectedTeam = useMemo(
-    () => (eligibleTeams as EligibleTeam[]).find((team) => team.id === selectedTeamId) ?? null,
-    [eligibleTeams, selectedTeamId]
-  );
-
-  useEffect(() => {
-    if (selectedTeamId && !selectedTeam) {
-      setSelectedTeamId(null);
-    }
-  }, [selectedTeam, selectedTeamId]);
+  const didHydratePreferences = useRef(false);
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') {
@@ -100,42 +161,102 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    const handleEscape = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !creating) {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
+    window.addEventListener('keydown', onKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [creating, onClose, open]);
+
+  useEffect(() => {
+    if (!open) {
+      didHydratePreferences.current = false;
+      return;
+    }
+
+    setStep('game');
+    setMode('Box Fight');
+    setTeamSize(1);
+    setPlatform('All');
+    setRegion('EU');
+    setEntryFeeInput('1.00');
+    setCreating(false);
+    setSelectedTeam(null);
+    setPaymentMode('cover');
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !profile || didHydratePreferences.current) {
+      return;
+    }
+
+    setPlatform(getInitialPlatform(profile.preferred_platform));
+    setRegion((profile.preferred_region as Region) || 'EU');
+    didHydratePreferences.current = true;
+  }, [open, profile]);
+
+  const entryFee = useMemo(() => {
+    const parsed = Number.parseFloat(entryFeeInput.replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : Number.NaN;
+  }, [entryFeeInput]);
 
   if (!open || typeof document === 'undefined') {
     return null;
   }
 
+  const isEntryFeeValid = Number.isFinite(entryFee) && entryFee >= 0.5;
+  const normalizedEntryFee = isEntryFeeValid ? Number(entryFee.toFixed(2)) : 0;
+  const isTeamMatch = teamSize > 1;
+  const playerCount = teamSize * 2;
+  const totalCost = normalizedEntryFee * teamSize;
+  const totalPool = normalizedEntryFee * playerCount;
+  const prize = totalPool * 0.95;
   const walletBalance = wallet?.balance ?? 0;
-  const totalCost = isTeamMatch ? actualFee * teamSize : actualFee;
-  const grossPool = totalCost * 2;
-  const prizePool = grossPool * (1 - PLATFORM_FEE);
-  const platformFeeAmount = grossPool * PLATFORM_FEE;
-  const canAffordSolo = walletBalance >= actualFee;
+  const canAffordSolo = walletBalance >= normalizedEntryFee;
   const canAffordCover = walletBalance >= totalCost;
-  const canAffordSplit = selectedTeam?.memberBalances?.every((member) => member.balance >= actualFee) ?? false;
+  const canAffordSplit = selectedTeam?.memberBalances?.every((member) => member.balance >= normalizedEntryFee) ?? false;
   const canAfford = isTeamMatch ? (paymentMode === 'cover' ? canAffordCover : canAffordSplit) : canAffordSolo;
-  const canCreate = isValidFee && (isTeamMatch ? selectedTeam !== null && canAfford : canAfford);
+  const gameStepValid = !isTeamMatch || selectedTeam !== null;
+  const finalCreateEnabled = Boolean(user && isProfileComplete && gameStepValid && isEntryFeeValid && canAfford);
+  const currentPlatformLabel = PLATFORM_OPTIONS.find((option) => option.value === platform)?.label ?? 'ANY';
+  const teamCostLabel = paymentMode === 'cover' ? totalCost : normalizedEntryFee;
+  const teamCostCopy =
+    paymentMode === 'cover'
+      ? `You will lock ${formatAmount(teamCostLabel)} OBT for your ${teamSize} players.`
+      : `Each team member must hold ${formatAmount(teamCostLabel)} OBT.`;
 
-  const handleTeamSizeChange = (size: number) => {
+  const resetTeamState = (size: number) => {
     setTeamSize(size);
-    setSelectedTeamId(null);
+    setSelectedTeam(null);
+    setPaymentMode('cover');
+  };
 
-    if (size === 1) {
-      setPaymentMode('cover');
+  const handleEntryFeeBlur = () => {
+    if (!entryFeeInput.trim() || !Number.isFinite(entryFee)) {
+      return;
     }
+
+    setEntryFeeInput(Math.max(entryFee, 0.5).toFixed(2));
+  };
+
+  const handleNextStep = () => {
+    if (!gameStepValid) {
+      toast({
+        title: 'Complete the game step',
+        description: 'Select a team before continuing to the token step.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStep('tokens');
   };
 
   const handleCreate = async () => {
@@ -145,29 +266,37 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
     if (!isProfileComplete) {
       toast({
-        title: 'Epic Games connection required',
-        description: 'Connect Epic Games in your profile before creating a match.',
+        title: 'Complete your profile',
+        description: 'Add your Epic Games username before creating matches.',
         variant: 'destructive',
       });
       return;
     }
 
-    if (!isValidFee) {
+    if (!isEntryFeeValid) {
       toast({
         title: 'Invalid entry fee',
-        description: 'The minimum entry fee is 0.50 OBT.',
+        description: 'Entry fee must be at least 0.50 OBT.',
         variant: 'destructive',
       });
       return;
     }
 
-    if (!canCreate) {
+    if (!gameStepValid) {
       toast({
-        title: 'Cannot create match',
-        description:
-          isTeamMatch && !selectedTeam
-            ? 'Select an eligible team before continuing.'
-            : 'Your wallet or team balance is not enough for this setup.',
+        title: 'Select a team',
+        description: 'Team matches require a selected team before creation.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!canAfford) {
+      toast({
+        title: 'Insufficient balance',
+        description: isTeamMatch && paymentMode === 'split'
+          ? 'One or more selected teammates do not have enough balance.'
+          : 'You do not have enough balance to create this match.',
         variant: 'destructive',
       });
       return;
@@ -181,14 +310,12 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       if (isTeamMatch && selectedTeam) {
         const { data, error } = await supabase.rpc('create_team_match', {
           p_team_id: selectedTeam.id,
-          p_entry_fee: actualFee,
+          p_entry_fee: normalizedEntryFee,
           p_region: region,
           p_platform: platform,
           p_mode: mode,
           p_team_size: teamSize,
-          p_first_to: firstTo,
           p_payment_mode: paymentMode,
-          p_is_private: isPrivate,
         });
 
         if (error) {
@@ -197,18 +324,16 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
         const result = data as { success: boolean; error?: string; match_id?: string } | null;
         if (result && !result.success) {
-          throw new Error(result.error || 'Failed to create team match');
+          throw new Error(result.error);
         }
 
         matchId = result?.match_id;
       } else {
         const { data, error } = await supabase.rpc('create_match_1v1', {
-          p_entry_fee: actualFee,
+          p_entry_fee: normalizedEntryFee,
           p_region: region,
           p_platform: platform,
           p_mode: mode,
-          p_first_to: firstTo,
-          p_is_private: isPrivate,
         });
 
         if (error) {
@@ -217,7 +342,7 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
         const result = data as { success: boolean; error?: string; match_id?: string } | null;
         if (result && !result.success) {
-          throw new Error(result.error || 'Failed to create match');
+          throw new Error(result.error);
         }
 
         matchId = result?.match_id;
@@ -227,7 +352,7 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
       toast({
         title: 'Match created',
-        description: 'Your live match is now on the board.',
+        description: isTeamMatch ? 'Your team token is now live.' : 'Your token is now live.',
       });
 
       if (matchId && onCreated) {
@@ -235,12 +360,14 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       } else {
         onClose();
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create match. Please try again.';
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : 'Failed to create match. Please try again.';
 
+      console.error('Match creation error:', error);
       toast({
-        title: 'Creation failed',
-        description: message,
+        title: 'Error',
+        description,
         variant: 'destructive',
       });
     } finally {
@@ -250,543 +377,379 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
   const overlay = (
     <div
-      className="fixed inset-0 z-[120] bg-black/[0.78] backdrop-blur-[10px]"
+      className="fixed inset-0 z-40 overflow-y-auto bg-[rgba(15,4,4,0.72)] backdrop-blur-[4px]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !creating) {
           onClose();
         }
       }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,22,84,0.18),transparent_42%)]" />
-
       <div
-        className="absolute left-1/2 top-1/2 h-[min(880px,calc(100vh-32px))] w-[min(1180px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[30px] border border-white/10 bg-[#12080b]/95 shadow-[0_40px_120px_rgba(0,0,0,0.6)]"
-        onMouseDown={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="create-match-title"
-      >
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#ff1654_0%,rgba(255,22,84,0.24)_58%,rgba(255,22,84,0)_100%)]" />
-        <div className="absolute right-[-120px] top-[-120px] h-[320px] w-[320px] rounded-full bg-[radial-gradient(circle,rgba(255,22,84,0.18)_0%,rgba(255,22,84,0)_72%)]" />
-        <div className="absolute bottom-[-140px] left-[-120px] h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(255,22,84,0.14)_0%,rgba(255,22,84,0)_72%)]" />
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[220px] bg-[radial-gradient(circle_at_top,rgba(255,22,84,0.18),transparent_64%)]"
+      />
 
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={creating}
-          className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.05] text-white/[0.72] transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Close create match overlay"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
+      <div className="mx-auto flex min-h-screen max-w-[1600px] items-start justify-center px-4 pb-12 pt-[140px] md:px-6 md:pt-[168px]">
         {!user ? (
-          <div className="relative flex h-full items-center justify-center p-6">
-            <div className="w-full max-w-[430px] rounded-[26px] border border-white/10 bg-black/25 p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+          <section
+            className="w-full max-w-[903px] rounded-[18px] border border-[#ff1654] bg-[#282828] px-6 py-8 shadow-[0_30px_100px_rgba(0,0,0,0.45)] md:px-12 md:py-12"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-match-title"
+          >
+            <div className="mx-auto max-w-[520px] text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#ff1654]/[0.14] text-[#ff1654]">
                 <Lock className="h-7 w-7" />
               </div>
-              <p className="mt-6 text-sm font-display uppercase tracking-[0.18em] text-white/[0.42]">
-                Sign In Required
-              </p>
-              <h2
+              <h1
                 id="create-match-title"
-                className="mt-4 text-4xl uppercase text-white"
-                style={{ fontFamily: "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif" }}
+                className="mt-8 text-[36px] leading-[0.95] text-white md:text-[64px]"
+                style={{ fontFamily: FONT_EXPANDED_BOLD }}
               >
-                CREATE MATCH
-              </h2>
-              <p className="mt-4 text-base leading-6 text-white/[0.62]">
-                Log in with Discord to open a live arena, lock your entry fee and publish the match to the board.
+                SPECIFY DETAILS
+              </h1>
+              <p className="mt-6 text-base text-white/80 md:text-lg" style={{ fontFamily: FONT_REGULAR }}>
+                Sign in to create a live match token and push it to the arena.
               </p>
-              <Link
-                to="/auth?next=%2Fmatches%2Fcreate"
-                className="btn-premium mt-8 inline-flex h-12 items-center justify-center rounded-[14px] px-6 text-sm font-semibold uppercase tracking-[0.08em] no-underline"
-              >
-                Continue With Discord
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="relative grid h-full grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_390px] max-[980px]:grid-cols-1">
-            <div className="overflow-y-auto px-7 pb-7 pt-7 xl:px-8 xl:pb-8">
-              <div className="flex items-start justify-between gap-6 border-b border-white/[0.08] pb-6 pr-14">
-                <div>
-                  <p className="text-sm font-display uppercase tracking-[0.18em] text-[#ff9ab3]">
-                    OBT Matchmaker
-                  </p>
-                  <h2
-                    id="create-match-title"
-                    className="mt-3 text-[46px] uppercase leading-none text-white xl:text-[54px]"
-                    style={{ fontFamily: "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif" }}
-                  >
-                    Create Match
-                  </h2>
-                  <p className="mt-3 max-w-[720px] text-[17px] leading-6 text-white/[0.62] xl:text-[18px]">
-                    Open a live arena with the original OBT match rules. Entry fees, team payments and prize pool
-                    calculations use the real backend flow already wired to Supabase.
+              <div className="mt-10 rounded-[18px] border border-[#ff1654]/30 bg-black/30 px-5 py-4 text-left">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-[#ff6a8f]" />
+                  <p className="text-sm text-white/80 md:text-base" style={{ fontFamily: FONT_REGULAR }}>
+                    You need an authenticated wallet before locking entry fees and publishing a token.
                   </p>
                 </div>
-
-                <div className="hidden rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-right max-[980px]:hidden">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.38]">Wallet</p>
-                  <div className="mt-2">
-                    <CoinDisplay amount={walletBalance} size="lg" />
-                  </div>
+              </div>
+              <Link
+                to="/auth?next=%2Fmatches%2Fcreate"
+                className="mx-auto mt-10 inline-flex h-[69px] w-full max-w-[361px] items-center justify-center rounded-[23px] bg-[#ff1654] text-[30px] text-white transition-transform duration-200 hover:scale-[1.01] md:text-[36px]"
+                style={{ fontFamily: FONT_WIDE_BLACK }}
+              >
+                SIGN IN
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <section
+            className="w-full max-w-[903px] rounded-[18px] border border-[#ff1654] bg-[#282828] shadow-[0_30px_100px_rgba(0,0,0,0.45)]"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-match-title"
+            data-testid="create-match-panel"
+          >
+            <div className="max-h-[calc(100vh-220px)] overflow-y-auto px-5 py-8 sm:px-8 md:px-12 md:py-10">
+              <div className="text-center">
+                <h1
+                  id="create-match-title"
+                  className="text-[38px] leading-[0.95] text-white md:text-[64px]"
+                  style={{ fontFamily: FONT_EXPANDED_BOLD }}
+                >
+                  SPECIFY DETAILS
+                </h1>
+                <div className="mt-8 flex items-center justify-center gap-7 md:gap-16" role="tablist" aria-label="Create match steps">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={step === 'game'}
+                    onClick={() => setStep('game')}
+                    className={cn(
+                      'relative pb-3 text-[22px] text-white transition-colors md:text-[32px]',
+                      step === 'game' ? 'text-white' : 'text-white/70',
+                    )}
+                    style={{ fontFamily: step === 'game' ? FONT_BOLD : FONT_REGULAR }}
+                  >
+                    GAME
+                    {step === 'game' && (
+                      <span className="absolute bottom-0 left-1/2 h-[2px] w-[110px] -translate-x-1/2 bg-[#ff1654] md:w-[150px]" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={step === 'tokens'}
+                    onClick={() => {
+                      if (step === 'tokens' || gameStepValid) {
+                        setStep('tokens');
+                      }
+                    }}
+                    className={cn(
+                      'relative pb-3 text-[22px] transition-colors md:text-[32px]',
+                      step === 'tokens' ? 'text-white' : 'text-white/70',
+                    )}
+                    style={{ fontFamily: step === 'tokens' ? FONT_BOLD : FONT_REGULAR }}
+                  >
+                    TOKENS
+                    {step === 'tokens' && (
+                      <span className="absolute bottom-0 left-1/2 h-[2px] w-[110px] -translate-x-1/2 bg-[#ff1654] md:w-[150px]" />
+                    )}
+                  </button>
                 </div>
               </div>
 
-              {!isProfileComplete && (
-                <div className="mt-6 flex items-start gap-3 rounded-[20px] border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
-                  <AlertCircle className="mt-0.5 h-5 w-5 flex-none" />
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.08em]">Epic Games Missing</p>
-                    <p className="mt-1 text-sm leading-6 text-amber-100/80">
-                      Match creation still follows the original rule set and requires an Epic Games connection on your
-                      profile before the RPC can proceed.
-                    </p>
+              {step === 'game' ? (
+                <div className="mt-8 space-y-8 md:mt-10">
+                  <section>
+                    <FigmaSectionLabel>Mode:</FigmaSectionLabel>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {MODE_OPTIONS.map((option) => (
+                        <SelectionButton
+                          key={option.value}
+                          active={mode === option.value}
+                          label={option.label}
+                          onClick={() => setMode(option.value)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <FigmaSectionLabel>Team size:</FigmaSectionLabel>
+                    <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                      {TEAM_SIZE_OPTIONS.map((option) => (
+                        <SelectionButton
+                          key={option.value}
+                          active={teamSize === option.value}
+                          label={option.label}
+                          onClick={() => resetTeamState(option.value)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <FigmaSectionLabel>Platform:</FigmaSectionLabel>
+                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                      {PLATFORM_OPTIONS.map((option) => (
+                        <SelectionButton
+                          key={option.value}
+                          active={platform === option.value}
+                          label={option.label}
+                          onClick={() => setPlatform(option.value)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+
+                  {isTeamMatch && (
+                    <section className="space-y-6">
+                      <div>
+                        <FigmaSectionLabel>Select team:</FigmaSectionLabel>
+                        <div className="mt-4">
+                          <TeamSelector
+                            teamSize={teamSize}
+                            entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
+                            selectedTeamId={selectedTeam?.id ?? null}
+                            onSelectTeam={(team) => setSelectedTeam(team as SelectedTeam | null)}
+                            paymentMode={paymentMode}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <FigmaSectionLabel>Payment mode:</FigmaSectionLabel>
+                        <div className="mt-4">
+                          <PaymentModeSelector
+                            paymentMode={paymentMode}
+                            onChangePaymentMode={setPaymentMode}
+                            entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
+                            teamSize={teamSize}
+                            memberBalances={selectedTeam?.memberBalances}
+                            userBalance={walletBalance}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="rounded-[18px] border border-white/10 bg-black/25 px-4 py-4">
+                        <div className="flex items-start gap-3">
+                          <Users className="mt-1 h-5 w-5 shrink-0 text-[#ff6a8f]" />
+                          <div className="space-y-1">
+                            <p className="text-sm text-white/95 md:text-base" style={{ fontFamily: FONT_EXPANDED }}>
+                              TEAM PAYMENT
+                            </p>
+                            <p className="text-sm text-white/70" style={{ fontFamily: FONT_REGULAR }}>
+                              {teamCostCopy}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  )}
+
+                  {!gameStepValid && (
+                    <StatusNotice>
+                      Select a team to unlock the token step for {teamSize}v{teamSize} matches.
+                    </StatusNotice>
+                  )}
+
+                  <div className="mx-auto mt-2 h-px w-full max-w-[589px] bg-white/60" />
+
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleNextStep}
+                      disabled={!gameStepValid}
+                      className={cn(
+                        'inline-flex h-[69px] w-full max-w-[361px] items-center justify-center gap-3 rounded-[23px] bg-[#ff1654] text-[30px] text-white transition-all duration-200 md:text-[36px]',
+                        !gameStepValid && 'cursor-not-allowed opacity-45',
+                      )}
+                      style={{ fontFamily: FONT_WIDE_BLACK }}
+                    >
+                      NEXT STEP
+                      <ArrowRight className="h-7 w-7 md:h-8 md:w-8" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-8 space-y-8 md:mt-10">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <section>
+                      <FigmaSectionLabel>Entry fee:</FigmaSectionLabel>
+                      <div className="mt-4 flex h-[59px] items-center rounded-[18px] bg-[rgba(0,0,0,0.5)] px-4">
+                        <img src={oleboyCoin} alt="" className="h-[28px] w-[28px] shrink-0 object-contain" />
+                        <input
+                          aria-label="Entry fee"
+                          inputMode="decimal"
+                          type="number"
+                          min="0.5"
+                          step="0.5"
+                          value={entryFeeInput}
+                          onChange={(event) => setEntryFeeInput(event.target.value.replace(',', '.'))}
+                          onBlur={handleEntryFeeBlur}
+                          className="ml-3 w-full bg-transparent text-right text-[24px] text-white outline-none md:text-[28px]"
+                          style={{ fontFamily: FONT_EXPANDED_BOLD }}
+                        />
+                      </div>
+                    </section>
+
+                    <section>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <FigmaSectionLabel>Total Pool:</FigmaSectionLabel>
+                        <p className="text-[14px] text-[#ff1654] md:text-[16px]" style={{ fontFamily: FONT_EXPANDED }}>
+                          ({playerCount} players)
+                        </p>
+                      </div>
+                      <div className="mt-4 flex h-[59px] items-center rounded-[18px] bg-[rgba(0,0,0,0.5)] px-4">
+                        <img src={oleboyCoin} alt="" className="h-[28px] w-[28px] shrink-0 object-contain" />
+                        <p
+                          className="ml-3 w-full text-right text-[24px] text-white md:text-[28px]"
+                          style={{ fontFamily: FONT_EXPANDED_BOLD }}
+                          data-testid="total-pool-value"
+                        >
+                          {formatAmount(totalPool)}
+                        </p>
+                      </div>
+                    </section>
+                  </div>
+
+                  <section>
+                    <FigmaSectionLabel>Prize:</FigmaSectionLabel>
+                    <div className="mt-4 flex min-h-[91px] items-center rounded-[21px] bg-[linear-gradient(90deg,rgba(255,22,84,0.42)_0%,rgba(15,4,4,0.42)_65%),linear-gradient(90deg,rgba(15,4,4,0.32)_0%,rgba(15,4,4,0.32)_100%)] px-5 py-5">
+                      <img src={oleboyCoin} alt="" className="h-[46px] w-[46px] shrink-0 object-contain" />
+                      <p
+                        className="ml-auto text-right text-[34px] text-white md:text-[42px]"
+                        style={{ fontFamily: FONT_EXPANDED_BOLD }}
+                        data-testid="prize-value"
+                      >
+                        {formatAmount(prize)}
+                      </p>
+                    </div>
+                  </section>
+
+                  <div className="rounded-[18px] border border-white/10 bg-black/25 px-4 py-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="flex items-start gap-3">
+                        <Coins className="mt-1 h-5 w-5 shrink-0 text-[#ff6a8f]" />
+                        <div className="space-y-1">
+                          <p className="text-sm text-white/95 md:text-base" style={{ fontFamily: FONT_EXPANDED }}>
+                            TOKEN SNAPSHOT
+                          </p>
+                          <p className="text-sm text-white/70" style={{ fontFamily: FONT_REGULAR }}>
+                            Region locks to {region}. Platform stays on {currentPlatformLabel}. Mode publishes as {mode}.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 rounded-full border border-white/10 bg-white/5 px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8 border border-white/10">
+                            <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.username} />
+                            <AvatarFallback className="bg-black/50 text-xs text-white">
+                              {profile?.username?.charAt(0)?.toUpperCase() ?? 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.16em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>
+                              Available wallet
+                            </p>
+                            <p className="text-sm text-white" style={{ fontFamily: FONT_WIDE_BLACK }}>
+                              {formatAmount(walletBalance)} OBT
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isProfileComplete && (
+                    <StatusNotice>
+                      Add your Epic Games username in{' '}
+                      <Link to="/profile" className="underline underline-offset-4">
+                        Profile
+                      </Link>{' '}
+                      before publishing a token.
+                    </StatusNotice>
+                  )}
+
+                  {!isEntryFeeValid && (
+                    <StatusNotice variant="error">
+                      Entry fee must be at least 0.50 OBT.
+                    </StatusNotice>
+                  )}
+
+                  {isEntryFeeValid && !canAfford && (
+                    <StatusNotice variant="error">
+                      {isTeamMatch && paymentMode === 'split' ? (
+                        <>One or more selected teammates do not have enough balance for this token.</>
+                      ) : (
+                        <>
+                          You need {formatAmount(isTeamMatch ? totalCost : normalizedEntryFee)} OBT to create this token.{' '}
+                          <Link to="/buy" className="underline underline-offset-4">
+                            Buy Coins
+                          </Link>
+                          .
+                        </>
+                      )}
+                    </StatusNotice>
+                  )}
+
+                  <div className="mx-auto h-px w-full max-w-[589px] bg-white/60" />
+
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleCreate}
+                      disabled={!finalCreateEnabled || creating}
+                      className={cn(
+                        'inline-flex h-[69px] w-full max-w-[361px] items-center justify-center gap-3 rounded-[23px] bg-[#ff1654] text-[30px] text-white transition-all duration-200 md:text-[36px]',
+                        (!finalCreateEnabled || creating) && 'cursor-not-allowed opacity-45',
+                      )}
+                      style={{ fontFamily: FONT_WIDE_BLACK }}
+                    >
+                      {creating ? (
+                        <>
+                          <Loader2 className="h-7 w-7 animate-spin md:h-8 md:w-8" />
+                          CREATING
+                        </>
+                      ) : (
+                        'CREATE TOKEN'
+                      )}
+                    </button>
                   </div>
                 </div>
               )}
-
-              <div className="mt-6 space-y-5">
-                <section className="rounded-[24px] border border-white/10 bg-white/[0.035] p-5 xl:p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#ff1654]/[0.14] text-[#ff1654]">
-                      <Coins className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-[24px] uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif" }}>
-                        Entry Fee
-                      </h3>
-                      <p className="mt-1 text-sm text-white/[0.48]">Choose the stake per player for this match.</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6">
-                    {ENTRY_FEE_PRESETS.map((fee) => (
-                      <button
-                        key={fee}
-                        type="button"
-                        onClick={() => {
-                          setEntryFee(fee);
-                          setCustomFee('');
-                        }}
-                        className={cn(
-                          'h-12 rounded-[14px] border text-sm font-semibold transition',
-                          entryFee === fee && customFee.trim().length === 0
-                            ? 'border-[#ff1654] bg-[#ff1654] text-white shadow-[0_0_22px_rgba(255,22,84,0.28)]'
-                            : 'border-white/[0.12] bg-black/20 text-white/[0.72] hover:border-[#ff1654]/[0.65] hover:text-white'
-                        )}
-                      >
-                        {fee.toFixed(fee % 1 === 0 ? 0 : 1)}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-4">
-                    <input
-                      type="number"
-                      value={customFee}
-                      onChange={(event) => setCustomFee(event.target.value)}
-                      min={0.5}
-                      step={0.5}
-                      placeholder="Custom amount"
-                      className="h-12 w-full rounded-[14px] border border-white/[0.12] bg-black/20 px-4 text-base text-white outline-none transition placeholder:text-white/[0.28] focus:border-[#ff1654]"
-                    />
-                    <p className="mt-2 text-xs uppercase tracking-[0.12em] text-white/[0.32]">Minimum 0.50 OBT</p>
-                  </div>
-                </section>
-
-                <section className="rounded-[24px] border border-white/10 bg-white/[0.035] p-5 xl:p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-cyan-500/[0.12] text-cyan-300">
-                      <Users className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-[24px] uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif" }}>
-                        Match Format
-                      </h3>
-                      <p className="mt-1 text-sm text-white/[0.48]">Select the lobby size and who covers the entry.</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {TEAM_SIZES.map((sizeOption) => (
-                      <button
-                        key={sizeOption.value}
-                        type="button"
-                        onClick={() => handleTeamSizeChange(sizeOption.value)}
-                        className={cn(
-                          'h-14 rounded-[16px] border px-3 text-center text-sm font-semibold uppercase transition',
-                          teamSize === sizeOption.value
-                            ? 'border-[#ff1654] bg-[#ff1654] text-white shadow-[0_0_22px_rgba(255,22,84,0.28)]'
-                            : 'border-white/[0.12] bg-black/20 text-white/[0.72] hover:border-[#ff1654]/[0.65] hover:text-white'
-                        )}
-                      >
-                        {sizeOption.value}v{sizeOption.value}
-                      </button>
-                    ))}
-                  </div>
-
-                  {isTeamMatch && (
-                    <div className="mt-6">
-                      <div className="mb-3 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.16em] text-white/[0.38]">Eligible Teams</p>
-                          <p className="mt-1 text-sm text-white/[0.58]">
-                            Teams need exactly {teamSize} accepted members for this format.
-                          </p>
-                        </div>
-                        {teamsLoading && <span className="text-xs uppercase tracking-[0.16em] text-white/[0.35]">Loading…</span>}
-                      </div>
-
-                      {teamsLoading ? (
-                        <div className="rounded-[18px] border border-white/10 bg-black/20 p-5 text-sm text-white/[0.46]">
-                          Checking your eligible teams and member balances…
-                        </div>
-                      ) : (eligibleTeams as EligibleTeam[]).length === 0 ? (
-                        <div className="rounded-[18px] border border-dashed border-white/[0.12] bg-black/20 p-5 text-sm leading-6 text-white/[0.56]">
-                          No eligible team found for {teamSize}v{teamSize}. Create or complete a team with exactly{' '}
-                          {teamSize} accepted members to unlock team match creation.
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {(eligibleTeams as EligibleTeam[]).map((team) => {
-                            const insufficientMembers =
-                              paymentMode === 'split'
-                                ? team.memberBalances?.filter((member) => member.balance < actualFee) ?? []
-                                : [];
-                            const canSelect = paymentMode === 'cover' || insufficientMembers.length === 0;
-                            const isSelected = selectedTeamId === team.id;
-
-                            return (
-                              <button
-                                key={team.id}
-                                type="button"
-                                onClick={() => {
-                                  if (canSelect) {
-                                    setSelectedTeamId(isSelected ? null : team.id);
-                                  }
-                                }}
-                                className={cn(
-                                  'w-full rounded-[20px] border px-4 py-4 text-left transition',
-                                  isSelected
-                                    ? 'border-[#ff1654] bg-[#ff1654]/10 shadow-[0_0_18px_rgba(255,22,84,0.18)]'
-                                    : 'border-white/10 bg-black/20 hover:border-white/[0.22]',
-                                  !canSelect && 'cursor-not-allowed opacity-[0.55]'
-                                )}
-                              >
-                                <div className="flex items-start justify-between gap-4">
-                                  <div>
-                                    <div className="flex items-center gap-3">
-                                      <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-white/[0.06] text-sm font-semibold uppercase text-white">
-                                        {team.tag || team.name.slice(0, 3)}
-                                      </div>
-                                      <div>
-                                        <p className="text-base font-semibold uppercase text-white">{team.name}</p>
-                                        <p className="text-xs uppercase tracking-[0.14em] text-white/[0.42]">
-                                          {team.acceptedMemberCount} accepted members
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {paymentMode === 'split' && insufficientMembers.length > 0 && (
-                                      <div className="mt-3 flex items-start gap-2 rounded-[14px] border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-100/86">
-                                        <AlertCircle className="mt-0.5 h-4 w-4 flex-none" />
-                                        <span>
-                                          Insufficient split balance: {insufficientMembers.map((member) => member.username).join(', ')}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="flex -space-x-2">
-                                    {team.members.slice(0, 4).map((member) => (
-                                      <Avatar key={member.id} className="h-9 w-9 border-2 border-[#12080b]">
-                                        <AvatarImage src={member.profile?.avatar_url ?? undefined} />
-                                        <AvatarFallback className="bg-white/10 text-xs uppercase text-white">
-                                          {member.profile?.username?.slice(0, 1) ?? '?'}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                    ))}
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {selectedTeam && (
-                        <div className="mt-6">
-                          <p className="mb-3 text-xs uppercase tracking-[0.16em] text-white/[0.38]">Payment Mode</p>
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <button
-                              type="button"
-                              onClick={() => setPaymentMode('cover')}
-                              className={cn(
-                                'rounded-[20px] border p-4 text-left transition',
-                                paymentMode === 'cover'
-                                  ? 'border-[#ff1654] bg-[#ff1654]/10'
-                                  : 'border-white/10 bg-black/20 hover:border-white/[0.22]'
-                              )}
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-semibold uppercase text-white">Cover All</p>
-                                  <p className="mt-1 text-sm leading-5 text-white/[0.52]">
-                                    You pay the full team entry and carry the lobby cost.
-                                  </p>
-                                </div>
-                                <CoinDisplay amount={totalCost} size="md" />
-                              </div>
-                              {!canAffordCover && (
-                                <p className="mt-3 text-xs uppercase tracking-[0.14em] text-amber-200/86">
-                                  Need {totalCost.toFixed(2)} OBT in your wallet.
-                                </p>
-                              )}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (selectedTeam.memberBalances?.every((member) => member.balance >= actualFee)) {
-                                  setPaymentMode('split');
-                                }
-                              }}
-                              className={cn(
-                                'rounded-[20px] border p-4 text-left transition',
-                                paymentMode === 'split'
-                                  ? 'border-[#ff1654] bg-[#ff1654]/10'
-                                  : 'border-white/10 bg-black/20 hover:border-white/[0.22]',
-                                !selectedTeam.memberBalances?.every((member) => member.balance >= actualFee) &&
-                                  'opacity-60'
-                              )}
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-semibold uppercase text-white">Split</p>
-                                  <p className="mt-1 text-sm leading-5 text-white/[0.52]">
-                                    Each accepted member pays their own entry fee.
-                                  </p>
-                                </div>
-                                <CoinDisplay amount={actualFee} size="md" />
-                              </div>
-                              {!canAffordSplit && (
-                                <p className="mt-3 text-xs uppercase tracking-[0.14em] text-amber-200/86">
-                                  Every member needs {actualFee.toFixed(2)} OBT available.
-                                </p>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </section>
-
-                <section className="rounded-[24px] border border-white/10 bg-white/[0.035] p-5 xl:p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/[0.08] text-white">
-                      <Shield className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-[24px] uppercase leading-none text-white" style={{ fontFamily: "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif" }}>
-                        Match Rules
-                      </h3>
-                      <p className="mt-1 text-sm text-white/[0.48]">Configure the live lobby exactly like the legacy flow.</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-white/[0.42]">
-                        <MapPin className="h-4 w-4" />
-                        Region
-                      </span>
-                      <select
-                        value={region}
-                        onChange={(event) => setRegion(event.target.value as Region)}
-                        className="h-12 w-full rounded-[14px] border border-white/[0.12] bg-black/20 px-4 text-base text-white outline-none transition focus:border-[#ff1654]"
-                      >
-                        {REGIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-white/[0.42]">
-                        <Monitor className="h-4 w-4" />
-                        Platform
-                      </span>
-                      <select
-                        value={platform}
-                        onChange={(event) => setPlatform(event.target.value as Platform)}
-                        className="h-12 w-full rounded-[14px] border border-white/[0.12] bg-black/20 px-4 text-base text-white outline-none transition focus:border-[#ff1654]"
-                      >
-                        {PLATFORMS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-white/[0.42]">
-                        <Crosshair className="h-4 w-4" />
-                        Mode
-                      </span>
-                      <select
-                        value={mode}
-                        onChange={(event) => setMode(event.target.value as GameMode)}
-                        className="h-12 w-full rounded-[14px] border border-white/[0.12] bg-black/20 px-4 text-base text-white outline-none transition focus:border-[#ff1654]"
-                      >
-                        {GAME_MODES.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-white/[0.42]">
-                        <Target className="h-4 w-4" />
-                        First To
-                      </span>
-                      <select
-                        value={String(firstTo)}
-                        onChange={(event) => setFirstTo(Number.parseInt(event.target.value, 10))}
-                        className="h-12 w-full rounded-[14px] border border-white/[0.12] bg-black/20 px-4 text-base text-white outline-none transition focus:border-[#ff1654]"
-                      >
-                        {FIRST_TO_OPTIONS.map((option) => (
-                          <option key={option} value={String(option)}>
-                            First to {option}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between rounded-[18px] border border-white/10 bg-black/20 px-4 py-4">
-                    <div className="flex items-start gap-3">
-                      <Lock className="mt-0.5 h-5 w-5 text-white/[0.46]" />
-                      <div>
-                        <p className="text-sm font-semibold uppercase text-white">Private Match</p>
-                        <p className="mt-1 text-sm leading-5 text-white/[0.48]">
-                          Only players with the invite link can join this arena.
-                        </p>
-                      </div>
-                    </div>
-                    <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
-                  </div>
-                </section>
-              </div>
             </div>
-
-            <aside className="relative flex flex-col border-l border-white/[0.08] bg-black/[0.18] px-6 pb-6 pt-7 xl:px-7 max-[980px]:border-l-0 max-[980px]:border-t max-[980px]:border-white/[0.08]">
-              <div>
-                <p className="text-sm font-display uppercase tracking-[0.18em] text-white/[0.42]">Live Summary</p>
-                <div className="mt-5 rounded-[22px] border border-[#ff1654]/[0.26] bg-[#ff1654]/[0.08] p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-[0.16em] text-white/[0.48]">Available Wallet</span>
-                    <CoinDisplay amount={walletBalance} size="md" />
-                  </div>
-
-                  <div className="mt-4 space-y-3 text-sm text-white/[0.72]">
-                    <div className="flex items-center justify-between gap-4">
-                      <span>Entry Fee</span>
-                      <CoinDisplay amount={actualFee} size="sm" />
-                    </div>
-
-                    {isTeamMatch && (
-                      <div className="flex items-center justify-between gap-4">
-                        <span>Team Cost ({teamSize} players)</span>
-                        <CoinDisplay amount={totalCost} size="sm" />
-                      </div>
-                    )}
-
-                    {isTeamMatch && selectedTeam && (
-                      <div className="flex items-center justify-between gap-4">
-                        <span>Payment Mode</span>
-                        <span className="text-xs uppercase tracking-[0.16em] text-white">
-                          {paymentMode === 'cover' ? 'Cover All' : 'Split'}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="h-px bg-white/10" />
-
-                    <div className="flex items-center justify-between gap-4">
-                      <span>Total Prize Pool</span>
-                      <CoinDisplay amount={prizePool} size="md" />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <span>Platform Fee</span>
-                      <CoinDisplay amount={platformFeeAmount} size="sm" className="text-white/[0.62]" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/[0.38]">Match Rules Snapshot</p>
-                  <ul className="mt-4 space-y-3 text-sm leading-6 text-white/[0.64]">
-                    <li>Entry funds are locked immediately at creation time.</li>
-                    <li>Prize pool is calculated with the platform fee already deducted.</li>
-                    <li>Team matches follow the original cover or split payment logic.</li>
-                  </ul>
-                </div>
-
-                {(!canCreate || !isValidFee) && (
-                  <div className="mt-5 rounded-[20px] border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-6 text-amber-100/88">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="mt-0.5 h-5 w-5 flex-none" />
-                      <div>
-                        {!isValidFee ? (
-                          <span>Set a valid entry fee of at least 0.50 OBT to continue.</span>
-                        ) : isTeamMatch && !selectedTeam ? (
-                          <span>Select an eligible team before creating the live arena.</span>
-                        ) : paymentMode === 'cover' ? (
-                          <span>You need enough OBT in your wallet to cover this match setup.</span>
-                        ) : (
-                          <span>Every selected team member needs enough OBT for split payment.</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-auto pt-6">
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  disabled={creating || !canCreate}
-                  className={cn(
-                    'flex h-14 w-full items-center justify-center gap-3 rounded-[16px] border border-[#ff1654] bg-[#ff1654] text-sm font-semibold uppercase tracking-[0.12em] text-white transition',
-                    creating || !canCreate
-                      ? 'cursor-not-allowed opacity-50'
-                      : 'shadow-[0_0_24px_rgba(255,22,84,0.28)] hover:brightness-110'
-                  )}
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Creating Match
-                    </>
-                  ) : (
-                    'Create Match'
-                  )}
-                </button>
-              </div>
-            </aside>
-          </div>
+          </section>
         )}
       </div>
     </div>
