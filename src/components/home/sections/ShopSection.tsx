@@ -43,7 +43,7 @@ export const ShopSection = () => {
         {/* Right side — star + CTA */}
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
           <img
-            className="absolute top-[102px] left-[47px] w-[760px] h-[388px] rotate-[-15.44deg]"
+            className="absolute top-[98px] left-[39px] w-[788px] h-[401px] rotate-[-15.44deg]"
             alt=""
             src={imgStarShape}
           />
@@ -60,10 +60,10 @@ export const ShopSection = () => {
             </div>
           </button>
 
-          <div className="absolute top-[196px] left-[118px] w-[600px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
-            <span>Cosmetics, coins, VIP.</span>
-            <span>Everything you need</span>
-            <span>to set you up!</span>
+          <div className="absolute top-[242px] right-[169px] flex flex-col items-end [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-right tracking-[0] leading-[normal]">
+            <span className="whitespace-nowrap">Cosmetics, coins, VIP.</span>
+            <span className="whitespace-nowrap">Everything you need</span>
+            <span className="whitespace-nowrap">to set you up!</span>
           </div>
         </div>
 
