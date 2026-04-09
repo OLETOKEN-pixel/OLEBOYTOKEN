@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { ACTIVE_HOME_ASSETS } from '@/components/home/sections/activeHomeAssets';
 import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
 import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
 import { TeamSelectDialog } from '@/components/matches/TeamSelectDialog';
@@ -9,18 +10,30 @@ import { useJoinMatch } from '@/hooks/useMatches';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  formatMatchTitle,
+  formatEntryFee,
   formatFirstTo,
+  formatMatchTitle,
   formatPlatform,
   formatPrize,
-  formatEntryFee,
   formatTimeLeft,
 } from '@/lib/matchFormatters';
-import type { Match, Platform, PaymentMode } from '@/types';
+import { cn } from '@/lib/utils';
+import type { Match, PaymentMode, Platform } from '@/types';
 
 type TeamSizeFilter = 'all' | '1' | '2' | '3' | '4';
 type PlatformFilter = 'all' | Platform;
 type ModeFilter = 'all' | 'Box Fight' | 'Build Fight' | 'Realistic' | 'Zone Wars';
+
+const FONT_REGULAR =
+  "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED =
+  "'Base_Neue_Trial:Expanded', 'Base Neue Trial-Expanded', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BOLD =
+  "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BLACK =
+  "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial-ExpandedBlack Oblique', 'Base Neue Trial', sans-serif";
+const FONT_WIDE_BLACK =
+  "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial-WideBlack', 'Base Neue Trial', sans-serif";
 
 const TEAM_SIZE_OPTIONS: Array<{ value: TeamSizeFilter; label: string }> = [
   { value: 'all', label: 'TEAM SIZE' },
@@ -57,11 +70,21 @@ function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterS
   const activeOption = options.find((option) => option.value === value) ?? options[0];
 
   return (
-    <div className={`matches-page__filter matches-page__filter--${width}`}>
-      <span className="matches-page__filter-label">{activeOption?.label}</span>
+    <div
+      className={cn(
+        'relative h-[48px] overflow-hidden rounded-[17px] border border-white/35 bg-[rgba(59,59,59,0.78)] pl-[20px] pr-[48px] shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)]',
+        width === 'wide' ? 'w-[223px]' : 'w-[146px]',
+      )}
+    >
+      <span
+        className="pointer-events-none flex h-full items-center uppercase text-white"
+        style={{ fontFamily: FONT_EXPANDED, fontSize: '18px', letterSpacing: '0.02em' }}
+      >
+        {activeOption?.label}
+      </span>
 
       <select
-        className="matches-page__filter-native"
+        className="absolute inset-0 cursor-pointer opacity-0"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={options[0]?.label ?? 'Filter'}
@@ -74,7 +97,7 @@ function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterS
       </select>
 
       <img
-        className="matches-page__filter-chevron"
+        className="pointer-events-none absolute right-[16px] top-1/2 h-[10px] w-[15px] -translate-y-1/2"
         src="/figma-assets/matches-filter-chevron.svg"
         alt=""
         aria-hidden="true"
@@ -85,57 +108,43 @@ function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterS
 
 function MatchesPlaceholderCard() {
   return (
-    <article className="matches-live-card matches-live-card--placeholder" aria-hidden="true">
-      <header className="matches-live-card__header">
-        <div className="matches-live-card__placeholder-bar matches-live-card__placeholder-bar--title" />
-        <div className="matches-live-card__divider matches-live-card__divider--placeholder" />
-      </header>
+    <article className="flex min-h-[392px] flex-col rounded-[30px] border border-[#ff1654]/45 bg-[#272727] px-[30px] pb-[28px] pt-[26px] shadow-[0_16px_36px_rgba(0,0,0,0.32)]">
+      <div className="h-[34px] w-[242px] rounded-full bg-white/10" />
+      <div className="mt-[13px] h-[3px] w-[258px] rounded-full bg-[#ff1654]/40" />
 
-      <div className="matches-live-card__info-grid">
-        <div className="matches-live-card__metric">
-          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label" />
-          <div className="matches-live-card__value-row matches-live-card__value-row--first-to">
-            <div className="matches-live-card__placeholder-dot" />
-            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value-lg" />
+      <div className="mt-[25px] grid grid-cols-2 gap-x-7 gap-y-6">
+        <div className="space-y-3">
+          <div className="h-5 w-[92px] rounded-full bg-white/10" />
+          <div className="flex items-center gap-3">
+            <div className="h-[28px] w-[19px] rounded-full bg-[#ff1654]/30" />
+            <div className="h-9 w-[86px] rounded-full bg-white/12" />
           </div>
         </div>
 
-        <div className="matches-live-card__metric matches-live-card__metric--platform">
-          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label matches-live-card__placeholder-line--center" />
-          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--platform" />
+        <div className="space-y-3">
+          <div className="h-5 w-[96px] rounded-full bg-white/10" />
+          <div className="h-9 w-[88px] rounded-full bg-white/12" />
         </div>
 
-        <div className="matches-live-card__metric matches-live-card__metric--money">
-          <div className="matches-live-card__money-labels">
-            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label" />
-            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label matches-live-card__placeholder-line--short" />
+        <div className="col-span-2 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="h-5 w-[88px] rounded-full bg-white/10" />
+            <div className="h-5 w-[60px] rounded-full bg-white/10" />
           </div>
-
-          <div className="matches-live-card__money-values">
-            <div className="matches-live-card__value-row">
-              <div className="matches-live-card__placeholder-dot" />
-              <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value" />
-            </div>
-
-            <div className="matches-live-card__placeholder-arrow" />
-
-            <div className="matches-live-card__value-row">
-              <div className="matches-live-card__placeholder-prize" />
-              <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value" />
-            </div>
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-[120px] rounded-full bg-white/12" />
+            <div className="h-3 w-[18px] rounded-full bg-white/8" />
+            <div className="h-9 w-[120px] rounded-full bg-white/12" />
           </div>
         </div>
 
-        <div className="matches-live-card__metric matches-live-card__metric--expires">
-          <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--label" />
-          <div className="matches-live-card__value-row">
-            <div className="matches-live-card__placeholder-dot" />
-            <div className="matches-live-card__placeholder-line matches-live-card__placeholder-line--value" />
-          </div>
+        <div className="col-span-2 space-y-3">
+          <div className="h-5 w-[88px] rounded-full bg-white/10" />
+          <div className="h-9 w-[126px] rounded-full bg-white/12" />
         </div>
       </div>
 
-      <div className="matches-live-card__accept matches-live-card__accept--placeholder" />
+      <div className="mt-auto h-[58px] rounded-[18px] border border-[#ff1654]/45 bg-[rgba(255,22,84,0.18)]" />
     </article>
   );
 }
@@ -146,46 +155,89 @@ interface MatchesEmptyStateProps {
 
 function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
   const eyebrow = hasActiveFilters ? 'FILTERED VIEW' : 'ARENA STANDBY';
-  const title = hasActiveFilters ? 'NO MATCHES FOR THIS SETUP' : 'NO LIVE MATCHES RIGHT NOW';
   const description = hasActiveFilters
-    ? 'Nothing is live for the selected team size, platform or mode. Widen the filters and the board will refresh as soon as a matching arena opens.'
+    ? 'Nothing is live for the selected team size, platform or mode. Widen the filters and the board refreshes the second a matching arena opens.'
     : 'The board is quiet for now. The second a player opens the next live arena, the first match card lands here in real time.';
   const status = hasActiveFilters ? 'FILTERS ARE NARROWING THE BOARD' : 'WAITING FOR THE NEXT LIVE DROP';
   const panelCopy = hasActiveFilters
-    ? 'Your filters are active, so only matching live cards can appear here. Change the setup and the feed updates instantly.'
+    ? 'Your current setup is only showing a narrow slice of the live feed. Switch the filters back out and cards will repopulate immediately.'
     : 'This section is ready for real matches only. When the first lobby goes live, the feed wakes up automatically.';
   const tags = hasActiveFilters
     ? ['TEAM SIZE', 'PLATFORM', 'MODE']
     : ['REAL-TIME FEED', 'AUTO REFRESH', 'READY FOR THE NEXT ARENA'];
+  const titleLines = hasActiveFilters ? ['NO MATCHES', 'FOR THIS', 'SETUP'] : ['NO LIVE', 'MATCHES', 'RIGHT NOW'];
 
   return (
-    <section className="matches-page__empty-state" aria-live="polite">
-      <img
-        className="matches-page__empty-triangles"
-        src="/figma-assets/matches-title-triangles.svg"
-        alt=""
-        aria-hidden="true"
-      />
+    <section
+      className="grid h-full min-h-[360px] grid-cols-[minmax(0,1fr)_430px] gap-[34px] overflow-hidden rounded-[34px] border border-[#ff1654] bg-[linear-gradient(180deg,rgba(90,8,31,0.7)_0%,rgba(24,4,9,0.97)_100%)] px-[34px] py-[30px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.06)]"
+      aria-live="polite"
+    >
+      <div className="flex min-w-0 gap-[24px]">
+        <img
+          className="mt-[16px] h-[154px] w-[103px] flex-shrink-0"
+          src="/figma-assets/matches-title-triangles.svg"
+          alt=""
+          aria-hidden="true"
+        />
 
-      <div className="matches-page__empty-copy">
-        <span className="matches-page__empty-kicker">{eyebrow}</span>
-        <h2 className="matches-page__empty-title">{title}</h2>
-        <p className="matches-page__empty-description">{description}</p>
+        <div className="min-w-0 pt-[16px]">
+          <span
+            className="inline-flex w-fit items-center gap-3 rounded-full border border-[#ff1654]/65 bg-[rgba(78,7,27,0.74)] px-4 py-[9px] uppercase text-[#ffb1c6]"
+            style={{ fontFamily: FONT_EXPANDED, fontSize: '18px', letterSpacing: '0.06em' }}
+          >
+            <span className="h-3 w-3 rounded-full bg-[#ff1654]" aria-hidden="true" />
+            {eyebrow}
+          </span>
+
+          <h2
+            className="mt-[22px] whitespace-nowrap leading-[0.88] text-white"
+            style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '74px' }}
+          >
+            {titleLines.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </h2>
+
+          <p
+            className="mt-[20px] max-w-[690px] text-white/88"
+            style={{ fontFamily: FONT_REGULAR, fontSize: '23px', lineHeight: '1.17' }}
+          >
+            {description}
+          </p>
+        </div>
       </div>
 
-      <aside className="matches-page__empty-panel">
-        <span className="matches-page__empty-panel-kicker">LIVE BOARD</span>
+      <aside className="flex min-h-0 flex-col rounded-[28px] border border-white/10 bg-[rgba(41,31,33,0.94)] px-[28px] py-[26px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.04)]">
+        <span
+          className="uppercase text-white/55"
+          style={{ fontFamily: FONT_EXPANDED, fontSize: '16px', letterSpacing: '0.08em' }}
+        >
+          LIVE BOARD
+        </span>
 
-        <div className="matches-page__empty-status">
-          <span className="matches-page__empty-status-dot" aria-hidden="true" />
-          <span>{status}</span>
+        <div className="mt-[30px] flex items-center gap-3 text-white">
+          <span className="h-4 w-4 rounded-full bg-[#ff1654]" aria-hidden="true" />
+          <span style={{ fontFamily: FONT_EXPANDED_BOLD, fontSize: '24px', lineHeight: '1.02' }}>
+            {status}
+          </span>
         </div>
 
-        <p className="matches-page__empty-panel-copy">{panelCopy}</p>
+        <p
+          className="mt-[26px] text-white/74"
+          style={{ fontFamily: FONT_REGULAR, fontSize: '20px', lineHeight: '1.18' }}
+        >
+          {panelCopy}
+        </p>
 
-        <div className="matches-page__empty-tags">
+        <div className="mt-auto flex flex-wrap gap-3 pt-8">
           {tags.map((tag) => (
-            <span key={tag} className="matches-page__empty-tag">
+            <span
+              key={tag}
+              className="rounded-full border border-white/14 px-4 py-[10px] uppercase text-white/92"
+              style={{ fontFamily: FONT_EXPANDED, fontSize: '16px', letterSpacing: '0.08em' }}
+            >
               {tag}
             </span>
           ))}
@@ -211,6 +263,24 @@ export default function Matches() {
   const hasActiveFilters =
     teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
   const isCreateOverlayOpen = location.pathname === '/matches/create';
+  const isEmptyState = !loading && matches.length === 0;
+  const shouldLockViewport = loading || matches.length <= 4;
+  const contentPaddingTop = 140;
+  const contentPaddingBottom = isEmptyState ? 136 : 104;
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const handleAccept = async (match: Match) => {
     if (!user) {
@@ -223,7 +293,6 @@ export default function Matches() {
       return;
     }
 
-    // 1v1: direct join
     try {
       await joinMatch.mutateAsync({ matchId: match.id });
       navigate(`/matches/${match.id}`);
@@ -234,6 +303,7 @@ export default function Matches() {
 
   const handleTeamJoin = async (teamId: string, paymentMode: PaymentMode) => {
     if (!teamSelectMatch) return;
+
     try {
       await joinMatch.mutateAsync({
         matchId: teamSelectMatch.id,
@@ -247,16 +317,6 @@ export default function Matches() {
       toast({ title: 'Failed to join', description: err.message, variant: 'destructive' });
     }
   };
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setCurrentTime(Date.now());
-    }, 1000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -312,7 +372,7 @@ export default function Matches() {
         },
         () => {
           void fetchMatches();
-        }
+        },
       )
       .subscribe();
 
@@ -324,33 +384,42 @@ export default function Matches() {
 
   return (
     <PublicLayout>
-      <section className="matches-page">
+      <section className="relative overflow-x-hidden bg-[radial-gradient(circle_at_bottom,rgba(118,12,38,0.24),transparent_28%),linear-gradient(180deg,#160406_0%,#090203_100%)] text-white">
         <img
-          className="matches-page__top-neon"
+          className="pointer-events-none absolute left-1/2 top-0 h-[146px] w-screen -translate-x-1/2 object-cover"
           src="/figma-assets/figma-neon.png"
           alt=""
           aria-hidden="true"
         />
 
-        <div className="matches-page__content">
-          <div className="matches-page__hero">
+        <div
+          className="relative mx-auto flex flex-col"
+          style={{
+            width: 'min(1532px, calc(100% - 100px))',
+            paddingTop: `${contentPaddingTop}px`,
+            paddingBottom: `${contentPaddingBottom}px`,
+            minHeight: shouldLockViewport
+              ? `calc(100vh - ${contentPaddingTop + contentPaddingBottom}px)`
+              : undefined,
+          }}
+        >
+          <div className="relative h-[207px] w-[1263px] max-w-full">
             <img
-              className="matches-page__hero-triangles"
-              src="/figma-assets/matches-title-triangles.svg"
+              className="absolute left-0 top-0 h-[207px] w-[1263px] max-w-full object-contain object-left-top"
+              src={ACTIVE_HOME_ASSETS.liveMatches.title}
               alt=""
               aria-hidden="true"
             />
-            <img
-              className="matches-page__title-underline"
-              src="/figma-assets/matches-title-underline.svg"
-              alt=""
-              aria-hidden="true"
-            />
-            <h1 className="matches-page__title">LIVE MATCHES</h1>
+            <h1
+              className="absolute left-[79px] top-[65px] whitespace-nowrap leading-none text-white"
+              style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '96px' }}
+            >
+              LIVE MATCHES
+            </h1>
           </div>
 
-          <div className="matches-page__toolbar">
-            <div className="matches-page__toolbar-left">
+          <div className="mt-[8px] flex items-center justify-between gap-10">
+            <div className="flex items-center gap-7">
               <MatchesFilterSelect
                 value={teamSizeFilter}
                 options={TEAM_SIZE_OPTIONS}
@@ -374,52 +443,53 @@ export default function Matches() {
             </div>
 
             <button
-              className="matches-page__create-button"
+              className="flex h-[50px] items-center gap-4 rounded-[18px] border border-[#ff1654] bg-[#ff1654] px-[28px] text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.16),inset_0px_-4px_4px_rgba(0,0,0,0.22)] transition hover:brightness-110"
               type="button"
               onClick={() => navigate('/matches/create')}
             >
-              <img src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
-              <span>CREATE</span>
+              <img className="h-[21px] w-[21px]" src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
+              <span style={{ fontFamily: FONT_WIDE_BLACK, fontSize: '26px', lineHeight: 1 }}>CREATE</span>
             </button>
           </div>
 
-          <div className="matches-page__grid" aria-busy={loading}>
-            {loading &&
-              Array.from({ length: 4 }).map((_, index) => <MatchesPlaceholderCard key={`loading-${index}`} />)}
-
-            {!loading &&
-              matches.map((match) => {
-                const isOwn = !!user && match.creator_id === user.id;
-                if (isOwn) {
-                  return (
-                    <Link key={match.id} to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
-                      <MatchesLiveCard
-                        title={formatMatchTitle(match)}
-                        firstTo={formatFirstTo(match)}
-                        platform={formatPlatform(match.platform)}
-                        entryFee={formatEntryFee(match)}
-                        prize={formatPrize(match)}
-                        expiresIn={formatTimeLeft(match.expires_at, currentTime)}
-                      />
-                    </Link>
-                  );
-                }
-                return (
+          {loading ? (
+            <div className="mt-[34px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <MatchesPlaceholderCard key={`loading-${index}`} />
+              ))}
+            </div>
+          ) : isEmptyState ? (
+            <div className="mt-[34px] flex-1 min-h-0">
+              <MatchesEmptyState hasActiveFilters={hasActiveFilters} />
+            </div>
+          ) : (
+            <div className="mt-[34px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+              {matches.map((match) => {
+                const card = (
                   <MatchesLiveCard
-                    key={match.id}
                     title={formatMatchTitle(match)}
                     firstTo={formatFirstTo(match)}
                     platform={formatPlatform(match.platform)}
                     entryFee={formatEntryFee(match)}
                     prize={formatPrize(match)}
                     expiresIn={formatTimeLeft(match.expires_at, currentTime)}
-                    onAccept={() => handleAccept(match)}
+                    onAccept={!user || match.creator_id !== user.id ? () => handleAccept(match) : undefined}
+                    variant="page"
                   />
                 );
-              })}
 
-            {!loading && matches.length === 0 && <MatchesEmptyState hasActiveFilters={hasActiveFilters} />}
-          </div>
+                if (user && match.creator_id === user.id) {
+                  return (
+                    <Link key={match.id} to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
+                      {card}
+                    </Link>
+                  );
+                }
+
+                return <div key={match.id}>{card}</div>;
+              })}
+            </div>
+          )}
         </div>
 
         <CreateMatchOverlay
