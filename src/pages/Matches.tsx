@@ -61,7 +61,7 @@ const MODE_OPTIONS: Array<{ value: ModeFilter; label: string }> = [
 interface MatchesFilterSelectProps {
   value: string;
   options: Array<{ value: string; label: string }>;
-  width: 'wide' | 'narrow';
+  width: number;
   onChange: (value: string) => void;
 }
 
@@ -70,14 +70,12 @@ function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterS
 
   return (
     <div
-      className={cn(
-        'relative h-[48px] overflow-hidden rounded-[17px] border border-white/35 bg-[rgba(59,59,59,0.78)] pl-[20px] pr-[48px] shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)]',
-        width === 'wide' ? 'w-[223px]' : 'w-[146px]',
-      )}
+      className="relative h-[47px] overflow-hidden rounded-[16px] border border-white/50 bg-[#3d3d3d] pl-[19px] pr-[38px] shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)]"
+      style={{ width: `${width}px` }}
     >
       <span
         className="pointer-events-none flex h-full items-center uppercase text-white"
-        style={{ fontFamily: FONT_EXPANDED, fontSize: '18px', letterSpacing: '0.02em' }}
+        style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', letterSpacing: '0em' }}
       >
         {activeOption?.label}
       </span>
@@ -96,7 +94,7 @@ function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterS
       </select>
 
       <img
-        className="pointer-events-none absolute right-[16px] top-1/2 h-[10px] w-[15px] -translate-y-1/2"
+        className="pointer-events-none absolute right-[20px] top-1/2 h-[5px] w-[12px] -translate-y-1/2"
         src="/figma-assets/matches-filter-chevron.svg"
         alt=""
         aria-hidden="true"
@@ -230,21 +228,28 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
           {panelCopy}
         </p>
 
-        <div className="mt-auto flex flex-col items-start gap-3 pt-8">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex max-w-full items-center rounded-full border border-white/14 text-left uppercase leading-none text-white/92 whitespace-nowrap"
-              style={{
-                fontFamily: FONT_EXPANDED,
-                fontSize: tag.length > 20 ? '13px' : '16px',
-                letterSpacing: tag.length > 20 ? '0.05em' : '0.08em',
-                padding: tag.length > 20 ? '11px 16px' : '10px 16px',
-              }}
-            >
-              {tag}
-            </span>
-          ))}
+        <div className="mt-auto flex w-full flex-col items-start gap-3 pt-8">
+          {tags.map((tag) => {
+            const isLongTag = tag.length > 20;
+
+            return (
+              <span
+                key={tag}
+                className={cn(
+                  'inline-flex max-w-full items-center rounded-full border border-white/14 text-left uppercase leading-none text-white/92 whitespace-nowrap',
+                  isLongTag ? 'w-full justify-start' : 'w-fit',
+                )}
+                style={{
+                  fontFamily: FONT_EXPANDED,
+                  fontSize: isLongTag ? '12px' : '16px',
+                  letterSpacing: isLongTag ? '0.03em' : '0.08em',
+                  padding: isLongTag ? '11px 14px' : '10px 16px',
+                }}
+              >
+                {tag}
+              </span>
+            );
+          })}
         </div>
       </aside>
     </section>
@@ -270,7 +275,7 @@ export default function Matches() {
   const isEmptyState = !loading && matches.length === 0;
   const shouldDisablePageScroll = loading || isEmptyState;
   const shouldLockViewport = loading || matches.length <= 4;
-  const contentPaddingTop = 148;
+  const contentPaddingTop = 156;
   const contentPaddingBottom = isEmptyState ? 72 : 104;
 
   useLayoutEffect(() => {
@@ -438,78 +443,77 @@ export default function Matches() {
             height: shouldDisablePageScroll ? '100%' : undefined,
           }}
         >
-          <div className="flex h-[214px] max-w-full items-start">
-            <div className="flex max-w-full items-start gap-[12px] pl-[8px]">
-              <img
-                className="mt-[26px] h-[152px] w-[101px] flex-shrink-0 object-contain"
-                src="/figma-assets/matches-title-triangles.svg"
-                alt=""
-                aria-hidden="true"
-              />
-
-              <div className="flex min-w-0 flex-col pt-[44px]">
-                <h1
-                  className="whitespace-nowrap leading-none text-white"
-                  style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '96px' }}
-                >
-                  LIVE MATCHES
-                </h1>
-                <img
-                  className="mt-[22px] h-[22px] w-[900px] max-w-full object-contain object-left"
-                  src="/figma-assets/matches-title-underline.svg"
-                  alt=""
-                  aria-hidden="true"
-                />
-              </div>
-            </div>
+          <div className="relative h-[187px] w-[1060px] max-w-full overflow-visible">
+            <img
+              className="absolute left-0 top-0 h-[186px] w-[124px] object-contain"
+              src="/figma-assets/matches-title-triangles.svg"
+              alt=""
+              aria-hidden="true"
+            />
+            <h1
+              className="absolute left-[71px] top-[77px] whitespace-nowrap leading-none text-white"
+              style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '80px' }}
+            >
+              LIVE MATCHES
+            </h1>
+            <img
+              className="absolute left-[59px] top-[168px] h-[22px] w-[1000px] max-w-none object-fill"
+              src="/figma-assets/matches-title-underline.svg"
+              alt=""
+              aria-hidden="true"
+            />
           </div>
 
-          <div className="mt-0 flex items-center justify-between gap-10">
-            <div className="flex items-center gap-7">
+          <div className="relative mt-[26px] h-[47px] w-full">
+            <div className="absolute left-[42px] top-0">
               <MatchesFilterSelect
                 value={teamSizeFilter}
                 options={TEAM_SIZE_OPTIONS}
-                width="wide"
+                width={222}
                 onChange={(value) => setTeamSizeFilter(value as TeamSizeFilter)}
               />
+            </div>
 
+            <div className="absolute left-[293px] top-0">
               <MatchesFilterSelect
                 value={platformFilter}
                 options={PLATFORM_OPTIONS}
-                width="wide"
+                width={222}
                 onChange={(value) => setPlatformFilter(value as PlatformFilter)}
               />
+            </div>
 
+            <div className="absolute left-[544px] top-0">
               <MatchesFilterSelect
                 value={modeFilter}
                 options={MODE_OPTIONS}
-                width="narrow"
+                width={147}
                 onChange={(value) => setModeFilter(value as ModeFilter)}
               />
             </div>
 
             <button
-              className="flex h-[50px] items-center gap-4 rounded-[18px] border border-[#ff1654] bg-[#ff1654] px-[28px] text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.16),inset_0px_-4px_4px_rgba(0,0,0,0.22)] transition hover:brightness-110"
+              className="absolute left-[1264px] top-0 flex h-[47px] w-[222px] items-center justify-center gap-[18px] rounded-[16px] border border-white/50 bg-[#ff1654] text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.16),inset_0px_-4px_4px_rgba(0,0,0,0.22)] transition hover:brightness-110"
               type="button"
               onClick={() => navigate('/matches/create')}
             >
-              <img className="h-[21px] w-[21px]" src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
-              <span style={{ fontFamily: FONT_WIDE_BLACK, fontSize: '26px', lineHeight: 1 }}>CREATE</span>
+              <img className="h-[18px] w-[18px]" src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
+              <span style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', lineHeight: 1 }}>CREATE</span>
             </button>
           </div>
 
           {loading ? (
-            <div className="mt-[34px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+            <div className="mt-[47px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
               {Array.from({ length: 4 }).map((_, index) => (
                 <MatchesPlaceholderCard key={`loading-${index}`} />
               ))}
             </div>
           ) : isEmptyState ? (
-            <div className="mt-[18px] flex-1 min-h-0 overflow-hidden">
+            <div className="mt-[47px] flex-1 min-h-0 overflow-hidden">
               <MatchesEmptyState hasActiveFilters={hasActiveFilters} />
             </div>
           ) : (
-            <div className="mt-[34px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+            <div className="mt-[47px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
               {matches.map((match) => {
                 const card = (
                   <MatchesLiveCard
