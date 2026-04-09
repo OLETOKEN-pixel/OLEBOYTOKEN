@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { ACTIVE_HOME_ASSETS } from '@/components/home/sections/activeHomeAssets';
 import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
 import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
 import { TeamSelectDialog } from '@/components/matches/TeamSelectDialog';
@@ -169,7 +168,7 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
 
   return (
     <section
-      className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_430px] gap-[34px] overflow-hidden rounded-[34px] border border-[#ff1654] bg-[linear-gradient(180deg,rgba(90,8,31,0.7)_0%,rgba(24,4,9,0.97)_100%)] px-[32px] py-[28px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.06)]"
+      className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_456px] gap-[30px] overflow-hidden rounded-[34px] border border-[#ff1654] bg-[linear-gradient(180deg,rgba(90,8,31,0.7)_0%,rgba(24,4,9,0.97)_100%)] px-[32px] py-[28px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.06)]"
       aria-live="polite"
     >
       <div className="flex min-w-0 gap-[24px]">
@@ -231,15 +230,16 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
           {panelCopy}
         </p>
 
-        <div className="mt-auto flex flex-wrap gap-3 pt-8">
+        <div className="mt-auto flex flex-col items-start gap-3 pt-8">
           {tags.map((tag) => (
             <span
               key={tag}
-              className="max-w-full rounded-full border border-white/14 px-4 py-[10px] text-center uppercase leading-[1.05] text-white/92 whitespace-normal"
+              className="inline-flex max-w-full items-center rounded-full border border-white/14 text-left uppercase leading-none text-white/92 whitespace-nowrap"
               style={{
                 fontFamily: FONT_EXPANDED,
-                fontSize: tag.length > 20 ? '14px' : '16px',
-                letterSpacing: '0.08em',
+                fontSize: tag.length > 20 ? '13px' : '16px',
+                letterSpacing: tag.length > 20 ? '0.05em' : '0.08em',
+                padding: tag.length > 20 ? '11px 16px' : '10px 16px',
               }}
             >
               {tag}
@@ -438,19 +438,30 @@ export default function Matches() {
             height: shouldDisablePageScroll ? '100%' : undefined,
           }}
         >
-          <div className="relative h-[207px] w-[1263px] max-w-full">
-            <img
-              className="absolute left-0 top-0 h-[207px] w-[1263px] max-w-full object-contain object-left-top"
-              src={ACTIVE_HOME_ASSETS.liveMatches.title}
-              alt=""
-              aria-hidden="true"
-            />
-            <h1
-              className="absolute left-[104px] top-[65px] whitespace-nowrap leading-none text-white"
-              style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '96px' }}
-            >
-              LIVE MATCHES
-            </h1>
+          <div className="flex h-[214px] max-w-full items-start">
+            <div className="flex max-w-full items-start gap-[12px] pl-[8px]">
+              <img
+                className="mt-[26px] h-[152px] w-[101px] flex-shrink-0 object-contain"
+                src="/figma-assets/matches-title-triangles.svg"
+                alt=""
+                aria-hidden="true"
+              />
+
+              <div className="flex min-w-0 flex-col pt-[44px]">
+                <h1
+                  className="whitespace-nowrap leading-none text-white"
+                  style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '96px' }}
+                >
+                  LIVE MATCHES
+                </h1>
+                <img
+                  className="mt-[22px] h-[22px] w-[900px] max-w-full object-contain object-left"
+                  src="/figma-assets/matches-title-underline.svg"
+                  alt=""
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="mt-0 flex items-center justify-between gap-10">
