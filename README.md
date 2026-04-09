@@ -1,6 +1,12 @@
-# OLEBOY TOKEN - Competitive Gaming Platform
+# OLEBOY TOKEN
 
-Piattaforma competitiva Fortnite dove gli utenti creano partite private, competono per Coins e scalano la classifica.
+OleBoy Token e la root app in questa cartella e rappresenta il runtime canonico per sviluppo, build e deploy.
+
+## Canonical Runtime
+
+- Usa questa root `C:\Users\OleBoy\Desktop\OLEBOYTOKEN` come unica sorgente attiva per il deploy.
+- `oleboy_logged_home_page/` e il checkout annidato `OLEBOYTOKEN/` sono snapshot legacy e non vanno usati come riferimento per nuove modifiche runtime.
+- Gli asset pubblici e il branding attivo devono essere gestiti solo dalla root app.
 
 ## Tech Stack
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { Match } from '@/types';
+import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface MatchDisplay {
   id: string;
@@ -69,16 +70,16 @@ export const LiveMatchesSection = () => {
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-launch'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={ACTIVE_HOME_ASSETS.shared.navPrev} />
           </button>
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-leaderboard'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src={ACTIVE_HOME_ASSETS.shared.navNext} />
           </button>
         </div>
 
         {/* Right side — star shape + CTA */}
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
-          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/star-shape-3.svg" />
+          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.star} />
 
           <div
             role="button"
@@ -91,7 +92,7 @@ export const LiveMatchesSection = () => {
               <div className="w-[93px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
                 PLAY
               </div>
-              <img className="mt-[7px] w-8 h-[23px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--3.svg" />
+              <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
           </div>
 
@@ -115,7 +116,7 @@ export const LiveMatchesSection = () => {
 
             <div className="absolute top-[261px] left-[38px] w-[104px] h-[55px]">
               <div className="absolute top-0 left-0 [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-xl tracking-[0] leading-[normal] whitespace-nowrap">Expires in</div>
-              <img className="absolute top-[31px] left-0 w-[19px] h-[19px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/ellipse-6-1.svg" />
+              <img className="absolute top-[31px] left-0 w-[19px] h-[19px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.countdownDot} />
               <div className="absolute top-[26px] left-6 [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-2xl text-white tracking-[0] leading-[normal]">
                 {main.expiresIn}
               </div>
@@ -126,9 +127,9 @@ export const LiveMatchesSection = () => {
               <div className="absolute top-0 left-[132px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-xl tracking-[0] leading-[normal] whitespace-nowrap">Prize</div>
               <div className="top-[31px] left-0 w-[19px] h-[19px] rounded-[9.5px] absolute bg-[#ff1654]" />
               <div className="absolute top-[26px] left-6 [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-2xl text-white tracking-[0] leading-[normal]">{main.entryFee}</div>
-              <img className="absolute top-[35px] left-[100px] w-4 h-[11px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--5.svg" />
+              <img className="absolute top-[35px] left-[100px] w-4 h-[11px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.prizeArrow} />
               <div className="absolute top-[26px] left-[166px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-2xl text-white tracking-[0] leading-[normal]">{main.prize}</div>
-              <img className="absolute top-[31px] left-[132px] w-[23px] h-[19px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-23-2.svg" />
+              <img className="absolute top-[31px] left-[132px] w-[23px] h-[19px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.prizeCoin} />
             </div>
 
             <div className="absolute top-[107px] left-[170px] w-[86px] h-14 flex flex-col gap-[3px]">
@@ -140,11 +141,11 @@ export const LiveMatchesSection = () => {
               <div className="absolute top-0 left-0 [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-xl tracking-[0] leading-[normal] whitespace-nowrap">First to</div>
               <div className="absolute top-6 left-[22px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-3xl whitespace-nowrap text-white tracking-[0] leading-[normal]">{main.firstTo}</div>
               <div className="absolute top-7 left-0 w-[19px] h-7">
-                <img className="absolute top-3.5 left-[3px] w-2 h-[11px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-6-1.svg" />
-                <img className="absolute top-[9px] left-3 w-[5px] h-[3px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-7-1.svg" />
-                <img className="top-2 left-[11px] w-0.5 absolute h-0.5" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-8-1.svg" />
-                <img className="top-[13px] left-1 w-1 absolute h-0.5" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-9-1.svg" />
-                <img className="top-[3px] w-2 h-[9px] absolute left-0.5" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-10-1.svg" />
+                <img className="absolute top-3.5 left-[3px] w-2 h-[11px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.firstToTriangles.largeBottom} />
+                <img className="absolute top-[9px] left-3 w-[5px] h-[3px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.firstToTriangles.smallRight} />
+                <img className="top-2 left-[11px] w-0.5 absolute h-0.5" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.firstToTriangles.wireTop} />
+                <img className="top-[13px] left-1 w-1 absolute h-0.5" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.firstToTriangles.wireBottom} />
+                <img className="top-[3px] w-2 h-[9px] absolute left-0.5" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.firstToTriangles.largeTop} />
               </div>
             </div>
 
@@ -152,7 +153,7 @@ export const LiveMatchesSection = () => {
               <div className="ml-[22px] w-[216px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] tracking-[0] leading-[normal] whitespace-nowrap">
                 {main.title}
               </div>
-              <img className="w-[259px] h-px object-cover" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-22-1.svg" />
+              <img className="w-[259px] h-px object-cover" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.mainDivider} />
             </div>
           </div>
 
@@ -173,9 +174,9 @@ export const LiveMatchesSection = () => {
               <div className="absolute top-px left-[103px] [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-[15.6px] tracking-[0] leading-[normal]">Prize</div>
               <div className="top-6 left-px w-[15px] h-[15px] rounded-[7.39px] absolute bg-[#ff1654]" />
               <div className="absolute top-5 left-[19px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-[18.7px] whitespace-nowrap text-white tracking-[0] leading-[normal]">{secondary.entryFee}</div>
-              <img className="absolute top-[27px] left-[78px] w-3 h-[9px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--4.svg" />
+              <img className="absolute top-[27px] left-[78px] w-3 h-[9px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.secondaryPrizeArrow} />
               <div className="absolute top-5 left-[129px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-[18.7px] whitespace-nowrap text-white tracking-[0] leading-[normal]">{secondary.prize}</div>
-              <img className="absolute top-6 left-[103px] w-[18px] h-[15px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-23-1.svg" />
+              <img className="absolute top-6 left-[103px] w-[18px] h-[15px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.secondaryPrizeCoin} />
             </div>
 
             <div className="absolute top-[83px] left-[132px] w-[68px] h-[43px] flex flex-col gap-0.5">
@@ -190,13 +191,13 @@ export const LiveMatchesSection = () => {
 
             <div className="absolute top-[18px] left-[13px] w-[209px] h-[43px] flex flex-col gap-[12.3px]">
               <div className="w-[207px] h-[30px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[24.9px] tracking-[0] leading-[normal]">{secondary.title}</div>
-              <img className="ml-[2.6px] w-[201.57px] h-px" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-22.svg" />
+              <img className="ml-[2.6px] w-[201.57px] h-px" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.secondaryDivider} />
             </div>
           </div>
         </div>
 
         {/* Section title */}
-        <img className="absolute top-0 left-0 w-[1263px] h-[207px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/spaccato-title-3.png" />
+        <img className="absolute top-0 left-0 w-[1263px] h-[207px]" alt="" src={ACTIVE_HOME_ASSETS.liveMatches.title} />
         <div className="absolute top-[65px] left-[79px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
           LIVE MATCHES
         </div>

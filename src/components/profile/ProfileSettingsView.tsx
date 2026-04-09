@@ -4,7 +4,9 @@ import {
   AlertCircle,
   ArrowUpRight,
   Check,
+  ChevronDown,
   Clock3,
+  Crown,
   Gamepad2,
   Link2,
   Loader2,
@@ -12,6 +14,7 @@ import {
   Mail,
   Save,
   Unlink,
+  User,
   Wallet,
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -56,30 +59,18 @@ interface PaymentsActivityItem {
   state: PaymentsActivityState;
 }
 
-const PROFILE_TRIANGLES_ASSET = '/figma-profile/profile-triangles.svg';
-const PROFILE_TITLE_UNDERLINE_ASSET = '/figma-profile/profile-underline-bar.svg';
-const PROFILE_TITLE_OUTLINE_ASSET = '/figma-profile/profile-underline.svg';
-const PROFILE_EPIC_LOGO_ASSET = '/figma-profile/epic-logo.svg';
-const PROFILE_ACCOUNT_ICON_ASSET = '/figma-profile/nav-icon-user.svg';
-const PROFILE_GAME_ICON_ASSET = '/figma-profile/nav-icon-game.svg';
-const PROFILE_CONNECTIONS_ICON_ASSET = '/figma-profile/nav-icon-connections.svg';
 const PROFILE_PFP_FALLBACK_ASSET = '/figma-assets/marv-pfp.png';
-const PROFILE_ACCOUNT_CARD_SHELL_ASSET = '/figma-profile/account-setting/account-card-shell.svg';
-const PROFILE_ACCOUNT_PANEL_SHELL_ASSET = '/figma-profile/account-setting/account-panel-shell.svg';
-const PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET = '/figma-profile/account-setting/account-select-chevron.svg';
-const PROFILE_ACCOUNT_VIP_CROWN_ASSET = '/figma-profile/account-setting/account-vip-crown.svg';
 
 const sections: Array<{
   id: ProfileSection;
   label: string;
   railLabel: string;
-  assetSrc?: string;
   icon?: ComponentType<{ className?: string }>;
 }> = [
-  { id: 'account', label: 'Account', railLabel: 'ACCOUNT', assetSrc: PROFILE_ACCOUNT_ICON_ASSET },
-  { id: 'game', label: 'Game', railLabel: 'GAME', assetSrc: PROFILE_GAME_ICON_ASSET },
-  { id: 'payments', label: 'Withdraw', railLabel: 'WITHDRAW' },
-  { id: 'connections', label: 'Connections', railLabel: 'CONNECTIONS' },
+  { id: 'account', label: 'Account', railLabel: 'ACCOUNT', icon: User },
+  { id: 'game', label: 'Game', railLabel: 'GAME', icon: Gamepad2 },
+  { id: 'payments', label: 'Withdraw', railLabel: 'WITHDRAW', icon: Wallet },
+  { id: 'connections', label: 'Connections', railLabel: 'CONNECTIONS', icon: Link2 },
 ];
 
 const profileSecondaryButtonClass = "!h-11 !rounded-[14px] !border !border-white/[0.14] !bg-white/[0.04] px-5 text-[12px] font-semibold uppercase tracking-[0.12em] !text-white hover:!border-[#ff1654]/35 hover:!bg-[#ff1654]/10";
@@ -96,23 +87,74 @@ const figmaPinkActionButtonClass = '!h-12 !rounded-[16px] !border !border-white/
 const figmaSectionTitleClass = 'whitespace-nowrap text-[38px] uppercase leading-[0.92] text-white xl:text-[54px]';
 
 function SectionRailIcon({
-  assetSrc,
   icon: Icon,
   className,
 }: {
-  assetSrc?: string;
   icon?: ComponentType<{ className?: string }>;
   className?: string;
 }) {
-  if (assetSrc) {
-    return <img src={assetSrc} alt="" aria-hidden className={cn('h-6 w-6 object-contain', className)} />;
-  }
-
   if (Icon) {
-    return <Icon className={className} />;
+    return <Icon aria-hidden className={cn('h-6 w-6', className)} />;
   }
 
   return null;
+}
+
+function ProfileAccentTriangles({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 123.871 185.808" fill="none" aria-hidden>
+      <path d="M67.6638 91.1534L16.3949 143.246L57.2726 163.501L67.6638 91.1534Z" fill="#FF1654" />
+      <path d="M79.1608 76.9574L106.566 56.8805L113.134 77.0428L79.1608 76.9574Z" fill="#FF1654" />
+      <path d="M76.5381 54.3349L83.605 57.5917L75.1141 66.7206L76.5381 54.3349Z" stroke="#FF1654" />
+      <path d="M34.1068 97.4588L29.8539 82.9532L54.0587 83.7324L34.1068 97.4588Z" stroke="#FF1654" />
+      <path d="M65.4807 76.639L45.3878 17.5911L14.2866 41.0083L65.4807 76.639Z" fill="#FF1654" />
+    </svg>
+  );
+}
+
+function ProfileDesktopUnderline({ className }: { className?: string }) {
+  return (
+    <div aria-hidden className={cn('relative overflow-hidden', className)}>
+      <div
+        className="absolute left-0 top-0 h-full w-[28px] bg-[#ff1654]"
+        style={{ clipPath: 'polygon(50% 0, 100% 100%, 0 100%)' }}
+      />
+      <div className="absolute left-[18px] right-0 top-[22%] h-[56%] rounded-r-[2px] bg-[#ff1654]" />
+    </div>
+  );
+}
+
+function EpicGamesMark({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        'flex items-center justify-center rounded-[18px] border border-black/10 bg-white text-[#121212] shadow-[0_10px_24px_rgba(0,0,0,0.18)]',
+        className
+      )}
+    >
+      <div
+        className={cn('flex flex-col items-center leading-none', compact ? 'gap-0.5' : 'gap-1')}
+        style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
+      >
+        <span className={cn('font-black tracking-[0.18em]', compact ? 'text-[9px]' : 'text-[30px]')}>EPIC</span>
+        <span
+          className={cn(
+            'font-semibold tracking-[0.34em] text-black/74',
+            compact ? 'text-[5px]' : 'text-[11px]'
+          )}
+        >
+          GAMES
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function FigmaStatusBadge({
@@ -697,14 +739,16 @@ export function ProfileSettingsView({
   );
 
   const renderAccountSection = () => (
-    <section className="relative h-full overflow-hidden text-white">
-      <img
-        src={PROFILE_ACCOUNT_PANEL_SHELL_ASSET}
-        alt=""
+    <section
+      className={cn(
+        figmaMainStageClass,
+        'h-full bg-[linear-gradient(180deg,rgba(44,44,44,0.98)_0%,rgba(27,20,24,0.98)_100%)] text-white'
+      )}
+    >
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full object-fill"
+        className="pointer-events-none absolute inset-0 rounded-[16px] bg-[radial-gradient(circle_at_top_right,rgba(255,22,84,0.16)_0%,transparent_42%)]"
       />
-
       <div className="relative flex h-full min-h-[360px] flex-col px-6 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-7 lg:min-h-[486px] lg:px-[34px] lg:pb-[42px] lg:pt-[34px]">
         {savingProfile && (
           <span className="absolute right-6 top-6 text-white/72 lg:right-8 lg:top-8">
@@ -714,24 +758,19 @@ export function ProfileSettingsView({
 
         <div>
           <div className="flex items-center gap-3 lg:gap-4">
-            <img
-              src={PROFILE_ACCOUNT_ICON_ASSET}
-              alt=""
-              aria-hidden
-              className="h-9 w-9 object-contain lg:h-[46px] lg:w-[46px]"
-            />
+            <User aria-hidden className="h-9 w-9 text-white lg:h-[46px] lg:w-[46px]" />
             <h2
               className="text-[clamp(28px,3vw,48px)] uppercase leading-[0.92] text-white"
               style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
             >
-              ACCOUNT SETTING
+              ACCOUNT SETTINGS
             </h2>
           </div>
           <p
             className="mt-2 text-[clamp(12px,1.3vw,20px)] leading-[1.2] text-white/88 lg:mt-1"
             style={{ fontFamily: "'Base_Neue_Trial-Regular', 'Base Neue Trial', sans-serif" }}
           >
-            Update your display prefernces and keep your competitive ready.
+            Update your display preferences and keep your profile ready.
           </p>
         </div>
 
@@ -776,12 +815,7 @@ export function ProfileSettingsView({
             </div>
 
             <div className="flex h-[47px] w-full max-w-[222px] items-center rounded-[16px] border border-white/50 bg-[#ffd700] px-4 shadow-[0_4px_8px_rgba(0,0,0,0.25)] lg:mb-[3px]">
-              <img
-                src={PROFILE_ACCOUNT_VIP_CROWN_ASSET}
-                alt=""
-                aria-hidden
-                className="h-[22px] w-[28px] object-contain"
-              />
+              <Crown aria-hidden className="h-[22px] w-[28px] text-[#ff1654]" />
               <span
                 className="ml-2 text-[24px] uppercase leading-none text-black"
                 style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
@@ -811,12 +845,10 @@ export function ProfileSettingsView({
                 aria-label="Preferred Region"
               >
                 <SelectValue placeholder="Select region" />
-                <img
-                  src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
-                  alt=""
+                <ChevronDown
                   aria-hidden
-                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] object-contain"
-                  style={{ transform: 'translateY(-50%) rotate(-90deg) scaleY(-1)' }}
+                  className="pointer-events-none absolute right-[14px] top-1/2 h-5 w-5 -translate-y-1/2 text-white"
+                  strokeWidth={2.4}
                 />
               </SelectTrigger>
               <SelectContent className={profileSelectContentClass}>
@@ -843,12 +875,10 @@ export function ProfileSettingsView({
                 aria-label="Preferred Platform"
               >
                 <SelectValue placeholder="Select platform" />
-                <img
-                  src={PROFILE_ACCOUNT_SELECT_CHEVRON_ASSET}
-                  alt=""
+                <ChevronDown
                   aria-hidden
-                  className="pointer-events-none absolute right-[10px] top-1/2 h-[39px] w-[39px] object-contain"
-                  style={{ transform: 'translateY(-50%) rotate(-90deg) scaleY(-1)' }}
+                  className="pointer-events-none absolute right-[14px] top-1/2 h-5 w-5 -translate-y-1/2 text-white"
+                  strokeWidth={2.4}
                 />
               </SelectTrigger>
               <SelectContent className={profileSelectContentClass}>
@@ -868,7 +898,7 @@ export function ProfileSettingsView({
   const renderGameSection = () => (
     <div className="space-y-5">
       {renderStageHeader(
-        <img src={PROFILE_GAME_ICON_ASSET} alt="" aria-hidden className="h-6 w-6 object-contain" />,
+        <Gamepad2 aria-hidden className="h-6 w-6 text-white" />,
         'GAME SETTINGS',
         'Connect Epic Games to sync the display name used inside matches and friend-request flows.'
       )}
@@ -895,9 +925,7 @@ export function ProfileSettingsView({
         </div>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-end">
-          <div className="rounded-[18px] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
-            <img src={PROFILE_EPIC_LOGO_ASSET} alt="Epic Games" className="h-[150px] w-full object-contain" />
-          </div>
+          <EpicGamesMark className="h-[150px] w-full" />
 
           <div className="space-y-4">
             <div className={cn(figmaDarkInsetClass, 'p-4')}>
@@ -1188,7 +1216,7 @@ export function ProfileSettingsView({
   const renderConnectionsSection = () => (
     <div className="space-y-5">
       {renderStageHeader(
-        <img src={PROFILE_CONNECTIONS_ICON_ASSET} alt="" aria-hidden className="h-6 w-6 object-contain" />,
+        <Link2 aria-hidden className="h-6 w-6 text-white" />,
         'CONNECTIONS',
         'Review the identities and payout lanes currently attached to your OBT profile.'
       )}
@@ -1219,7 +1247,7 @@ export function ProfileSettingsView({
             <div className={cn(figmaDarkInsetClass, 'p-4')}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <img src={PROFILE_EPIC_LOGO_ASSET} alt="Epic Games" className="h-12 w-12 rounded-[10px] bg-white p-1.5 object-contain" />
+                  <EpicGamesMark compact className="h-12 w-12 rounded-[10px] shadow-none" />
                   <div>
                     <p className="text-sm font-semibold uppercase text-white">Epic Games</p>
                     <p className="text-sm text-white/60">{profile.epic_username || 'Not connected'}</p>
@@ -1319,19 +1347,18 @@ export function ProfileSettingsView({
   );
 
   const renderIdentityCard = (_compact = false) => (
-    <div className="relative mx-auto w-full max-w-[304px] overflow-hidden text-white">
+    <div className="relative mx-auto w-full max-w-[304px] overflow-hidden rounded-[16px] border border-[#ff1654] bg-[#282828] text-white shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,22,84,0.16)_0%,transparent_48%)]"
+      />
       <div className="aspect-[304/116] w-full">
-        <img
-          src={PROFILE_ACCOUNT_CARD_SHELL_ASSET}
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
-        />
-
         <Avatar className="absolute left-[1.32%] top-[18.97%] h-[57.76%] w-[22.04%] rounded-full border border-white/8">
           <AvatarImage src={avatarUrl} alt={discordDisplayName} className="object-cover" />
           <AvatarFallback className="bg-black/30 text-white">{discordDisplayName.charAt(0)}</AvatarFallback>
         </Avatar>
+
+        <div aria-hidden className="absolute left-[35.82%] right-[14.47%] top-[58.19%] h-px bg-white/60" />
 
         <p
           className="absolute left-[42.11%] right-[8.55%] top-[16.38%] truncate text-[clamp(20px,1.8vw,32px)] uppercase leading-none text-white"
@@ -1380,16 +1407,10 @@ export function ProfileSettingsView({
                 >
                   {section.railLabel ? (
                     <>
-                      {section.assetSrc && (
-                        <SectionRailIcon
-                          assetSrc={section.assetSrc}
-                          icon={section.icon}
-                          className="h-5 w-5"
-                        />
-                      )}
+                      <SectionRailIcon icon={section.icon} className="h-5 w-5" />
                       <span
                         className={cn(
-                          section.assetSrc ? 'ml-2' : '',
+                          section.icon ? 'ml-2' : '',
                           'truncate text-[18px] uppercase leading-none',
                           section.id === 'connections' && 'text-[17px]',
                         )}
@@ -1421,22 +1442,16 @@ export function ProfileSettingsView({
                   'flex h-[47px] items-center rounded-[16px] border border-white/50 bg-[#ff1654] px-4 text-left text-white shadow-[0_4px_8px_rgba(0,0,0,0.25)] transition',
                   isActive && 'shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_10px_18px_rgba(255,22,84,0.24)]'
                 )}
-              >
-                {section.railLabel ? (
-                  <>
-                    {section.assetSrc && (
-                      <SectionRailIcon
-                        assetSrc={section.assetSrc}
-                        icon={section.icon}
-                        className="h-5 w-5"
-                      />
-                    )}
-                    <span
-                      className={cn(
-                        section.assetSrc ? 'ml-2' : '',
-                        'truncate text-[18px] uppercase leading-none',
-                        section.id === 'connections' && 'text-[16px]',
-                      )}
+                >
+                  {section.railLabel ? (
+                    <>
+                      <SectionRailIcon icon={section.icon} className="h-5 w-5" />
+                      <span
+                        className={cn(
+                          section.icon ? 'ml-2' : '',
+                          'truncate text-[18px] uppercase leading-none',
+                          section.id === 'connections' && 'text-[16px]',
+                        )}
                       style={{ fontFamily: "'Base_Neue_Trial-Expanded', 'Base Neue Trial', sans-serif" }}
                     >
                       {section.railLabel}
@@ -1498,28 +1513,16 @@ export function ProfileSettingsView({
 
           <div className="absolute left-[9.79%] top-0 z-10 h-[25.74%] w-[65.57%]">
             <div className="relative h-full w-full">
-              <img
-                src={PROFILE_TRIANGLES_ASSET}
-                alt=""
-                aria-hidden
-                className="pointer-events-none absolute left-0 top-0 h-[89.25%] w-[9.84%] object-contain"
-              />
+              <ProfileAccentTriangles className="pointer-events-none absolute left-0 top-0 h-[89.25%] w-[9.84%]" />
               <h1
                 className="absolute left-[6.52%] top-[39.39%] whitespace-nowrap text-[clamp(48px,4.15vw,80px)] uppercase leading-[0.92] text-white"
                 style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
               >
-                PROFILE SETTING
+                PROFILE SETTINGS
               </h1>
 
-              <div className="absolute left-[4.71%] top-[78.87%] flex h-[21.15%] w-[95.29%] items-center justify-center">
-                <div className="origin-center rotate-[89.8deg] scale-y-[-1]">
-                  <img
-                    src={PROFILE_TITLE_OUTLINE_ASSET}
-                    alt=""
-                    aria-hidden
-                    className="block h-[899.67px] w-[34.49px] max-w-none"
-                  />
-                </div>
+              <div className="absolute left-[4.71%] top-[78.87%] flex h-[21.15%] w-[95.29%] items-center">
+                <ProfileDesktopUnderline className="h-[18px] w-full" />
               </div>
             </div>
           </div>
@@ -1546,24 +1549,14 @@ export function ProfileSettingsView({
 
       <div className="space-y-5 lg:hidden">
         <div className="relative pl-[62px] pt-2">
-          <img
-            src={PROFILE_TRIANGLES_ASSET}
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute left-0 top-0 h-[102px] w-[70px] object-contain"
-          />
+          <ProfileAccentTriangles className="pointer-events-none absolute left-0 top-0 h-[102px] w-[70px]" />
           <h1
             className="mt-1 whitespace-nowrap text-[46px] uppercase leading-[0.92] text-white sm:text-[58px]"
             style={{ fontFamily: "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif" }}
           >
-            PROFILE SETTING
+            PROFILE SETTINGS
           </h1>
-          <img
-            src={PROFILE_TITLE_UNDERLINE_ASSET}
-            alt=""
-            aria-hidden
-            className="mt-3 h-[14px] w-[260px] object-fill sm:w-[360px]"
-          />
+          <div aria-hidden className="mt-3 h-[14px] w-[260px] rounded-[2px] bg-[#ff1654] sm:w-[360px]" />
         </div>
 
         <div className="space-y-4">

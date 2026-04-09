@@ -1,3 +1,5 @@
+import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
+
 const videoItems = [
   { href: 'https://youtu.be/HxRTrHyWB0Y?si=VdsoQIswI9eOlHG5', src: '/showreel/highlight-video-1.png', alt: 'Piz montage 1' },
   { href: 'https://youtu.be/SDIys2MtwnA?si=Tba7ZE_Uda0qphNI', src: '/showreel/highlight-video-2.png', alt: 'Maxresdefault' },
@@ -12,23 +14,23 @@ export const HighlightsSection = () => {
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-challenges'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={ACTIVE_HOME_ASSETS.shared.navPrev} />
           </button>
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-teams'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src={ACTIVE_HOME_ASSETS.shared.navNext} />
           </button>
         </div>
 
         {/* Right side — star + CTA */}
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
-          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/star-shape.svg" />
+          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.highlights.star} />
 
           <div className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
             <div className="mt-3.5 w-[212px] ml-[34px] flex gap-[11px]">
               <div className="w-[167px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
                 WATCH
               </div>
-              <img className="mt-[7px] w-8 h-[23px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--3.svg" />
+              <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
           </div>
 
@@ -58,7 +60,7 @@ export const HighlightsSection = () => {
         <div className="absolute top-[311px] left-0 w-[375px] h-[229px] bg-[linear-gradient(270deg,rgba(15,4,4,0)_0%,rgba(15,4,4,1)_100%)]" />
 
         {/* Section title */}
-        <img className="left-px w-[1044px] absolute top-0 h-[207px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/spaccato-title.png" />
+        <img className="left-px w-[1044px] absolute top-0 h-[207px]" alt="" src={ACTIVE_HOME_ASSETS.highlights.title} />
         <div className="absolute top-[65px] left-[79px] w-[797px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
           HIGHLIGHTS
         </div>

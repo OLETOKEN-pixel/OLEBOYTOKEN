@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface PlayerDisplay {
   rank: number;
@@ -79,9 +80,9 @@ export const LeaderboardSection = () => {
   }, []);
 
   // Pad to 3 players minimum with empty placeholders
-  const first: PlayerDisplay = players[0] ?? { rank: 1, username: '—', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
-  const second: PlayerDisplay = players[1] ?? { rank: 2, username: '—', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
-  const third: PlayerDisplay = players[2] ?? { rank: 3, username: '—', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const first: PlayerDisplay = players[0] ?? { rank: 1, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const second: PlayerDisplay = players[1] ?? { rank: 2, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const third: PlayerDisplay = players[2] ?? { rank: 3, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
 
   const Avatar = ({ url, alt, size }: { url: string | null; alt: string; size: string }) => (
     url ? (
@@ -97,21 +98,21 @@ export const LeaderboardSection = () => {
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button onClick={handlePrev} className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center">
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={ACTIVE_HOME_ASSETS.shared.navPrev} />
           </button>
           <button onClick={handleNext} className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center">
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src={ACTIVE_HOME_ASSETS.shared.navNext} />
           </button>
         </div>
 
-        {/* Right side — star + CTA */}
+        {/* Right side - star + CTA */}
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
-          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/star-shape-2.svg" />
+          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.leaderboard.star} />
 
           <div className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
             <div className="w-[211px] ml-[34px] gap-3 mt-3.5 flex">
               <div className="w-[165px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">RANK UP</div>
-              <img className="mt-[7px] w-8 h-[23px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--3.svg" />
+              <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
           </div>
 
@@ -124,31 +125,31 @@ export const LeaderboardSection = () => {
 
         {/* Player cards */}
         <div className="absolute w-[584px] h-[378px] top-[257px] left-[53px]">
-          {/* 3rd place — right */}
+          {/* 3rd place - right */}
           <div className="absolute top-[78px] left-[417px] w-[169px] h-[300px]">
             <div className="absolute -top-px -left-px w-[169px] h-[302px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-6 left-[26px]">
               <Avatar url={third.avatarUrl} alt={third.username} size="w-[116px] h-[116px]" />
             </div>
             <div className="absolute top-[150px] left-0 right-0 text-center px-2">
-              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">3°</div>
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">#3</div>
               <div className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[22px] leading-normal truncate">{third.username}</div>
             </div>
           </div>
 
-          {/* 2nd place — left */}
+          {/* 2nd place - left */}
           <div className="absolute top-[78px] left-0 w-[169px] h-[300px]">
             <div className="absolute -top-px -left-px w-[169px] h-[302px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-6 left-[26px]">
               <Avatar url={second.avatarUrl} alt={second.username} size="w-[116px] h-[116px]" />
             </div>
             <div className="absolute top-[150px] left-0 right-0 text-center px-2">
-              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[20px] leading-normal">2°</div>
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[20px] leading-normal">#2</div>
               <div className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[20px] leading-normal truncate">{second.username}</div>
             </div>
           </div>
 
-          {/* 1st place — center, larger */}
+          {/* 1st place - center, larger */}
           <div className="absolute top-0 left-7 w-[530px] h-[378px]">
             <div className="absolute -top-px left-[158px] w-[212px] h-[380px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-[30px] left-48">
@@ -213,14 +214,14 @@ export const LeaderboardSection = () => {
             </div>
 
             <div className="absolute top-[189px] left-[158px] w-[212px] text-center px-2">
-              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">1°</div>
+              <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">#1</div>
               <div className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[21px] leading-normal truncate">{first.username}</div>
             </div>
           </div>
         </div>
 
         {/* Section title */}
-        <img className="left-0 w-[1277px] absolute top-0 h-[207px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/spaccato-title-2.png" />
+        <img className="left-0 w-[1277px] absolute top-0 h-[207px]" alt="" src={ACTIVE_HOME_ASSETS.leaderboard.title} />
         <div className="absolute top-[65px] left-[79px] w-[890px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal]">
           LEADERBOARD
         </div>

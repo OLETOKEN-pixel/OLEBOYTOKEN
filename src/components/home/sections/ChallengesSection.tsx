@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface ChallengeDisplay {
   id: string;
@@ -102,21 +103,21 @@ export const ChallengesSection = () => {
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-leaderboard'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src="https://c.animaapp.com/cjSO5wtV/img/bw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={ACTIVE_HOME_ASSETS.shared.navPrev} />
           </button>
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-highlights'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
-            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src="https://c.animaapp.com/cjSO5wtV/img/fw-arrow-3@2x.png" />
+            <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Next" src={ACTIVE_HOME_ASSETS.shared.navNext} />
           </button>
         </div>
 
         {/* Right side — star + CTA */}
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
-          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/star-shape-1.svg" />
+          <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.challenges.star} />
 
           <div className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
             <div className="mt-3.5 w-[212px] ml-[34px] flex gap-[11px]">
               <div className="w-[167px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">LEVEL UP</div>
-              <img className="mt-[7px] w-8 h-[23px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--3.svg" />
+              <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
           </div>
 
@@ -185,7 +186,7 @@ export const ChallengesSection = () => {
                 <div className={`absolute top-2.5 left-3.5 w-7 h-7 rounded-[3px] ${checkBg(c)}`} />
                 {/* Checkmark icon (only if completed) */}
                 {c.completed && (
-                  <img className="absolute top-3.5 left-[18px] w-5 h-5" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-24.svg" />
+                  <img className="absolute top-3.5 left-[18px] w-5 h-5" alt="" src={ACTIVE_HOME_ASSETS.challenges.checkmark} />
                 )}
                 {/* Title */}
                 <div className="absolute top-[15px] left-[57px] w-[230px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap overflow-hidden text-ellipsis">
@@ -214,12 +215,12 @@ export const ChallengesSection = () => {
           })}
 
           {/* Separator lines */}
-          <img className="absolute top-[214px] left-[267px] w-[333px] h-px object-cover" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-23.svg" />
-          <img className="absolute top-[248px] left-[90px] w-[75px] h-px object-cover" alt="" src="https://c.animaapp.com/cjSO5wtV/img/vector-24-1.svg" />
+          <img className="absolute top-[214px] left-[267px] w-[333px] h-px object-cover" alt="" src={ACTIVE_HOME_ASSETS.challenges.separatorMain} />
+          <img className="absolute top-[248px] left-[90px] w-[75px] h-px object-cover" alt="" src={ACTIVE_HOME_ASSETS.challenges.separatorSecondary} />
         </div>
 
         {/* Section title */}
-        <img className="left-0 w-[1159px] absolute top-0 h-[207px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/spaccato-title-1.png" />
+        <img className="left-0 w-[1159px] absolute top-0 h-[207px]" alt="" src={ACTIVE_HOME_ASSETS.challenges.title} />
         <div className="absolute top-[65px] left-[79px] w-[797px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
           CHALLENGES
         </div>

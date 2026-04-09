@@ -11,16 +11,16 @@ export function Footer() {
           {/* Logo Row */}
           <div className="flex items-center gap-[8px] mb-[24px] opacity-80">
             <div className="w-[24px] h-[24px] bg-[#374151] rounded-[8px] flex items-center justify-center">
-              <img src={coinIcon} alt="Coin" className="w-[24px] h-[24px] object-contain" />
+              <img src={coinIcon} alt="OleBoy Token" className="w-[24px] h-[24px] object-contain" />
             </div>
             <span className="font-teko font-bold text-[20px] text-white tracking-[1px]">
-              OLEBOY
+              OLEBOY TOKEN
             </span>
           </div>
 
           {/* Copyright */}
           <p className="text-center font-sans font-normal text-[14px] text-[#6b7280] mb-[24px]">
-            © {currentYear} OleBoy Token. All rights reserved. Competitive gaming platform.
+            © {currentYear} OleBoy Token. All rights reserved.
           </p>
 
           {/* Links Row */}

@@ -20,7 +20,7 @@ export function HeroSection() {
         <div className="mb-4 flex justify-center">
           <img 
             src={logoOleboy} 
-            alt="OLEBOY TOKEN" 
+            alt="OleBoy Token" 
             className="w-28 h-28 lg:w-36 lg:h-36 object-contain animate-float"
           />
         </div>
@@ -33,8 +33,7 @@ export function HeroSection() {
 
         {/* Subtitle */}
         <p className="text-lg lg:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
-          The ultimate FN competitive gaming platform. 
-          Create matches, compete for Coins, and climb the leaderboard.
+          OleBoy Token for Fortnite matches, challenges, rewards, and community competition.
         </p>
 
         {/* CTAs */}

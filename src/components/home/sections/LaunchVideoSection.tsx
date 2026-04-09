@@ -1,3 +1,5 @@
+import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
+
 interface LaunchVideoSectionProps {
   displayName: string;
 }
@@ -16,7 +18,11 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
   };
 
   return (
-    <div id="s-launch" className="z-[5] w-[1920px] h-[955px] flex flex-col bg-[#0f0404] bg-[url(https://c.animaapp.com/cjSO5wtV/img/zaps.png)] bg-[100%_100%]">
+    <div
+      id="s-launch"
+      className="z-[5] flex h-[955px] w-[1920px] flex-col bg-[#0f0404]"
+      style={{ backgroundImage: `url(${ACTIVE_HOME_ASSETS.launch.background})`, backgroundSize: '100% 100%' }}
+    >
       <div className="ml-[191px] w-[876px] h-[99px] relative mt-[174px]">
         <p className="absolute top-[5px] left-8 [font-family:'Base_Neue_Trial-Bold',Helvetica] font-normal text-white text-[50px] text-center tracking-[0] leading-[normal]">
           <span className="font-bold">Welcome</span>
@@ -29,15 +35,15 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
         <img
           className="absolute top-[85px] left-[29px] w-[634px] h-3"
           alt=""
-          src="https://c.animaapp.com/cjSO5wtV/img/outline.svg"
+          src={ACTIVE_HOME_ASSETS.launch.underline}
         />
 
         <div className="absolute top-0 left-0 w-[45px] h-[67px]">
-          <img className="absolute top-[33px] left-1.5 w-[18px] h-[26px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-6-2.svg" />
-          <img className="absolute top-[21px] left-[29px] w-3 h-[7px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-7-2.svg" />
-          <img className="absolute top-[19px] left-[27px] w-1 h-[5px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-8-2.svg" />
-          <img className="absolute top-[30px] left-[11px] w-2.5 h-1.5" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-9-2.svg" />
-          <img className="absolute top-1.5 left-[5px] w-[18px] h-[21px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/polygon-10-2.svg" />
+          <img className="absolute top-[33px] left-1.5 w-[18px] h-[26px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.largeBottom} />
+          <img className="absolute top-[21px] left-[29px] w-3 h-[7px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.smallRight} />
+          <img className="absolute top-[19px] left-[27px] w-1 h-[5px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.wireTop} />
+          <img className="absolute top-[30px] left-[11px] w-2.5 h-1.5" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.wireBottom} />
+          <img className="absolute top-1.5 left-[5px] w-[18px] h-[21px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.largeTop} />
         </div>
       </div>
 
@@ -69,8 +75,8 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
           <span className="absolute top-[18px] left-16 [font-family:'Base_Neue_Trial-Regular',Helvetica] font-normal text-white text-2xl text-center tracking-[0] leading-[normal]">
             See sections
           </span>
-          <img className="absolute top-[23px] left-5 w-4 h-[21px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--6.svg" />
-          <img className="absolute top-[23px] left-[237px] w-4 h-[21px]" alt="" src="https://c.animaapp.com/cjSO5wtV/img/arrow--stroke--7.svg" />
+          <img className="absolute top-[23px] left-5 w-4 h-[21px]" alt="" src={ACTIVE_HOME_ASSETS.launch.buttonArrowLeft} />
+          <img className="absolute top-[23px] left-[237px] w-4 h-[21px]" alt="" src={ACTIVE_HOME_ASSETS.launch.buttonArrowRight} />
         </button>
       </div>
     </div>
