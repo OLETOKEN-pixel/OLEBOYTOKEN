@@ -266,7 +266,7 @@ export default function Matches() {
   const isEmptyState = !loading && matches.length === 0;
   const shouldDisablePageScroll = loading || isEmptyState;
   const shouldLockViewport = loading || matches.length <= 4;
-  const contentPaddingTop = isEmptyState ? 98 : 124;
+  const contentPaddingTop = 148;
   const contentPaddingBottom = isEmptyState ? 72 : 104;
 
   useLayoutEffect(() => {
