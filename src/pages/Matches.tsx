@@ -235,8 +235,12 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
           {tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-white/14 px-4 py-[10px] uppercase text-white/92"
-              style={{ fontFamily: FONT_EXPANDED, fontSize: '16px', letterSpacing: '0.08em' }}
+              className="max-w-full rounded-full border border-white/14 px-4 py-[10px] text-center uppercase leading-[1.05] text-white/92 whitespace-normal"
+              style={{
+                fontFamily: FONT_EXPANDED,
+                fontSize: tag.length > 20 ? '14px' : '16px',
+                letterSpacing: '0.08em',
+              }}
             >
               {tag}
             </span>
@@ -442,7 +446,7 @@ export default function Matches() {
               aria-hidden="true"
             />
             <h1
-              className="absolute left-[79px] top-[65px] whitespace-nowrap leading-none text-white"
+              className="absolute left-[104px] top-[65px] whitespace-nowrap leading-none text-white"
               style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '96px' }}
             >
               LIVE MATCHES
