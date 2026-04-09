@@ -42,4 +42,18 @@ describe('active app brand hygiene', () => {
     expect(html).toContain('/favicon.ico');
     expect(fs.existsSync(path.join(rootDir, 'public', 'favicon.ico'))).toBe(true);
   });
+
+  it('stores active-home svg assets as plain svg files instead of gzip payloads', () => {
+    const activeHomeDir = path.join(rootDir, 'public', 'active-home');
+    const svgFiles = fs.readdirSync(activeHomeDir).filter((file) => file.endsWith('.svg'));
+
+    expect(svgFiles.length).toBeGreaterThan(0);
+
+    for (const file of svgFiles) {
+      const data = fs.readFileSync(path.join(activeHomeDir, file));
+      expect(data[0]).not.toBe(0x1f);
+      expect(data[1]).not.toBe(0x8b);
+      expect(data.toString('utf8', 0, 4)).toContain('<svg');
+    }
+  });
 });
