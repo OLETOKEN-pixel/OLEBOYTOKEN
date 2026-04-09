@@ -20,7 +20,7 @@ import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON          = '/figma-assets/figma-neon.png';
 const A_ZAPS          = '/figma-assets/figma-zaps.svg';
-const A_BRAND_LOGO    = '/figma-assets/figma-logo.svg';
+const A_BRAND_LOGO    = '/figma-assets/oleboy-logo-transparent.png';
 const A_DS_BTN        = '/figma-assets/figma-ds-icon-hero.png';
 // Section 2 - RANK UP
 const A_GUIDE         = '/figma-assets/figma-guide.svg';
@@ -153,13 +153,13 @@ export function HomeNotRegistered() {
           {/* Brand lockup */}
           <div
             style={{
-              width: 'clamp(150px, 12vw, 200px)',
-              height: 'clamp(180px, 16vw, 240px)',
+              width: 'clamp(240px, 18vw, 340px)',
+              maxWidth: '100%',
+              aspectRatio: '65.2068 / 55.2445',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transform: 'rotate(89.78deg)',
-              marginBottom: '20px',
+              marginBottom: '28px',
             }}
           >
             <img
