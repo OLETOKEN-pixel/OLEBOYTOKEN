@@ -20,6 +20,7 @@ import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON          = '/figma-assets/figma-neon.png';
 const A_ZAPS          = '/figma-assets/figma-zaps.svg';
+const A_BRAND_LOGO    = '/figma-assets/figma-logo.svg';
 const A_DS_BTN        = '/figma-assets/figma-ds-icon-hero.png';
 // Section 2 - RANK UP
 const A_GUIDE         = '/figma-assets/figma-guide.svg';
@@ -137,119 +138,136 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            top: '356px',
+            top: 'clamp(220px, 26vw, 320px)',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             zIndex: 4,
+            width: 'min(92vw, 760px)',
+            padding: '0 24px',
+            boxSizing: 'border-box',
           }}
         >
-          {/* OLEBOY title */}
-          <p
+          {/* Brand lockup */}
+          <div
+            style={{
+              width: 'clamp(150px, 12vw, 200px)',
+              height: 'clamp(180px, 16vw, 240px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: 'rotate(89.78deg)',
+              marginBottom: '20px',
+            }}
+          >
+            <img
+              src={A_BRAND_LOGO}
+              alt="OleBoy Token"
+              style={{
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0px 18px 36px rgba(0, 0, 0, 0.35))',
+              }}
+            />
+          </div>
+
+          <h1
             style={{
               fontFamily: F,
               fontWeight: 900,
-              fontSize: '128px',
-              lineHeight: 'normal',
+              fontSize: 'clamp(40px, 6vw, 96px)',
+              lineHeight: '0.92',
               color: '#ffffff',
               textAlign: 'center',
               whiteSpace: 'nowrap',
+              textShadow: '0px 10px 30px rgba(0, 0, 0, 0.35)',
               margin: 0,
             }}
           >
-            OLEBOY
-          </p>
+            OleBoy Token
+          </h1>
 
-          {/* Subtitle */}
-          <p
+          <div
             style={{
-              fontFamily: F,
-              fontWeight: 400,
-              fontSize: '30px',
-              lineHeight: '35px',
-              letterSpacing: '4.8px',
-              color: '#ffffff',
-              textAlign: 'center',
-              width: '686px',
-              margin: '0',
-              marginTop: '-2px',
-            }}
-          >
-            Stake tokens. Win Matches.
-            <br />
-            Claim your victory.
-          </p>
-
-          {/* SIGN UP BUTTON */}
-          <button
-            onClick={handleSignUp}
-            style={{
-              marginTop: '32px',
-              width: '285px',
-              height: '69px',
-              background: '#3b28cc',
-              borderRadius: '29px',
-              boxShadow: 'inset 0px 4px 4px 0px rgba(255,255,255,0.15), inset 0px -3px 4px 0px rgba(0,0,0,0.25)',
-              cursor: 'pointer',
-              border: 'none',
+              width: 'min(100%, 320px)',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              padding: 0,
+              gap: '28px',
+              marginTop: '38px',
             }}
           >
-            <span
+            {/* SIGN UP BUTTON */}
+            <button
+              onClick={handleSignUp}
               style={{
-                fontFamily: F,
-                fontWeight: 900,
-                color: '#ffffff',
-                fontSize: 0,
-                lineHeight: 0,
+                width: 'min(100%, 285px)',
+                height: '69px',
+                background: '#3b28cc',
+                borderRadius: '29px',
+                boxShadow: 'inset 0px 4px 4px 0px rgba(255,255,255,0.15), inset 0px -3px 4px 0px rgba(0,0,0,0.25)',
+                cursor: 'pointer',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                padding: 0,
               }}
             >
-              <span style={{ fontSize: '36px', lineHeight: 'normal' }}>SIGN UP</span>
-              <span style={{ fontSize: '40px', lineHeight: 'normal' }}>!</span>
-            </span>
-            <img src={A_DS_BTN} alt="" aria-hidden style={{ width: '52.907px', height: '38.932px' }} />
-          </button>
+              <span
+                style={{
+                  fontFamily: F,
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  fontSize: 0,
+                  lineHeight: 0,
+                }}
+              >
+                <span style={{ fontSize: '36px', lineHeight: 'normal' }}>SIGN UP</span>
+                <span style={{ fontSize: '40px', lineHeight: 'normal' }}>!</span>
+              </span>
+              <img src={A_DS_BTN} alt="" aria-hidden style={{ width: '52.907px', height: '38.932px' }} />
+            </button>
 
-          {/* KNOW MORE BUTTON */}
-          <button
-            onClick={() => scrollTo(1)}
-            style={{
-              marginTop: '139px',
-              width: '274px',
-              height: '65px',
-              background: 'rgba(255,22,84,0.23)',
-              border: '1px solid #ff1654',
-              borderRadius: '50px',
-              boxShadow: 'inset 0px -4px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.14)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '16px',
-              padding: 0,
-            }}
-          >
-            <img src="/figma-assets/figma-arrow-stroke.svg" alt="" aria-hidden style={{ width: '16.312px', height: '21.071px', flexShrink: 0 }} />
-            <span
+            {/* KNOW MORE BUTTON */}
+            <button
+              onClick={() => scrollTo(1)}
               style={{
-                fontFamily: F,
-                fontWeight: 400,
-                fontSize: '24px',
-                lineHeight: 'normal',
-                color: '#ffffff',
-                whiteSpace: 'nowrap',
+                width: 'min(100%, 274px)',
+                height: '65px',
+                background: 'rgba(255,22,84,0.23)',
+                border: '1px solid #ff1654',
+                borderRadius: '50px',
+                boxShadow: 'inset 0px -4px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.14)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '16px',
+                padding: 0,
               }}
             >
-              Know More
-            </span>
-            <img src="/figma-assets/figma-arrow-stroke1.svg" alt="" aria-hidden style={{ width: '15.653px', height: '21.071px', flexShrink: 0 }} />
-          </button>
+              <img src="/figma-assets/figma-arrow-stroke.svg" alt="" aria-hidden style={{ width: '16.312px', height: '21.071px', flexShrink: 0 }} />
+              <span
+                style={{
+                  fontFamily: F,
+                  fontWeight: 400,
+                  fontSize: '24px',
+                  lineHeight: 'normal',
+                  color: '#ffffff',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Know More
+              </span>
+              <img src="/figma-assets/figma-arrow-stroke1.svg" alt="" aria-hidden style={{ width: '15.653px', height: '21.071px', flexShrink: 0 }} />
+            </button>
+          </div>
         </div>
       </section>
 
