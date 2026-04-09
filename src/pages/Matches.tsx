@@ -169,7 +169,7 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
 
   return (
     <section
-      className="grid h-full min-h-[360px] grid-cols-[minmax(0,1fr)_430px] gap-[34px] overflow-hidden rounded-[34px] border border-[#ff1654] bg-[linear-gradient(180deg,rgba(90,8,31,0.7)_0%,rgba(24,4,9,0.97)_100%)] px-[34px] py-[30px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.06)]"
+      className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_430px] gap-[34px] overflow-hidden rounded-[34px] border border-[#ff1654] bg-[linear-gradient(180deg,rgba(90,8,31,0.7)_0%,rgba(24,4,9,0.97)_100%)] px-[32px] py-[28px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.06)]"
       aria-live="polite"
     >
       <div className="flex min-w-0 gap-[24px]">
@@ -264,9 +264,10 @@ export default function Matches() {
     teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
   const isCreateOverlayOpen = location.pathname === '/matches/create';
   const isEmptyState = !loading && matches.length === 0;
+  const shouldDisablePageScroll = loading || isEmptyState;
   const shouldLockViewport = loading || matches.length <= 4;
-  const contentPaddingTop = 140;
-  const contentPaddingBottom = isEmptyState ? 136 : 104;
+  const contentPaddingTop = isEmptyState ? 98 : 124;
+  const contentPaddingBottom = isEmptyState ? 72 : 104;
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
@@ -281,6 +282,29 @@ export default function Matches() {
       window.clearInterval(timer);
     };
   }, []);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const previousHtmlOverflowY = html.style.overflowY;
+    const previousBodyOverflowY = body.style.overflowY;
+    const previousHtmlOverscroll = html.style.overscrollBehaviorY;
+    const previousBodyOverscroll = body.style.overscrollBehaviorY;
+
+    if (shouldDisablePageScroll) {
+      html.style.overflowY = 'hidden';
+      body.style.overflowY = 'hidden';
+      html.style.overscrollBehaviorY = 'none';
+      body.style.overscrollBehaviorY = 'none';
+    }
+
+    return () => {
+      html.style.overflowY = previousHtmlOverflowY;
+      body.style.overflowY = previousBodyOverflowY;
+      html.style.overscrollBehaviorY = previousHtmlOverscroll;
+      body.style.overscrollBehaviorY = previousBodyOverscroll;
+    };
+  }, [shouldDisablePageScroll]);
 
   const handleAccept = async (match: Match) => {
     if (!user) {
@@ -384,7 +408,13 @@ export default function Matches() {
 
   return (
     <PublicLayout>
-      <section className="relative overflow-x-hidden bg-[radial-gradient(circle_at_bottom,rgba(118,12,38,0.24),transparent_28%),linear-gradient(180deg,#160406_0%,#090203_100%)] text-white">
+      <section
+        className={cn(
+          'relative overflow-x-hidden bg-[radial-gradient(circle_at_bottom,rgba(118,12,38,0.24),transparent_28%),linear-gradient(180deg,#160406_0%,#090203_100%)] text-white',
+          shouldDisablePageScroll && 'h-[100dvh] overflow-hidden',
+          !shouldDisablePageScroll && 'min-h-screen',
+        )}
+      >
         <img
           className="pointer-events-none absolute left-1/2 top-0 h-[146px] w-screen -translate-x-1/2 object-cover"
           src="/figma-assets/figma-neon.png"
@@ -393,14 +423,15 @@ export default function Matches() {
         />
 
         <div
-          className="relative mx-auto flex flex-col"
+          className={cn('relative mx-auto flex flex-col box-border', shouldDisablePageScroll && 'h-full')}
           style={{
             width: 'min(1532px, calc(100% - 100px))',
             paddingTop: `${contentPaddingTop}px`,
             paddingBottom: `${contentPaddingBottom}px`,
             minHeight: shouldLockViewport
-              ? `calc(100vh - ${contentPaddingTop + contentPaddingBottom}px)`
+              ? `calc(100dvh - ${contentPaddingTop + contentPaddingBottom}px)`
               : undefined,
+            height: shouldDisablePageScroll ? '100%' : undefined,
           }}
         >
           <div className="relative h-[207px] w-[1263px] max-w-full">
@@ -418,7 +449,7 @@ export default function Matches() {
             </h1>
           </div>
 
-          <div className="mt-[8px] flex items-center justify-between gap-10">
+          <div className="mt-0 flex items-center justify-between gap-10">
             <div className="flex items-center gap-7">
               <MatchesFilterSelect
                 value={teamSizeFilter}
@@ -459,7 +490,7 @@ export default function Matches() {
               ))}
             </div>
           ) : isEmptyState ? (
-            <div className="mt-[34px] flex-1 min-h-0">
+            <div className="mt-[18px] flex-1 min-h-0 overflow-hidden">
               <MatchesEmptyState hasActiveFilters={hasActiveFilters} />
             </div>
           ) : (

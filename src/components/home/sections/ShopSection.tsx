@@ -60,7 +60,7 @@ export const ShopSection = () => {
             </div>
           </button>
 
-          <div className="absolute top-[242px] right-[169px] flex flex-col items-end [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-right tracking-[0] leading-[normal]">
+          <div className="absolute top-[186px] left-[118px] flex h-[184px] w-[620px] flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-[48px] leading-[58px] text-white text-center tracking-[0]">
             <span className="whitespace-nowrap">Cosmetics, coins, VIP.</span>
             <span className="whitespace-nowrap">Everything you need</span>
             <span className="whitespace-nowrap">to set you up!</span>
