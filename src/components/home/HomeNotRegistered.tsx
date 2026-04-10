@@ -137,111 +137,117 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            top: 'clamp(220px, 26vw, 320px)',
+            top: '356px',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             zIndex: 4,
-            width: 'min(92vw, 760px)',
-            padding: '0 24px',
-            boxSizing: 'border-box',
           }}
         >
-          <h1
+          <p
             style={{
-              fontFamily: F,
+              fontFamily: FE,
               fontWeight: 900,
-              fontSize: 'clamp(40px, 6vw, 96px)',
-              lineHeight: '0.92',
+              fontSize: '128px',
+              lineHeight: 'normal',
               color: '#ffffff',
               textAlign: 'center',
               whiteSpace: 'nowrap',
-              textShadow: '0px 10px 30px rgba(0, 0, 0, 0.35)',
               margin: 0,
+              width: '647.999px',
+              height: '145.6px',
             }}
           >
-            OleBoy Token
-          </h1>
+            OLEBOY
+          </p>
 
-          <div
+          <p
             style={{
-              width: 'min(100%, 320px)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '28px',
-              marginTop: '38px',
+              fontFamily: FE,
+              fontWeight: 400,
+              fontSize: '30px',
+              lineHeight: '35px',
+              letterSpacing: '4.8px',
+              color: '#ffffff',
+              textAlign: 'center',
+              width: '686px',
+              height: '100.577px',
+              margin: 0,
+              marginTop: '-0.4px',
             }}
           >
-            {/* SIGN UP BUTTON */}
-            <button
-              onClick={handleSignUp}
-              style={{
-                width: 'min(100%, 285px)',
-                height: '69px',
-                background: '#3b28cc',
-                borderRadius: '29px',
-                boxShadow: 'inset 0px 4px 4px 0px rgba(255,255,255,0.15), inset 0px -3px 4px 0px rgba(0,0,0,0.25)',
-                cursor: 'pointer',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                padding: 0,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: F,
-                  fontWeight: 900,
-                  color: '#ffffff',
-                  fontSize: 0,
-                  lineHeight: 0,
-                }}
-              >
-                <span style={{ fontSize: '36px', lineHeight: 'normal' }}>SIGN UP</span>
-                <span style={{ fontSize: '40px', lineHeight: 'normal' }}>!</span>
-              </span>
-              <img src={A_DS_BTN} alt="" aria-hidden style={{ width: '52.907px', height: '38.932px' }} />
-            </button>
+            Stake tokens. Win Matches.
+            <br />
+            Claim your victory.
+          </p>
 
-            {/* KNOW MORE BUTTON */}
-            <button
-              onClick={() => scrollTo(1)}
+          <button
+            onClick={handleSignUp}
+            style={{
+              width: '285px',
+              height: '69px',
+              background: '#3b28cc',
+              borderRadius: '29px',
+              boxShadow: 'inset 0px 4px 4px 0px rgba(255,255,255,0.15), inset 0px -3px 4px 0px rgba(0,0,0,0.25)',
+              cursor: 'pointer',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              padding: 0,
+            }}
+          >
+            <span
               style={{
-                width: 'min(100%, 274px)',
-                height: '65px',
-                background: 'rgba(255,22,84,0.23)',
-                border: '1px solid #ff1654',
-                borderRadius: '50px',
-                boxShadow: 'inset 0px -4px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.14)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '16px',
-                padding: 0,
+                fontFamily: F,
+                fontWeight: 900,
+                color: '#ffffff',
+                fontSize: 0,
+                lineHeight: 0,
               }}
             >
-              <img src="/figma-assets/figma-arrow-stroke.svg" alt="" aria-hidden style={{ width: '16.312px', height: '21.071px', flexShrink: 0 }} />
-              <span
-                style={{
-                  fontFamily: F,
-                  fontWeight: 400,
-                  fontSize: '24px',
-                  lineHeight: 'normal',
-                  color: '#ffffff',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Know More
-              </span>
-              <img src="/figma-assets/figma-arrow-stroke1.svg" alt="" aria-hidden style={{ width: '15.653px', height: '21.071px', flexShrink: 0 }} />
-            </button>
-          </div>
+              <span style={{ fontSize: '36px', lineHeight: 'normal' }}>SIGN UP</span>
+              <span style={{ fontSize: '40px', lineHeight: 'normal' }}>!</span>
+            </span>
+            <img src={A_DS_BTN} alt="" aria-hidden style={{ width: '52.907px', height: '38.932px' }} />
+          </button>
+
+          <button
+            onClick={() => scrollTo(1)}
+            style={{
+              marginTop: '169px',
+              width: '274px',
+              height: '65px',
+              background: 'rgba(255,22,84,0.23)',
+              border: '1px solid #ff1654',
+              borderRadius: '50px',
+              boxShadow: 'inset 0px -4px 4px 0px rgba(0,0,0,0.25), inset 0px 4px 4px 0px rgba(255,255,255,0.14)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              padding: 0,
+            }}
+          >
+            <img src="/figma-assets/figma-arrow-stroke.svg" alt="" aria-hidden style={{ width: '16.312px', height: '21.071px', flexShrink: 0 }} />
+            <span
+              style={{
+                fontFamily: F,
+                fontWeight: 400,
+                fontSize: '24px',
+                lineHeight: 'normal',
+                color: '#ffffff',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Know More
+            </span>
+            <img src="/figma-assets/figma-arrow-stroke1.svg" alt="" aria-hidden style={{ width: '15.653px', height: '21.071px', flexShrink: 0 }} />
+          </button>
         </div>
       </section>
 
@@ -262,7 +268,7 @@ export function HomeNotRegistered() {
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
         {/* Spaccato title decoration — triangles only */}
-        <div style={{ position: 'absolute', left: 'calc(16% - 68px)', top: '157px', width: '843px', height: '207.862px', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '846.854px', height: '207.862px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_2} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -270,9 +276,11 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            left: '16%',
+            left: 'calc(16% + 289.3px)',
             top: '228.89px',
+            transform: 'translateX(-50%)',
             zIndex: 2,
+            width: '583px',
           }}
         >
           <p
@@ -285,20 +293,13 @@ export function HomeNotRegistered() {
               color: '#ffffff',
               whiteSpace: 'nowrap',
               margin: 0,
+              textAlign: 'center',
             }}
           >
-            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>RANK UP!</span>
+            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>RANK UP</span>
+            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
           </p>
           {/* Pink outline — matches text width exactly */}
-          <div
-            style={{
-              width: '100%',
-              height: '17.75px',
-              marginTop: '8px',
-              background: '#FF1654',
-              clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
-            }}
-          />
         </div>
 
         {/* Star shape — decorative */}
@@ -307,7 +308,7 @@ export function HomeNotRegistered() {
             position: 'absolute',
             left: 'calc(8% - 17.6px)',
             top: '297px',
-            width: '45.1%',
+            width: '866.424px',
             height: '596.408px',
             display: 'flex',
             alignItems: 'center',
@@ -395,9 +396,11 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            right: 'calc(100% - 84%)',
+            left: 'calc(28% + 1088.4px)',
             top: '203px',
+            transform: 'translateX(-100%)',
             zIndex: 2,
+            width: '1088.4px',
           }}
         >
           <p
@@ -413,18 +416,32 @@ export function HomeNotRegistered() {
               textAlign: 'right',
             }}
           >
-            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>JOIN THE ARENA!</span>
+            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>JOIN THE ARENA</span>
+            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
           </p>
           {/* Pink outline — matches text width exactly */}
-          <div
-            style={{
-              width: '100%',
-              height: '17.75px',
-              marginTop: '13px',
-              background: '#FF1654',
-              clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
-            }}
-          />
+        </div>
+
+        {/* Pink outline - Figma asset anchored independently from the title */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(28% + 20.4px)',
+            top: '319.71px',
+            width: '1436.682px',
+            height: '25.522px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        >
+          <div style={{ transform: 'scaleY(-1) rotate(89.8deg)', flexShrink: 0 }}>
+            <div style={{ position: 'relative', width: '20.499px', height: '1436.62px' }}>
+              <img src={A_OUTLINE_S3} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+            </div>
+          </div>
         </div>
 
         {/* Star decoration */}
@@ -433,7 +450,7 @@ export function HomeNotRegistered() {
             position: 'absolute',
             left: 'calc(44% + 43.2px)',
             top: '316px',
-            width: '42.4%',
+            width: '813.516px',
             height: '506.117px',
             display: 'flex',
             alignItems: 'center',
@@ -483,8 +500,9 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            right: 'calc(100% - 48% - 708.4px)',
+            left: 'calc(48% + 708.4px)',
             top: '483px',
+            transform: 'translateX(-100%)',
             fontFamily: FE,
             fontWeight: 700,
             fontSize: '48px',
@@ -531,7 +549,7 @@ export function HomeNotRegistered() {
         <img src={A_GUIDE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
         {/* Spaccato title decoration — triangles only */}
-        <div style={{ position: 'absolute', left: 'calc(16% - 66px)', top: '157px', width: '1299px', height: '207.861px', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '1321.928px', height: '207.861px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
@@ -539,9 +557,11 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            left: '16%',
+            left: 'calc(16% + 461.3px)',
             top: '228px',
+            transform: 'translateX(-50%)',
             zIndex: 2,
+            width: '922.6px',
           }}
         >
           <p
@@ -554,20 +574,13 @@ export function HomeNotRegistered() {
               color: '#ffffff',
               whiteSpace: 'nowrap',
               margin: 0,
+              textAlign: 'center',
             }}
           >
-            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS!</span>
+            <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS</span>
+            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
           </p>
           {/* Pink outline — matches text width exactly */}
-          <div
-            style={{
-              width: '100%',
-              height: '17.75px',
-              marginTop: '8px',
-              background: '#FF1654',
-              clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
-            }}
-          />
         </div>
 
         {/* Vector 19 — decorative star shape */}
@@ -576,7 +589,7 @@ export function HomeNotRegistered() {
             position: 'absolute',
             left: 'calc(12% - 6.4px)',
             top: '331px',
-            width: '34.4%',
+            width: '660.187px',
             height: '650.974px',
             display: 'flex',
             alignItems: 'center',
