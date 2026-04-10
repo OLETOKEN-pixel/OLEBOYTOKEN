@@ -20,7 +20,6 @@ import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON          = '/figma-assets/figma-neon.png';
 const A_ZAPS          = '/figma-assets/figma-zaps.svg';
-const A_BRAND_LOGO    = '/figma-assets/oleboy-logo-transparent.png';
 const A_DS_BTN        = '/figma-assets/figma-ds-icon-hero.png';
 // Section 2 - RANK UP
 const A_GUIDE         = '/figma-assets/figma-guide.svg';
@@ -150,31 +149,6 @@ export function HomeNotRegistered() {
             boxSizing: 'border-box',
           }}
         >
-          {/* Brand lockup */}
-          <div
-            style={{
-              width: 'clamp(240px, 18vw, 340px)',
-              maxWidth: '100%',
-              aspectRatio: '65.2068 / 55.2445',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '28px',
-            }}
-          >
-            <img
-              src={A_BRAND_LOGO}
-              alt="OleBoy Token"
-              style={{
-                display: 'block',
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0px 18px 36px rgba(0, 0, 0, 0.35))',
-              }}
-            />
-          </div>
-
           <h1
             style={{
               fontFamily: F,
