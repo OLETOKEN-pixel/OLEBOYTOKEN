@@ -91,37 +91,16 @@ function FigmaBang() {
       style={{
         display: 'inline-block',
         position: 'relative',
-        width: '48px',
-        height: '104px',
-        marginLeft: '8px',
-        verticalAlign: '-13px',
-        transform: 'skewX(-8deg)',
+        width: '34px',
+        height: '100px',
+        marginLeft: '6px',
+        verticalAlign: '-10px',
       }}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: '14px',
-          top: '4px',
-          width: '24px',
-          height: '76px',
-          background: '#ffffff',
-        }}
-      />
-      <span
-        aria-hidden="true"
-        data-figma-bang-dot="true"
-        style={{
-          position: 'absolute',
-          left: '18px',
-          bottom: '3px',
-          width: '15px',
-          height: '15px',
-          borderRadius: '999px',
-          background: '#ffffff',
-        }}
-      />
+      <svg aria-hidden="true" viewBox="0 0 34 100" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '100%', overflow: 'visible' }}>
+        <polygon points="13 0 34 0 22 76 1 76" fill="#ffffff" />
+        <circle data-figma-bang-dot="true" cx="11" cy="92" r="8" fill="#ffffff" />
+      </svg>
     </span>
   );
 }
@@ -359,7 +338,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(16% + 289.3px)',
-            top: '220.89px',
+            top: '223.89px',
             transform: 'translateX(-50%)',
             zIndex: 2,
             width: '583px',
@@ -479,7 +458,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(28% + 1088.4px)',
-            top: '195px',
+            top: '198px',
             transform: 'translateX(-100%)',
             zIndex: 2,
             width: '1088.4px',
@@ -635,7 +614,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(16% + 461.3px)',
-            top: '220px',
+            top: '223px',
             transform: 'translateX(-50%)',
             zIndex: 2,
             width: '922.6px',

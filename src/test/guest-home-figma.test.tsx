@@ -44,7 +44,8 @@ describe('HomeNotRegistered Figma guest landing', () => {
     expect(bangs).toHaveLength(3);
     expect(dots).toHaveLength(3);
     dots.forEach((dot) => {
-      expect((dot as HTMLElement).style.borderRadius).toBe('999px');
+      expect(dot.tagName.toLowerCase()).toBe('circle');
+      expect(dot.getAttribute('r')).toBe('8');
     });
   });
 
