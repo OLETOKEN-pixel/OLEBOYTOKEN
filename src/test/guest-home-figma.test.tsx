@@ -36,17 +36,13 @@ describe('HomeNotRegistered Figma guest landing', () => {
     expect(srcs.some((src) => src?.startsWith('https://www.figma.com/api/mcp/'))).toBe(false);
   });
 
-  it('uses round custom dots for the section title exclamation marks', () => {
+  it('uses text exclamation marks in the section titles', () => {
     const { container } = render(<HomeNotRegistered />);
-    const bangs = container.querySelectorAll('[data-figma-bang="true"]');
-    const dots = container.querySelectorAll('[data-figma-bang-dot="true"]');
 
-    expect(bangs).toHaveLength(3);
-    expect(dots).toHaveLength(3);
-    dots.forEach((dot) => {
-      expect(dot.tagName.toLowerCase()).toBe('circle');
-      expect(dot.getAttribute('r')).toBe('8');
-    });
+    expect(container.querySelector('[data-figma-bang="true"]')).toBeNull();
+    expect(container.textContent).toContain('RANK UP!');
+    expect(container.textContent).toContain('JOIN THE ARENA!');
+    expect(container.textContent).toContain('GET REWARDS!');
   });
 
   it('keeps title outlines capped at each exclamation mark', () => {

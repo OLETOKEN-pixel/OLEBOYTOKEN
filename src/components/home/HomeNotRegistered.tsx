@@ -83,28 +83,6 @@ function FigmaTitleOutline({ name, left, top, width, height }: FigmaOutlineProps
   );
 }
 
-function FigmaBang() {
-  return (
-    <span
-      aria-label="!"
-      data-figma-bang="true"
-      style={{
-        display: 'inline-block',
-        position: 'relative',
-        width: '34px',
-        height: '100px',
-        marginLeft: '6px',
-        verticalAlign: '-10px',
-      }}
-    >
-      <svg aria-hidden="true" viewBox="0 0 34 100" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '100%', overflow: 'visible' }}>
-        <polygon points="13 0 34 0 22 76 1 76" fill="#ffffff" />
-        <circle data-figma-bang-dot="true" cx="11" cy="92" r="8" fill="#ffffff" />
-      </svg>
-    </span>
-  );
-}
-
 export function HomeNotRegistered() {
   const handleSignUp = useCallback(async () => {
     try {
@@ -358,7 +336,7 @@ export function HomeNotRegistered() {
             }}
           >
             <span style={{ fontSize: '96px', lineHeight: 'normal' }}>RANK UP</span>
-            <FigmaBang />
+            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
           </p>
           {/* Pink outline — matches text width exactly */}
         </div>
@@ -478,7 +456,7 @@ export function HomeNotRegistered() {
             }}
           >
             <span style={{ fontSize: '96px', lineHeight: 'normal' }}>JOIN THE ARENA</span>
-            <FigmaBang />
+            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
           </p>
           {/* Pink outline — matches text width exactly */}
         </div>
@@ -634,7 +612,7 @@ export function HomeNotRegistered() {
             }}
           >
             <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS</span>
-            <FigmaBang />
+            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
           </p>
           {/* Pink outline — matches text width exactly */}
         </div>
