@@ -83,6 +83,49 @@ function FigmaTitleOutline({ name, left, top, width, height }: FigmaOutlineProps
   );
 }
 
+function FigmaBang() {
+  return (
+    <span
+      aria-label="!"
+      data-figma-bang="true"
+      style={{
+        display: 'inline-block',
+        position: 'relative',
+        width: '48px',
+        height: '104px',
+        marginLeft: '8px',
+        verticalAlign: '-13px',
+        transform: 'skewX(-8deg)',
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: '14px',
+          top: '4px',
+          width: '24px',
+          height: '76px',
+          background: '#ffffff',
+        }}
+      />
+      <span
+        aria-hidden="true"
+        data-figma-bang-dot="true"
+        style={{
+          position: 'absolute',
+          left: '18px',
+          bottom: '3px',
+          width: '15px',
+          height: '15px',
+          borderRadius: '999px',
+          background: '#ffffff',
+        }}
+      />
+    </span>
+  );
+}
+
 export function HomeNotRegistered() {
   const handleSignUp = useCallback(async () => {
     try {
@@ -316,7 +359,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(16% + 289.3px)',
-            top: '223.89px',
+            top: '220.89px',
             transform: 'translateX(-50%)',
             zIndex: 2,
             width: '583px',
@@ -336,7 +379,7 @@ export function HomeNotRegistered() {
             }}
           >
             <span style={{ fontSize: '96px', lineHeight: 'normal' }}>RANK UP</span>
-            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
+            <FigmaBang />
           </p>
           {/* Pink outline — matches text width exactly */}
         </div>
@@ -436,7 +479,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(28% + 1088.4px)',
-            top: '198px',
+            top: '195px',
             transform: 'translateX(-100%)',
             zIndex: 2,
             width: '1088.4px',
@@ -456,7 +499,7 @@ export function HomeNotRegistered() {
             }}
           >
             <span style={{ fontSize: '96px', lineHeight: 'normal' }}>JOIN THE ARENA</span>
-            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
+            <FigmaBang />
           </p>
           {/* Pink outline — matches text width exactly */}
         </div>
@@ -592,7 +635,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(16% + 461.3px)',
-            top: '223px',
+            top: '220px',
             transform: 'translateX(-50%)',
             zIndex: 2,
             width: '922.6px',
@@ -612,7 +655,7 @@ export function HomeNotRegistered() {
             }}
           >
             <span style={{ fontSize: '96px', lineHeight: 'normal' }}>GET REWARDS</span>
-            <span style={{ fontSize: '110px', lineHeight: 'normal' }}>!</span>
+            <FigmaBang />
           </p>
           {/* Pink outline — matches text width exactly */}
         </div>

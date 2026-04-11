@@ -36,6 +36,18 @@ describe('HomeNotRegistered Figma guest landing', () => {
     expect(srcs.some((src) => src?.startsWith('https://www.figma.com/api/mcp/'))).toBe(false);
   });
 
+  it('uses round custom dots for the section title exclamation marks', () => {
+    const { container } = render(<HomeNotRegistered />);
+    const bangs = container.querySelectorAll('[data-figma-bang="true"]');
+    const dots = container.querySelectorAll('[data-figma-bang-dot="true"]');
+
+    expect(bangs).toHaveLength(3);
+    expect(dots).toHaveLength(3);
+    dots.forEach((dot) => {
+      expect((dot as HTMLElement).style.borderRadius).toBe('999px');
+    });
+  });
+
   it('keeps title outlines capped at each exclamation mark', () => {
     const { container } = render(<HomeNotRegistered />);
     const rank = container.querySelector('[data-figma-outline="rank"]') as SVGElement | null;
