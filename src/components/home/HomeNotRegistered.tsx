@@ -27,16 +27,13 @@ const A_SPAC_BOTTOM   = '/figma-assets/figma-spaccato-bottom.svg';
 const A_ANIMATION     = '/figma-assets/figma-animation.svg';
 const A_STAR_SHAPE    = '/figma-assets/figma-star-shape.svg';
 const A_SPAC_TITLE_2  = '/figma-assets/figma-spaccato-title-s2.svg';
-const A_OUTLINE_S2    = '/figma-assets/figma-outline-s2.svg';
 // Section 3 - JOIN THE ARENA
 const A_ANIMATION_S3  = '/figma-assets/figma-animation-s3.svg';
 const A_SPAC_BOTTOM_S3= '/figma-assets/figma-spaccato-bottom-s3.svg';
 const A_STAR_S3       = '/figma-assets/figma-star-s3.svg';
-const A_OUTLINE_S3    = '/figma-assets/figma-outline-s3.svg';
 // Section 4 - GET REWARDS
 const A_VECTOR19      = '/figma-assets/figma-vector19.svg';
 const A_SPAC_TITLE_4  = '/figma-assets/figma-spaccato-title-s4.svg';
-const A_OUTLINE_S4    = '/figma-assets/figma-outline-s4.svg';
 // Footer
 const A_COPYRIGHT     = '/figma-assets/figma-copyright.png';
 
@@ -55,17 +52,20 @@ const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
 const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
 
 type FigmaOutlineProps = {
-  src: string;
+  name: string;
   left: string;
   top: string;
   width: string;
   height: string;
 };
 
-function FigmaTitleOutline({ src, left, top, width, height }: FigmaOutlineProps) {
+function FigmaTitleOutline({ name, left, top, width, height }: FigmaOutlineProps) {
   return (
-    <div
+    <svg
       aria-hidden="true"
+      data-figma-outline={name}
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
       style={{
         position: 'absolute',
         left,
@@ -74,10 +74,12 @@ function FigmaTitleOutline({ src, left, top, width, height }: FigmaOutlineProps)
         height,
         pointerEvents: 'none',
         zIndex: 1,
+        display: 'block',
+        overflow: 'visible',
       }}
     >
-      <img src={src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-    </div>
+      <polygon points="0,50 100,0 100,100" fill="#FF1654" />
+    </svg>
   );
 }
 
@@ -302,8 +304,8 @@ export function HomeNotRegistered() {
         </div>
 
         <FigmaTitleOutline
-          src={A_OUTLINE_S2}
-          left="292px"
+          name="rank"
+          left="calc(12% + 61.6px)"
           top="344.363px"
           width="780.854px"
           height="23.229px"
@@ -461,8 +463,8 @@ export function HomeNotRegistered() {
 
         {/* Pink outline - Figma asset anchored independently from the title */}
         <FigmaTitleOutline
-          src={A_OUTLINE_S3}
-          left="558px"
+          name="arena"
+          left="calc(28% + 20.4px)"
           top="324.73px"
           width="1436.682px"
           height="25.522px"
@@ -578,8 +580,8 @@ export function HomeNotRegistered() {
         </div>
 
         <FigmaTitleOutline
-          src={A_OUTLINE_S4}
-          left="292px"
+          name="rewards"
+          left="calc(12% + 61.6px)"
           top="344.362px"
           width="1255.928px"
           height="24.89px"
