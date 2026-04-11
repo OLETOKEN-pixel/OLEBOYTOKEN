@@ -27,6 +27,7 @@ const A_SPAC_BOTTOM   = '/figma-assets/figma-spaccato-bottom.svg';
 const A_ANIMATION     = '/figma-assets/figma-animation.svg';
 const A_STAR_SHAPE    = '/figma-assets/figma-star-shape.svg';
 const A_SPAC_TITLE_2  = '/figma-assets/figma-spaccato-title-s2.svg';
+const A_OUTLINE_S2    = '/figma-assets/figma-outline-s2.svg';
 // Section 3 - JOIN THE ARENA
 const A_ANIMATION_S3  = '/figma-assets/figma-animation-s3.svg';
 const A_SPAC_BOTTOM_S3= '/figma-assets/figma-spaccato-bottom-s3.svg';
@@ -35,6 +36,7 @@ const A_OUTLINE_S3    = '/figma-assets/figma-outline-s3.svg';
 // Section 4 - GET REWARDS
 const A_VECTOR19      = '/figma-assets/figma-vector19.svg';
 const A_SPAC_TITLE_4  = '/figma-assets/figma-spaccato-title-s4.svg';
+const A_OUTLINE_S4    = '/figma-assets/figma-outline-s4.svg';
 // Footer
 const A_COPYRIGHT     = '/figma-assets/figma-copyright.png';
 
@@ -51,6 +53,33 @@ const IDS = ['s-hero', 's-rank', 's-arena', 's-rewards', 's-footer'];
 // ─── Asset URLs for navigation arrows ────────────────────────────────────────
 const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
 const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
+
+type FigmaOutlineProps = {
+  src: string;
+  left: string;
+  top: string;
+  width: string;
+  height: string;
+};
+
+function FigmaTitleOutline({ src, left, top, width, height }: FigmaOutlineProps) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width,
+        height,
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}
+    >
+      <img src={src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+    </div>
+  );
+}
 
 export function HomeNotRegistered() {
   const handleSignUp = useCallback(async () => {
@@ -272,6 +301,14 @@ export function HomeNotRegistered() {
           <img src={A_SPAC_TITLE_2} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
 
+        <FigmaTitleOutline
+          src={A_OUTLINE_S2}
+          left="292px"
+          top="344.363px"
+          width="780.854px"
+          height="23.229px"
+        />
+
         {/* RANK UP! title + outline wrapper */}
         <div
           style={{
@@ -423,26 +460,13 @@ export function HomeNotRegistered() {
         </div>
 
         {/* Pink outline - Figma asset anchored independently from the title */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 'calc(28% + 20.4px)',
-            top: '319.71px',
-            width: '1436.682px',
-            height: '25.522px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            zIndex: 1,
-          }}
-        >
-          <div style={{ transform: 'scaleY(-1) rotate(89.8deg)', flexShrink: 0 }}>
-            <div style={{ position: 'relative', width: '20.499px', height: '1436.62px' }}>
-              <img src={A_OUTLINE_S3} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-            </div>
-          </div>
-        </div>
+        <FigmaTitleOutline
+          src={A_OUTLINE_S3}
+          left="558px"
+          top="324.73px"
+          width="1436.682px"
+          height="25.522px"
+        />
 
         {/* Star decoration */}
         <div
@@ -552,6 +576,14 @@ export function HomeNotRegistered() {
         <div style={{ position: 'absolute', left: 'calc(12% - 4.4px)', top: '157px', width: '1321.928px', height: '207.861px', pointerEvents: 'none' }}>
           <img src={A_SPAC_TITLE_4} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
+
+        <FigmaTitleOutline
+          src={A_OUTLINE_S4}
+          left="292px"
+          top="344.362px"
+          width="1255.928px"
+          height="24.89px"
+        />
 
         {/* GET REWARDS! title + outline wrapper */}
         <div

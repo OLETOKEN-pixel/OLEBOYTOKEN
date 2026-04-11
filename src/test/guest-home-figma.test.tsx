@@ -29,8 +29,10 @@ describe('HomeNotRegistered Figma guest landing', () => {
 
     expect(srcs).toContain('/figma-assets/figma-zaps.svg');
     expect(srcs).toContain('/figma-assets/figma-spaccato-title-s2.svg');
+    expect(srcs).toContain('/figma-assets/figma-outline-s2.svg');
     expect(srcs).toContain('/figma-assets/figma-outline-s3.svg');
     expect(srcs).toContain('/figma-assets/figma-spaccato-title-s4.svg');
+    expect(srcs).toContain('/figma-assets/figma-outline-s4.svg');
     expect(srcs.some((src) => src?.startsWith('https://www.figma.com/api/mcp/'))).toBe(false);
   });
 });
