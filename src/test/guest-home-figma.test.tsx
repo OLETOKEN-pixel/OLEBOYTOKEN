@@ -69,4 +69,17 @@ describe('HomeNotRegistered Figma guest landing', () => {
     expect(rewardsCopy.style.left).toBe('calc(16% + 90.8px)');
     expect(rewardsCopy.style.top).toBe('509px');
   });
+
+  it('keeps the footer copyright baseline aligned and gives the OLEBOY wordmark breathing room', () => {
+    const { container } = render(<HomeNotRegistered />);
+    const copyright = container.querySelector('#s-footer [data-footer-copyright="true"]') as HTMLElement;
+    const wordmarks = Array.from(container.querySelectorAll('#s-footer p[aria-hidden="true"]')) as HTMLElement[];
+
+    expect(container.querySelector('img[src="/figma-assets/figma-copyright.png"]')).toBeNull();
+    expect(copyright.style.display).toBe('flex');
+    expect(copyright.style.alignItems).toBe('baseline');
+    expect(copyright.style.lineHeight).toBe('30px');
+    expect(wordmarks).toHaveLength(2);
+    expect(wordmarks.every((wordmark) => wordmark.style.paddingRight === '32px')).toBe(true);
+  });
 });

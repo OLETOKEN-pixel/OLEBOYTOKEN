@@ -20,7 +20,7 @@ export function Footer() {
 
           {/* Copyright */}
           <p className="text-center font-sans font-normal text-[14px] text-[#6b7280] mb-[24px]">
-            © {currentYear} OleBoy Token. All rights reserved.
+            {'\u00A9'} {currentYear} OleBoy Token. All rights reserved.
           </p>
 
           {/* Links Row */}

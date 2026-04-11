@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { FooterSection } from '@/components/home/sections/FooterSection';
 import { ShopSection } from '@/components/home/sections/ShopSection';
 import { TeamsSection } from '@/components/home/sections/TeamsSection';
 
@@ -60,5 +61,19 @@ describe('logged home section assets', () => {
     expect(srcs).toContain('/showreel/vip-icon.svg');
     expect(srcs).toContain('/showreel/coin-icon.svg');
     expect(srcs.some((src) => src.includes('https://www.figma.com/api/mcp/asset/'))).toBe(false);
+  });
+
+  it('aligns the logged-home footer copyright and prevents wordmark edge clipping', () => {
+    const { container } = render(<FooterSection />);
+    const copyright = container.querySelector('[data-footer-copyright="true"]') as HTMLElement;
+    const wordmarks = Array.from(container.querySelectorAll('p[aria-hidden="true"]')) as HTMLElement[];
+    const srcs = getImageSources(container);
+
+    expect(srcs).not.toContain('/figma-assets/figma-copyright.png');
+    expect(copyright.style.display).toBe('flex');
+    expect(copyright.style.alignItems).toBe('baseline');
+    expect(copyright.style.lineHeight).toBe('30px');
+    expect(wordmarks).toHaveLength(2);
+    expect(wordmarks.every((wordmark) => wordmark.style.paddingRight === '32px')).toBe(true);
   });
 });

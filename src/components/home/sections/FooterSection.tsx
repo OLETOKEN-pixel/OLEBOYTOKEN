@@ -1,4 +1,3 @@
-const A_COPYRIGHT = '/figma-assets/figma-copyright.png';
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 const FE = "'Base Neue Expanded', 'Base Neue Trial', 'Base Neue', sans-serif";
 
@@ -28,6 +27,8 @@ export const FooterSection = () => {
           fontSize: '347.059px',
           lineHeight: 'normal',
           whiteSpace: 'nowrap',
+          display: 'inline-block',
+          paddingRight: '32px',
           margin: 0,
           WebkitTextStroke: '3.48px transparent',
           background: 'linear-gradient(180.075deg, #FFFFFF 0%, #0F0404 100%)',
@@ -54,6 +55,8 @@ export const FooterSection = () => {
           fontSize: '347.059px',
           lineHeight: 'normal',
           whiteSpace: 'nowrap',
+          display: 'inline-block',
+          paddingRight: '32px',
           margin: 0,
           backgroundImage: 'linear-gradient(180.075deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
           WebkitBackgroundClip: 'text',
@@ -92,12 +95,28 @@ export const FooterSection = () => {
       <a href="/terms" style={{ position: 'absolute', left: 'calc(80% + 29px)', top: '439px', fontFamily: F, fontWeight: 400, fontSize: '16px', color: '#e6e6e6', textDecoration: 'underline', zIndex: 2 }}>Terms &amp; Privacy</a>
 
       {/* COPYRIGHT */}
-      <div style={{ position: 'absolute', left: 'calc(76% + 25.8px)', top: '588px', width: '23px', height: '23px', zIndex: 2 }}>
-        <img src={A_COPYRIGHT} alt="©" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'invert(1)' }} />
+      <div
+        data-footer-copyright="true"
+        style={{
+          position: 'absolute',
+          left: 'calc(76% + 25.8px)',
+          top: '584px',
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: '7px',
+          fontFamily: F,
+          fontWeight: 400,
+          fontSize: '24px',
+          lineHeight: '30px',
+          color: '#e6e6e6',
+          whiteSpace: 'nowrap',
+          margin: 0,
+          zIndex: 2,
+        }}
+      >
+        <span aria-hidden="true" style={{ position: 'relative', top: '2px', fontSize: '23px', lineHeight: 1 }}>{'\u00A9'}</span>
+        <span>2026 OLEBOY. All Rights Reserved.</span>
       </div>
-      <p style={{ position: 'absolute', left: 'calc(76% + 48.8px)', top: '585px', fontFamily: F, fontWeight: 400, fontSize: '24px', color: '#e6e6e6', whiteSpace: 'nowrap', margin: 0, zIndex: 2 }}>
-        {' '}2026 OLEBOY. All Rights Reserved.
-      </p>
     </section>
   );
 };
