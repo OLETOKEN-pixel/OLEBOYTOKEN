@@ -316,7 +316,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(16% + 289.3px)',
-            top: '223.89px',
+            top: '220.89px',
             transform: 'translateX(-50%)',
             zIndex: 2,
             width: '583px',
@@ -436,7 +436,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(28% + 1088.4px)',
-            top: '198px',
+            top: '195px',
             transform: 'translateX(-100%)',
             zIndex: 2,
             width: '1088.4px',
@@ -592,7 +592,7 @@ export function HomeNotRegistered() {
           style={{
             position: 'absolute',
             left: 'calc(16% + 461.3px)',
-            top: '223px',
+            top: '220px',
             transform: 'translateX(-50%)',
             zIndex: 2,
             width: '922.6px',
