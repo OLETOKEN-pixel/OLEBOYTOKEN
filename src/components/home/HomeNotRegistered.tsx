@@ -307,7 +307,7 @@ export function HomeNotRegistered() {
           name="rank"
           left="calc(12% + 61.6px)"
           top="344.363px"
-          width="780.854px"
+          width="calc(4% + 519.2px)"
           height="23.229px"
         />
 
@@ -466,7 +466,7 @@ export function HomeNotRegistered() {
           name="arena"
           left="calc(28% + 20.4px)"
           top="324.73px"
-          width="1436.682px"
+          width="1068px"
           height="25.522px"
         />
 
@@ -583,7 +583,7 @@ export function HomeNotRegistered() {
           name="rewards"
           left="calc(12% + 61.6px)"
           top="344.362px"
-          width="1255.928px"
+          width="calc(4% + 861px)"
           height="24.89px"
         />
 

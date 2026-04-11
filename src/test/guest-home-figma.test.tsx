@@ -35,4 +35,15 @@ describe('HomeNotRegistered Figma guest landing', () => {
     expect(container.querySelector('[data-figma-outline="rewards"]')).not.toBeNull();
     expect(srcs.some((src) => src?.startsWith('https://www.figma.com/api/mcp/'))).toBe(false);
   });
+
+  it('keeps title outlines capped at each exclamation mark', () => {
+    const { container } = render(<HomeNotRegistered />);
+    const rank = container.querySelector('[data-figma-outline="rank"]') as SVGElement | null;
+    const arena = container.querySelector('[data-figma-outline="arena"]') as SVGElement | null;
+    const rewards = container.querySelector('[data-figma-outline="rewards"]') as SVGElement | null;
+
+    expect(rank?.style.width).toBe('calc(4% + 519.2px)');
+    expect(arena?.style.width).toBe('1068px');
+    expect(rewards?.style.width).toBe('calc(4% + 861px)');
+  });
 });
