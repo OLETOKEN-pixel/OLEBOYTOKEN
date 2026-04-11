@@ -364,7 +364,7 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            left: 'calc(16% - 7.2px)',
+            left: 'calc(16% + 20.8px)',
             top: '509px',
             fontFamily: FE,
             fontWeight: 700,
@@ -526,7 +526,7 @@ export function HomeNotRegistered() {
         <div
           style={{
             position: 'absolute',
-            left: 'calc(48% + 708.4px)',
+            left: 'calc(48% + 680.4px)',
             top: '483px',
             transform: 'translateX(-100%)',
             fontFamily: FE,
@@ -640,7 +640,7 @@ export function HomeNotRegistered() {
         <p
           style={{
             position: 'absolute',
-            left: 'calc(16% + 2.8px)',
+            left: 'calc(16% + 30.8px)',
             top: '509px',
             fontFamily: FE,
             fontWeight: 700,
