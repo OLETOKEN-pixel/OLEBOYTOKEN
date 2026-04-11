@@ -18,7 +18,6 @@ import type {
   TeamMember,
   TeamMemberWithBalance,
 } from '@/types';
-import oleboyCoin from '@/assets/oleboy-coin.png';
 
 type CreateStep = 'game' | 'teams' | 'tokens';
 
@@ -63,6 +62,8 @@ const PLATFORM_OPTIONS: Array<{ value: Platform; label: string }> = [
   { value: 'PC', label: 'PC' },
   { value: 'Console', label: 'CONSOLE' },
 ];
+
+const TOKEN_ENTRY_FEE_PRESETS = [0.5, 1, 5, 10, 50] as const;
 
 function formatAmount(value: number) {
   return value.toFixed(2);
@@ -267,10 +268,11 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
   const [teamSize, setTeamSize] = useState<number>(1);
   const [platform, setPlatform] = useState<Platform>('All');
   const [region, setRegion] = useState<Region>('EU');
-  const [entryFeeInput, setEntryFeeInput] = useState('1.00');
+  const [entryFeeInput, setEntryFeeInput] = useState('5.00');
   const [creating, setCreating] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<SelectedTeam | null>(null);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('cover');
+  const [termsAccepted, setTermsAccepted] = useState(true);
   const didHydratePreferences = useRef(false);
 
   useEffect(() => {
@@ -306,10 +308,11 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
     setTeamSize(1);
     setPlatform('All');
     setRegion('EU');
-    setEntryFeeInput('1.00');
+    setEntryFeeInput('5.00');
     setCreating(false);
     setSelectedTeam(null);
     setPaymentMode('cover');
+    setTermsAccepted(true);
   }, [open]);
 
   useEffect(() => {
@@ -338,14 +341,16 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
   const playerCount = teamSize * 2;
   const totalCost = normalizedEntryFee * teamSize;
   const totalPool = normalizedEntryFee * playerCount;
-  const prize = totalPool * 0.95;
+  const platformFeeAmount = totalPool * 0.05;
+  const prize = totalPool - platformFeeAmount;
   const walletBalance = wallet?.balance ?? 0;
   const teamsStepValid = !hasTeamsStep || selectedTeam !== null;
   const canAffordSolo = walletBalance >= normalizedEntryFee;
   const canAffordCover = walletBalance >= totalCost;
   const canAffordSplit = selectedTeam?.memberBalances?.every((member) => member.balance >= normalizedEntryFee) ?? false;
   const canAfford = isTeamMatch ? (paymentMode === 'cover' ? canAffordCover : canAffordSplit) : canAffordSolo;
-  const finalCreateEnabled = Boolean(user && isProfileComplete && teamsStepValid && isEntryFeeValid && canAfford);
+  const isPresetEntryFee = isEntryFeeValid && TOKEN_ENTRY_FEE_PRESETS.some((fee) => normalizedEntryFee === fee);
+  const finalCreateEnabled = Boolean(user && isProfileComplete && teamsStepValid && isEntryFeeValid && canAfford && termsAccepted);
   const teamCostLabel = paymentMode === 'cover' ? totalCost : normalizedEntryFee;
   const teamCostCopy =
     paymentMode === 'cover'
@@ -393,6 +398,18 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
     setEntryFeeInput(Math.max(entryFee, 0.5).toFixed(2));
   };
 
+  const handlePresetEntryFee = (value: number) => {
+    setEntryFeeInput(value.toFixed(2));
+  };
+
+  const handleAllIn = () => {
+    const allInFee = isTeamMatch && paymentMode === 'cover' ? walletBalance / teamSize : walletBalance;
+
+    if (Number.isFinite(allInFee) && allInFee > 0) {
+      setEntryFeeInput(allInFee.toFixed(2));
+    }
+  };
+
   const handleNextStep = () => {
     if (step === 'game') {
       setStep(hasTeamsStep ? 'teams' : 'tokens');
@@ -431,6 +448,15 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       toast({
         title: 'Invalid entry fee',
         description: 'Entry fee must be at least 0.50 OBT.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!termsAccepted) {
+      toast({
+        title: 'Terms required',
+        description: 'Accept the Terms & Conditions before creating a token.',
         variant: 'destructive',
       });
       return;
@@ -638,61 +664,116 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
 
   const renderTokensStep = () => (
     <div className="mt-[31px] flex flex-1 flex-col">
-      <div className="grid grid-cols-[344px_344px] justify-between">
-        <section>
-          <FigmaSectionLabel>Entry fee:</FigmaSectionLabel>
-          <div className="mt-[13px] flex h-[59px] items-center rounded-[18px] bg-[rgba(0,0,0,0.5)] px-4">
-            <img src={oleboyCoin} alt="" className="h-[33px] w-[33px] shrink-0 object-contain" />
+      <section>
+        <FigmaSectionLabel>Entry fee:</FigmaSectionLabel>
+        <div className="mt-[8px] grid grid-cols-5 gap-x-[10px] gap-y-[12px]">
+          {TOKEN_ENTRY_FEE_PRESETS.map((fee) => {
+            const isActive = isEntryFeeValid && normalizedEntryFee === fee;
+
+            return (
+              <button
+                key={fee}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => handlePresetEntryFee(fee)}
+                className={cn(
+                  'flex h-[59px] items-center gap-[10px] rounded-[18px] border px-[13px] text-left text-[28px] text-white transition-all duration-200',
+                  isActive
+                    ? 'border-[#ff1654] bg-[rgba(255,22,84,0.34)]'
+                    : 'border-transparent bg-[rgba(0,0,0,0.5)] hover:border-white/10',
+                )}
+                style={{ fontFamily: FONT_EXPANDED_BOLD }}
+              >
+                <span className="h-[14px] w-[14px] shrink-0 rounded-full bg-[#ff1654]" aria-hidden="true" />
+                {formatAmount(fee)}
+              </button>
+            );
+          })}
+
+          <label className="col-span-2 flex h-[59px] items-center gap-[16px] rounded-[18px] bg-[rgba(0,0,0,0.5)] px-[13px]">
+            <span className="h-[14px] w-[14px] shrink-0 rounded-full bg-[#ff1654]" aria-hidden="true" />
             <input
-              aria-label="Entry fee"
+              aria-label="Custom entry fee"
               inputMode="decimal"
               type="number"
               min="0.5"
               step="0.5"
-              value={entryFeeInput}
+              value={isPresetEntryFee ? '' : entryFeeInput}
               onChange={(event) => setEntryFeeInput(event.target.value.replace(',', '.'))}
               onBlur={handleEntryFeeBlur}
-              className="ml-3 w-full bg-transparent text-right text-[28px] text-white outline-none"
-              style={{ fontFamily: FONT_EXPANDED_BOLD }}
+              placeholder="Custom amount"
+              className="min-w-0 flex-1 bg-transparent text-right text-[24px] text-white outline-none placeholder:text-[#515151]"
+              style={{ fontFamily: FONT_REGULAR }}
             />
-          </div>
-        </section>
+          </label>
 
-        <section>
-          <div className="flex items-baseline justify-between">
-            <FigmaSectionLabel>Total Pool:</FigmaSectionLabel>
-            <p className="text-[16px] text-[#ff1654]" style={{ fontFamily: FONT_EXPANDED }}>
-              ({playerCount} players)
-            </p>
-          </div>
-          <div className="mt-[13px] flex h-[59px] items-center rounded-[18px] bg-[rgba(0,0,0,0.5)] px-4">
-            <img src={oleboyCoin} alt="" className="h-[33px] w-[33px] shrink-0 object-contain" />
+          <button
+            type="button"
+            onClick={handleAllIn}
+            className="h-[59px] rounded-[18px] bg-[#ff1654] text-center text-[28px] text-white transition-all duration-200 hover:brightness-110"
+            style={{ fontFamily: FONT_EXPANDED_BOLD }}
+          >
+            ALL IN
+          </button>
+
+          <Link
+            to="/wallet"
+            className="col-span-2 flex h-[59px] items-center justify-center rounded-[18px] bg-[#ff1654] text-center text-[28px] text-white no-underline transition-all duration-200 hover:brightness-110"
+            style={{ fontFamily: FONT_EXPANDED_BOLD }}
+          >
+            GET MORE OBC
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-[26px]">
+        <div className="grid grid-cols-2 gap-[13px] px-[7px]">
+          <FigmaSectionLabel>Total pool:</FigmaSectionLabel>
+          <FigmaSectionLabel>Prize:</FigmaSectionLabel>
+        </div>
+
+        <div className="mt-[6px] grid grid-cols-2 gap-[13px]">
+          <div className="relative flex h-[91px] items-center overflow-hidden rounded-[21px] bg-[rgba(0,0,0,0.5)] px-[19px]">
+            <span className="h-[51px] w-[51px] shrink-0 rounded-full bg-[#ff1654]" aria-hidden="true" />
             <p
-              className="ml-3 w-full text-right text-[28px] text-white"
+              className="ml-[13px] text-[42px] leading-none text-white"
               style={{ fontFamily: FONT_EXPANDED_BOLD }}
               data-testid="total-pool-value"
             >
               {formatAmount(totalPool)}
             </p>
+            <span
+              className="absolute bottom-[18px] right-[26px] text-[12px] leading-none text-[#ff1654]/60"
+              style={{ fontFamily: FONT_EXPANDED_BOLD }}
+            >
+              ({playerCount} players)
+            </span>
           </div>
-        </section>
-      </div>
 
-      <section className="mt-[57px]">
-        <FigmaSectionLabel>Prize:</FigmaSectionLabel>
-        <div className="mt-[24px] ml-auto flex h-[91px] w-[527px] items-center rounded-[21px] bg-[linear-gradient(90deg,rgba(255,22,84,0.42)_0%,rgba(15,4,4,0.42)_65%),linear-gradient(90deg,rgba(15,4,4,0.32)_0%,rgba(15,4,4,0.32)_100%)] px-5">
-          <img src={oleboyCoin} alt="" className="h-[51px] w-[51px] shrink-0 object-contain" />
-          <p
-            className="ml-auto text-right text-[42px] text-white"
-            style={{ fontFamily: FONT_EXPANDED_BOLD }}
-            data-testid="prize-value"
-          >
-            {formatAmount(prize)}
-          </p>
+          <div className="relative flex h-[91px] items-center overflow-hidden rounded-[21px] border border-[#ff1654] bg-[linear-gradient(90deg,rgba(255,22,84,0.42)_0%,rgba(15,4,4,0.42)_65%),linear-gradient(90deg,rgba(15,4,4,0.32)_0%,rgba(15,4,4,0.32)_100%)] px-[19px]">
+            <span className="h-[51px] w-[51px] shrink-0 rounded-full bg-[#ff1654]" aria-hidden="true" />
+            <p
+              className="ml-[13px] text-[42px] leading-none text-white"
+              style={{ fontFamily: FONT_EXPANDED_BOLD }}
+              data-testid="prize-value"
+            >
+              {formatAmount(prize)}
+            </p>
+            <div
+              className="absolute bottom-[19px] right-[13px] flex flex-col items-end gap-[5px] leading-none"
+              style={{ fontFamily: FONT_EXPANDED_BOLD }}
+            >
+              <span className="text-[12px] text-[#ff1654]/60">OBT Fee (5%)</span>
+              <span className="inline-flex items-center gap-[9px] text-[20px] text-white">
+                <i className="h-[13px] w-[13px] rounded-full bg-[#ff1654]" aria-hidden="true" />
+                {formatAmount(platformFeeAmount)}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="mt-[28px] min-h-[86px] space-y-3">
+      <div className="mt-[18px] min-h-[86px] space-y-3">
         {!isProfileComplete && (
           <StatusNotice>
             Add your Epic Games username in{' '}
@@ -716,18 +797,33 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
             ) : (
               <>
                 You need {formatAmount(isTeamMatch ? totalCost : normalizedEntryFee)} OBT to create this token.{' '}
-                <Link to="/buy" className="underline underline-offset-4">
-                  Buy Coins
+                <Link to="/wallet" className="underline underline-offset-4">
+                  Get More OBC
                 </Link>
                 .
               </>
             )}
           </StatusNotice>
         )}
-
       </div>
 
-      <FooterAction label="CREATE TOKEN" onClick={handleCreate} disabled={!finalCreateEnabled} loading={creating} />
+      <label className="mx-auto mt-auto flex w-fit items-center gap-[13px] text-[20px] text-white" style={{ fontFamily: FONT_REGULAR }}>
+        <input
+          type="checkbox"
+          checked={termsAccepted}
+          onChange={(event) => setTermsAccepted(event.target.checked)}
+          className="peer sr-only"
+        />
+        <span className="relative h-[44px] w-[44px] shrink-0 rounded-[8px] bg-[#ff1654] after:absolute after:left-[15px] after:top-[8px] after:hidden after:h-[22px] after:w-[12px] after:rotate-45 after:border-b-[5px] after:border-r-[5px] after:border-white peer-checked:after:block" />
+        <span>
+          Accept our{' '}
+          <Link to="/terms" className="text-white underline underline-offset-2">
+            Terms & Conditions
+          </Link>
+        </span>
+      </label>
+
+      <FooterAction label="CREATE TOKEN" onClick={handleCreate} disabled={!finalCreateEnabled} loading={creating} spacing="tight" />
     </div>
   );
 

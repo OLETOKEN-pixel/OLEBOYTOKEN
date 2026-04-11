@@ -2172,3 +2172,685 @@
     width: 100%;
   }
 }
+
+.create-token-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(15, 4, 4, 0.7);
+}
+
+.create-token-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(903px, calc(100vw - 32px));
+  height: min(800px, calc(100vh - 48px));
+  height: min(800px, calc(100dvh - 48px));
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  border: 1.462px solid #ff1654;
+  border-radius: 18px;
+  background: #282828;
+  color: #fff;
+  box-sizing: border-box;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+.create-token-modal--auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(520px, calc(100vw - 32px));
+  height: auto;
+  min-height: 420px;
+  padding: 40px;
+}
+
+.create-token-modal__header {
+  padding: 30px 30px 0;
+  text-align: center;
+}
+
+.create-token-modal__header h2,
+.create-token-auth h2 {
+  margin: 0;
+  font-family: 'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif;
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.create-token-modal__tabs {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 75px;
+  margin-top: 17px;
+}
+
+.create-token-modal__tabs button {
+  position: relative;
+  width: 150px;
+  height: 52px;
+  border: 0;
+  background: transparent;
+  padding: 0 0 17px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 32px;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+}
+
+.create-token-modal__tabs button.is-active {
+  font-family: 'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif;
+}
+
+.create-token-modal__tabs button.is-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 150px;
+  height: 1.462px;
+  transform: translateX(-50%);
+  background: #ff1654;
+}
+
+.create-token-tab {
+  width: 790px;
+  max-width: calc(100% - 60px);
+  margin: 24px auto 0;
+  padding-bottom: 18px;
+}
+
+.create-token-label,
+.create-token-summary__labels p {
+  margin: 0;
+  font-family: 'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: 0;
+}
+
+.create-token-fee-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 151px));
+  gap: 12px 10px;
+  margin-top: 8px;
+}
+
+.create-token-chip,
+.create-token-custom,
+.create-token-action {
+  display: flex;
+  align-items: center;
+  height: 59px;
+  border: 0;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  color: #fff;
+}
+
+.create-token-chip {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 13px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.create-token-chip.is-active {
+  border: 1px solid #ff1654;
+  background: rgba(255, 22, 84, 0.34);
+}
+
+.create-token-dot {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  border-radius: 50%;
+  background: #ff1654;
+}
+
+.create-token-custom {
+  grid-column: span 2;
+  gap: 16px;
+  padding: 0 13px;
+}
+
+.create-token-custom input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  outline: 0;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  text-align: right;
+}
+
+.create-token-custom input::placeholder {
+  color: #515151;
+  opacity: 1;
+}
+
+.create-token-action {
+  justify-content: center;
+  border-radius: 18px;
+  background: #ff1654;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.create-token-action--wide {
+  grid-column: span 2;
+}
+
+.create-token-summary {
+  margin-top: 26px;
+}
+
+.create-token-summary__labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  padding: 0 7px;
+}
+
+.create-token-summary__cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  margin-top: 6px;
+}
+
+.create-token-summary__card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 91px;
+  border-radius: 21px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0 19px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.create-token-summary__card--prize {
+  border: 1px solid #ff1654;
+  background:
+    linear-gradient(90deg, rgba(255, 22, 84, 0.42) 0%, rgba(15, 4, 4, 0.42) 65%),
+    linear-gradient(90deg, rgba(15, 4, 4, 0.32) 0%, rgba(15, 4, 4, 0.32) 100%);
+}
+
+.create-token-big-dot {
+  width: 51px;
+  height: 51px;
+  flex: 0 0 51px;
+  border-radius: 50%;
+  background: #ff1654;
+}
+
+.create-token-summary__card strong {
+  margin-left: 13px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.create-token-summary__card small {
+  position: absolute;
+  right: 26px;
+  bottom: 18px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(255, 22, 84, 0.6);
+  white-space: nowrap;
+}
+
+.create-token-fee {
+  position: absolute;
+  right: 13px;
+  bottom: 19px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.create-token-fee span:first-child {
+  font-size: 12px;
+  color: rgba(255, 22, 84, 0.6);
+}
+
+.create-token-fee span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 20px;
+  color: #fff;
+}
+
+.create-token-fee i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ff1654;
+}
+
+.create-token-warning {
+  margin: 18px auto 0;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(255, 22, 84, 0.32);
+  border-radius: 8px;
+  background: rgba(15, 4, 4, 0.48);
+  padding: 10px 14px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 16px;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.create-token-terms {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  width: fit-content;
+  margin: 36px auto 0;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+}
+
+.create-token-terms input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.create-token-terms__box {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 8px;
+  background: #ff1654;
+}
+
+.create-token-terms input:checked + .create-token-terms__box::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  width: 12px;
+  height: 22px;
+  border: solid #fff;
+  border-width: 0 5px 5px 0;
+  transform: rotate(45deg);
+}
+
+.create-token-terms a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.create-token-divider {
+  width: min(589px, 100%);
+  height: 1.462px;
+  margin: 22px auto 0;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.create-token-submit,
+.create-token-modal__next-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 361px;
+  height: 69px;
+  margin: 10px auto 0;
+  border: 0;
+  border-radius: 23px;
+  background: #ff1654;
+  font-family: 'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif;
+  font-size: 36px;
+  line-height: 1;
+  color: #fff;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+
+.create-token-submit:hover:not(:disabled),
+.create-token-modal__next-button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.create-token-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.create-token-modal__game-panel {
+  width: 790px;
+  max-width: calc(100% - 60px);
+  margin: 24px auto 0;
+  padding-bottom: 24px;
+}
+
+.create-token-modal__game-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 22, 84, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 22, 84, 0.1);
+  padding: 12px 14px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.create-token-modal__game-section {
+  border: 1px solid rgba(255, 22, 84, 0.22);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 20px;
+}
+
+.create-token-modal__game-section + .create-token-modal__game-section {
+  margin-top: 16px;
+}
+
+.create-token-modal__game-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+}
+
+.create-token-modal__team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.create-token-modal__small-button,
+.create-token-modal__payment-button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  cursor: pointer;
+}
+
+.create-token-modal__small-button {
+  height: 54px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 18px;
+}
+
+.create-token-modal__small-button.is-active,
+.create-token-modal__payment-button.is-active {
+  border-color: #ff1654;
+  background: rgba(255, 22, 84, 0.22);
+}
+
+.create-token-modal__payment-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0 16px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.create-token-modal__rules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.create-token-modal__rules-grid label > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.create-token-modal__rules-grid select {
+  width: 100%;
+  height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0 13px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 18px;
+  color: #fff;
+  outline: 0;
+}
+
+.create-token-modal__private-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.24);
+  padding: 14px 16px;
+}
+
+.create-token-modal__private-row p {
+  margin: 0;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.create-token-modal__private-row span {
+  display: block;
+  margin-top: 4px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.create-token-modal__next-button {
+  margin-top: 18px;
+}
+
+.create-token-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.create-token-auth__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: rgba(255, 22, 84, 0.14);
+  color: #ff1654;
+}
+
+.create-token-auth p {
+  margin: 22px 0 12px;
+  font-family: 'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.create-token-auth span {
+  display: block;
+  max-width: 380px;
+  margin-top: 14px;
+  font-family: 'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif;
+  font-size: 18px;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.create-token-auth a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 28px;
+  border-radius: 8px;
+  background: #ff1654;
+  padding: 0 22px;
+  font-family: 'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif;
+  font-size: 16px;
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .create-token-modal {
+    height: min(800px, calc(100vh - 24px));
+    height: min(800px, calc(100dvh - 24px));
+  }
+
+  .create-token-modal__header h2,
+  .create-token-auth h2 {
+    font-size: clamp(36px, 9vw, 54px);
+    white-space: normal;
+  }
+
+  .create-token-modal__tabs {
+    gap: 24px;
+    margin-top: 16px;
+  }
+
+  .create-token-modal__tabs button {
+    width: 124px;
+    font-size: 26px;
+  }
+
+  .create-token-modal__tabs button.is-active::after {
+    width: 124px;
+  }
+
+  .create-token-tab,
+  .create-token-modal__game-panel {
+    max-width: calc(100% - 28px);
+    margin-top: 20px;
+  }
+
+  .create-token-fee-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .create-token-custom,
+  .create-token-action--wide {
+    grid-column: span 2;
+  }
+
+  .create-token-summary__labels,
+  .create-token-summary__cards,
+  .create-token-modal__rules-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .create-token-summary__labels p:last-child {
+    display: none;
+  }
+
+  .create-token-summary__card {
+    min-height: 91px;
+  }
+
+  .create-token-terms {
+    align-items: flex-start;
+    font-size: 16px;
+  }
+
+  .create-token-submit,
+  .create-token-modal__next-button {
+    width: min(361px, 100%);
+    font-size: 28px;
+  }
+
+  .create-token-modal__team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .create-token-modal {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    height: calc(100dvh - 16px);
+  }
+
+  .create-token-modal__header {
+    padding: 24px 14px 0;
+  }
+
+  .create-token-chip,
+  .create-token-action {
+    font-size: 22px;
+  }
+
+  .create-token-custom input {
+    font-size: 20px;
+  }
+
+  .create-token-summary__card strong {
+    font-size: 34px;
+  }
+}
