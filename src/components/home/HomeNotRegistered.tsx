@@ -362,9 +362,10 @@ export function HomeNotRegistered() {
 
         {/* Body text */}
         <div
+          data-figma-copy="rank"
           style={{
             position: 'absolute',
-            left: 'calc(16% + 20.8px)',
+            left: 'calc(16% + 80.8px)',
             top: '509px',
             fontFamily: FE,
             fontWeight: 700,
@@ -524,9 +525,10 @@ export function HomeNotRegistered() {
 
         {/* Body text — right aligned */}
         <div
+          data-figma-copy="arena"
           style={{
             position: 'absolute',
-            left: 'calc(48% + 680.4px)',
+            left: 'calc(48% + 620.4px)',
             top: '483px',
             transform: 'translateX(-100%)',
             fontFamily: FE,
@@ -638,9 +640,10 @@ export function HomeNotRegistered() {
 
         {/* Body text */}
         <p
+          data-figma-copy="rewards"
           style={{
             position: 'absolute',
-            left: 'calc(16% + 30.8px)',
+            left: 'calc(16% + 90.8px)',
             top: '509px',
             fontFamily: FE,
             fontWeight: 700,

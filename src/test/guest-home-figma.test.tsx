@@ -55,4 +55,18 @@ describe('HomeNotRegistered Figma guest landing', () => {
     expect(arena?.style.width).toBe('1068px');
     expect(rewards?.style.width).toBe('calc(4% + 861px)');
   });
+
+  it('positions section body copy horizontally without changing vertical alignment', () => {
+    const { container } = render(<HomeNotRegistered />);
+    const rankCopy = container.querySelector('[data-figma-copy="rank"]') as HTMLElement;
+    const arenaCopy = container.querySelector('[data-figma-copy="arena"]') as HTMLElement;
+    const rewardsCopy = container.querySelector('[data-figma-copy="rewards"]') as HTMLElement;
+
+    expect(rankCopy.style.left).toBe('calc(16% + 80.8px)');
+    expect(rankCopy.style.top).toBe('509px');
+    expect(arenaCopy.style.left).toBe('calc(48% + 620.4px)');
+    expect(arenaCopy.style.top).toBe('483px');
+    expect(rewardsCopy.style.left).toBe('calc(16% + 90.8px)');
+    expect(rewardsCopy.style.top).toBe('509px');
+  });
 });
