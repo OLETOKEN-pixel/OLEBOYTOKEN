@@ -25,6 +25,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Matches from "./pages/Matches";
 import MatchDetail from "./pages/MatchDetail";
+import MyMatches from "./pages/MyMatches";
 import Profile from "./pages/Profile";
 import Wallet from "./pages/Wallet";
 
@@ -105,6 +106,7 @@ function App() {
                 <Route path="/matches/create" element={<Matches />} />
                 <Route path="/matches/:id" element={<MatchDetail />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/my-matches" element={<MyMatches />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/privacy" element={<Privacy />} />

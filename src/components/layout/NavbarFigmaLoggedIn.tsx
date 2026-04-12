@@ -458,6 +458,19 @@ export function NavbarFigmaLoggedIn() {
 
               <DropdownMenuItem
                 className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+                onSelect={() => openProfilePage('/my-matches')}
+              >
+                <div className="flex w-full items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">My Matches</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Tokens, history and active arenas</p>
+                  </div>
+                  <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
                 onSelect={() => openProfilePage('/profile?tab=game')}
               >
                 <div className="flex w-full items-center justify-between gap-4 py-3">
@@ -698,6 +711,7 @@ function NavbarFigmaLoggedInMobile({
 
             <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
             <MobileProfileItem label="My Profile" detail="Account details and identity" onSelect={() => onProfilePage('/profile')} />
+            <MobileProfileItem label="My Matches" detail="Tokens, history and active arenas" onSelect={() => onProfilePage('/my-matches')} />
             <MobileProfileItem label="Game Settings" detail="Epic Games and match setup" onSelect={() => onProfilePage('/profile?tab=game')} />
             <MobileProfileItem label="Payments & Bank" detail="Wallet, Stripe and withdrawals" onSelect={() => onProfilePage('/wallet')} />
             <MobileProfileItem label="Connections" detail="Discord and linked services" onSelect={() => onProfilePage('/profile?tab=connections')} />

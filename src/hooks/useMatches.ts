@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/queryKeys';
-import type { Region, Platform, GameMode } from '@/types';
+import type { Region, Platform, GameMode, Match } from '@/types';
 
 export interface MatchFilters {
   region?: Region | 'all';
@@ -12,6 +12,55 @@ export interface MatchFilters {
   size?: number | 'all';
   sortBy?: 'newest' | 'entry_fee_low' | 'entry_fee_high' | 'expiring';
   searchQuery?: string;
+}
+
+const MY_MATCHES_SELECT = `
+  *,
+  creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+  participants:match_participants(
+    id,
+    match_id,
+    user_id,
+    team_side,
+    team_id,
+    ready,
+    ready_at,
+    result_choice,
+    result_at,
+    status,
+    joined_at,
+    profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+  ),
+  result:match_results(*)
+`;
+
+const ACTIVE_MY_MATCH_STATUSES = new Set([
+  'open',
+  'ready_check',
+  'full',
+  'in_progress',
+  'result_pending',
+  'disputed',
+  'joined',
+  'started',
+]);
+
+function sortMyMatches(matches: Match[]) {
+  return [...matches].sort((a, b) => {
+    const aActive = ACTIVE_MY_MATCH_STATUSES.has(a.status || '');
+    const bActive = ACTIVE_MY_MATCH_STATUSES.has(b.status || '');
+
+    if (aActive !== bActive) return aActive ? -1 : 1;
+
+    const aUrgency = aActive ? new Date(a.expires_at || a.created_at || 0).getTime() : 0;
+    const bUrgency = bActive ? new Date(b.expires_at || b.created_at || 0).getTime() : 0;
+
+    if (aActive && bActive && aUrgency !== bUrgency) {
+      return aUrgency - bUrgency;
+    }
+
+    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+  });
 }
 
 export function useOpenMatches(filters: MatchFilters = {}) {
@@ -134,47 +183,43 @@ export function useMyMatches() {
     queryFn: async () => {
       if (!user) return [];
 
-      // First get match IDs where user is a participant
       const { data: participantData, error: participantError } = await supabase
         .from('match_participants')
         .select('match_id')
         .eq('user_id', user.id);
 
       if (participantError) throw participantError;
-      if (!participantData?.length) return [];
 
-      const matchIds = participantData.map(p => p.match_id);
+      const participantMatchIds = Array.from(
+        new Set((participantData || []).map((participant) => participant.match_id).filter(Boolean))
+      );
 
-      // Fetch full match data
-      const { data: matches, error: matchError } = await supabase
+      const { data: createdMatches, error: createdError } = await supabase
         .from('matches')
-        .select(`
-          *,
-          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
-          participants:match_participants(
-            id,
-            user_id,
-            team_side,
-            team_id,
-            ready,
-            result_choice,
-            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
-          ),
-          result:match_results(*)
-        `)
-        .in('id', matchIds)
-        .neq('status', 'open');
+        .select(MY_MATCHES_SELECT)
+        .eq('creator_id', user.id);
 
-      if (matchError) throw matchError;
+      if (createdError) throw createdError;
 
-      // Sort: active matches first, then by created_at
-      const activeStatuses = ['ready', 'in_progress', 'pending_result', 'disputed'];
-      return (matches || []).sort((a, b) => {
-        const aActive = activeStatuses.includes(a.status || '');
-        const bActive = activeStatuses.includes(b.status || '');
-        if (aActive !== bActive) return bActive ? 1 : -1;
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      let participantMatches: Match[] = [];
+
+      if (participantMatchIds.length > 0) {
+        const { data, error } = await supabase
+          .from('matches')
+          .select(MY_MATCHES_SELECT)
+          .in('id', participantMatchIds);
+
+        if (error) throw error;
+        participantMatches = (data || []) as Match[];
+      }
+
+      const mergedMatches = new Map<string, Match>();
+
+      [...((createdMatches || []) as Match[]), ...participantMatches].forEach((match) => {
+        if (match?.id) mergedMatches.set(match.id, match);
       });
+
+      return sortMyMatches(Array.from(mergedMatches.values()));
     },
     enabled: !!user,
     staleTime: 30_000,
