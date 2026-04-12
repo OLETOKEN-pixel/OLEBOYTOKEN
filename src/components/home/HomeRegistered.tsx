@@ -12,12 +12,20 @@ import { HighlightsSection } from './sections/HighlightsSection';
 import { TeamsSection } from './sections/TeamsSection';
 import { ShopSection } from './sections/ShopSection';
 import { FooterSection } from './sections/FooterSection';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { HomeRegisteredMobile } from './HomeRegisteredMobile';
 
 interface HomeRegisteredProps {
   displayName: string;
 }
 
 export function HomeRegistered({ displayName }: HomeRegisteredProps) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <HomeRegisteredMobile displayName={displayName} />;
+  }
+
   return (
     <div className="bg-[#0f0404] w-full min-w-[1920px] min-h-[7321px] flex flex-col">
       <LaunchVideoSection displayName={displayName} />

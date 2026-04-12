@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const NAV_SECTIONS: Record<string, string> = {
   matches: 's-matches',
@@ -44,15 +45,19 @@ const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   matches: '/matches',
 };
 
+type NavItem = keyof typeof NAV_SECTIONS;
+
 export function NavbarFigmaLoggedIn() {
   const { profile, wallet, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
   const level = (profile as any)?.level ?? 1;
 
   const isOnHome = location.pathname === '/';
+  const navItems = Object.keys(NAV_SECTIONS) as NavItem[];
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
   // Determine active nav item from current route (when not on home page)
@@ -102,6 +107,34 @@ export function NavbarFigmaLoggedIn() {
     await signOut();
     navigate('/');
   };
+
+  const isNavItemActive = (item: NavItem) =>
+    activeRouteItem === item || activeSection === NAV_SECTIONS[item];
+
+  const handleNavItemClick = (item: NavItem) => {
+    if (isOnHome) {
+      scrollToSection(NAV_SECTIONS[item]);
+    } else {
+      navigate('/', { state: { scrollTo: NAV_SECTIONS[item] } });
+    }
+  };
+
+  if (isMobile) {
+    return (
+      <NavbarFigmaLoggedInMobile
+        avatarUrl={avatarUrl}
+        balance={balance}
+        level={level}
+        profile={profile}
+        navItems={navItems}
+        isNavItemActive={isNavItemActive}
+        onNavItemClick={handleNavItemClick}
+        onWalletClick={() => navigate('/wallet')}
+        onProfilePage={openProfilePage}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
 
   return (
     <>
@@ -173,23 +206,13 @@ export function NavbarFigmaLoggedIn() {
             flex: 1,
           }}
         >
-          {(Object.keys(NAV_SECTIONS) as Array<keyof typeof NAV_SECTIONS>).map((item) => {
-            const isActive = activeRouteItem === item || activeSection === NAV_SECTIONS[item];
-
-            const handleClick = () => {
-              if (isOnHome) {
-                // Scroll to section on home page
-                scrollToSection(NAV_SECTIONS[item]);
-              } else {
-                // Navigate to home page then scroll
-                navigate('/', { state: { scrollTo: NAV_SECTIONS[item] } });
-              }
-            };
+          {navItems.map((item) => {
+            const isActive = isNavItemActive(item);
 
             return (
               <button
                 key={item}
-                onClick={handleClick}
+                onClick={() => handleNavItemClick(item)}
                 style={{
                   fontFamily: isActive
                     ? "'Base_Neue_Trial-ExpandedBlack_Oblique', sans-serif"
@@ -492,5 +515,294 @@ export function NavbarFigmaLoggedIn() {
       </div>
       </nav>
     </>
+  );
+}
+
+type LoggedInMobileNavbarProps = {
+  avatarUrl: string | null;
+  balance: string;
+  level: number;
+  profile: any;
+  navItems: NavItem[];
+  isNavItemActive: (item: NavItem) => boolean;
+  onNavItemClick: (item: NavItem) => void;
+  onWalletClick: () => void;
+  onProfilePage: (path: string) => void;
+  onSignOut: () => Promise<void>;
+};
+
+function NavbarFigmaLoggedInMobile({
+  avatarUrl,
+  balance,
+  level,
+  profile,
+  navItems,
+  isNavItemActive,
+  onNavItemClick,
+  onWalletClick,
+  onProfilePage,
+  onSignOut,
+}: LoggedInMobileNavbarProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = () => setMenuOpen(false);
+  const handleSectionClick = (item: NavItem) => {
+    onNavItemClick(item);
+    closeMenu();
+  };
+
+  return (
+    <nav
+      data-mobile-navbar="logged-in"
+      aria-label="Logged-in mobile navigation"
+      style={{
+        position: 'fixed',
+        top: '14px',
+        left: '12px',
+        right: '12px',
+        width: 'auto',
+        minHeight: '64px',
+        zIndex: 80,
+        borderRadius: '8px',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(10, 10, 15, 0.88)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 12px 38px rgba(0, 0, 0, 0.34)',
+        fontFamily: F,
+      }}
+    >
+      <div
+        style={{
+          height: '64px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '7px',
+          padding: '0 8px',
+        }}
+      >
+        <Link
+          to="/"
+          aria-label="OleBoy home"
+          onClick={closeMenu}
+          style={{
+            width: '38px',
+            height: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <img src="/figma-assets/84-287.svg" alt="OleBoy" style={{ display: 'block', width: '38px', height: '32px' }} />
+        </Link>
+
+        <div
+          aria-label="Wallet balance"
+          style={{
+            minWidth: 0,
+            maxWidth: '128px',
+            flex: 1,
+            height: '38px',
+            borderRadius: '8px',
+            background: 'rgba(255, 22, 84, 0.2)',
+            border: '1px solid rgba(255, 22, 84, 0.38)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '7px',
+            padding: '0 7px',
+          }}
+        >
+          <span aria-hidden="true" style={{ width: '15px', height: '15px', borderRadius: '50%', background: '#ff1654', flexShrink: 0 }} />
+          <span
+            style={{
+              minWidth: 0,
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontFamily: "'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif",
+              fontWeight: 700,
+              fontSize: '15px',
+              lineHeight: '18px',
+              color: '#ffffff',
+              letterSpacing: 0,
+            }}
+          >
+            {balance}
+          </span>
+          <button
+            type="button"
+            aria-label="Open wallet page"
+            onClick={onWalletClick}
+            style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '8px',
+              background: 'rgba(255, 22, 84, 0.5)',
+              border: '1px solid #ff1654',
+              color: '#ffffff',
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              padding: 0,
+              flexShrink: 0,
+              fontFamily: F,
+              fontSize: '18px',
+              lineHeight: 1,
+            }}
+          >
+            +
+          </button>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Open profile menu"
+              aria-haspopup="menu"
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                padding: 0,
+                border: '1px solid rgba(255,255,255,0.18)',
+                background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                cursor: 'pointer',
+                boxShadow: '0 0 18px rgba(0,0,0,0.28)',
+                flexShrink: 0,
+              }}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #3b28cc, #6f5cff)' }} />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="end"
+            sideOffset={12}
+            className="w-[calc(100vw_-_32px)] max-w-[336px] rounded-[8px] border border-white/[0.14] bg-[linear-gradient(180deg,rgba(18,11,15,0.97)_0%,rgba(8,6,10,0.94)_100%)] p-2 text-white shadow-[0_26px_60px_rgba(0,0,0,0.55)] backdrop-blur-[22px]"
+          >
+            <DropdownMenuLabel className="rounded-[8px] border border-white/[0.08] bg-white/[0.04] px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff8ead]">My Profile</p>
+              <p className="mt-1 truncate text-[15px] font-semibold uppercase tracking-[0.08em] text-white">
+                {profile?.discord_display_name || profile?.username || 'Player'}
+              </p>
+              <p className="mt-1 text-[12px] uppercase tracking-[0.12em] text-white/50">LVL.{level}</p>
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
+            <MobileProfileItem label="My Profile" detail="Account details and identity" onSelect={() => onProfilePage('/profile')} />
+            <MobileProfileItem label="Game Settings" detail="Epic Games and match setup" onSelect={() => onProfilePage('/profile?tab=game')} />
+            <MobileProfileItem label="Payments & Bank" detail="Wallet, Stripe and withdrawals" onSelect={() => onProfilePage('/wallet')} />
+            <MobileProfileItem label="Connections" detail="Discord and linked services" onSelect={() => onProfilePage('/profile?tab=connections')} />
+            <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
+
+            <DropdownMenuItem
+              className="rounded-[8px] border border-[#ff1654]/20 bg-[#ff1654]/8 px-3 py-0 text-[#ffc1d1] outline-none transition hover:bg-[#ff1654]/14 focus:bg-[#ff1654]/14"
+              onSelect={() => void onSignOut()}
+            >
+              <div className="flex w-full items-center justify-between gap-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#ffd0dc]">Sign Out</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#ffc1d1]/60">Close your current session</p>
+                </div>
+                <span className="text-xl leading-none text-[#ffc1d1]/45">&rsaquo;</span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button
+          type="button"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+          style={{
+            width: '42px',
+            height: '42px',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            color: '#ffffff',
+            cursor: 'pointer',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 0,
+            flexShrink: 0,
+          }}
+        >
+          <span aria-hidden="true" style={{ display: 'grid', gap: '5px', width: '18px' }}>
+            <span style={{ display: 'block', height: '2px', background: '#ffffff', borderRadius: '2px' }} />
+            <span style={{ display: 'block', height: '2px', background: '#ff1654', borderRadius: '2px' }} />
+            <span style={{ display: 'block', height: '2px', background: '#ffffff', borderRadius: '2px' }} />
+          </span>
+        </button>
+      </div>
+
+      {menuOpen ? (
+        <div
+          data-mobile-navbar-menu="logged-in"
+          style={{
+            display: 'grid',
+            gap: '12px',
+            padding: '8px 14px 16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          {navItems.map((item) => {
+            const isActive = isNavItemActive(item);
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => handleSectionClick(item)}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: isActive
+                    ? "'Base_Neue_Trial-ExpandedBlack_Oblique', sans-serif"
+                    : "'Base_Neue_Trial-Expanded', sans-serif",
+                  fontWeight: 'normal',
+                  fontSize: '24px',
+                  lineHeight: '28px',
+                  color: isActive ? '#ff1654' : '#ffffff',
+                  letterSpacing: 0,
+                  textTransform: isActive ? 'uppercase' : 'none',
+                }}
+              >
+                {isActive ? item.toUpperCase() : item}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </nav>
+  );
+}
+
+function MobileProfileItem({ label, detail, onSelect }: { label: string; detail: string; onSelect: () => void }) {
+  return (
+    <DropdownMenuItem
+      className="group rounded-[8px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+      onSelect={onSelect}
+    >
+      <div className="flex w-full items-center justify-between gap-4 py-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">{label}</p>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">{detail}</p>
+        </div>
+        <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+      </div>
+    </DropdownMenuItem>
   );
 }
