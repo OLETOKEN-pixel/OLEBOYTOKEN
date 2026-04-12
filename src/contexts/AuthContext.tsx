@@ -16,6 +16,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const MATCH_EXPIRY_REFRESH_INTERVAL_MS = 5000;
 
 // Clean up legacy localStorage keys from old auth methods
 const cleanupLegacyStorage = () => {
@@ -246,6 +247,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       channel.unsubscribe();
     };
   }, [user, refreshWallet]);
+
+  // Fast foreground expiry check: cron can take up to a minute, so the active
+  // client nudges the idempotent DB job and refreshes the wallet when refunds land.
+  useEffect(() => {
+    const lockedBalance = Number(wallet?.locked_balance ?? 0);
+
+    if (!user || typeof window === 'undefined' || lockedBalance <= 0) return;
+
+    let cancelled = false;
+    let inFlight = false;
+
+    const runExpiryCheck = async () => {
+      if (cancelled || inFlight) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+
+      inFlight = true;
+
+      try {
+        const { data, error } = await supabase.rpc('expire_stale_matches');
+
+        if (error) {
+          console.warn('Match expiry check failed:', error);
+          return;
+        }
+
+        const refundedTotal =
+          data && typeof data === 'object' && 'refunded_total' in data
+            ? Number((data as { refunded_total?: unknown }).refunded_total)
+            : 0;
+
+        if (!cancelled && Number.isFinite(refundedTotal) && refundedTotal > 0) {
+          await refreshWallet();
+        }
+      } catch (error) {
+        console.warn('Match expiry check failed:', error);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    void runExpiryCheck();
+
+    const intervalId = window.setInterval(() => {
+      void runExpiryCheck();
+    }, MATCH_EXPIRY_REFRESH_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void runExpiryCheck();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshWallet, user, wallet?.locked_balance]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
