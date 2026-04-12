@@ -87,6 +87,68 @@ function normalizeMatchDiscordAvatars<T extends Match | null>(match: T): T {
   } as T;
 }
 
+function collectMatchUserIds(matches: Array<Match | null>): string[] {
+  const userIds = new Set<string>();
+
+  for (const match of matches) {
+    if (!match) continue;
+    if (match.creator_id) userIds.add(match.creator_id);
+
+    const participants = (match.participants ?? []) as MatchParticipant[];
+    for (const participant of participants) {
+      if (participant.user_id) userIds.add(participant.user_id);
+    }
+  }
+
+  return Array.from(userIds);
+}
+
+function applyDiscordAvatarMap<T extends Match | null>(match: T, avatarMap: Map<string, string | null>): T {
+  if (!match) return match;
+
+  const participants = (match.participants ?? []) as MatchParticipant[];
+
+  return {
+    ...match,
+    creator: {
+      ...((match.creator as ProfileSummary | undefined) ?? {}),
+      discord_avatar_url: avatarMap.get(match.creator_id) ?? getDiscordAvatarUrl(match.creator as ProfileSummary | undefined),
+    },
+    participants: participants.map((participant) => ({
+      ...participant,
+      profile: {
+        ...((participant.profile as ProfileSummary | undefined) ?? {}),
+        discord_avatar_url: avatarMap.get(participant.user_id) ?? getDiscordAvatarUrl(participant.profile as ProfileSummary | undefined),
+      },
+    })),
+  } as T;
+}
+
+async function enrichMatchesWithDiscordAvatars(matches: Match[]): Promise<Match[]> {
+  const normalizedMatches = matches.map((match) => normalizeMatchDiscordAvatars(match));
+  const userIds = collectMatchUserIds(normalizedMatches);
+
+  if (userIds.length === 0) return normalizedMatches;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, discord_avatar_url')
+    .in('user_id', userIds);
+
+  if (error || !data) {
+    if (error) console.warn('Unable to hydrate Discord avatars for matches:', error);
+    return normalizedMatches;
+  }
+
+  const avatarMap = new Map(data.map((profile) => [profile.user_id, profile.discord_avatar_url]));
+  return normalizedMatches.map((match) => applyDiscordAvatarMap(match, avatarMap));
+}
+
+async function enrichMatchWithDiscordAvatars(match: Match | null): Promise<Match | null> {
+  const [enrichedMatch] = await enrichMatchesWithDiscordAvatars(match ? [match] : []);
+  return enrichedMatch ?? null;
+}
+
 export function useOpenMatches(filters: MatchFilters = {}) {
   const queryClient = useQueryClient();
 
@@ -158,7 +220,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
         );
       }
 
-      return matches.map((match) => normalizeMatchDiscordAvatars(match as Match));
+      return enrichMatchesWithDiscordAvatars(matches as Match[]);
     },
     staleTime: 30_000, // 30 seconds
     refetchOnWindowFocus: false,
@@ -240,10 +302,10 @@ export function useMyMatches() {
       const mergedMatches = new Map<string, Match>();
 
       [...((createdMatches || []) as Match[]), ...participantMatches].forEach((match) => {
-        if (match?.id) mergedMatches.set(match.id, normalizeMatchDiscordAvatars(match));
+        if (match?.id) mergedMatches.set(match.id, match);
       });
 
-      return sortMyMatches(Array.from(mergedMatches.values()));
+      return sortMyMatches(await enrichMatchesWithDiscordAvatars(Array.from(mergedMatches.values())));
     },
     enabled: !!user,
     staleTime: 30_000,
@@ -355,7 +417,7 @@ export function useMatchDetail(matchId: string | undefined) {
         .maybeSingle();
 
       if (error) throw error;
-      return normalizeMatchDiscordAvatars(data as Match | null);
+      return enrichMatchWithDiscordAvatars(data as Match | null);
     },
     enabled: !!matchId,
     staleTime: 5_000,
