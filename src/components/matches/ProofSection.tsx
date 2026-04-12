@@ -18,7 +18,7 @@ interface Proof {
   description: string | null;
   created_at: string;
   username?: string;
-  avatar_url?: string | null;
+  discord_avatar_url?: string | null;
 }
 
 interface ProofSectionProps {
@@ -56,7 +56,7 @@ export function ProofSection({ matchId, currentUserId, isAdmin, isParticipant }:
       
       const { data: profilesData } = await supabase
         .from('profiles_public')
-        .select('user_id, username, avatar_url')
+        .select('user_id, username, discord_avatar_url')
         .in('user_id', userIds);
 
       const profileMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
@@ -86,7 +86,7 @@ export function ProofSection({ matchId, currentUserId, isAdmin, isParticipant }:
             storage_path: (proof as any).storage_path ?? (normalizedPath ?? null),
             image_url: displayUrl,
             username: profileMap.get((proof as any).user_id)?.username || 'Unknown',
-            avatar_url: profileMap.get((proof as any).user_id)?.avatar_url || null,
+            discord_avatar_url: profileMap.get((proof as any).user_id)?.discord_avatar_url || null,
           } as Proof;
         })
       );
@@ -380,7 +380,7 @@ export function ProofSection({ matchId, currentUserId, isAdmin, isParticipant }:
               <div className="p-3 bg-card flex items-center justify-between border-t border-border/30">
                 <div className="flex items-center gap-2">
                   <Avatar className="w-6 h-6 border border-border">
-                    <AvatarImage src={selectedProof.avatar_url || undefined} />
+                    <AvatarImage src={selectedProof.discord_avatar_url || undefined} />
                     <AvatarFallback className="text-xs">
                       {selectedProof.username?.charAt(0) || '?'}
                     </AvatarFallback>

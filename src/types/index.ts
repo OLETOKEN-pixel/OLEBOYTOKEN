@@ -87,8 +87,10 @@ export interface Profile {
 export interface ProfileSummary {
   user_id?: string;
   username: string;
-  avatar_url: string | null;
+  avatar_url?: string | null;
+  discord_avatar_url?: string | null;
   epic_username?: string | null;
+  discord_display_name?: string | null;
 }
 
 export type WithdrawalStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'failed' | 'completed';
@@ -275,6 +277,7 @@ export interface LeaderboardEntry {
   user_id: string;
   username: string;
   avatar_url: string | null;
+  discord_avatar_url?: string | null;
   wins: number;
   total_matches: number;
   total_earnings: number;

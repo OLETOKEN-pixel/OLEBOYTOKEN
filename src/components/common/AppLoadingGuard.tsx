@@ -9,20 +9,20 @@ interface AppLoadingGuardProps {
 export function AppLoadingGuard({ children }: AppLoadingGuardProps) {
   const { loading, profile } = useAuth();
 
-  // Preload active avatar for instant display
+  // Preload Discord profile avatar for instant display.
   useEffect(() => {
-    if (profile?.avatar_url) {
+    if (profile?.discord_avatar_url) {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
-      link.href = profile.avatar_url;
+      link.href = profile.discord_avatar_url;
       document.head.appendChild(link);
       
       // Also preload into browser cache
       const img = new Image();
-      img.src = profile.avatar_url;
+      img.src = profile.discord_avatar_url;
     }
-  }, [profile?.avatar_url]);
+  }, [profile?.discord_avatar_url]);
 
   if (loading) {
     return (

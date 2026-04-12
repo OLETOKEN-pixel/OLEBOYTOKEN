@@ -16,7 +16,7 @@ export interface MatchFilters {
 
 const MY_MATCHES_SELECT = `
   *,
-  creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+  creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
   participants:match_participants(
     id,
     match_id,
@@ -29,7 +29,7 @@ const MY_MATCHES_SELECT = `
     result_at,
     status,
     joined_at,
-    profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+    profile:profiles_public!match_participants_user_id_fkey(username, discord_avatar_url, epic_username)
   ),
   result:match_results(*)
 `;
@@ -73,7 +73,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
           participants:match_participants(
             id,
             match_id,
@@ -86,7 +86,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
             result_at,
             status,
             joined_at,
-            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+            profile:profiles_public!match_participants_user_id_fkey(username, discord_avatar_url, epic_username)
           )
         `)
         .eq('status', 'open')
@@ -310,7 +310,7 @@ export function useMatchDetail(matchId: string | undefined) {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
           participants:match_participants(
             id,
             match_id,
@@ -323,7 +323,7 @@ export function useMatchDetail(matchId: string | undefined) {
             result_at,
             status,
             joined_at,
-            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+            profile:profiles_public!match_participants_user_id_fkey(username, discord_avatar_url, epic_username)
           ),
           result:match_results(*)
         `)

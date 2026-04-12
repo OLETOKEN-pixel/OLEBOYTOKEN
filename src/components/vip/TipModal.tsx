@@ -19,13 +19,13 @@ interface TipModalProps {
   onOpenChange: (open: boolean) => void;
   recipientId: string;
   recipientUsername: string;
-  recipientAvatarUrl?: string;
+  recipientDiscordAvatarUrl?: string;
 }
 
 interface SearchResult {
   user_id: string;
   username: string;
-  avatar_url: string | null;
+  discord_avatar_url: string | null;
   rank: number;
 }
 
@@ -34,7 +34,7 @@ export function TipModal({
   onOpenChange, 
   recipientId, 
   recipientUsername, 
-  recipientAvatarUrl 
+  recipientDiscordAvatarUrl
 }: TipModalProps) {
   const { isVip, sendTip } = useVipStatus();
   const { user, wallet, refreshWallet } = useAuth();
@@ -60,14 +60,14 @@ export function TipModal({
         setSelectedRecipient({
           user_id: recipientId,
           username: recipientUsername,
-          avatar_url: recipientAvatarUrl ?? null,
+          discord_avatar_url: recipientDiscordAvatarUrl ?? null,
           rank: 0,
         });
       } else {
         setSelectedRecipient(null);
       }
     }
-  }, [open, recipientId, recipientUsername, recipientAvatarUrl]);
+  }, [open, recipientId, recipientUsername, recipientDiscordAvatarUrl]);
 
   // Search for users
   useEffect(() => {
@@ -90,7 +90,10 @@ export function TipModal({
         });
 
         if (!error && data) {
-          setSearchResults(data as SearchResult[]);
+          setSearchResults((data as SearchResult[]).map((player) => ({
+            ...player,
+            discord_avatar_url: player.discord_avatar_url ?? null,
+          })));
         }
       } catch (e) {
         console.error('Search error:', e);
@@ -189,7 +192,7 @@ export function TipModal({
                       )}
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={player.avatar_url ?? undefined} />
+                        <AvatarImage src={player.discord_avatar_url ?? undefined} />
                         <AvatarFallback className="text-xs bg-primary/20 text-primary">
                           {player.username?.charAt(0).toUpperCase()}
                         </AvatarFallback>
@@ -214,7 +217,7 @@ export function TipModal({
               {/* Selected Recipient */}
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
                 <Avatar className="w-10 h-10">
-                  <AvatarImage src={selectedRecipient.avatar_url ?? undefined} />
+                  <AvatarImage src={selectedRecipient.discord_avatar_url ?? undefined} />
                   <AvatarFallback className="bg-primary/20 text-primary">
                     {selectedRecipient.username.charAt(0).toUpperCase()}
                   </AvatarFallback>

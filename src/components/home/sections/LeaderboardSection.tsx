@@ -35,12 +35,12 @@ export const LeaderboardSection = () => {
           if (userIds.length > 0) {
             const { data: profiles } = await supabase
               .from('profiles')
-              .select('user_id, discord_avatar_url, avatar_url, discord_display_name, username')
+              .select('user_id, discord_avatar_url, discord_display_name, username')
               .in('user_id', userIds);
 
             if (profiles) {
               for (const p of profiles) {
-                avatarMap[p.user_id] = p.discord_avatar_url || p.avatar_url || null;
+                avatarMap[p.user_id] = p.discord_avatar_url || null;
               }
             }
           }
@@ -57,7 +57,7 @@ export const LeaderboardSection = () => {
           // Fallback: get top 3 profiles by completed matches
           const { data: profiles } = await supabase
             .from('profiles')
-            .select('user_id, username, discord_display_name, discord_avatar_url, avatar_url')
+            .select('user_id, username, discord_display_name, discord_avatar_url')
             .order('created_at', { ascending: true })
             .limit(3);
 
@@ -65,7 +65,7 @@ export const LeaderboardSection = () => {
             setPlayers(profiles.map((p, i) => ({
               rank: i + 1,
               username: p.discord_display_name || p.username || `Player${i + 1}`,
-              avatarUrl: p.discord_avatar_url || p.avatar_url || null,
+              avatarUrl: p.discord_avatar_url || null,
               winRate: '0%',
               roundsWon: '0',
               earnings: '0',

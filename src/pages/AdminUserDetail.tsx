@@ -278,7 +278,7 @@ export default function AdminUserDetail() {
             </Button>
             <div className="flex items-center gap-4 flex-1">
               <Avatar className="w-16 h-16 ring-2 ring-primary/20">
-                <AvatarImage src={profile.avatar_url ?? undefined} />
+                <AvatarImage src={profile.discord_avatar_url ?? undefined} />
                 <AvatarFallback className="text-2xl bg-primary/10 text-primary">{profile.username?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>

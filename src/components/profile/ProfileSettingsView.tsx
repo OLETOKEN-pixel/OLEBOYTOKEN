@@ -59,8 +59,6 @@ interface PaymentsActivityItem {
   state: PaymentsActivityState;
 }
 
-const PROFILE_PFP_FALLBACK_ASSET = '/figma-assets/marv-pfp.png';
-
 const sections: Array<{
   id: ProfileSection;
   label: string;
@@ -277,7 +275,7 @@ export function ProfileSettingsView({
   const minimumUnlockedBalance = MIN_PAYPAL_WITHDRAWAL + PAYPAL_WITHDRAWAL_FEE;
   const canWithdraw = hasValidPayPalEmail && walletBalance >= minimumUnlockedBalance;
   const discordDisplayName = profile?.discord_display_name || profile?.discord_username || profile?.username || 'User';
-  const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || PROFILE_PFP_FALLBACK_ASSET;
+  const avatarUrl = profile?.discord_avatar_url || null;
   const parsedWithdrawAmount = Number.parseFloat(withdrawAmount);
   const previewTotalDeduction =
     (Number.isFinite(parsedWithdrawAmount) && parsedWithdrawAmount > 0 ? parsedWithdrawAmount : MIN_PAYPAL_WITHDRAWAL) +

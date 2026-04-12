@@ -242,7 +242,7 @@ export function TeamSelectDialog({
                       className="w-6 h-6"
                       style={{ marginLeft: i > 0 ? '-6px' : 0, border: '2px solid rgba(10,7,11,0.96)' }}
                     >
-                      <AvatarImage src={member.profile?.avatar_url} />
+                      <AvatarImage src={member.profile?.discord_avatar_url ?? undefined} />
                       <AvatarFallback
                         style={{ fontSize: '10px', background: 'rgba(255,255,255,0.08)' }}
                       >

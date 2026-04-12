@@ -26,7 +26,10 @@ export function Leaderboard() {
       });
 
       if (!error && data) {
-        setEntries(data as LeaderboardEntry[]);
+        setEntries((data as LeaderboardEntry[]).map((entry) => ({
+          ...entry,
+          discord_avatar_url: entry.discord_avatar_url ?? null,
+        })));
       }
       setLoading(false);
     };
@@ -84,7 +87,7 @@ export function Leaderboard() {
 
                   {/* Avatar */}
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={entry.avatar_url ?? undefined} />
+                    <AvatarImage src={entry.discord_avatar_url ?? undefined} />
                     <AvatarFallback className="text-xs bg-primary/20 text-primary">
                       {entry.username.charAt(0).toUpperCase()}
                     </AvatarFallback>

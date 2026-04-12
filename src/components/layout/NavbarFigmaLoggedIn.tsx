@@ -52,7 +52,7 @@ export function NavbarFigmaLoggedIn() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const avatarUrl = profile?.discord_avatar_url || profile?.avatar_url || null;
+  const avatarUrl = profile?.discord_avatar_url || null;
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
   const level = (profile as any)?.level ?? 1;
 

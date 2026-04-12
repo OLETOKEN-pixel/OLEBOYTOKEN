@@ -63,7 +63,7 @@ function matchFactory(overrides: Partial<Match>): Match {
     created_at: new Date().toISOString(),
     creator: {
       username: 'Host',
-      avatar_url: '/figma-assets/tom-pfp.png',
+      discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/discord-host.png',
       epic_username: 'HostEpic',
     },
     participants: [
@@ -81,7 +81,7 @@ function matchFactory(overrides: Partial<Match>): Match {
         joined_at: new Date().toISOString(),
         profile: {
           username: 'Host',
-          avatar_url: '/figma-assets/tom-pfp.png',
+          discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/discord-host.png',
           epic_username: 'HostEpic',
         },
       },
@@ -133,7 +133,7 @@ describe('MyMatches page', () => {
               joined_at: new Date().toISOString(),
               profile: {
                 username: 'Tester',
-                avatar_url: '/figma-assets/marv-pfp.png',
+                discord_avatar_url: 'https://cdn.discordapp.com/avatars/tester/discord-tester.png',
                 epic_username: 'TesterEpic',
               },
             },

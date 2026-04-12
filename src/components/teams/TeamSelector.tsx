@@ -109,7 +109,7 @@ export function TeamSelector({
                 <div className="flex -space-x-2">
                   {team.members?.slice(0, 4).map((member) => (
                     <Avatar key={member.id} className="h-8 w-8 border-2 border-[#282828]">
-                      <AvatarImage src={member.profile?.avatar_url ?? undefined} />
+                      <AvatarImage src={member.profile?.discord_avatar_url ?? undefined} />
                       <AvatarFallback className="bg-black/60 text-xs text-white">
                         {member.profile?.username?.charAt(0).toUpperCase()}
                       </AvatarFallback>

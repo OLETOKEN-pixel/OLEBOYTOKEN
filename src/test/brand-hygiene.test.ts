@@ -9,6 +9,18 @@ const rootDir = path.resolve(here, '..', '..');
 const readProjectFile = (relativePath: string) =>
   fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
 
+const collectProjectFiles = (relativeDir: string): string[] => {
+  const absoluteDir = path.join(rootDir, relativeDir);
+  if (!fs.existsSync(absoluteDir)) return [];
+
+  return fs.readdirSync(absoluteDir, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = path.join(relativeDir, entry.name);
+    if (entry.isDirectory()) return collectProjectFiles(relativePath);
+    if (!/\.(ts|tsx)$/.test(entry.name)) return [];
+    return [relativePath.replace(/\\/g, '/')];
+  });
+};
+
 describe('active app brand hygiene', () => {
   it('keeps logged-home sections local and free from anima-hosted runtime assets', () => {
     const files = [
@@ -54,6 +66,28 @@ describe('active app brand hygiene', () => {
       expect(data[0]).not.toBe(0x1f);
       expect(data[1]).not.toBe(0x8b);
       expect(data.toString('utf8', 0, 4)).toContain('<svg');
+    }
+  });
+
+  it('keeps user avatar rendering Discord-only with no old fallback profile art', () => {
+    const runtimeFiles = [
+      ...collectProjectFiles('src/components'),
+      ...collectProjectFiles('src/pages'),
+      ...collectProjectFiles('src/hooks'),
+      ...collectProjectFiles('src/contexts'),
+      ...collectProjectFiles('src/lib'),
+    ];
+
+    for (const file of runtimeFiles) {
+      const content = readProjectFile(file);
+
+      expect(content).not.toContain('/figma-assets/tom-pfp.png');
+      expect(content).not.toContain('/figma-assets/marv-pfp.png');
+      expect(content).not.toContain('PROFILE_PFP_FALLBACK_ASSET');
+
+      if (content.includes('AvatarImage')) {
+        expect(content).not.toMatch(/\??\.avatar_url\b/);
+      }
     }
   });
 });

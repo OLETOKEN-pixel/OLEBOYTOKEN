@@ -433,7 +433,7 @@ export default function Admin() {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10 ring-1 ring-[hsl(var(--border-soft))]">
-                            <AvatarImage src={wd.profiles?.avatar_url ?? undefined} />
+                            <AvatarImage src={wd.profiles?.discord_avatar_url ?? undefined} />
                             <AvatarFallback className="bg-[hsl(var(--bg-2))] text-sm">{wd.profiles?.username?.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div>

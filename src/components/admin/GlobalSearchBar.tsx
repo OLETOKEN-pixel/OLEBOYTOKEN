@@ -13,7 +13,7 @@ interface SearchResults {
     user_id: string;
     username: string;
     email: string;
-    avatar_url: string | null;
+    discord_avatar_url: string | null;
     is_banned: boolean;
   }>;
   matches: Array<{
@@ -153,7 +153,7 @@ export function GlobalSearchBar() {
                       className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.05] transition-colors text-left"
                     >
                       <Avatar className="w-8 h-8 ring-1 ring-white/[0.1]">
-                        <AvatarImage src={user.avatar_url ?? undefined} />
+                        <AvatarImage src={user.discord_avatar_url ?? undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary text-xs">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">

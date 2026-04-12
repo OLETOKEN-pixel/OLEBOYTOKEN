@@ -269,7 +269,7 @@ export function UsersTable({ users, loading, onUserUpdated }: UsersTableProps) {
                 >
                   <TableCell>
                     <Avatar className="w-8 h-8 ring-1 ring-white/[0.1]">
-                      <AvatarImage src={user.avatar_url ?? undefined} />
+                      <AvatarImage src={user.discord_avatar_url ?? undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </TableCell>

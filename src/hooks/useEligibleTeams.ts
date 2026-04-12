@@ -72,7 +72,8 @@ export function useEligibleTeams(teamSize: number, entryFee?: number) {
           profile: {
             user_id: m.user_id,
             username: m.username,
-            avatar_url: m.avatar_url,
+            avatar_url: null,
+            discord_avatar_url: m.discord_avatar_url ?? null,
             epic_username: m.epic_username,
           } as unknown as Profile,
         })) as (TeamMember & { profile: Profile })[];

@@ -5,6 +5,7 @@ import {
   formatPlatform,
   formatPrize,
 } from '@/lib/matchFormatters';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Match, MatchParticipant, ProfileSummary } from '@/types';
 
 interface MyMatchTokenCardProps {
@@ -30,10 +31,6 @@ function getProfileName(profile?: ProfileSummary | null): string {
   return profile?.username || profile?.epic_username || 'Player';
 }
 
-function getAvatarUrl(profile?: ProfileSummary | null, fallback = '/figma-assets/tom-pfp.png') {
-  return profile?.avatar_url || fallback;
-}
-
 function getCardPlayers(match: Match) {
   const participants = (match.participants ?? []) as MatchParticipant[];
   const creatorProfile = match.creator as ProfileSummary | undefined;
@@ -55,6 +52,8 @@ function getCardPlayers(match: Match) {
 
 export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProps) {
   const { creator, opponent } = getCardPlayers(match);
+  const creatorAvatarUrl = getDiscordAvatarUrl(creator);
+  const opponentAvatarUrl = getDiscordAvatarUrl(opponent);
   const timeLeft = match.status === 'open'
     ? formatOpenTimeLeft(match.expires_at, now)
     : String(match.status ?? 'match').replace(/_/g, ' ').toUpperCase();
@@ -224,19 +223,42 @@ export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProp
         aria-label={`Players ${getProfileName(creator)} versus ${opponent ? getProfileName(opponent) : 'waiting'}`}
         style={{ position: 'absolute', left: '38px', top: '272px', width: '224px', height: '50px' }}
       >
-        <img
-          src={getAvatarUrl(creator, '/figma-assets/tom-pfp.png')}
-          alt={getProfileName(creator)}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-          }}
-        />
+        {creatorAvatarUrl ? (
+          <img
+            src={creatorAvatarUrl}
+            alt={getProfileName(creator)}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div
+            aria-label="Discord avatar missing"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.18)',
+              background: 'rgba(255,255,255,0.05)',
+              display: 'grid',
+              placeItems: 'center',
+              fontFamily: FONT_WIDE_BLACK,
+              fontSize: '16px',
+              color: 'rgba(255,255,255,0.7)',
+            }}
+          >
+            ?
+          </div>
+        )}
         <span
           style={{
             position: 'absolute',
@@ -252,9 +274,9 @@ export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProp
         >
           VS
         </span>
-        {opponent ? (
+        {opponent && opponentAvatarUrl ? (
           <img
-            src={getAvatarUrl(opponent, '/figma-assets/marv-pfp.png')}
+            src={opponentAvatarUrl}
             alt={getProfileName(opponent)}
             style={{
               position: 'absolute',

@@ -17,7 +17,7 @@ interface ChatMessage {
   is_system: boolean;
   created_at: string;
   display_name?: string;
-  avatar_url?: string | null;
+  discord_avatar_url?: string | null;
 }
 
 interface MatchChatProps {
@@ -210,7 +210,7 @@ export function MatchChat({
                     isAdminMessage ? "w-10 h-10 border-2 border-destructive" : "w-6 h-6",
                     isOwnMessage && !isAdminMessage ? "border border-accent/50" : "border border-border"
                   )}>
-                    <AvatarImage src={msg.avatar_url || undefined} />
+                    <AvatarImage src={msg.discord_avatar_url || undefined} />
                     <AvatarFallback className={cn(
                       "font-bold",
                       isAdminMessage ? "text-sm bg-destructive text-destructive-foreground" : "text-[10px]"

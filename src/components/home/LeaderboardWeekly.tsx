@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 interface WeeklyEntry {
   user_id: string;
   username: string;
-  avatar_url: string | null;
+  discord_avatar_url: string | null;
   weekly_earned: number;
 }
 
@@ -34,7 +34,10 @@ export function LeaderboardWeekly() {
       });
 
       if (!error && data && data.length > 0) {
-        setEntries(data as WeeklyEntry[]);
+        setEntries((data as WeeklyEntry[]).map((entry) => ({
+          ...entry,
+          discord_avatar_url: entry.discord_avatar_url ?? null,
+        })));
       } else {
         // Fallback to all-time leaderboard via secured RPC
         const { data: fallbackData } = await supabase.rpc('get_leaderboard', {
@@ -46,7 +49,7 @@ export function LeaderboardWeekly() {
           setEntries(fallbackData.map(e => ({
             user_id: (e as any).user_id || '',
             username: (e as any).username || '',
-            avatar_url: (e as any).avatar_url,
+            discord_avatar_url: (e as any).discord_avatar_url ?? null,
             weekly_earned: Number((e as any).total_earnings) || 0,
           })));
         }
@@ -109,7 +112,7 @@ export function LeaderboardWeekly() {
 
                     {/* Avatar */}
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={entry.avatar_url ?? undefined} />
+                      <AvatarImage src={entry.discord_avatar_url ?? undefined} />
                       <AvatarFallback className="text-xs bg-primary/20 text-primary">
                         {entry.username?.charAt(0).toUpperCase()}
                       </AvatarFallback>

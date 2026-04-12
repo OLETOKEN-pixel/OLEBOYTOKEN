@@ -447,13 +447,13 @@ function ParticipantRow({
   participant: MatchParticipant;
   showReady: boolean;
 }) {
-  const profile = participant.profile as { username?: string; avatar_url?: string } | undefined;
+  const profile = participant.profile as { username?: string; discord_avatar_url?: string | null } | undefined;
   return (
     <div className="match-detail__participant">
-      {profile?.avatar_url ? (
+      {profile?.discord_avatar_url ? (
         <img
           className="match-detail__participant-avatar"
-          src={profile.avatar_url}
+          src={profile.discord_avatar_url}
           alt=""
         />
       ) : (

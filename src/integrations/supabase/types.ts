@@ -1720,6 +1720,7 @@ export type Database = {
       leaderboard: {
         Row: {
           avatar_url: string | null
+          discord_avatar_url: string | null
           id: string | null
           total_earnings: number | null
           total_matches: number | null
@@ -1732,6 +1733,7 @@ export type Database = {
       leaderboard_weekly: {
         Row: {
           avatar_url: string | null
+          discord_avatar_url: string | null
           user_id: string | null
           username: string | null
           weekly_earned: number | null
@@ -1740,8 +1742,8 @@ export type Database = {
       }
       match_chat_messages_view: {
         Row: {
-          avatar_url: string | null
           created_at: string | null
+          discord_avatar_url: string | null
           display_name: string | null
           id: string | null
           is_system: boolean | null
@@ -1763,6 +1765,8 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          discord_avatar_url: string | null
+          discord_display_name: string | null
           epic_username: string | null
           id: string | null
           preferred_platform: string | null
@@ -1773,6 +1777,8 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          discord_avatar_url?: string | null
+          discord_display_name?: string | null
           epic_username?: string | null
           id?: string | null
           preferred_platform?: string | null
@@ -1783,6 +1789,8 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          discord_avatar_url?: string | null
+          discord_display_name?: string | null
           epic_username?: string | null
           id?: string | null
           preferred_platform?: string | null
@@ -2007,6 +2015,7 @@ export type Database = {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
           avatar_url: string
+          discord_avatar_url: string
           id: string
           total_earnings: number
           total_matches: number
@@ -2019,6 +2028,7 @@ export type Database = {
         Args: { p_limit?: number }
         Returns: {
           avatar_url: string
+          discord_avatar_url: string
           user_id: string
           username: string
           weekly_earned: number
@@ -2152,6 +2162,7 @@ export type Database = {
         Args: { p_current_user_id?: string; p_limit?: number; p_query: string }
         Returns: {
           avatar_url: string
+          discord_avatar_url: string
           rank: number
           user_id: string
           username: string
