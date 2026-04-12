@@ -161,10 +161,12 @@ describe('Matches page scroll reset', () => {
       expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
     });
 
+    const heading = screen.getByRole('heading', { name: 'LIVE MATCHES' });
     const underline = container.querySelector('[data-testid="matches-title-underline"]');
 
+    expect(heading.className).toContain('top-[83px]');
     expect(underline).not.toBeNull();
-    expect(underline?.className).toContain('w-[743px]');
+    expect(underline?.className).toContain('w-[768px]');
     expect(underline?.className).not.toContain('w-[1000px]');
   });
 

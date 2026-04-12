@@ -529,13 +529,13 @@ export default function Matches() {
               aria-hidden="true"
             />
             <h1
-              className="absolute left-[71px] top-[77px] whitespace-nowrap leading-none text-white"
+              className="absolute left-[71px] top-[83px] whitespace-nowrap leading-none text-white"
               style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '80px' }}
             >
               LIVE MATCHES
             </h1>
             <img
-              className="absolute left-[59px] top-[168px] h-[22px] w-[743px] max-w-none object-fill"
+              className="absolute left-[59px] top-[168px] h-[22px] w-[768px] max-w-none object-fill"
               src="/figma-assets/matches-title-underline.svg"
               alt=""
               aria-hidden="true"
