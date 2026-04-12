@@ -16,6 +16,8 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { HomeNotRegisteredMobile } from './HomeNotRegisteredMobile';
 
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON          = '/figma-assets/figma-neon.png';
@@ -81,6 +83,16 @@ function FigmaTitleOutline({ name, left, top, width, height }: FigmaOutlineProps
 }
 
 export function HomeNotRegistered() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <HomeNotRegisteredMobile />;
+  }
+
+  return <HomeNotRegisteredDesktop />;
+}
+
+function HomeNotRegisteredDesktop() {
   const handleSignUp = useCallback(async () => {
     try {
       await startDiscordAuth(getCurrentPathWithQueryAndHash());
