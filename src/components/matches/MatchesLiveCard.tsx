@@ -36,21 +36,6 @@ const VARIANT_STYLES = {
     prizeIcon: 'h-[18px] w-[21px]',
     arrow: 'h-[11px] w-[16px]',
   },
-  page: {
-    article: 'min-h-[392px] rounded-[30px] border-[#ff1654]/85 px-[30px] pb-[28px] pt-[26px]',
-    title: 'text-[34px]',
-    divider: 'mt-[13px] h-[3px] w-[258px]',
-    metricGap: 'mt-[25px] gap-x-7 gap-y-6',
-    label: 'text-[20px]',
-    value: 'text-[26px]',
-    largeValue: 'text-[36px]',
-    platform: 'text-[30px]',
-    action: 'mt-auto h-[58px] rounded-[18px] text-[24px]',
-    triangles: 'h-[28px] w-[19px]',
-    dot: 'h-[19px] w-[19px]',
-    prizeIcon: 'h-[19px] w-[23px]',
-    arrow: 'h-[12px] w-[18px]',
-  },
 } as const;
 
 export function MatchesLiveCard({
@@ -63,6 +48,118 @@ export function MatchesLiveCard({
   onAccept,
   variant = 'compact',
 }: MatchesLiveCardProps) {
+  if (variant === 'page') {
+    return (
+      <article className="relative h-[400px] w-[300px] overflow-hidden rounded-[8px] border border-[#ff1654] bg-[#272727] shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+        <header>
+          <h2
+            className="absolute left-1/2 top-[25px] -translate-x-1/2 whitespace-nowrap text-[32px] leading-none text-white"
+            style={{ fontFamily: FONT_WIDE_BLACK }}
+          >
+            {title}
+          </h2>
+          <img
+            className="absolute left-[20px] top-[78px] h-px w-[259px] object-cover"
+            src="/figma-assets/matches-card-divider.svg"
+            alt=""
+            aria-hidden="true"
+          />
+        </header>
+
+        <div className="absolute left-[38px] top-[107px] h-[60px] w-[79px]">
+          <span className="absolute left-0 top-0 whitespace-nowrap text-[20px] leading-none text-white" style={{ fontFamily: FONT_REGULAR }}>
+            First to
+          </span>
+          <img
+            className="absolute left-0 top-[28px] h-[28px] w-[19px]"
+            src="/figma-assets/matches-first-to-triangles.svg"
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="absolute left-[22px] top-[24px] whitespace-nowrap text-[30px] leading-none text-white" style={{ fontFamily: FONT_BOLD }}>
+            {firstTo}
+          </span>
+        </div>
+
+        <div className="absolute left-[170px] top-[107px] h-[56px] w-[86px]">
+          <span className="absolute left-0 top-0 whitespace-nowrap text-center text-[20px] leading-none text-white" style={{ fontFamily: FONT_REGULAR }}>
+            Platform
+          </span>
+          <span className="absolute left-0 top-[27px] whitespace-nowrap text-[24px] leading-none text-white" style={{ fontFamily: FONT_BOLD }}>
+            {platform}
+          </span>
+        </div>
+
+        <div className="absolute left-[38px] top-[187px] h-[55px] w-[232px]">
+          <span className="absolute left-0 top-0 whitespace-nowrap text-[20px] leading-none text-white" style={{ fontFamily: FONT_REGULAR }}>
+            Entry fee
+          </span>
+          <span className="absolute left-[132px] top-0 whitespace-nowrap text-[20px] leading-none text-white" style={{ fontFamily: FONT_REGULAR }}>
+            Prize
+          </span>
+          <img
+            className="absolute left-0 top-[31px] h-[19px] w-[19px]"
+            src="/figma-assets/matches-entry-dot.svg"
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="absolute left-[24px] top-[26px] whitespace-nowrap text-[24px] leading-none text-white" style={{ fontFamily: FONT_WIDE_BLACK }}>
+            {entryFee}
+          </span>
+          <img
+            className="absolute left-[100px] top-[35px] h-[11px] w-[16px] -rotate-90"
+            src="/figma-assets/figma-arrow-stroke.svg"
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            className="absolute left-[132px] top-[31px] h-[19px] w-[23px]"
+            src="/figma-assets/matches-prize-icon.svg"
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="absolute left-[166px] top-[26px] whitespace-nowrap text-[24px] leading-none text-white" style={{ fontFamily: FONT_WIDE_BLACK }}>
+            {prize}
+          </span>
+        </div>
+
+        <div className="absolute left-[38px] top-[261px] h-[55px] w-[104px]">
+          <span className="absolute left-0 top-0 whitespace-nowrap text-[20px] leading-none text-white" style={{ fontFamily: FONT_REGULAR }}>
+            Expires in
+          </span>
+          <img
+            className="absolute left-0 top-[31px] h-[19px] w-[19px]"
+            src="/figma-assets/matches-expiry-dot.svg"
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="absolute left-[24px] top-[26px] whitespace-nowrap text-[24px] leading-none text-white" style={{ fontFamily: FONT_WIDE_BLACK }}>
+            {expiresIn}
+          </span>
+        </div>
+
+        {onAccept ? (
+          <button
+            className="absolute left-[26px] top-[335px] h-[44px] w-[247px] rounded-[8px] border-none bg-[#ff1654] text-[20px] leading-none text-white"
+            style={{ fontFamily: FONT_WIDE_BLACK }}
+            type="button"
+            onClick={onAccept}
+          >
+            Accept token
+          </button>
+        ) : (
+          <div
+            className="absolute left-[26px] top-[335px] flex h-[44px] w-[247px] items-center justify-center rounded-[8px] bg-[#ff1654] text-[20px] leading-none text-white"
+            style={{ fontFamily: FONT_WIDE_BLACK }}
+            aria-hidden="true"
+          >
+            Accept token
+          </div>
+        )}
+      </article>
+    );
+  }
+
   const styles = VARIANT_STYLES[variant];
   const metricLabelClass = cn('uppercase leading-none text-white/92', styles.label);
   const metricValueClass = cn('leading-none text-white', styles.value);

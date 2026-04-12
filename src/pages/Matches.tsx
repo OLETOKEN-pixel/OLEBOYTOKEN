@@ -503,7 +503,7 @@ export default function Matches() {
           </div>
 
           {loading ? (
-            <div className="mt-[47px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+            <div className="mt-[47px] grid" style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '111px', rowGap: '40px' }}>
               {Array.from({ length: 4 }).map((_, index) => (
                 <MatchesPlaceholderCard key={`loading-${index}`} />
               ))}
@@ -513,7 +513,7 @@ export default function Matches() {
               <MatchesEmptyState hasActiveFilters={hasActiveFilters} />
             </div>
           ) : (
-            <div className="mt-[47px] grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+            <div className="mt-[47px] grid" style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '111px', rowGap: '40px' }}>
               {matches.map((match) => {
                 const card = (
                   <MatchesLiveCard

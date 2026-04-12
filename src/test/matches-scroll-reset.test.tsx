@@ -144,6 +144,7 @@ describe('Matches page scroll reset', () => {
 
     const grid = container.querySelector('[data-testid="matches-live-card"]')?.parentElement?.parentElement as HTMLElement;
 
-    expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fill, minmax(320px, 1fr))');
+    expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fill, 300px)');
+    expect(grid.style.columnGap).toBe('111px');
   });
 });
