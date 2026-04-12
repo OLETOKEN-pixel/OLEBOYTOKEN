@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { queryKeys } from '@/lib/queryKeys';
-import type { Region, Platform, GameMode, Match } from '@/types';
+import type { Region, Platform, GameMode, Match, MatchParticipant, ProfileSummary } from '@/types';
 
 export interface MatchFilters {
   region?: Region | 'all';
@@ -16,7 +17,7 @@ export interface MatchFilters {
 
 const MY_MATCHES_SELECT = `
   *,
-  creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
+  creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
   participants:match_participants(
     id,
     match_id,
@@ -29,7 +30,7 @@ const MY_MATCHES_SELECT = `
     result_at,
     status,
     joined_at,
-    profile:profiles_public!match_participants_user_id_fkey(username, discord_avatar_url, epic_username)
+    profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
   ),
   result:match_results(*)
 `;
@@ -63,6 +64,29 @@ function sortMyMatches(matches: Match[]) {
   });
 }
 
+function normalizeProfileDiscordAvatar(profile?: ProfileSummary | null): ProfileSummary | null | undefined {
+  if (!profile) return profile;
+  return {
+    ...profile,
+    discord_avatar_url: getDiscordAvatarUrl(profile),
+  };
+}
+
+function normalizeMatchDiscordAvatars<T extends Match | null>(match: T): T {
+  if (!match) return match;
+
+  const participants = (match.participants ?? []) as MatchParticipant[];
+
+  return {
+    ...match,
+    creator: normalizeProfileDiscordAvatar(match.creator as ProfileSummary | undefined),
+    participants: participants.map((participant) => ({
+      ...participant,
+      profile: normalizeProfileDiscordAvatar(participant.profile as ProfileSummary | undefined),
+    })),
+  } as T;
+}
+
 export function useOpenMatches(filters: MatchFilters = {}) {
   const queryClient = useQueryClient();
 
@@ -73,7 +97,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
           participants:match_participants(
             id,
             match_id,
@@ -86,7 +110,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
             result_at,
             status,
             joined_at,
-            profile:profiles_public!match_participants_user_id_fkey(username, discord_avatar_url, epic_username)
+            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
           )
         `)
         .eq('status', 'open')
@@ -134,7 +158,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
         );
       }
 
-      return matches;
+      return matches.map((match) => normalizeMatchDiscordAvatars(match as Match));
     },
     staleTime: 30_000, // 30 seconds
     refetchOnWindowFocus: false,
@@ -216,7 +240,7 @@ export function useMyMatches() {
       const mergedMatches = new Map<string, Match>();
 
       [...((createdMatches || []) as Match[]), ...participantMatches].forEach((match) => {
-        if (match?.id) mergedMatches.set(match.id, match);
+        if (match?.id) mergedMatches.set(match.id, normalizeMatchDiscordAvatars(match));
       });
 
       return sortMyMatches(Array.from(mergedMatches.values()));
@@ -310,7 +334,7 @@ export function useMatchDetail(matchId: string | undefined) {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
           participants:match_participants(
             id,
             match_id,
@@ -323,7 +347,7 @@ export function useMatchDetail(matchId: string | undefined) {
             result_at,
             status,
             joined_at,
-            profile:profiles_public!match_participants_user_id_fkey(username, discord_avatar_url, epic_username)
+            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
           ),
           result:match_results(*)
         `)
@@ -331,7 +355,7 @@ export function useMatchDetail(matchId: string | undefined) {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return normalizeMatchDiscordAvatars(data as Match | null);
     },
     enabled: !!matchId,
     staleTime: 5_000,

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -17,6 +18,7 @@ interface ChatMessage {
   is_system: boolean;
   created_at: string;
   display_name?: string;
+  avatar_url?: string | null;
   discord_avatar_url?: string | null;
 }
 
@@ -29,6 +31,13 @@ interface MatchChatProps {
 }
 
 const ACTIVE_STATUSES = ['ready_check', 'in_progress', 'result_pending', 'disputed', 'full'];
+
+function normalizeChatMessageAvatar(message: ChatMessage): ChatMessage {
+  return {
+    ...message,
+    discord_avatar_url: getDiscordAvatarUrl(message),
+  };
+}
 
 export function MatchChat({ 
   matchId, 
@@ -57,7 +66,7 @@ export function MatchChat({
 
       if (error) throw error;
 
-      setMessages((messagesData || []) as unknown as ChatMessage[]);
+      setMessages(((messagesData || []) as unknown as ChatMessage[]).map(normalizeChatMessageAvatar));
     } catch (error) {
       console.error('Error fetching chat messages:', error);
     } finally {
@@ -88,7 +97,7 @@ export function MatchChat({
             .eq('id', newMsg.id)
             .maybeSingle();
 
-          setMessages(prev => [...prev, ((enriched || newMsg) as unknown as ChatMessage)]);
+          setMessages(prev => [...prev, normalizeChatMessageAvatar((enriched || newMsg) as unknown as ChatMessage)]);
         }
       )
       .subscribe();

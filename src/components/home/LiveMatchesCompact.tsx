@@ -26,7 +26,7 @@ export function LiveMatchesCompact() {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, discord_avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
           participants:match_participants(*)
         `)
         .eq('status', 'open')

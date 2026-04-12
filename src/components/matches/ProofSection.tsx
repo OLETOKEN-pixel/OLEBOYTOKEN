@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Upload, X, Loader2, Trash2, ZoomIn, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 interface Proof {
@@ -18,6 +19,7 @@ interface Proof {
   description: string | null;
   created_at: string;
   username?: string;
+  avatar_url?: string | null;
   discord_avatar_url?: string | null;
 }
 
@@ -56,7 +58,7 @@ export function ProofSection({ matchId, currentUserId, isAdmin, isParticipant }:
       
       const { data: profilesData } = await supabase
         .from('profiles_public')
-        .select('user_id, username, discord_avatar_url')
+        .select('user_id, username, avatar_url')
         .in('user_id', userIds);
 
       const profileMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
@@ -86,7 +88,7 @@ export function ProofSection({ matchId, currentUserId, isAdmin, isParticipant }:
             storage_path: (proof as any).storage_path ?? (normalizedPath ?? null),
             image_url: displayUrl,
             username: profileMap.get((proof as any).user_id)?.username || 'Unknown',
-            discord_avatar_url: profileMap.get((proof as any).user_id)?.discord_avatar_url || null,
+            discord_avatar_url: getDiscordAvatarUrl(profileMap.get((proof as any).user_id)),
           } as Proof;
         })
       );

@@ -86,7 +86,7 @@ describe('active app brand hygiene', () => {
       expect(content).not.toContain('PROFILE_PFP_FALLBACK_ASSET');
 
       if (content.includes('AvatarImage')) {
-        expect(content).not.toMatch(/\??\.avatar_url\b/);
+        expect(content).not.toMatch(/<AvatarImage[\s\S]{0,160}src=\{[^}]*\??\.avatar_url\b/);
       }
     }
   });

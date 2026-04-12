@@ -17,6 +17,7 @@ import {
   formatPlatform,
   formatEntryFee,
 } from '@/lib/matchFormatters';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { PLATFORM_FEE } from '@/types';
 import type { Match, MatchParticipant } from '@/types';
 
@@ -447,13 +448,14 @@ function ParticipantRow({
   participant: MatchParticipant;
   showReady: boolean;
 }) {
-  const profile = participant.profile as { username?: string; discord_avatar_url?: string | null } | undefined;
+  const profile = participant.profile as { username?: string; avatar_url?: string | null; discord_avatar_url?: string | null } | undefined;
+  const avatarUrl = getDiscordAvatarUrl(profile);
   return (
     <div className="match-detail__participant">
-      {profile?.discord_avatar_url ? (
+      {avatarUrl ? (
         <img
           className="match-detail__participant-avatar"
-          src={profile.discord_avatar_url}
+          src={avatarUrl}
           alt=""
         />
       ) : (
