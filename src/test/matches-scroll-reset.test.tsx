@@ -47,7 +47,7 @@ vi.mock('@/components/matches/TeamSelectDialog', () => ({
 }));
 
 vi.mock('@/components/matches/MatchesLiveCard', () => ({
-  MatchesLiveCard: ({ title }: { title: string }) => <div>{title}</div>,
+  MatchesLiveCard: ({ title }: { title: string }) => <div data-testid="matches-live-card">{title}</div>,
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -114,5 +114,36 @@ describe('Matches page scroll reset', () => {
     await waitFor(() => {
       expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
     });
+  });
+
+  it('keeps a single token card at normal column width on desktop', async () => {
+    queryBuilder.data = [
+      {
+        id: 'match-1',
+        creator_id: 'creator-1',
+        mode: 'Box Fight',
+        platform: 'PC',
+        first_to: 5,
+        entry_fee: 1,
+        team_size: 1,
+        expires_at: new Date(Date.now() + 600_000).toISOString(),
+      },
+    ];
+
+    const { container } = render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="matches-live-card"]')).not.toBeNull();
+    });
+
+    const grid = container.querySelector('[data-testid="matches-live-card"]')?.parentElement?.parentElement as HTMLElement;
+
+    expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fill, minmax(320px, 1fr))');
   });
 });
