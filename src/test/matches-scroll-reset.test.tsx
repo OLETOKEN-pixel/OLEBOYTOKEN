@@ -193,6 +193,34 @@ describe('Matches page scroll reset', () => {
     expect(within(menu).getByRole('option', { name: '1V1' })).toBeInTheDocument();
   });
 
+  it('removes cross-platform from platform filters and keeps long options on one line', async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'PLATFORM filter' }));
+
+    const platformMenu = container.querySelector('[data-filter-menu="PLATFORM"]') as HTMLElement;
+
+    expect(within(platformMenu).queryByRole('option', { name: 'CROSS-PLATFORM' })).toBeNull();
+    expect(within(platformMenu).getByRole('option', { name: 'CONSOLE' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'MODE filter' }));
+
+    const modeMenu = container.querySelector('[data-filter-menu="MODE"]') as HTMLElement;
+    const buildFightOption = within(modeMenu).getByRole('option', { name: 'BUILD FIGHT' });
+
+    expect(buildFightOption).toHaveClass('whitespace-nowrap');
+  });
+
   it('updates the team size query from the custom dropdown', async () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/matches']}>

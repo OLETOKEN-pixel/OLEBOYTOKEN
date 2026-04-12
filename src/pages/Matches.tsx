@@ -54,7 +54,6 @@ const PLATFORM_OPTIONS: Array<MatchesFilterOption<PlatformFilter>> = [
   { value: 'PC', label: 'PC' },
   { value: 'Console', label: 'CONSOLE' },
   { value: 'Mobile', label: 'MOBILE' },
-  { value: 'All', label: 'CROSS-PLATFORM' },
 ];
 
 const MODE_OPTIONS: Array<MatchesFilterOption<ModeFilter>> = [
@@ -85,6 +84,10 @@ function MatchesFilterSelect({
   const rootRef = useRef<HTMLDivElement>(null);
   const activeOption = options.find((option) => option.value === value) ?? options[0];
   const placeholderLabel = options[0]?.label ?? 'Filter';
+  const resolvedWidth = Math.max(
+    width,
+    ...options.map((option) => (option.menuLabel ?? option.label).length * 15 + 62),
+  );
 
   useEffect(() => {
     if (!open) {
@@ -116,12 +119,12 @@ function MatchesFilterSelect({
     <div
       ref={rootRef}
       className="relative z-40"
-      style={{ width: `${width}px` }}
+      style={{ width: `${resolvedWidth}px` }}
     >
       <button
         type="button"
         className={cn(
-          'relative flex h-[47px] w-full items-center rounded-[16px] border border-white/50 bg-[rgba(61,61,61,0.82)] pl-[19px] pr-[38px] text-left uppercase text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)] transition hover:bg-[rgba(72,72,72,0.9)] focus:outline-none focus:ring-2 focus:ring-[#ff1654]/70',
+          'relative flex h-[47px] w-full items-center overflow-hidden rounded-[16px] border border-white/50 bg-[rgba(61,61,61,0.82)] pl-[19px] pr-[38px] text-left uppercase text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)] transition hover:bg-[rgba(72,72,72,0.9)] focus:outline-none focus:ring-2 focus:ring-[#ff1654]/70',
           open && 'rounded-b-[5px] border-white/60 bg-[rgba(61,61,61,0.9)]',
         )}
         style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', letterSpacing: '0em' }}
@@ -130,7 +133,7 @@ function MatchesFilterSelect({
         aria-label={`${activeOption?.label ?? placeholderLabel} filter`}
         onClick={() => onOpenChange(!open)}
       >
-        {activeOption?.label}
+        <span className="block min-w-0 whitespace-nowrap leading-none">{activeOption?.label}</span>
         <img
           className={cn(
             'pointer-events-none absolute right-[20px] top-1/2 h-[5px] w-[12px] -translate-y-1/2 transition-transform',
@@ -157,7 +160,7 @@ function MatchesFilterSelect({
               role="option"
               aria-selected={option.value === value}
               className={cn(
-                'flex min-h-[38px] w-full items-center px-[18px] text-left uppercase text-white transition hover:bg-white/10',
+                'flex min-h-[38px] w-full items-center whitespace-nowrap px-[18px] text-left uppercase text-white transition hover:bg-white/10',
                 option.value === value && 'bg-[#ff1654]/24 text-white',
               )}
               style={{ fontSize: option.label.length > 12 ? '15px' : '18px' }}
@@ -166,7 +169,9 @@ function MatchesFilterSelect({
                 onOpenChange(false);
               }}
             >
-              {option.menuLabel ?? option.label}
+              <span className="block min-w-0 whitespace-nowrap leading-none">
+                {option.menuLabel ?? option.label}
+              </span>
             </button>
           ))}
         </div>
@@ -565,7 +570,7 @@ export default function Matches() {
               <MatchesFilterSelect
                 value={modeFilter}
                 options={MODE_OPTIONS}
-                width={147}
+                width={222}
                 open={openFilter === 'mode'}
                 onOpenChange={(open) => setOpenFilter(open ? 'mode' : null)}
                 onChange={(value) => setModeFilter(value as ModeFilter)}
