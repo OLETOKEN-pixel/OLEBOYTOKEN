@@ -50,17 +50,23 @@ describe('HomeNotRegistered mobile guest landing', () => {
     expect(screen.getByRole('heading', { name: 'GET REWARDS!' })).toBeInTheDocument();
   });
 
-  it('keeps the same local Figma assets on the mobile composition', () => {
+  it('keeps only the controlled local Figma assets on the mobile composition', () => {
     setViewportWidth(375);
 
     const { container } = render(<HomeNotRegistered />);
     const srcs = Array.from(container.querySelectorAll('img')).map((img) => img.getAttribute('src'));
 
     expect(srcs).toContain('/figma-assets/figma-neon.png');
-    expect(srcs).toContain('/figma-assets/figma-zaps.svg');
-    expect(srcs).toContain('/figma-assets/figma-spaccato-title-s2.svg');
-    expect(srcs).toContain('/figma-assets/figma-spaccato-title-s4.svg');
+    expect(srcs).toContain('/figma-assets/figma-animation.svg');
     expect(srcs).toContain('/figma-assets/figma-animation-s3.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-zaps.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-guide.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-spaccato-title-s2.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-spaccato-title-s4.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-star-shape.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-star-s3.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-vector19.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-spaccato-bottom.svg');
     expect(srcs.some((src) => src?.startsWith('https://www.figma.com/api/mcp/'))).toBe(false);
   });
 
@@ -68,7 +74,12 @@ describe('HomeNotRegistered mobile guest landing', () => {
     setViewportWidth(390);
 
     render(<HomeNotRegistered />);
-    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+    const signUpButton = screen.getByRole('button', { name: /sign up/i });
+
+    expect(signUpButton.style.whiteSpace).toBe('nowrap');
+    expect(signUpButton.style.width).toBe('210px');
+
+    fireEvent.click(signUpButton);
 
     expect(mocks.startDiscordAuth).toHaveBeenCalledTimes(1);
     expect(mocks.startDiscordAuth).toHaveBeenCalledWith('/mobile-test');
@@ -95,7 +106,7 @@ describe('NavbarFigma mobile guest navigation', () => {
     setViewportWidth(1024);
   });
 
-  it('renders a compact guest navbar with visible signup below the mobile breakpoint', () => {
+  it('renders a compact guest navbar with the three social icons below the mobile breakpoint', () => {
     setViewportWidth(390);
 
     const { container } = render(
@@ -105,13 +116,13 @@ describe('NavbarFigma mobile guest navigation', () => {
     );
 
     expect(container.querySelector('[data-mobile-navbar="guest"]')).not.toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
-
-    expect(mocks.startDiscordAuth).toHaveBeenCalledTimes(1);
-    expect(mocks.startDiscordAuth).toHaveBeenCalledWith('/mobile-test');
+    expect(screen.queryByRole('button', { name: /sign up/i })).toBeNull();
+    expect(screen.getByRole('link', { name: 'X/Twitter' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'TikTok' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Discord' })).toBeInTheDocument();
   });
 
-  it('opens the mobile menu with the guest links and social actions', () => {
+  it('opens the mobile menu with the guest links', () => {
     setViewportWidth(390);
 
     const { container } = render(
@@ -127,8 +138,5 @@ describe('NavbarFigma mobile guest navigation', () => {
     expect(screen.getByRole('link', { name: 'matches' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'ladder' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'highlights' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'X/Twitter' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'TikTok' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Discord' })).toBeInTheDocument();
   });
 });

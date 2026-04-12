@@ -3,18 +3,9 @@ import { toast } from 'sonner';
 import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 
 const A_NEON = '/figma-assets/figma-neon.png';
-const A_ZAPS = '/figma-assets/figma-zaps.svg';
 const A_DS_BTN = '/figma-assets/figma-ds-icon-hero.png';
-const A_GUIDE = '/figma-assets/figma-guide.svg';
-const A_SPAC_BOTTOM = '/figma-assets/figma-spaccato-bottom.svg';
 const A_ANIMATION = '/figma-assets/figma-animation.svg';
-const A_STAR_SHAPE = '/figma-assets/figma-star-shape.svg';
-const A_SPAC_TITLE_2 = '/figma-assets/figma-spaccato-title-s2.svg';
 const A_ANIMATION_S3 = '/figma-assets/figma-animation-s3.svg';
-const A_SPAC_BOTTOM_S3 = '/figma-assets/figma-spaccato-bottom-s3.svg';
-const A_STAR_S3 = '/figma-assets/figma-star-s3.svg';
-const A_VECTOR19 = '/figma-assets/figma-vector19.svg';
-const A_SPAC_TITLE_4 = '/figma-assets/figma-spaccato-title-s4.svg';
 const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
 const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
 
@@ -27,13 +18,10 @@ type MobileSectionProps = {
   id: string;
   title: string;
   copy: ReactNode;
-  titleChrome: string;
-  star: string;
   animation: string;
-  bottomChrome: string;
   prevIndex: number;
   nextIndex: number;
-  mirror?: boolean;
+  align?: 'left' | 'right';
 };
 
 function MobileNavArrows({ prevIndex, nextIndex, scrollTo }: { prevIndex: number; nextIndex: number; scrollTo: (index: number) => void }) {
@@ -77,15 +65,14 @@ function MobileInfoSection({
   id,
   title,
   copy,
-  titleChrome,
-  star,
   animation,
-  bottomChrome,
   prevIndex,
   nextIndex,
-  mirror = false,
+  align = 'left',
   scrollTo,
 }: MobileSectionProps & { scrollTo: (index: number) => void }) {
+  const isRightAligned = align === 'right';
+
   return (
     <section
       id={id}
@@ -96,51 +83,11 @@ function MobileInfoSection({
         maxWidth: '100vw',
         minHeight: '100svh',
         overflow: 'hidden',
-        padding: '112px 18px 56px',
-        background: SECTION_BG,
+        padding: '124px 16px 58px',
+        background: `radial-gradient(circle at 50% 100%, rgba(255, 22, 84, 0.18) 0%, rgba(255, 22, 84, 0.08) 34%, rgba(255, 22, 84, 0) 68%), ${SECTION_BG}`,
       }}
     >
-      <img
-        src={A_GUIDE}
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.86 }}
-      />
-      <img
-        src={titleChrome}
-        alt=""
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: '88px',
-          left: mirror ? 'auto' : '-90px',
-          right: mirror ? '-110px' : 'auto',
-          width: '520px',
-          maxWidth: '150%',
-          height: '132px',
-          objectFit: 'contain',
-          opacity: 0.9,
-          pointerEvents: 'none',
-          transform: mirror ? 'scaleX(-1)' : undefined,
-        }}
-      />
-      <img
-        src={star}
-        alt=""
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: '240px',
-          left: mirror ? 'auto' : '-154px',
-          right: mirror ? '-154px' : 'auto',
-          width: star === A_VECTOR19 ? '300px' : '460px',
-          maxWidth: '135%',
-          opacity: 0.38,
-          transform: mirror ? 'rotate(-9deg)' : 'rotate(-14deg)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: '420px', margin: '0 auto', textAlign: mirror ? 'right' : 'left' }}>
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: '420px', margin: '0 auto', textAlign: align }}>
         <h2
           style={{
             margin: 0,
@@ -160,21 +107,22 @@ function MobileInfoSection({
           aria-hidden="true"
           style={{
             width: '100%',
-            height: '6px',
+            height: '4px',
             marginTop: '14px',
-            background: 'linear-gradient(90deg, #ff1654 0%, rgba(255, 22, 84, 0) 100%)',
-            transform: mirror ? 'scaleX(-1)' : undefined,
+            background: 'linear-gradient(90deg, #ff1654 0%, rgba(255, 22, 84, 0) 92%)',
+            transform: isRightAligned ? 'scaleX(-1)' : undefined,
           }}
         />
         <div
           style={{
-            marginTop: '72px',
+            marginTop: '58px',
             fontFamily: FE,
             fontWeight: 700,
-            fontSize: '28px',
-            lineHeight: '32px',
+            fontSize: '24px',
+            lineHeight: '29px',
             letterSpacing: 0,
             color: '#ffffff',
+            overflowWrap: 'normal',
           }}
         >
           {copy}
@@ -190,29 +138,12 @@ function MobileInfoSection({
             background: 'rgba(30, 30, 40, 0.8)',
             overflow: 'hidden',
             boxShadow: '0 18px 46px rgba(0, 0, 0, 0.36)',
-            transform: mirror ? 'scaleX(-1)' : undefined,
           }}
         >
           <img src={animation} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         </div>
         <MobileNavArrows prevIndex={prevIndex} nextIndex={nextIndex} scrollTo={scrollTo} />
       </div>
-      <img
-        src={bottomChrome}
-        alt=""
-        aria-hidden
-        style={{
-          position: 'absolute',
-          bottom: '46px',
-          left: mirror ? '18px' : 'auto',
-          right: mirror ? 'auto' : '18px',
-          width: '74px',
-          height: '112px',
-          opacity: 0.84,
-          pointerEvents: 'none',
-          transform: mirror ? 'scaleX(-1)' : undefined,
-        }}
-      />
     </section>
   );
 }
@@ -299,7 +230,7 @@ export function HomeNotRegisteredMobile() {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '132px 18px 84px',
-          background: SECTION_BG,
+          background: `radial-gradient(circle at 50% 100%, rgba(255, 22, 84, 0.14) 0%, rgba(255, 22, 84, 0) 66%), ${SECTION_BG}`,
         }}
       >
         <img
@@ -307,21 +238,6 @@ export function HomeNotRegisteredMobile() {
           alt=""
           aria-hidden
           style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '118px', objectFit: 'cover', zIndex: 2 }}
-        />
-        <img
-          src={A_ZAPS}
-          alt=""
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: '-62%',
-            top: '-220px',
-            width: '224%',
-            height: '900px',
-            opacity: 0.72,
-            pointerEvents: 'none',
-            zIndex: 1,
-          }}
         />
         <img
           src={A_NEON}
@@ -370,7 +286,7 @@ export function HomeNotRegisteredMobile() {
           <button
             onClick={handleSignUp}
             style={{
-              width: '190px',
+              width: '210px',
               height: '58px',
               marginTop: '34px',
               background: '#3b28cc',
@@ -382,17 +298,18 @@ export function HomeNotRegisteredMobile() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '10px',
-              padding: 0,
+              gap: '8px',
+              padding: '0 18px',
               fontFamily: F,
               fontWeight: 900,
-              fontSize: '28px',
-              lineHeight: '30px',
+              fontSize: '26px',
+              lineHeight: '28px',
               letterSpacing: 0,
+              whiteSpace: 'nowrap',
             }}
           >
-            SIGN UP!
-            <img src={A_DS_BTN} alt="" aria-hidden style={{ width: '42px', height: '31px' }} />
+            <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>SIGN UP!</span>
+            <img src={A_DS_BTN} alt="" aria-hidden style={{ width: '34px', height: '25px', flexShrink: 0 }} />
           </button>
           <button
             onClick={() => scrollTo(1)}
@@ -428,10 +345,7 @@ export function HomeNotRegisteredMobile() {
       <MobileInfoSection
         id="s-rank"
         title="RANK UP!"
-        titleChrome={A_SPAC_TITLE_2}
-        star={A_STAR_SHAPE}
         animation={A_ANIMATION}
-        bottomChrome={A_SPAC_BOTTOM}
         prevIndex={0}
         nextIndex={2}
         scrollTo={scrollTo}
@@ -446,18 +360,16 @@ export function HomeNotRegisteredMobile() {
       <MobileInfoSection
         id="s-arena"
         title="JOIN THE ARENA!"
-        titleChrome={A_SPAC_TITLE_2}
-        star={A_STAR_S3}
         animation={A_ANIMATION_S3}
-        bottomChrome={A_SPAC_BOTTOM_S3}
         prevIndex={1}
         nextIndex={3}
-        mirror
+        align="right"
         scrollTo={scrollTo}
         copy={
           <>
             <p style={{ margin: 0 }}>Build your team,</p>
-            <p style={{ margin: 0 }}>complete challenges and get rewarded.</p>
+            <p style={{ margin: 0 }}>complete challenges</p>
+            <p style={{ margin: 0 }}>and get rewarded.</p>
           </>
         }
       />
@@ -465,10 +377,7 @@ export function HomeNotRegisteredMobile() {
       <MobileInfoSection
         id="s-rewards"
         title="GET REWARDS!"
-        titleChrome={A_SPAC_TITLE_4}
-        star={A_VECTOR19}
         animation={A_ANIMATION}
-        bottomChrome={A_SPAC_BOTTOM}
         prevIndex={2}
         nextIndex={4}
         scrollTo={scrollTo}

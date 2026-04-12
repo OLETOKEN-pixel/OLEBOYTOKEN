@@ -3,11 +3,9 @@
  * Based on Figma node 41:128
  */
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
@@ -218,15 +216,6 @@ export function NavbarFigma() {
 function NavbarFigmaMobile() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleSignUp = useCallback(async () => {
-    try {
-      await startDiscordAuth(getCurrentPathWithQueryAndHash());
-    } catch (error) {
-      console.error('Discord sign-up error:', error);
-      toast.error(error instanceof Error ? error.message : 'Unable to start Discord login. Please try again.');
-    }
-  }, []);
-
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -273,38 +262,29 @@ function NavbarFigmaMobile() {
           }}
         >
           <div style={{ transform: 'rotate(89.78deg)', flexShrink: 0 }}>
-            <img src={A_LOGO} alt="OleBoy" style={{ display: 'block', width: '42px', height: '50px' }} />
+            <img src={A_LOGO} alt="OleBoy" style={{ display: 'block', width: '40px', height: '48px' }} />
           </div>
         </Link>
 
-        <button
-          onClick={handleSignUp}
-          style={{
-            height: '42px',
-            minWidth: '118px',
-            marginLeft: 'auto',
-            border: 'none',
-            borderRadius: '8px',
-            background: '#3b28cc',
-            boxShadow: 'inset 0px 4px 4px 0px rgba(255,255,255,0.15), inset 0px -3px 4px 0px rgba(0,0,0,0.25)',
-            color: '#ffffff',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '7px',
-            padding: '0 10px',
-            fontFamily: F,
-            fontWeight: 900,
-            fontSize: '20px',
-            lineHeight: '22px',
-            letterSpacing: 0,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          SIGN UP!
-          <img src={A_DS_NAV} alt="" aria-hidden style={{ width: '23px', height: '23px' }} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
+          <MobileSocialLink href="https://x.com/oleboytokens" label="X/Twitter" image={A_TWITTER} />
+          <MobileSocialLink href="https://www.tiktok.com/@oleboytokens" label="TikTok" image={A_TIKTOK} />
+          <a
+            href="https://discord.gg/2XVffNDPAE"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Discord"
+            style={{ width: '34px', height: '34px', display: 'block', position: 'relative', flexShrink: 0 }}
+          >
+            <img src={A_ELLIPSE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+            <img
+              src={A_DS_NAV}
+              alt=""
+              aria-hidden
+              style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '19px', height: '19px' }}
+            />
+          </a>
+        </div>
 
         <button
           type="button"
@@ -370,25 +350,6 @@ function NavbarFigmaMobile() {
               highlights
             </Link>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <MobileSocialLink href="https://x.com/oleboytokens" label="X/Twitter" image={A_TWITTER} />
-            <MobileSocialLink href="https://www.tiktok.com/@oleboytokens" label="TikTok" image={A_TIKTOK} />
-            <a
-              href="https://discord.gg/2XVffNDPAE"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Discord"
-              style={{ width: '42px', height: '42px', display: 'block', position: 'relative' }}
-            >
-              <img src={A_ELLIPSE} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-              <img
-                src={A_DS_NAV}
-                alt=""
-                aria-hidden
-                style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '23px', height: '23px' }}
-              />
-            </a>
-          </div>
         </div>
       ) : null}
     </nav>
@@ -413,8 +374,9 @@ function MobileSocialLink({ href, label, image }: { href: string; label: string;
       rel="noopener noreferrer"
       aria-label={label}
       style={{
-        width: '42px',
-        height: '42px',
+        width: '34px',
+        height: '34px',
+        flexShrink: 0,
         borderRadius: '8px',
         overflow: 'hidden',
         display: 'block',
