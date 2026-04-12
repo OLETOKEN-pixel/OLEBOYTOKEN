@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
@@ -22,6 +22,7 @@ import type { Match, PaymentMode, Platform } from '@/types';
 type TeamSizeFilter = 'all' | '1' | '2' | '3' | '4';
 type PlatformFilter = 'all' | Platform;
 type ModeFilter = 'all' | 'Box Fight' | 'Build Fight' | 'Realistic' | 'Zone Wars';
+type MatchesFilterKey = 'teamSize' | 'platform' | 'mode';
 
 const FONT_REGULAR =
   "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
@@ -34,24 +35,30 @@ const FONT_EXPANDED_BLACK =
 const FONT_WIDE_BLACK =
   "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial-WideBlack', 'Base Neue Trial', sans-serif";
 
-const TEAM_SIZE_OPTIONS: Array<{ value: TeamSizeFilter; label: string }> = [
-  { value: 'all', label: 'TEAM SIZE' },
+interface MatchesFilterOption<TValue extends string = string> {
+  value: TValue;
+  label: string;
+  menuLabel?: string;
+}
+
+const TEAM_SIZE_OPTIONS: Array<MatchesFilterOption<TeamSizeFilter>> = [
+  { value: 'all', label: 'TEAM SIZE', menuLabel: 'ALL' },
   { value: '1', label: '1V1' },
   { value: '2', label: '2V2' },
   { value: '3', label: '3V3' },
   { value: '4', label: '4V4' },
 ];
 
-const PLATFORM_OPTIONS: Array<{ value: PlatformFilter; label: string }> = [
-  { value: 'all', label: 'PLATFORM' },
+const PLATFORM_OPTIONS: Array<MatchesFilterOption<PlatformFilter>> = [
+  { value: 'all', label: 'PLATFORM', menuLabel: 'ALL' },
   { value: 'PC', label: 'PC' },
   { value: 'Console', label: 'CONSOLE' },
   { value: 'Mobile', label: 'MOBILE' },
   { value: 'All', label: 'CROSS-PLATFORM' },
 ];
 
-const MODE_OPTIONS: Array<{ value: ModeFilter; label: string }> = [
-  { value: 'all', label: 'MODE' },
+const MODE_OPTIONS: Array<MatchesFilterOption<ModeFilter>> = [
+  { value: 'all', label: 'MODE', menuLabel: 'ALL' },
   { value: 'Box Fight', label: 'BOX FIGHT' },
   { value: 'Build Fight', label: 'BUILD FIGHT' },
   { value: 'Realistic', label: 'REALISTIC' },
@@ -60,45 +67,110 @@ const MODE_OPTIONS: Array<{ value: ModeFilter; label: string }> = [
 
 interface MatchesFilterSelectProps {
   value: string;
-  options: Array<{ value: string; label: string }>;
+  options: Array<MatchesFilterOption>;
   width: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onChange: (value: string) => void;
 }
 
-function MatchesFilterSelect({ value, options, width, onChange }: MatchesFilterSelectProps) {
+function MatchesFilterSelect({
+  value,
+  options,
+  width,
+  open,
+  onOpenChange,
+  onChange,
+}: MatchesFilterSelectProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const activeOption = options.find((option) => option.value === value) ?? options[0];
+  const placeholderLabel = options[0]?.label ?? 'Filter';
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        onOpenChange(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onOpenChange(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onOpenChange, open]);
 
   return (
     <div
-      className="relative h-[47px] overflow-hidden rounded-[16px] border border-white/50 bg-[#3d3d3d] pl-[19px] pr-[38px] shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)]"
+      ref={rootRef}
+      className="relative z-40"
       style={{ width: `${width}px` }}
     >
-      <span
-        className="pointer-events-none flex h-full items-center uppercase text-white"
+      <button
+        type="button"
+        className={cn(
+          'relative flex h-[47px] w-full items-center rounded-[16px] border border-white/50 bg-[rgba(61,61,61,0.82)] pl-[19px] pr-[38px] text-left uppercase text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)] transition hover:bg-[rgba(72,72,72,0.9)] focus:outline-none focus:ring-2 focus:ring-[#ff1654]/70',
+          open && 'rounded-b-[5px] border-white/60 bg-[rgba(61,61,61,0.9)]',
+        )}
         style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', letterSpacing: '0em' }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${activeOption?.label ?? placeholderLabel} filter`}
+        onClick={() => onOpenChange(!open)}
       >
         {activeOption?.label}
-      </span>
+        <img
+          className={cn(
+            'pointer-events-none absolute right-[20px] top-1/2 h-[5px] w-[12px] -translate-y-1/2 transition-transform',
+            open && 'rotate-180',
+          )}
+          src="/figma-assets/matches-filter-chevron.svg"
+          alt=""
+          aria-hidden="true"
+        />
+      </button>
 
-      <select
-        className="absolute inset-0 cursor-pointer opacity-0"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        aria-label={options[0]?.label ?? 'Filter'}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <img
-        className="pointer-events-none absolute right-[20px] top-1/2 h-[5px] w-[12px] -translate-y-1/2"
-        src="/figma-assets/matches-filter-chevron.svg"
-        alt=""
-        aria-hidden="true"
-      />
+      {open && (
+        <div
+          className="absolute left-0 top-[46px] z-50 w-full overflow-hidden rounded-b-[16px] border border-t-0 border-white/50 bg-[rgba(35,35,35,0.86)] py-[7px] shadow-[0_18px_34px_rgba(0,0,0,0.32),inset_0px_1px_0px_rgba(255,255,255,0.1)] backdrop-blur-[14px]"
+          role="listbox"
+          data-filter-menu={placeholderLabel}
+          aria-label={`${placeholderLabel} options`}
+          style={{ fontFamily: FONT_EXPANDED, letterSpacing: '0em' }}
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              className={cn(
+                'flex min-h-[38px] w-full items-center px-[18px] text-left uppercase text-white transition hover:bg-white/10',
+                option.value === value && 'bg-[#ff1654]/24 text-white',
+              )}
+              style={{ fontSize: option.label.length > 12 ? '15px' : '18px' }}
+              onClick={() => {
+                onChange(option.value);
+                onOpenChange(false);
+              }}
+            >
+              {option.menuLabel ?? option.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -268,6 +340,7 @@ export default function Matches() {
   const [teamSizeFilter, setTeamSizeFilter] = useState<TeamSizeFilter>('all');
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  const [openFilter, setOpenFilter] = useState<MatchesFilterKey | null>(null);
   const [teamSelectMatch, setTeamSelectMatch] = useState<Match | null>(null);
   const hasActiveFilters =
     teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
@@ -457,19 +530,22 @@ export default function Matches() {
               LIVE MATCHES
             </h1>
             <img
-              className="absolute left-[59px] top-[168px] h-[22px] w-[1000px] max-w-none object-fill"
+              className="absolute left-[59px] top-[168px] h-[22px] w-[743px] max-w-none object-fill"
               src="/figma-assets/matches-title-underline.svg"
               alt=""
               aria-hidden="true"
+              data-testid="matches-title-underline"
             />
           </div>
 
-          <div className="relative mt-[26px] h-[47px] w-full">
+          <div className="relative z-30 mt-[26px] h-[47px] w-full">
             <div className="absolute left-[42px] top-0">
               <MatchesFilterSelect
                 value={teamSizeFilter}
                 options={TEAM_SIZE_OPTIONS}
                 width={222}
+                open={openFilter === 'teamSize'}
+                onOpenChange={(open) => setOpenFilter(open ? 'teamSize' : null)}
                 onChange={(value) => setTeamSizeFilter(value as TeamSizeFilter)}
               />
             </div>
@@ -479,6 +555,8 @@ export default function Matches() {
                 value={platformFilter}
                 options={PLATFORM_OPTIONS}
                 width={222}
+                open={openFilter === 'platform'}
+                onOpenChange={(open) => setOpenFilter(open ? 'platform' : null)}
                 onChange={(value) => setPlatformFilter(value as PlatformFilter)}
               />
             </div>
@@ -488,6 +566,8 @@ export default function Matches() {
                 value={modeFilter}
                 options={MODE_OPTIONS}
                 width={147}
+                open={openFilter === 'mode'}
+                onOpenChange={(open) => setOpenFilter(open ? 'mode' : null)}
                 onChange={(value) => setModeFilter(value as ModeFilter)}
               />
             </div>

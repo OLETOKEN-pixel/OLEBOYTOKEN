@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Matches from '@/pages/Matches';
@@ -146,5 +146,101 @@ describe('Matches page scroll reset', () => {
 
     expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fill, 300px)');
     expect(grid.style.columnGap).toBe('111px');
+  });
+
+  it('caps the live matches title outline at the final title letter', async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
+    });
+
+    const underline = container.querySelector('[data-testid="matches-title-underline"]');
+
+    expect(underline).not.toBeNull();
+    expect(underline?.className).toContain('w-[743px]');
+    expect(underline?.className).not.toContain('w-[1000px]');
+  });
+
+  it('uses custom liquid-glass filter menus instead of native selects', async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
+    });
+
+    expect(container.querySelector('select')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'TEAM SIZE filter' }));
+
+    const menu = container.querySelector('[data-filter-menu="TEAM SIZE"]') as HTMLElement;
+
+    expect(menu).not.toBeNull();
+    expect(within(menu).queryByRole('option', { name: 'TEAM SIZE' })).toBeNull();
+    expect(within(menu).getByRole('option', { name: 'ALL' })).toBeInTheDocument();
+    expect(within(menu).getByRole('option', { name: '1V1' })).toBeInTheDocument();
+  });
+
+  it('updates the team size query from the custom dropdown', async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'TEAM SIZE filter' }));
+
+    const menu = container.querySelector('[data-filter-menu="TEAM SIZE"]') as HTMLElement;
+    fireEvent.click(within(menu).getByRole('option', { name: '1V1' }));
+
+    expect(screen.getByRole('button', { name: '1V1 filter' })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(queryBuilder.eq).toHaveBeenCalledWith('team_size', 1);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('FILTERED VIEW')).toBeInTheDocument();
+    });
+  });
+
+  it('closes an open filter when another filter opens', async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'TEAM SIZE filter' }));
+    expect(container.querySelector('[data-filter-menu="TEAM SIZE"]')).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'PLATFORM filter' }));
+
+    expect(container.querySelector('[data-filter-menu="TEAM SIZE"]')).toBeNull();
+    expect(container.querySelector('[data-filter-menu="PLATFORM"]')).not.toBeNull();
   });
 });
