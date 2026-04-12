@@ -198,6 +198,15 @@ describe('MyMatches page', () => {
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/matches/creator-open');
   });
 
+  it('keeps the desktop card grid tight enough for four 300px cards per row', () => {
+    renderMyMatches();
+
+    const grid = screen.getByTestId('my-matches-grid');
+
+    expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fill, 300px)');
+    expect(grid.style.columnGap).toBe('100px');
+  });
+
   it('uses the mobile layout below 768px without horizontal overflow wrappers', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 390 });
 

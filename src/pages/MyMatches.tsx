@@ -176,8 +176,9 @@ function MyMatchesDesktop({
       />
 
       <div
+        data-testid="my-matches-grid"
         className="mt-[47px] grid"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '111px', rowGap: '40px' }}
+        style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '100px', rowGap: '40px' }}
       >
         <MyMatchesContent error={error} isPending={isPending} matches={matches} now={now} />
       </div>
