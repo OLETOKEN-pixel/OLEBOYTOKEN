@@ -7,6 +7,10 @@ import { PaymentModeSelector } from '@/components/teams/PaymentModeSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  prepareMatchLockScreenNotificationPermission,
+  showMatchLockScreenNotification,
+} from '@/lib/matchLockScreenNotification';
 import { cn } from '@/lib/utils';
 import type {
   GameMode,
@@ -482,6 +486,8 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       return;
     }
 
+    const notificationReadinessPromise = prepareMatchLockScreenNotificationPermission();
+
     setCreating(true);
 
     try {
@@ -529,6 +535,19 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
       }
 
       await refreshWallet();
+
+      if (matchId) {
+        void showMatchLockScreenNotification(
+          {
+            matchId,
+            mode,
+            teamSize,
+            entryFeeCoins: normalizedEntryFee,
+            winCoins: prize,
+          },
+          notificationReadinessPromise,
+        );
+      }
 
       toast({
         title: 'Match created',
@@ -693,7 +712,7 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
           <label className="col-span-2 flex h-[59px] items-center gap-[16px] rounded-[18px] bg-[rgba(0,0,0,0.5)] px-[13px]">
             <span className="h-[14px] w-[14px] shrink-0 rounded-full bg-[#ff1654]" aria-hidden="true" />
             <input
-              aria-label="Custom entry fee"
+              aria-label="Entry fee"
               inputMode="decimal"
               type="number"
               min="0.5"

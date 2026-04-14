@@ -3,12 +3,27 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
 
-const { mockToast, mockRefreshWallet, mockRpc, mockOnCreated } = vi.hoisted(() => ({
+const {
+  mockToast,
+  mockRefreshWallet,
+  mockRpc,
+  mockOnCreated,
+  mockRequestPermission,
+  mockShowNotification,
+  mockGetRegistration,
+  mockRegisterServiceWorker,
+} = vi.hoisted(() => ({
   mockToast: vi.fn(),
   mockRefreshWallet: vi.fn(),
   mockRpc: vi.fn(),
   mockOnCreated: vi.fn(),
+  mockRequestPermission: vi.fn(),
+  mockShowNotification: vi.fn(),
+  mockGetRegistration: vi.fn(),
+  mockRegisterServiceWorker: vi.fn(),
 }));
+
+let notificationPermission: NotificationPermission = 'granted';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -104,6 +119,44 @@ function renderOverlay() {
   );
 }
 
+function installNotificationMocks() {
+  const registration = {
+    showNotification: mockShowNotification,
+  };
+
+  Object.defineProperty(window, 'isSecureContext', {
+    configurable: true,
+    value: true,
+  });
+
+  Object.defineProperty(window, 'Notification', {
+    configurable: true,
+    value: {
+      get permission() {
+        return notificationPermission;
+      },
+      requestPermission: mockRequestPermission,
+    },
+  });
+
+  Object.defineProperty(navigator, 'serviceWorker', {
+    configurable: true,
+    value: {
+      getRegistration: mockGetRegistration,
+      register: mockRegisterServiceWorker,
+    },
+  });
+
+  mockGetRegistration.mockResolvedValue(registration);
+  mockRegisterServiceWorker.mockResolvedValue(registration);
+}
+
+async function flushAsyncNotifications() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 describe('CreateMatchOverlay', () => {
   beforeEach(() => {
     mockToast.mockReset();
@@ -111,6 +164,17 @@ describe('CreateMatchOverlay', () => {
     mockRefreshWallet.mockResolvedValue(undefined);
     mockRpc.mockReset();
     mockOnCreated.mockReset();
+    mockRequestPermission.mockReset();
+    mockRequestPermission.mockImplementation((callback?: (permission: NotificationPermission) => void) => {
+      callback?.(notificationPermission);
+      return Promise.resolve(notificationPermission);
+    });
+    mockShowNotification.mockReset();
+    mockShowNotification.mockResolvedValue(undefined);
+    mockGetRegistration.mockReset();
+    mockRegisterServiceWorker.mockReset();
+    notificationPermission = 'granted';
+    installNotificationMocks();
   });
 
   it('keeps 1v1 as a two-step game to tokens flow', async () => {
@@ -171,12 +235,12 @@ describe('CreateMatchOverlay', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
 
-    const entryFeeInput = screen.getByLabelText('Entry fee');
-    fireEvent.change(entryFeeInput, { target: { value: '5' } });
-    fireEvent.blur(entryFeeInput);
+    expect(screen.getByLabelText('Entry fee')).toBeInTheDocument();
 
-    expect(screen.getByTestId('total-pool-value')).toHaveTextContent('10.00');
-    expect(screen.getByTestId('prize-value')).toHaveTextContent('9.50');
+    fireEvent.click(screen.getByRole('button', { name: '10.00' }));
+
+    expect(screen.getByTestId('total-pool-value')).toHaveTextContent('20.00');
+    expect(screen.getByTestId('prize-value')).toHaveTextContent('19.00');
   });
 
   it('creates a 1v1 match with hidden defaults from profile preferences', async () => {
@@ -192,7 +256,7 @@ describe('CreateMatchOverlay', () => {
 
     await waitFor(() => {
       expect(mockRpc).toHaveBeenCalledWith('create_match_1v1', {
-        p_entry_fee: 1,
+        p_entry_fee: 5,
         p_region: 'EU',
         p_platform: 'PC',
         p_mode: 'Box Fight',
@@ -203,5 +267,69 @@ describe('CreateMatchOverlay', () => {
       expect(mockRefreshWallet).toHaveBeenCalled();
       expect(mockOnCreated).toHaveBeenCalledWith('match-123');
     });
+
+    await waitFor(() => {
+      expect(mockShowNotification).toHaveBeenCalledWith(
+        '1V1 BOX FIGHT',
+        expect.objectContaining({
+          body: 'ENTRY 5.00 COINS · WIN 9.50 COINS',
+          icon: '/favicon-oleboy.png',
+          badge: '/favicon-oleboy.png',
+          tag: 'oleboy-match-match-123',
+          data: {
+            matchId: 'match-123',
+            url: '/matches/match-123',
+          },
+        }),
+      );
+    });
+  });
+
+  it('creates the match when notifications are denied', async () => {
+    notificationPermission = 'denied';
+    installNotificationMocks();
+    mockRpc.mockResolvedValue({
+      data: { success: true, match_id: 'match-denied' },
+      error: null,
+    });
+
+    renderOverlay();
+
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create token/i }));
+
+    await waitFor(() => {
+      expect(mockOnCreated).toHaveBeenCalledWith('match-denied');
+    });
+
+    await flushAsyncNotifications();
+
+    expect(mockRpc).toHaveBeenCalled();
+    expect(mockShowNotification).not.toHaveBeenCalled();
+  });
+
+  it('creates the match when browser notifications are unsupported', async () => {
+    Object.defineProperty(window, 'Notification', {
+      configurable: true,
+      value: undefined,
+    });
+    mockRpc.mockResolvedValue({
+      data: { success: true, match_id: 'match-unsupported' },
+      error: null,
+    });
+
+    renderOverlay();
+
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create token/i }));
+
+    await waitFor(() => {
+      expect(mockOnCreated).toHaveBeenCalledWith('match-unsupported');
+    });
+
+    await flushAsyncNotifications();
+
+    expect(mockRpc).toHaveBeenCalled();
+    expect(mockShowNotification).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,19 @@
+{
+  "name": "OleBoy Token",
+  "short_name": "OleBoy",
+  "description": "Create and track OleBoy live match tokens.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090203",
+  "theme_color": "#ff1654",
+  "icons": [
+    {
+      "src": "/favicon-oleboy.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
