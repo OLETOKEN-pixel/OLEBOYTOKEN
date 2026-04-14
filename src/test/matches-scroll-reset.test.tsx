@@ -82,6 +82,11 @@ describe('Matches page scroll reset', () => {
     vi.clearAllMocks();
     queryBuilder.data = [];
     queryBuilder.error = null;
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 1024,
+    });
   });
 
   it('forces /matches to open from the top', async () => {
@@ -272,5 +277,29 @@ describe('Matches page scroll reset', () => {
 
     expect(container.querySelector('[data-filter-menu="TEAM SIZE"]')).toBeNull();
     expect(container.querySelector('[data-filter-menu="PLATFORM"]')).not.toBeNull();
+  });
+
+  it('uses a mobile-only layout with the create action visible on phones', async () => {
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 390,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <Routes>
+          <Route path="/matches" element={<Matches />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('ARENA STANDBY')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /create match/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^CREATE$/ })).not.toBeInTheDocument();
+    expect(document.documentElement.style.overflowY).not.toBe('hidden');
   });
 });

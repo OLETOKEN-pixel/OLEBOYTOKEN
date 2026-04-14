@@ -5,6 +5,7 @@ import { MatchesLiveCard } from '@/components/matches/MatchesLiveCard';
 import { CreateMatchOverlay } from '@/components/matches/CreateMatchOverlay';
 import { TeamSelectDialog } from '@/components/matches/TeamSelectDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useJoinMatch } from '@/hooks/useMatches';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -180,6 +181,104 @@ function MatchesFilterSelect({
   );
 }
 
+function MatchesMobileFilterSelect({
+  value,
+  options,
+  open,
+  onOpenChange,
+  onChange,
+}: Omit<MatchesFilterSelectProps, 'width'>) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const activeOption = options.find((option) => option.value === value) ?? options[0];
+  const placeholderLabel = options[0]?.label ?? 'Filter';
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        onOpenChange(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onOpenChange(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onOpenChange, open]);
+
+  return (
+    <div ref={rootRef} className="relative z-40 w-full">
+      <button
+        type="button"
+        className={cn(
+          'relative flex h-[46px] w-full items-center overflow-hidden rounded-[8px] border border-white/45 bg-[rgba(61,61,61,0.84)] pl-4 pr-9 text-left uppercase text-white shadow-[inset_0px_3px_4px_rgba(255,255,255,0.12)] transition focus:outline-none focus:ring-2 focus:ring-[#ff1654]/70',
+          open && 'rounded-b-[4px] border-white/65 bg-[rgba(61,61,61,0.94)]',
+        )}
+        style={{ fontFamily: FONT_EXPANDED, fontSize: '18px', letterSpacing: '0em' }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${activeOption?.label ?? placeholderLabel} filter`}
+        onClick={() => onOpenChange(!open)}
+      >
+        <span className="block min-w-0 truncate leading-none">{activeOption?.label}</span>
+        <img
+          className={cn(
+            'pointer-events-none absolute right-4 top-1/2 h-[5px] w-[12px] -translate-y-1/2 transition-transform',
+            open && 'rotate-180',
+          )}
+          src="/figma-assets/matches-filter-chevron.svg"
+          alt=""
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && (
+        <div
+          className="absolute left-0 top-[45px] z-50 w-full overflow-hidden rounded-b-[8px] border border-t-0 border-white/50 bg-[rgba(35,35,35,0.94)] py-[6px] shadow-[0_18px_34px_rgba(0,0,0,0.32),inset_0px_1px_0px_rgba(255,255,255,0.1)] backdrop-blur-[14px]"
+          role="listbox"
+          data-filter-menu={placeholderLabel}
+          aria-label={`${placeholderLabel} options`}
+          style={{ fontFamily: FONT_EXPANDED, letterSpacing: '0em' }}
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              className={cn(
+                'flex min-h-[38px] w-full items-center whitespace-nowrap px-4 text-left uppercase text-white transition hover:bg-white/10',
+                option.value === value && 'bg-[#ff1654]/24 text-white',
+              )}
+              style={{ fontSize: option.label.length > 12 ? '13px' : '16px' }}
+              onClick={() => {
+                onChange(option.value);
+                onOpenChange(false);
+              }}
+            >
+              <span className="block min-w-0 whitespace-nowrap leading-none">
+                {option.menuLabel ?? option.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MatchesPlaceholderCard() {
   return (
     <article className="flex min-h-[392px] flex-col rounded-[30px] border border-[#ff1654]/45 bg-[#272727] px-[30px] pb-[28px] pt-[26px] shadow-[0_16px_36px_rgba(0,0,0,0.32)]">
@@ -219,6 +318,21 @@ function MatchesPlaceholderCard() {
       </div>
 
       <div className="mt-auto h-[58px] rounded-[18px] border border-[#ff1654]/45 bg-[rgba(255,22,84,0.18)]" />
+    </article>
+  );
+}
+
+function MatchesMobilePlaceholderCard() {
+  return (
+    <article className="flex min-h-[286px] flex-col rounded-[8px] border border-[#ff1654]/45 bg-[#272727] px-5 py-5 shadow-[0_16px_36px_rgba(0,0,0,0.32)]">
+      <div className="h-7 w-[78%] rounded-full bg-white/10" />
+      <div className="mt-3 h-[3px] w-full rounded-full bg-[#ff1654]/40" />
+      <div className="mt-7 grid grid-cols-2 gap-5">
+        <div className="h-14 rounded-[8px] bg-white/10" />
+        <div className="h-14 rounded-[8px] bg-white/10" />
+        <div className="col-span-2 h-16 rounded-[8px] bg-white/10" />
+        <div className="col-span-2 h-12 rounded-[8px] bg-[#ff1654]/20" />
+      </div>
     </article>
   );
 }
@@ -333,12 +447,47 @@ function MatchesEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
   );
 }
 
+function MatchesMobileEmptyState({ hasActiveFilters }: MatchesEmptyStateProps) {
+  const eyebrow = hasActiveFilters ? 'FILTERED VIEW' : 'ARENA STANDBY';
+  const title = hasActiveFilters ? 'NO MATCHES FOR THIS SETUP' : 'WAITING FOR LIVE DROP';
+  const copy = hasActiveFilters
+    ? 'Change team size, platform or mode to widen the board.'
+    : 'Create a token or wait for the next live arena.';
+
+  return (
+    <section
+      className="rounded-[8px] border border-[#ff1654] bg-[linear-gradient(180deg,rgba(90,8,31,0.7)_0%,rgba(24,4,9,0.97)_100%)] px-5 py-6 shadow-[inset_0px_1px_0px_rgba(255,255,255,0.06)]"
+      aria-live="polite"
+    >
+      <span
+        className="inline-flex items-center gap-2 rounded-[8px] border border-[#ff1654]/65 bg-[rgba(78,7,27,0.74)] px-3 py-2 uppercase text-[#ffb1c6]"
+        style={{ fontFamily: FONT_EXPANDED, fontSize: '13px', letterSpacing: '0.04em' }}
+      >
+        <span className="h-2.5 w-2.5 rounded-full bg-[#ff1654]" aria-hidden="true" />
+        {eyebrow}
+      </span>
+
+      <h2
+        className="mt-5 max-w-[280px] leading-[0.92] text-white"
+        style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '36px', letterSpacing: '0em' }}
+      >
+        {title}
+      </h2>
+
+      <p className="mt-4 text-white/76" style={{ fontFamily: FONT_REGULAR, fontSize: '18px', lineHeight: '1.18' }}>
+        {copy}
+      </p>
+    </section>
+  );
+}
+
 export default function Matches() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const joinMatch = useJoinMatch();
+  const isMobile = useIsMobile();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -351,8 +500,8 @@ export default function Matches() {
     teamSizeFilter !== 'all' || platformFilter !== 'all' || modeFilter !== 'all';
   const isCreateOverlayOpen = location.pathname === '/matches/create';
   const isEmptyState = !loading && matches.length === 0;
-  const shouldDisablePageScroll = loading || isEmptyState;
-  const shouldLockViewport = loading || matches.length <= 4;
+  const shouldDisablePageScroll = !isMobile && (loading || isEmptyState);
+  const shouldLockViewport = !isMobile && (loading || matches.length <= 4);
   const contentPaddingTop = 156;
   const contentPaddingBottom = isEmptyState ? 72 : 104;
 
@@ -493,6 +642,148 @@ export default function Matches() {
     };
   }, [modeFilter, platformFilter, teamSizeFilter]);
 
+  const renderMatchCard = (match: Match, variant: 'compact' | 'page') => {
+    const card = (
+      <MatchesLiveCard
+        title={formatMatchTitle(match)}
+        firstTo={formatFirstTo(match)}
+        platform={formatPlatform(match.platform)}
+        entryFee={formatEntryFee(match)}
+        prize={formatPrize(match)}
+        expiresIn={formatTimeLeft(match.expires_at, currentTime)}
+        onAccept={!user || match.creator_id !== user.id ? () => handleAccept(match) : undefined}
+        variant={variant}
+      />
+    );
+
+    if (user && match.creator_id === user.id) {
+      return (
+        <Link key={match.id} to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
+          {card}
+        </Link>
+      );
+    }
+
+    return <div key={match.id}>{card}</div>;
+  };
+
+  if (isMobile) {
+    return (
+      <PublicLayout>
+        <section className="relative min-h-[100dvh] overflow-x-hidden bg-[radial-gradient(circle_at_bottom,rgba(118,12,38,0.26),transparent_34%),linear-gradient(180deg,#160406_0%,#090203_100%)] px-4 pb-10 pt-[104px] text-white">
+          <img
+            className="pointer-events-none absolute left-1/2 top-0 h-[112px] w-screen -translate-x-1/2 object-cover"
+            src="/figma-assets/figma-neon.png"
+            alt=""
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10">
+            <div className="relative min-h-[142px] overflow-hidden">
+              <img
+                className="absolute left-0 top-2 h-[112px] w-[74px] object-contain"
+                src="/figma-assets/matches-title-triangles.svg"
+                alt=""
+                aria-hidden="true"
+              />
+              <h1
+                className="absolute left-[46px] top-[50px] max-w-[calc(100vw-70px)] whitespace-nowrap leading-none text-white"
+                style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '48px', letterSpacing: '0em' }}
+              >
+                LIVE
+              </h1>
+              <h2
+                className="absolute left-[46px] top-[92px] max-w-[calc(100vw-70px)] whitespace-nowrap leading-none text-white"
+                style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '38px', letterSpacing: '0em' }}
+              >
+                MATCHES
+              </h2>
+              <img
+                className="absolute left-[41px] top-[131px] h-[12px] w-[260px] max-w-[calc(100vw-82px)] object-fill"
+                src="/figma-assets/matches-title-underline.svg"
+                alt=""
+                aria-hidden="true"
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <MatchesMobileFilterSelect
+                value={teamSizeFilter}
+                options={TEAM_SIZE_OPTIONS}
+                open={openFilter === 'teamSize'}
+                onOpenChange={(open) => setOpenFilter(open ? 'teamSize' : null)}
+                onChange={(value) => setTeamSizeFilter(value as TeamSizeFilter)}
+              />
+              <MatchesMobileFilterSelect
+                value={platformFilter}
+                options={PLATFORM_OPTIONS}
+                open={openFilter === 'platform'}
+                onOpenChange={(open) => setOpenFilter(open ? 'platform' : null)}
+                onChange={(value) => setPlatformFilter(value as PlatformFilter)}
+              />
+              <div className="col-span-2">
+                <MatchesMobileFilterSelect
+                  value={modeFilter}
+                  options={MODE_OPTIONS}
+                  open={openFilter === 'mode'}
+                  onOpenChange={(open) => setOpenFilter(open ? 'mode' : null)}
+                  onChange={(value) => setModeFilter(value as ModeFilter)}
+                />
+              </div>
+            </div>
+
+            <button
+              className="mt-4 flex h-[52px] w-full items-center justify-center gap-3 rounded-[8px] border border-white/50 bg-[#ff1654] text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.16),inset_0px_-4px_4px_rgba(0,0,0,0.22)] transition active:scale-[0.99]"
+              type="button"
+              onClick={() => navigate('/matches/create')}
+            >
+              <img className="h-[18px] w-[18px]" src="/figma-assets/matches-create-plus.svg" alt="" aria-hidden="true" />
+              <span style={{ fontFamily: FONT_EXPANDED_BOLD, fontSize: '22px', lineHeight: 1 }}>CREATE MATCH</span>
+            </button>
+
+            {loading ? (
+              <div className="mt-8 grid gap-5">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <MatchesMobilePlaceholderCard key={`mobile-loading-${index}`} />
+                ))}
+              </div>
+            ) : isEmptyState ? (
+              <div className="mt-8">
+                <MatchesMobileEmptyState hasActiveFilters={hasActiveFilters} />
+              </div>
+            ) : (
+              <div className="mt-8 grid gap-5">
+                {matches.map((match) => renderMatchCard(match, 'compact'))}
+              </div>
+            )}
+          </div>
+
+          <CreateMatchOverlay
+            open={isCreateOverlayOpen}
+            onClose={() => navigate('/matches')}
+            onCreated={(matchId) => {
+              if (matchId) {
+                navigate(`/matches/${matchId}`, { replace: true });
+              } else {
+                navigate('/matches', { replace: true });
+              }
+            }}
+          />
+
+          {teamSelectMatch && (
+            <TeamSelectDialog
+              open={!!teamSelectMatch}
+              match={teamSelectMatch}
+              onClose={() => setTeamSelectMatch(null)}
+              onConfirm={handleTeamJoin}
+              isJoining={joinMatch.isPending}
+            />
+          )}
+        </section>
+      </PublicLayout>
+    );
+  }
+
   return (
     <PublicLayout>
       <section
@@ -599,30 +890,7 @@ export default function Matches() {
             </div>
           ) : (
             <div className="mt-[47px] grid" style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '111px', rowGap: '40px' }}>
-              {matches.map((match) => {
-                const card = (
-                  <MatchesLiveCard
-                    title={formatMatchTitle(match)}
-                    firstTo={formatFirstTo(match)}
-                    platform={formatPlatform(match.platform)}
-                    entryFee={formatEntryFee(match)}
-                    prize={formatPrize(match)}
-                    expiresIn={formatTimeLeft(match.expires_at, currentTime)}
-                    onAccept={!user || match.creator_id !== user.id ? () => handleAccept(match) : undefined}
-                    variant="page"
-                  />
-                );
-
-                if (user && match.creator_id === user.id) {
-                  return (
-                    <Link key={match.id} to={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
-                      {card}
-                    </Link>
-                  );
-                }
-
-                return <div key={match.id}>{card}</div>;
-              })}
+              {matches.map((match) => renderMatchCard(match, 'page'))}
             </div>
           )}
         </div>

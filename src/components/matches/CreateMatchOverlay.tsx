@@ -546,7 +546,28 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
             winCoins: prize,
           },
           notificationReadinessPromise,
-        );
+        ).then((notificationStatus) => {
+          if (notificationStatus === 'requires_pwa') {
+            toast({
+              title: 'Lock screen notification not active',
+              description: 'On iPhone, add OleBoy to Home Screen and open it from there to receive match lock screen notifications.',
+            });
+          }
+
+          if (notificationStatus === 'denied') {
+            toast({
+              title: 'Notifications blocked',
+              description: 'Enable notifications for OleBoy in your browser settings to receive the match card.',
+            });
+          }
+
+          if (notificationStatus === 'unsupported') {
+            toast({
+              title: 'Notifications unavailable',
+              description: 'This browser cannot show OleBoy match notifications on the lock screen.',
+            });
+          }
+        });
       }
 
       toast({
