@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PremiumBadge } from '@/components/ui/premium-badge';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 
 interface SearchResults {
@@ -153,7 +154,7 @@ export function GlobalSearchBar() {
                       className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.05] transition-colors text-left"
                     >
                       <Avatar className="w-8 h-8 ring-1 ring-white/[0.1]">
-                        <AvatarImage src={user.discord_avatar_url ?? undefined} />
+                        <AvatarImage src={getDiscordAvatarUrl(user) ?? undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary text-xs">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">

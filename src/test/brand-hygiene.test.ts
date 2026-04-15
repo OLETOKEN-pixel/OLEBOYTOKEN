@@ -84,10 +84,52 @@ describe('active app brand hygiene', () => {
       expect(content).not.toContain('/figma-assets/tom-pfp.png');
       expect(content).not.toContain('/figma-assets/marv-pfp.png');
       expect(content).not.toContain('PROFILE_PFP_FALLBACK_ASSET');
+      expect(content).not.toContain('/src/assets/avatars/');
+      expect(content).not.toContain('useAvatarShop');
+      expect(content).not.toContain('get_avatar_shop');
+      expect(content).not.toContain('get_user_avatars');
+      expect(content).not.toContain('purchase_avatar');
+      expect(content).not.toContain('equip_avatar');
+
+      if (file !== 'src/lib/avatar.ts') {
+        expect(content).not.toContain("'/avatars/");
+        expect(content).not.toContain('"/avatars/');
+      }
 
       if (content.includes('AvatarImage')) {
         expect(content).not.toMatch(/<AvatarImage[\s\S]{0,160}src=\{[^}]*\??\.avatar_url\b/);
       }
+    }
+  });
+
+  it('removes legacy avatar shop assets, dumps, and generated types', () => {
+    const removedPaths = [
+      'public/avatars',
+      'src/assets/avatars',
+      'src/hooks/useAvatarShop.ts',
+      'public/migration_part1.sql',
+      'public/migration_part2.sql',
+      'public/migration_part3.sql',
+    ];
+
+    for (const removedPath of removedPaths) {
+      expect(fs.existsSync(path.join(rootDir, removedPath))).toBe(false);
+    }
+
+    const supabaseTypes = readProjectFile('src/integrations/supabase/types.ts');
+    const forbiddenTypeFragments = [
+      'avatars: {',
+      'user_avatars: {',
+      'avatar_id:',
+      'profiles_avatar_id_fkey',
+      'get_avatar_shop',
+      'get_user_avatars',
+      'purchase_avatar',
+      'equip_avatar',
+    ];
+
+    for (const fragment of forbiddenTypeFragments) {
+      expect(supabaseTypes).not.toContain(fragment);
     }
   });
 });

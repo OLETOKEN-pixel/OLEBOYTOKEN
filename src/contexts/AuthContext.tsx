@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Profile, Wallet } from '@/types';
 
 interface AuthContextType {
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const meta = refreshData.session.user.user_metadata || {};
           const providerName = meta.full_name || meta.name || meta.preferred_username || meta.user_name || '';
           const cleanName = providerName.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20) || 'user' + Date.now().toString().slice(-6);
-          const discordAvatar = meta.avatar_url || null;
+          const discordAvatar = getDiscordAvatarUrl({ discord_avatar_url: meta.avatar_url || null });
 
           const { error: insertError } = await supabase
             .from('profiles')

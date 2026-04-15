@@ -22,7 +22,7 @@ export function isDiscordAvatarUrl(value?: string | null): value is string {
 }
 
 export function getDiscordAvatarUrl(profile?: ProfileAvatarSource | null): string | null {
-  if (profile?.discord_avatar_url) return profile.discord_avatar_url;
+  if (isDiscordAvatarUrl(profile?.discord_avatar_url)) return profile.discord_avatar_url;
   return isDiscordAvatarUrl(profile?.avatar_url) ? profile.avatar_url : null;
 }
 

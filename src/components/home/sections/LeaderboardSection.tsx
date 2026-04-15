@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface PlayerDisplay {
@@ -40,7 +41,7 @@ export const LeaderboardSection = () => {
 
             if (profiles) {
               for (const p of profiles) {
-                avatarMap[p.user_id] = p.discord_avatar_url || null;
+                avatarMap[p.user_id] = getDiscordAvatarUrl(p);
               }
             }
           }
@@ -65,7 +66,7 @@ export const LeaderboardSection = () => {
             setPlayers(profiles.map((p, i) => ({
               rank: i + 1,
               username: p.discord_display_name || p.username || `Player${i + 1}`,
-              avatarUrl: p.discord_avatar_url || null,
+              avatarUrl: getDiscordAvatarUrl(p),
               winRate: '0%',
               roundsWon: '0',
               earnings: '0',
@@ -88,7 +89,7 @@ export const LeaderboardSection = () => {
     url ? (
       <img className={`${size} object-cover rounded-full`} alt={alt} src={url} />
     ) : (
-      <div className={`${size} rounded-full bg-gradient-to-br from-[#3b28cc] to-[#6f5cff]`} />
+      <div className={`${size} rounded-full bg-white/[0.06] ring-1 ring-white/[0.1]`} />
     )
   );
 

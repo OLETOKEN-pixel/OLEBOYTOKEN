@@ -140,7 +140,7 @@ async function enrichMatchesWithDiscordAvatars(matches: Match[]): Promise<Match[
     return normalizedMatches;
   }
 
-  const avatarMap = new Map(data.map((profile) => [profile.user_id, profile.discord_avatar_url]));
+  const avatarMap = new Map(data.map((profile) => [profile.user_id, getDiscordAvatarUrl(profile)]));
   return normalizedMatches.map((match) => applyDiscordAvatarMap(match, avatarMap));
 }
 

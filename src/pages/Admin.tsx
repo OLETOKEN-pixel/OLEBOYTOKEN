@@ -24,6 +24,7 @@ import { TransactionsTable } from '@/components/admin/TransactionsTable';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -433,7 +434,7 @@ export default function Admin() {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10 ring-1 ring-[hsl(var(--border-soft))]">
-                            <AvatarImage src={wd.profiles?.discord_avatar_url ?? undefined} />
+                            <AvatarImage src={getDiscordAvatarUrl(wd.profiles) ?? undefined} />
                             <AvatarFallback className="bg-[hsl(var(--bg-2))] text-sm">{wd.profiles?.username?.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div>

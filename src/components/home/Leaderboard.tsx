@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CoinDisplay } from '@/components/common/CoinDisplay';
 import { supabase } from '@/integrations/supabase/client';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { LeaderboardEntry } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +29,7 @@ export function Leaderboard() {
       if (!error && data) {
         setEntries((data as LeaderboardEntry[]).map((entry) => ({
           ...entry,
-          discord_avatar_url: entry.discord_avatar_url ?? null,
+          discord_avatar_url: getDiscordAvatarUrl(entry),
         })));
       }
       setLoading(false);

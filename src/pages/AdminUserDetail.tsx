@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/motion';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -278,7 +279,7 @@ export default function AdminUserDetail() {
             </Button>
             <div className="flex items-center gap-4 flex-1">
               <Avatar className="w-16 h-16 ring-2 ring-primary/20">
-                <AvatarImage src={profile.discord_avatar_url ?? undefined} />
+                <AvatarImage src={getDiscordAvatarUrl(profile) ?? undefined} />
                 <AvatarFallback className="text-2xl bg-primary/10 text-primary">{profile.username?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>

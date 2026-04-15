@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { CoinDisplay } from '@/components/common/CoinDisplay';
 import { supabase } from '@/integrations/supabase/client';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 
 interface TipModalProps {
@@ -60,7 +61,7 @@ export function TipModal({
         setSelectedRecipient({
           user_id: recipientId,
           username: recipientUsername,
-          discord_avatar_url: recipientDiscordAvatarUrl ?? null,
+          discord_avatar_url: getDiscordAvatarUrl({ discord_avatar_url: recipientDiscordAvatarUrl }),
           rank: 0,
         });
       } else {
@@ -92,7 +93,7 @@ export function TipModal({
         if (!error && data) {
           setSearchResults((data as SearchResult[]).map((player) => ({
             ...player,
-            discord_avatar_url: player.discord_avatar_url ?? null,
+            discord_avatar_url: getDiscordAvatarUrl(player),
           })));
         }
       } catch (e) {

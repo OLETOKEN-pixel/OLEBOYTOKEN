@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 
 const NAV_SECTIONS: Record<string, string> = {
   matches: 's-matches',
@@ -39,6 +40,7 @@ function scrollToSection(sectionId: string) {
 }
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
+const PROFILE_AVATAR_FALLBACK = 'linear-gradient(135deg, rgba(255,255,255,0.11), rgba(255,255,255,0.03))';
 
 /* Standalone routes that should still mark a nav item as active */
 const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
@@ -52,7 +54,7 @@ export function NavbarFigmaLoggedIn() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const avatarUrl = profile?.discord_avatar_url || null;
+  const avatarUrl = getDiscordAvatarUrl(profile);
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
   const level = (profile as any)?.level ?? 1;
 
@@ -383,7 +385,7 @@ export function NavbarFigmaLoggedIn() {
                   overflow: 'hidden',
                   padding: 0,
                   border: '1px solid rgba(255,255,255,0.18)',
-                  background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                  background: avatarUrl ? 'transparent' : PROFILE_AVATAR_FALLBACK,
                   cursor: 'pointer',
                   boxShadow: '0 0 18px rgba(0,0,0,0.28)',
                 }}
@@ -406,7 +408,7 @@ export function NavbarFigmaLoggedIn() {
                       width: '100%',
                       height: '100%',
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                      background: PROFILE_AVATAR_FALLBACK,
                     }}
                   />
                 )}
@@ -427,7 +429,7 @@ export function NavbarFigmaLoggedIn() {
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Profile" className="block h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full bg-[linear-gradient(135deg,#3b28cc,#6f5cff)]" />
+                      <div className="h-full w-full bg-white/[0.06]" />
                     )}
                   </div>
 
@@ -682,7 +684,7 @@ function NavbarFigmaLoggedInMobile({
                 overflow: 'hidden',
                 padding: 0,
                 border: '1px solid rgba(255,255,255,0.18)',
-                background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+                background: avatarUrl ? 'transparent' : PROFILE_AVATAR_FALLBACK,
                 cursor: 'pointer',
                 boxShadow: '0 0 18px rgba(0,0,0,0.28)',
                 flexShrink: 0,
@@ -691,7 +693,7 @@ function NavbarFigmaLoggedInMobile({
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Profile" style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #3b28cc, #6f5cff)' }} />
+                <div style={{ width: '100%', height: '100%', background: PROFILE_AVATAR_FALLBACK }} />
               )}
             </button>
           </DropdownMenuTrigger>

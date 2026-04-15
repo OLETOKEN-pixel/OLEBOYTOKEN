@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DeleteUserDialog } from './DeleteUserDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Profile } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -269,7 +270,7 @@ export function UsersTable({ users, loading, onUserUpdated }: UsersTableProps) {
                 >
                   <TableCell>
                     <Avatar className="w-8 h-8 ring-1 ring-white/[0.1]">
-                      <AvatarImage src={user.discord_avatar_url ?? undefined} />
+                      <AvatarImage src={getDiscordAvatarUrl(user) ?? undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </TableCell>

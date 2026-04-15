@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingPage } from '@/components/common/LoadingSpinner';
 import { CoinDisplay } from '@/components/common/CoinDisplay';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Match, Transaction } from '@/types';
 import { PLATFORM_FEE } from '@/types';
 import { format } from 'date-fns';
@@ -340,7 +341,7 @@ export default function AdminMatchDetail() {
                 {teamAParticipants.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.05]">
                     <Avatar className="w-10 h-10 ring-2 ring-blue-500/20">
-                      <AvatarImage src={p.profile?.discord_avatar_url ?? undefined} />
+                      <AvatarImage src={getDiscordAvatarUrl(p.profile) ?? undefined} />
                       <AvatarFallback className="bg-blue-500/10 text-blue-400">{p.profile?.username?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
@@ -371,7 +372,7 @@ export default function AdminMatchDetail() {
                 {teamBParticipants.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.05]">
                     <Avatar className="w-10 h-10 ring-2 ring-orange-500/20">
-                      <AvatarImage src={p.profile?.discord_avatar_url ?? undefined} />
+                      <AvatarImage src={getDiscordAvatarUrl(p.profile) ?? undefined} />
                       <AvatarFallback className="bg-orange-500/10 text-orange-400">{p.profile?.username?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Team, TeamMember, Profile, TeamMemberWithBalance } from '@/types';
 
 interface TeamWithMembersAndBalance extends Team {
@@ -73,7 +74,7 @@ export function useEligibleTeams(teamSize: number, entryFee?: number) {
             user_id: m.user_id,
             username: m.username,
             avatar_url: null,
-            discord_avatar_url: m.discord_avatar_url ?? null,
+            discord_avatar_url: getDiscordAvatarUrl({ discord_avatar_url: m.discord_avatar_url }),
             epic_username: m.epic_username,
           } as unknown as Profile,
         })) as (TeamMember & { profile: Profile })[];

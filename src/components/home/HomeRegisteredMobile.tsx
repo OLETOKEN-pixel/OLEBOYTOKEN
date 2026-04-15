@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Match } from '@/types';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
 
@@ -138,7 +139,8 @@ function AvatarBlock({ src, alt, size = 48 }: { src: string | null; alt: string;
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: '8px',
-        background: 'linear-gradient(135deg, #3b28cc, #6f5cff)',
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.1)',
         flexShrink: 0,
       }}
     />
@@ -598,7 +600,7 @@ function LeaderboardMobile() {
 
             if (profiles) {
               for (const p of profiles) {
-                avatarMap[p.user_id] = p.discord_avatar_url || null;
+                avatarMap[p.user_id] = getDiscordAvatarUrl(p);
               }
             }
           }
@@ -622,7 +624,7 @@ function LeaderboardMobile() {
             setPlayers(profiles.map((p: any, i: number) => ({
               rank: i + 1,
               username: p.discord_display_name || p.username || `Player${i + 1}`,
-              avatarUrl: p.discord_avatar_url || null,
+              avatarUrl: getDiscordAvatarUrl(p),
               winRate: '0%',
               roundsWon: '0',
               earnings: '0',

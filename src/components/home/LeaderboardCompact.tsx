@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CoinDisplay } from '@/components/common/CoinDisplay';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { supabase } from '@/integrations/supabase/client';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 
 interface WeeklyEntry {
@@ -36,7 +37,7 @@ export function LeaderboardCompact() {
       if (!error && data && data.length > 0) {
         setEntries((data as WeeklyEntry[]).map((entry) => ({
           ...entry,
-          discord_avatar_url: entry.discord_avatar_url ?? null,
+          discord_avatar_url: getDiscordAvatarUrl(entry),
         })));
       } else {
         const { data: fallbackData } = await supabase.rpc('get_leaderboard', {
@@ -48,7 +49,7 @@ export function LeaderboardCompact() {
           setEntries(fallbackData.map(e => ({
             user_id: (e as any).user_id || '',
             username: (e as any).username || '',
-            discord_avatar_url: (e as any).discord_avatar_url ?? null,
+            discord_avatar_url: getDiscordAvatarUrl(e as any),
             weekly_earned: Number((e as any).total_earnings) || 0,
           })));
         }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Loader2, Users, Wallet } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useEligibleTeams } from '@/hooks/useEligibleTeams';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Match, PaymentMode } from '@/types';
 
 interface TeamSelectDialogProps {
@@ -242,7 +243,7 @@ export function TeamSelectDialog({
                       className="w-6 h-6"
                       style={{ marginLeft: i > 0 ? '-6px' : 0, border: '2px solid rgba(10,7,11,0.96)' }}
                     >
-                      <AvatarImage src={member.profile?.discord_avatar_url ?? undefined} />
+                      <AvatarImage src={getDiscordAvatarUrl(member.profile) ?? undefined} />
                       <AvatarFallback
                         style={{ fontSize: '10px', background: 'rgba(255,255,255,0.08)' }}
                       >

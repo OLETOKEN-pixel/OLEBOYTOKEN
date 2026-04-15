@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import logo from '@/assets/logo-oleboy.png';
 
 interface AppLoadingGuardProps {
@@ -8,21 +9,22 @@ interface AppLoadingGuardProps {
 
 export function AppLoadingGuard({ children }: AppLoadingGuardProps) {
   const { loading, profile } = useAuth();
+  const avatarUrl = getDiscordAvatarUrl(profile);
 
   // Preload Discord profile avatar for instant display.
   useEffect(() => {
-    if (profile?.discord_avatar_url) {
+    if (avatarUrl) {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
-      link.href = profile.discord_avatar_url;
+      link.href = avatarUrl;
       document.head.appendChild(link);
       
       // Also preload into browser cache
       const img = new Image();
-      img.src = profile.discord_avatar_url;
+      img.src = avatarUrl;
     }
-  }, [profile?.discord_avatar_url]);
+  }, [avatarUrl]);
 
   if (loading) {
     return (

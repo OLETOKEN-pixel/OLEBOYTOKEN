@@ -1,6 +1,7 @@
 import { Users, AlertCircle, Check, Coins } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useEligibleTeams } from '@/hooks/useEligibleTeams';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import type { Team, TeamMember, Profile } from '@/types';
@@ -109,7 +110,7 @@ export function TeamSelector({
                 <div className="flex -space-x-2">
                   {team.members?.slice(0, 4).map((member) => (
                     <Avatar key={member.id} className="h-8 w-8 border-2 border-[#282828]">
-                      <AvatarImage src={member.profile?.discord_avatar_url ?? undefined} />
+                      <AvatarImage src={getDiscordAvatarUrl(member.profile) ?? undefined} />
                       <AvatarFallback className="bg-black/60 text-xs text-white">
                         {member.profile?.username?.charAt(0).toUpperCase()}
                       </AvatarFallback>

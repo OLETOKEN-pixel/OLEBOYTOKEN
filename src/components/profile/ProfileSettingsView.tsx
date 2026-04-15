@@ -30,6 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useVipStatus } from '@/hooks/useVipStatus';
 import { supabase } from '@/integrations/supabase/client';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { extractFunctionErrorInfo, startEpicAuth, startTwitterAuth, startTwitchAuth } from '@/lib/oauth';
 import {
   describePayPalDestination,
@@ -275,7 +276,7 @@ export function ProfileSettingsView({
   const minimumUnlockedBalance = MIN_PAYPAL_WITHDRAWAL + PAYPAL_WITHDRAWAL_FEE;
   const canWithdraw = hasValidPayPalEmail && walletBalance >= minimumUnlockedBalance;
   const discordDisplayName = profile?.discord_display_name || profile?.discord_username || profile?.username || 'User';
-  const avatarUrl = profile?.discord_avatar_url || null;
+  const avatarUrl = getDiscordAvatarUrl(profile);
   const parsedWithdrawAmount = Number.parseFloat(withdrawAmount);
   const previewTotalDeduction =
     (Number.isFinite(parsedWithdrawAmount) && parsedWithdrawAmount > 0 ? parsedWithdrawAmount : MIN_PAYPAL_WITHDRAWAL) +
@@ -1226,7 +1227,7 @@ export function ProfileSettingsView({
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border border-white/10">
-                    <AvatarImage src={profile.discord_avatar_url || undefined} alt={discordDisplayName} />
+                    <AvatarImage src={avatarUrl || undefined} alt={discordDisplayName} />
                     <AvatarFallback className="bg-[#5865F2] text-white">
                       <DiscordIcon className="h-5 w-5" />
                     </AvatarFallback>

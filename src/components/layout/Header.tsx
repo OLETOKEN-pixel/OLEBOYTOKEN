@@ -17,6 +17,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { VipModal } from '@/components/vip/VipModal';
 import { TipModal } from '@/components/vip/TipModal';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import oleboyLogo from '@/assets/logo-oleboy.png';
 import olebyCoin from '@/assets/oleboy-coin.png';
 
@@ -31,6 +32,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = profile?.role === 'admin';
+  const avatarUrl = getDiscordAvatarUrl(profile);
 
   const handleSignOut = async () => {
     await signOut();
@@ -77,7 +79,7 @@ export function Header() {
                       <div className="p-[2px] rounded-full bg-gradient-to-br from-blue-500 to-cyan-400">
                         <Avatar className="h-[36px] w-[36px] border-2 border-[#0a0a0a]">
                           <AvatarImage
-                            src={profile?.discord_avatar_url ?? undefined}
+                            src={avatarUrl ?? undefined}
                             alt={profile?.username}
                             className="object-cover"
                           />
@@ -91,7 +93,7 @@ export function Header() {
                   <DropdownMenuContent align="end" className="w-56 p-1.5 bg-[#0f0f0f] border-[#374151]">
                     <div className="flex items-center gap-3 px-2 py-2 mb-1">
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src={profile?.discord_avatar_url ?? undefined} />
+                        <AvatarImage src={avatarUrl ?? undefined} />
                         <AvatarFallback className="bg-[#1e1e1e] text-white text-xs font-medium">
                           {profile?.username?.charAt(0).toUpperCase() ?? 'U'}
                         </AvatarFallback>
@@ -158,7 +160,7 @@ export function Header() {
                 <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-white/[0.04]">
                   <div className="p-[2px] rounded-full bg-gradient-to-br from-blue-500 to-cyan-400">
                     <Avatar className="h-10 w-10 border-2 border-[#0a0a0a]">
-                      <AvatarImage src={profile?.discord_avatar_url ?? undefined} />
+                      <AvatarImage src={avatarUrl ?? undefined} />
                       <AvatarFallback className="bg-[#1e1e1e] text-white text-sm font-medium">
                         {profile?.username?.charAt(0).toUpperCase() ?? 'U'}
                       </AvatarFallback>
