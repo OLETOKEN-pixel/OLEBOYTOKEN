@@ -11,6 +11,7 @@ import { getCanonicalRedirectUrl } from "@/lib/oauth";
 
 // Pages
 import Index from "./pages/Index";
+import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import EpicCallback from "./pages/EpicCallback";
@@ -76,6 +77,7 @@ function App() {
             {/* Fixed bottom neon — always visible on all pages, matches Figma node 205:855 */}
             <img
               aria-hidden="true"
+              data-global-neon="true"
               src="/figma-assets/figma-neon.png"
               alt=""
               style={{
@@ -110,6 +112,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/comingsoon" element={<ComingSoon />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLoadingGuard>
