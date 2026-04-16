@@ -29,9 +29,10 @@ interface MatchChatProps {
   isAdmin: boolean;
   isParticipant: boolean;
   className?: string;
+  hideHeader?: boolean;
 }
 
-const ACTIVE_STATUSES = ['ready_check', 'in_progress', 'result_pending', 'disputed', 'full'];
+const ACTIVE_STATUSES = ['open', 'joined', 'ready_check', 'in_progress', 'result_pending', 'disputed', 'full'];
 
 function normalizeChatMessageAvatar(message: ChatMessage): ChatMessage {
   return {
@@ -47,6 +48,7 @@ export function MatchChat({
   isAdmin,
   isParticipant,
   className,
+  hideHeader,
 }: MatchChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,20 +168,22 @@ export function MatchChat({
 
   return (
     <div className={cn("flex flex-col h-full bg-card rounded-lg border border-border/50 overflow-hidden", className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/30 bg-secondary/30">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-sm">Chat</span>
-          <span className="text-xs text-muted-foreground">({messages.length})</span>
-        </div>
-        {isReadOnly && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/50 text-muted-foreground">
-            <Lock className="w-3.5 h-3.5" />
-            <span className="text-xs">Closed</span>
+      {/* Header — hidden when parent renders its own title */}
+      {!hideHeader && (
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/30 bg-secondary/30">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-sm">Chat</span>
+            <span className="text-xs text-muted-foreground">({messages.length})</span>
           </div>
-        )}
-      </div>
+          {isReadOnly && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/50 text-muted-foreground">
+              <Lock className="w-3.5 h-3.5" />
+              <span className="text-xs">Closed</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-2" ref={scrollRef}>

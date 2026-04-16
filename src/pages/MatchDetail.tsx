@@ -21,6 +21,21 @@ import type { Match, MatchParticipant } from '@/types';
 // ─── fonts shorthand ─────────────────────────────────────────────────────────
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
+// ─── Epic Games logo SVG (inline) ────────────────────────────────────────────
+function EpicIcon() {
+  return (
+    <svg
+      width="13"
+      height="15"
+      viewBox="0 0 512 512"
+      fill="currentColor"
+      style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4, opacity: 0.75, flexShrink: 0 }}
+    >
+      <path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm117.4 319.2h-47.7v47.7h-47.4v-47.7h-47.7v-47.4h47.7v-47.7h47.4v47.7h47.7v47.4zm-187.5 47.7h-47.4V192.8h47.4v174.1zm0-221.5h-47.4v-47.4h47.4v47.4zm234.9 0h-47.4v-47.4h47.4v47.4z" />
+    </svg>
+  );
+}
+
 // ─── View state ──────────────────────────────────────────────────────────────
 type ViewState = 'WAIT' | 'READY_UP' | 'WIN_LOSS' | 'TERMINAL';
 
@@ -211,7 +226,12 @@ function FilledPlayerSlot({
       subtitle = <span style={{ color: '#9c9c9c', fontStyle: 'italic' }}>not ready</span>;
     }
   } else if (epicName) {
-    subtitle = <span style={{ color: '#9c9c9c', fontStyle: 'italic' }}>{epicName}</span>;
+    subtitle = (
+      <span style={{ color: '#9c9c9c', fontStyle: 'italic', display: 'flex', alignItems: 'center' }}>
+        <EpicIcon />
+        {epicName}
+      </span>
+    );
   }
 
   return (
@@ -444,7 +464,7 @@ export default function MatchDetail() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
 
       {/* Top neon decoration */}
       <img
@@ -454,13 +474,11 @@ export default function MatchDetail() {
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 146, objectFit: 'cover', zIndex: 5, pointerEvents: 'none' }}
       />
 
-      {/* Navbar */}
-      <div style={{ position: 'relative', zIndex: 20, flexShrink: 0 }}>
-        <NavbarFigmaLoggedIn />
-      </div>
+      {/* Navbar — renders as position:fixed internally, z-50. No wrapper needed. */}
+      <NavbarFigmaLoggedIn />
 
-      {/* ── Content area (below navbar) ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 10 }}>
+      {/* ── Content area — starts below navbar (55px top + 91px height + 14px gap = 160px) ── */}
+      <div style={{ position: 'absolute', top: 160, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 10 }}>
 
         {/* Match title */}
         <div style={{ textAlign: 'center', padding: 'clamp(4px, 1.2vh, 16px) 0 0' }}>
@@ -643,9 +661,9 @@ export default function MatchDetail() {
               }}
             >
               {/* Fade left */}
-              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '40%', background: 'linear-gradient(to right, #0f0404, transparent)', zIndex: 2 }} />
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '22%', background: 'linear-gradient(to right, #0f0404, transparent)', zIndex: 2 }} />
               {/* Fade right */}
-              <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '40%', background: 'linear-gradient(to left, #0f0404, transparent)', zIndex: 2 }} />
+              <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '22%', background: 'linear-gradient(to left, #0f0404, transparent)', zIndex: 2 }} />
               <p
                 style={{
                   fontFamily: F,
@@ -717,6 +735,7 @@ export default function MatchDetail() {
                   currentUserId={user.id}
                   isAdmin={false}
                   isParticipant={isParticipant}
+                  hideHeader={true}
                   className="flex-1 bg-transparent border-0 rounded-none overflow-hidden"
                 />
               </div>
