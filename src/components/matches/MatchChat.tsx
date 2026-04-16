@@ -28,6 +28,7 @@ interface MatchChatProps {
   currentUserId: string;
   isAdmin: boolean;
   isParticipant: boolean;
+  className?: string;
 }
 
 const ACTIVE_STATUSES = ['ready_check', 'in_progress', 'result_pending', 'disputed', 'full'];
@@ -39,12 +40,13 @@ function normalizeChatMessageAvatar(message: ChatMessage): ChatMessage {
   };
 }
 
-export function MatchChat({ 
-  matchId, 
-  matchStatus, 
-  currentUserId, 
-  isAdmin, 
-  isParticipant 
+export function MatchChat({
+  matchId,
+  matchStatus,
+  currentUserId,
+  isAdmin,
+  isParticipant,
+  className,
 }: MatchChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +165,7 @@ export function MatchChat({
   if (!isParticipant && !isAdmin) return null;
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-lg border border-border/50 overflow-hidden">
+    <div className={cn("flex flex-col h-full bg-card rounded-lg border border-border/50 overflow-hidden", className)}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/30 bg-secondary/30">
         <div className="flex items-center gap-2">

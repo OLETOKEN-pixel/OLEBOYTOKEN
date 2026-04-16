@@ -25,51 +25,34 @@ export const LeaderboardSection = () => {
         const { data: lbData, error: lbErr } = await supabase
           .from('leaderboard_weekly')
           .select('*')
-          .order('wins', { ascending: false })
+          .order('weekly_earned', { ascending: false })
           .limit(3);
 
         if (!lbErr && lbData && lbData.length > 0) {
-          // Get Discord avatars from profiles for these users
-          const userIds = lbData.map((p: any) => p.user_id).filter(Boolean);
-          let avatarMap: Record<string, string | null> = {};
-
-          if (userIds.length > 0) {
-            const { data: profiles } = await supabase
-              .from('profiles')
-              .select('user_id, discord_avatar_url, discord_display_name, username')
-              .in('user_id', userIds);
-
-            if (profiles) {
-              for (const p of profiles) {
-                avatarMap[p.user_id] = getDiscordAvatarUrl(p);
-              }
-            }
-          }
-
           setPlayers(lbData.map((p: any, i: number) => ({
             rank: i + 1,
             username: p.username || `Player${i + 1}`,
-            avatarUrl: avatarMap[p.user_id] || null,
+            avatarUrl: getDiscordAvatarUrl(p),
             winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
             roundsWon: String(p.wins ?? 0),
             earnings: p.total_earnings != null ? String(Number(p.total_earnings).toFixed(0)) : '0',
           })));
         } else {
-          // Fallback: get top 3 profiles by completed matches
+          // Fallback: top 3 all-time leaderboard (global, same for everyone)
           const { data: profiles } = await supabase
-            .from('profiles')
-            .select('user_id, username, discord_display_name, discord_avatar_url')
-            .order('created_at', { ascending: true })
+            .from('leaderboard')
+            .select('user_id, username, discord_avatar_url, wins, total_matches, total_earnings')
+            .order('total_earnings', { ascending: false })
             .limit(3);
 
           if (profiles && profiles.length > 0) {
-            setPlayers(profiles.map((p, i) => ({
+            setPlayers(profiles.map((p: any, i: number) => ({
               rank: i + 1,
-              username: p.discord_display_name || p.username || `Player${i + 1}`,
+              username: p.username || `Player${i + 1}`,
               avatarUrl: getDiscordAvatarUrl(p),
-              winRate: '0%',
-              roundsWon: '0',
-              earnings: '0',
+              winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
+              roundsWon: String(p.wins ?? 0),
+              earnings: p.total_earnings != null ? String(Number(p.total_earnings).toFixed(0)) : '0',
             })));
           }
         }

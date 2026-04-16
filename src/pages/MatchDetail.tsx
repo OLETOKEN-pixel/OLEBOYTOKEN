@@ -1,7 +1,6 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { PublicLayout } from '@/components/layout/PublicLayout';
-import { ProofSection } from '@/components/matches/ProofSection';
+import type { ReactNode } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { NavbarFigmaLoggedIn } from '@/components/layout/NavbarFigmaLoggedIn';
 import { MatchChat } from '@/components/matches/MatchChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,34 +12,332 @@ import {
 } from '@/hooks/useMatches';
 import {
   formatMatchTitle,
-  formatFirstTo,
-  formatPlatform,
   formatEntryFee,
 } from '@/lib/matchFormatters';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { PLATFORM_FEE } from '@/types';
 import type { Match, MatchParticipant } from '@/types';
 
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Open',
-  ready_check: 'Ready Check',
-  full: 'Ready Check',
-  in_progress: 'In Progress',
-  result_pending: 'Result Pending',
-  completed: 'Completed',
-  finished: 'Completed',
-  disputed: 'Disputed',
-  canceled: 'Canceled',
-  admin_resolved: 'Admin Resolved',
-  expired: 'Expired',
-};
+// ─── fonts shorthand ─────────────────────────────────────────────────────────
+const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 
-function getStatusClass(status: string): string {
-  if (status === 'full') return 'ready_check';
-  if (status === 'finished') return 'completed';
-  return status;
+// ─── View state ──────────────────────────────────────────────────────────────
+type ViewState = 'WAIT' | 'READY_UP' | 'WIN_LOSS' | 'TERMINAL';
+
+function getViewState(status: string): ViewState {
+  if (['open', 'joined'].includes(status)) return 'WAIT';
+  if (['ready_check', 'full'].includes(status)) return 'READY_UP';
+  if (['in_progress', 'result_pending', 'started'].includes(status)) return 'WIN_LOSS';
+  return 'TERMINAL';
 }
 
+// ─── Status progress ─────────────────────────────────────────────────────────
+function StepCircle({ done }: { done: boolean }) {
+  return (
+    <div
+      style={{
+        width: 66,
+        height: 66,
+        borderRadius: '50%',
+        border: `3px solid ${done ? '#ff1654' : 'rgba(255,255,255,0.25)'}`,
+        background: done ? '#ff1654' : 'transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
+      {done && (
+        <svg width="30" height="22" viewBox="0 0 30 22" fill="none">
+          <path d="M2 11L11 20L28 2" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+function StepConnector({ done }: { done: boolean }) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        height: 3,
+        background: done ? '#ff1654' : 'rgba(255,255,255,0.15)',
+        margin: '0 4px',
+        alignSelf: 'center',
+        marginBottom: 28,
+      }}
+    />
+  );
+}
+
+function MatchStatusProgress({ status }: { status: string }) {
+  const started = ['in_progress', 'result_pending', 'started', 'completed', 'finished', 'disputed', 'admin_resolved'].includes(status);
+  const finished = ['completed', 'finished', 'admin_resolved'].includes(status);
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '0 clamp(40px, 8vw, 200px)',
+        marginBottom: 8,
+      }}
+    >
+      {/* CREATED */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <StepCircle done />
+        <span style={{ fontFamily: F, fontWeight: 700, fontSize: 'clamp(14px, 1.25vw, 24px)', color: 'white', whiteSpace: 'nowrap' }}>
+          CREATED
+        </span>
+      </div>
+
+      <StepConnector done />
+
+      {/* STARTED */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <StepCircle done={started} />
+        <span style={{ fontFamily: F, fontWeight: 700, fontSize: 'clamp(14px, 1.25vw, 24px)', color: 'white', whiteSpace: 'nowrap' }}>
+          STARTED
+        </span>
+      </div>
+
+      <StepConnector done={finished} />
+
+      {/* FINISHED */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <StepCircle done={finished} />
+        <span style={{ fontFamily: F, fontWeight: 700, fontSize: 'clamp(14px, 1.25vw, 24px)', color: 'white', whiteSpace: 'nowrap' }}>
+          FINISHED
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Player slot ─────────────────────────────────────────────────────────────
+function EmptyPlayerSlot({ side }: { side: 'A' | 'B' }) {
+  const borderColor = side === 'A' ? '#ff1654' : '#d8ff16';
+  const textColor = side === 'A' ? '#ff1654' : '#d8ff16';
+
+  return (
+    <div
+      style={{
+        background: '#282828',
+        border: `1px solid ${borderColor}`,
+        borderRadius: 18,
+        height: 87,
+        width: '100%',
+        maxWidth: 368,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 16px',
+        gap: 12,
+        flexShrink: 0,
+      }}
+    >
+      {/* Question mark placeholder */}
+      <div
+        style={{
+          width: 58,
+          height: 58,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ fontFamily: F, fontWeight: 800, fontSize: 36, color: 'white' }}>?</span>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20, color: textColor, whiteSpace: 'nowrap' }}>
+          Wait for a player
+        </div>
+        <div style={{ fontFamily: F, fontStyle: 'italic', fontSize: 15, color: '#9c9c9c', whiteSpace: 'nowrap' }}>
+          ............
+        </div>
+      </div>
+      {/* Arrow icon */}
+      <div
+        style={{
+          width: 47,
+          height: 47,
+          borderRadius: '50%',
+          border: `2px solid ${borderColor}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ color: textColor, fontSize: 20, fontWeight: 700 }}>→</span>
+      </div>
+    </div>
+  );
+}
+
+function FilledPlayerSlot({
+  participant,
+  side,
+  viewState,
+}: {
+  participant: MatchParticipant;
+  side: 'A' | 'B';
+  viewState: ViewState;
+}) {
+  const profile = participant.profile as {
+    username?: string;
+    avatar_url?: string | null;
+    discord_avatar_url?: string | null;
+    epic_username?: string | null;
+    fortnite_username?: string | null;
+  } | undefined;
+
+  const avatarUrl = getDiscordAvatarUrl(profile);
+  const username = profile?.username || 'Unknown';
+  const epicName = profile?.fortnite_username || profile?.epic_username || null;
+
+  const borderColor = side === 'A' ? '#ff1654' : '#d8ff16';
+  const nameColor = side === 'A' ? '#ff1654' : '#d8ff16';
+
+  let subtitle: ReactNode = null;
+  if (viewState === 'READY_UP') {
+    if (participant.ready) {
+      subtitle = <span style={{ color: '#46f32f', fontStyle: 'italic' }}>ready to play</span>;
+    } else {
+      subtitle = <span style={{ color: '#9c9c9c', fontStyle: 'italic' }}>not ready</span>;
+    }
+  } else if (epicName) {
+    subtitle = <span style={{ color: '#9c9c9c', fontStyle: 'italic' }}>{epicName}</span>;
+  }
+
+  return (
+    <div
+      style={{
+        background: '#282828',
+        border: `1px solid ${borderColor}`,
+        borderRadius: 18,
+        height: 87,
+        width: '100%',
+        maxWidth: 368,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 16px',
+        gap: 12,
+        flexShrink: 0,
+      }}
+    >
+      {/* Avatar */}
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 58,
+            height: 58,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            fontFamily: F,
+            fontWeight: 700,
+            fontSize: 24,
+            color: nameColor,
+          }}
+        >
+          {username.charAt(0).toUpperCase()}
+        </div>
+      )}
+
+      {/* Name + subtitle */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20, color: nameColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {username}
+        </div>
+        {subtitle && (
+          <div style={{ fontFamily: F, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {subtitle}
+          </div>
+        )}
+      </div>
+
+      {/* Arrow button */}
+      <div
+        style={{
+          width: 47,
+          height: 47,
+          borderRadius: '50%',
+          border: `2px solid ${borderColor}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          cursor: 'pointer',
+        }}
+      >
+        <span style={{ color: nameColor, fontSize: 20, fontWeight: 700 }}>→</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Terminal banner ──────────────────────────────────────────────────────────
+function TerminalBanner({
+  status,
+  isWinner,
+  isParticipant,
+  prize,
+  entryFee,
+  teamSize,
+}: {
+  status: string;
+  isWinner: boolean | undefined;
+  isParticipant: boolean;
+  prize: number;
+  entryFee: number;
+  teamSize: number;
+}) {
+  if (status === 'canceled' || status === 'expired') {
+    return (
+      <div style={{ textAlign: 'center', padding: '8px 0' }}>
+        <div style={{ fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(24px, 3vw, 48px)', color: 'rgba(255,255,255,0.4)' }}>CANCELED</div>
+        <div style={{ fontFamily: F, fontSize: 15, color: '#9c9c9c', marginTop: 4 }}>All entry fees have been refunded.</div>
+      </div>
+    );
+  }
+  if (status === 'disputed') {
+    return (
+      <div style={{ textAlign: 'center', padding: '8px 0' }}>
+        <div style={{ fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(24px, 3vw, 48px)', color: '#ef4444' }}>DISPUTED</div>
+        <div style={{ fontFamily: F, fontSize: 15, color: '#9c9c9c', marginTop: 4 }}>An admin will review this match.</div>
+      </div>
+    );
+  }
+  if (isParticipant && isWinner !== undefined) {
+    return (
+      <div style={{ textAlign: 'center', padding: '8px 0' }}>
+        <div style={{ fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(24px, 3vw, 48px)', color: isWinner ? '#1aff16' : '#ff1654' }}>
+          {isWinner ? 'VICTORY' : 'DEFEAT'}
+        </div>
+        <div style={{ fontFamily: F, fontSize: 15, color: '#9c9c9c', marginTop: 4 }}>
+          {isWinner ? `+${(prize / teamSize).toFixed(2)} coins` : `-${entryFee.toFixed(2)} coins`}
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function MatchDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -53,47 +350,43 @@ export default function MatchDetail() {
 
   const match = matchRaw as Match | null;
 
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (isPending) {
     return (
-      <PublicLayout>
-        <section className="match-detail">
-          <div className="match-detail__loading">
-            <div className="match-detail__spinner" />
-          </div>
-        </section>
-      </PublicLayout>
+      <div style={{ position: 'fixed', inset: 0, background: '#0f0404', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 20 }}>
+          <NavbarFigmaLoggedIn />
+        </div>
+        <div style={{ fontFamily: F, fontWeight: 700, fontSize: 24, color: 'rgba(255,255,255,0.5)' }}>
+          Loading match...
+        </div>
+      </div>
     );
   }
 
+  // ── Not found ────────────────────────────────────────────────────────────
   if (error || !match) {
     return (
-      <PublicLayout>
-        <section className="match-detail">
-          <img
-            className="match-detail__top-neon"
-            src="/figma-assets/figma-neon.png"
-            alt=""
-            aria-hidden="true"
-          />
-          <div className="match-detail__content">
-            <Link to="/matches" className="match-detail__back">
-              <ArrowLeft size={18} />
-              Back to Matches
-            </Link>
-            <div style={{ textAlign: 'center', paddingTop: '80px' }}>
-              <h1 className="match-detail__title" style={{ fontSize: '36px' }}>
-                MATCH NOT FOUND
-              </h1>
-              <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: '12px', fontFamily: "'Base Neue Trial', sans-serif" }}>
-                This match does not exist or has been removed.
-              </p>
-            </div>
-          </div>
-        </section>
-      </PublicLayout>
+      <div style={{ position: 'fixed', inset: 0, background: '#0f0404', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <img src="/figma-assets/figma-neon.png" alt="" aria-hidden style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 146, objectFit: 'cover', zIndex: 5, pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 20 }}>
+          <NavbarFigmaLoggedIn />
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+          <h1 style={{ fontFamily: F, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(32px, 4vw, 60px)', color: 'white' }}>MATCH NOT FOUND</h1>
+          <p style={{ fontFamily: F, fontSize: 16, color: 'rgba(255,255,255,0.4)' }}>This match does not exist or has been removed.</p>
+          <button
+            onClick={() => navigate('/matches')}
+            style={{ marginTop: 16, background: '#ff1654', border: 'none', borderRadius: 23, padding: '14px 32px', fontFamily: F, fontWeight: 900, fontSize: 18, color: 'white', cursor: 'pointer' }}
+          >
+            BACK TO MATCHES
+          </button>
+        </div>
+      </div>
     );
   }
 
+  // ── Derived state ────────────────────────────────────────────────────────
   const participants = (match.participants ?? []) as MatchParticipant[];
   const myParticipant = user ? participants.find((p) => p.user_id === user.id) : undefined;
   const isParticipant = !!myParticipant;
@@ -102,6 +395,7 @@ export default function MatchDetail() {
   const hasSubmittedResult = !!myParticipant?.result_choice;
   const amReady = !!myParticipant?.ready;
 
+  const teamSize = Math.max(Number(match.team_size ?? 1), 1);
   const teamA = participants.filter((p) => p.team_side === 'A');
   const teamB = participants.filter((p) => p.team_side === 'B');
 
@@ -113,10 +407,13 @@ export default function MatchDetail() {
     : undefined;
 
   const entryFee = Number(match.entry_fee ?? 0);
-  const teamSize = Math.max(Number(match.team_size ?? 1), 1);
   const totalPot = entryFee * teamSize * 2;
   const prize = totalPot * (1 - PLATFORM_FEE);
 
+  const status = match.status ?? 'open';
+  const viewState = getViewState(status);
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const handleReady = async () => {
     try {
       await setPlayerReady.mutateAsync(match.id);
@@ -145,336 +442,306 @@ export default function MatchDetail() {
     }
   };
 
-  const status = match.status ?? 'open';
-  const showActions =
-    isParticipant &&
-    ['open', 'ready_check', 'full', 'in_progress', 'result_pending'].includes(status);
-  const isTerminal = ['completed', 'finished', 'canceled', 'admin_resolved', 'expired'].includes(status);
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <PublicLayout>
-      <section className="match-detail">
-        <img
-          className="match-detail__top-neon"
-          src="/figma-assets/figma-neon.png"
-          alt=""
-          aria-hidden="true"
-        />
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404', display: 'flex', flexDirection: 'column' }}>
 
-        <div className="match-detail__content">
-          <Link to="/matches" className="match-detail__back">
-            <ArrowLeft size={18} />
-            Back to Matches
-          </Link>
+      {/* Top neon decoration */}
+      <img
+        src="/figma-assets/figma-neon.png"
+        alt=""
+        aria-hidden
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 146, objectFit: 'cover', zIndex: 5, pointerEvents: 'none' }}
+      />
 
-          {/* Header */}
-          <div className="match-detail__header">
-            <h1 className="match-detail__title">
-              {formatMatchTitle(match)}
-            </h1>
-            <span className={`match-detail__status match-detail__status--${getStatusClass(status)}`}>
-              <span className="match-detail__status-dot" />
-              {STATUS_LABELS[status] || status.toUpperCase()}
-            </span>
-          </div>
+      {/* Navbar */}
+      <div style={{ position: 'relative', zIndex: 20, flexShrink: 0 }}>
+        <NavbarFigmaLoggedIn />
+      </div>
 
-          {/* Info Grid */}
-          <div className="match-detail__info-grid">
-            <div className="match-detail__info-item">
-              <span className="match-detail__info-label">First To</span>
-              <span className="match-detail__info-value">{formatFirstTo(match)}</span>
-            </div>
-            <div className="match-detail__info-item">
-              <span className="match-detail__info-label">Platform</span>
-              <span className="match-detail__info-value">{formatPlatform(match.platform)}</span>
-            </div>
-            <div className="match-detail__info-item">
-              <span className="match-detail__info-label">Region</span>
-              <span className="match-detail__info-value">{String(match.region ?? '').toUpperCase()}</span>
-            </div>
-            <div className="match-detail__info-item">
-              <span className="match-detail__info-label">Entry Fee</span>
-              <span className="match-detail__info-value">{formatEntryFee(match)}</span>
-            </div>
-            <div className="match-detail__info-item">
-              <span className="match-detail__info-label">Prize Pool</span>
-              <span className="match-detail__info-value match-detail__info-value--gold">
-                {prize.toFixed(2)}
-              </span>
-            </div>
-            <div className="match-detail__info-item">
-              <span className="match-detail__info-label">Mode</span>
-              <span className="match-detail__info-value">
-                {isTeamMatch ? `${teamSize}v${teamSize}` : '1v1'}
-              </span>
-            </div>
-          </div>
+      {/* ── Content area (below navbar) ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 10 }}>
 
-          {/* Result Banner (for terminal states) */}
-          {isTerminal && matchResult && isParticipant && (
-            <div
-              className={`match-detail__result-banner ${
-                isWinner
-                  ? 'match-detail__result-banner--winner'
-                  : 'match-detail__result-banner--loser'
-              }`}
-            >
-              <div
-                className={`match-detail__result-label ${
-                  isWinner
-                    ? 'match-detail__result-label--winner'
-                    : 'match-detail__result-label--loser'
-                }`}
+        {/* Match title */}
+        <div style={{ textAlign: 'center', padding: 'clamp(4px, 1.2vh, 16px) 0 0' }}>
+          <h1
+            style={{
+              fontFamily: F,
+              fontWeight: 900,
+              fontStyle: 'italic',
+              fontSize: 'clamp(28px, 4.2vw, 80px)',
+              color: 'white',
+              margin: 0,
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {formatMatchTitle(match).toUpperCase()} {formatEntryFee(match)}
+            {/* Dot indicator like Figma */}
+            <span style={{ color: '#ff1654', fontSize: '0.5em', verticalAlign: 'middle', marginLeft: 8 }}>●</span>
+          </h1>
+        </div>
+
+        {/* Status progress bar */}
+        <div style={{ padding: 'clamp(6px, 1.5vh, 20px) 0 0' }}>
+          <MatchStatusProgress status={status} />
+        </div>
+
+        {/* Action area (center, above players) */}
+        {isParticipant && viewState !== 'TERMINAL' && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(4px, 1vh, 12px) 0', gap: 24, flexShrink: 0 }}>
+
+            {/* READY UP */}
+            {viewState === 'READY_UP' && !amReady && (
+              <button
+                onClick={handleReady}
+                disabled={setPlayerReady.isPending}
+                style={{
+                  background: '#1aff16',
+                  border: 'none',
+                  borderRadius: 23,
+                  width: 246,
+                  height: 69,
+                  fontFamily: F,
+                  fontWeight: 900,
+                  fontSize: 'clamp(20px, 1.875vw, 36px)',
+                  color: 'white',
+                  cursor: setPlayerReady.isPending ? 'not-allowed' : 'pointer',
+                  opacity: setPlayerReady.isPending ? 0.7 : 1,
+                  letterSpacing: '0.02em',
+                }}
               >
-                {isWinner ? 'VICTORY' : 'DEFEAT'}
+                {setPlayerReady.isPending ? 'READYING...' : 'READY UP'}
+              </button>
+            )}
+
+            {viewState === 'READY_UP' && amReady && (
+              <div style={{ fontFamily: F, fontStyle: 'italic', fontSize: 18, color: '#46f32f', height: 69, display: 'flex', alignItems: 'center' }}>
+                You are ready. Waiting for all players...
               </div>
-              <div className="match-detail__result-sub">
-                {isWinner
-                  ? `You earned ${(prize / teamSize).toFixed(2)} coins`
-                  : `You lost ${entryFee.toFixed(2)} coins`}
+            )}
+
+            {/* WIN / LOSS */}
+            {viewState === 'WIN_LOSS' && !hasSubmittedResult && (
+              <>
+                <button
+                  onClick={() => handleSubmitResult('WIN')}
+                  disabled={submitResult.isPending}
+                  style={{
+                    background: '#1aff16',
+                    border: 'none',
+                    borderRadius: 23,
+                    width: 246,
+                    height: 69,
+                    fontFamily: F,
+                    fontWeight: 900,
+                    fontSize: 'clamp(20px, 1.875vw, 36px)',
+                    color: 'white',
+                    cursor: submitResult.isPending ? 'not-allowed' : 'pointer',
+                    opacity: submitResult.isPending ? 0.7 : 1,
+                  }}
+                >
+                  WIN
+                </button>
+                <button
+                  onClick={() => handleSubmitResult('LOSS')}
+                  disabled={submitResult.isPending}
+                  style={{
+                    background: '#ff1654',
+                    border: 'none',
+                    borderRadius: 23,
+                    width: 246,
+                    height: 69,
+                    fontFamily: F,
+                    fontWeight: 900,
+                    fontSize: 'clamp(20px, 1.875vw, 36px)',
+                    color: 'white',
+                    cursor: submitResult.isPending ? 'not-allowed' : 'pointer',
+                    opacity: submitResult.isPending ? 0.7 : 1,
+                  }}
+                >
+                  LOSS
+                </button>
+              </>
+            )}
+
+            {viewState === 'WIN_LOSS' && hasSubmittedResult && (
+              <div style={{ fontFamily: F, fontStyle: 'italic', fontSize: 18, color: '#9c9c9c', height: 69, display: 'flex', alignItems: 'center' }}>
+                You declared {myParticipant?.result_choice}. Waiting for opponent...
               </div>
+            )}
+
+            {/* DELETE MATCH */}
+            {viewState === 'WAIT' && isCreator && (
+              <button
+                onClick={handleCancel}
+                disabled={cancelMatch.isPending}
+                style={{
+                  background: '#ff0000',
+                  border: 'none',
+                  borderRadius: 23,
+                  width: 237,
+                  height: 51,
+                  fontFamily: F,
+                  fontWeight: 900,
+                  fontSize: 'clamp(16px, 1.25vw, 24px)',
+                  color: 'white',
+                  cursor: cancelMatch.isPending ? 'not-allowed' : 'pointer',
+                  opacity: cancelMatch.isPending ? 0.7 : 1,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {cancelMatch.isPending ? 'DELETING...' : 'DELETE MATCH'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Terminal banner */}
+        {viewState === 'TERMINAL' && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 'clamp(4px, 1vh, 12px) 0', flexShrink: 0 }}>
+            <TerminalBanner
+              status={status}
+              isWinner={isWinner}
+              isParticipant={isParticipant}
+              prize={prize}
+              entryFee={entryFee}
+              teamSize={teamSize}
+            />
+          </div>
+        )}
+
+        {/* ── Main row: Teams + Chat ── */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: '0 clamp(12px, 1.5vw, 28px) clamp(8px, 1.5vh, 20px)', gap: 'clamp(8px, 1vw, 16px)', minHeight: 0 }}>
+
+          {/* Left content: VS + teams */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, minWidth: 0, overflow: 'hidden' }}>
+
+            {/* Team A */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1vh, 14px)', flex: '0 0 auto', width: 'clamp(220px, 22vw, 368px)' }}>
+              {Array.from({ length: teamSize }).map((_, i) => {
+                const p = teamA[i];
+                return p ? (
+                  <FilledPlayerSlot key={p.id} participant={p} side="A" viewState={viewState} />
+                ) : (
+                  <EmptyPlayerSlot key={`a-empty-${i}`} side="A" />
+                );
+              })}
             </div>
-          )}
 
-          {isTerminal && status === 'canceled' && (
-            <div className="match-detail__result-banner match-detail__result-banner--neutral">
-              <div className="match-detail__result-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '36px' }}>
-                CANCELED
-              </div>
-              <div className="match-detail__result-sub">All entry fees have been refunded.</div>
-            </div>
-          )}
-
-          {status === 'disputed' && (
-            <div className="match-detail__result-banner match-detail__result-banner--neutral">
-              <div className="match-detail__result-label" style={{ color: '#EF4444', fontSize: '36px' }}>
-                DISPUTED
-              </div>
-              <div className="match-detail__result-sub">
-                Both sides declared conflicting results. An admin will review this match.
-              </div>
-            </div>
-          )}
-
-          {/* Teams */}
-          <div className="match-detail__teams">
-            <div className="match-detail__team match-detail__team--a">
-              <div className="match-detail__team-label">
-                {isTeamMatch ? 'Team A' : 'Player 1'} {isCreator && '(Host)'}
-              </div>
-              {teamA.length > 0 ? (
-                teamA.map((p) => (
-                  <ParticipantRow
-                    key={p.id}
-                    participant={p}
-                    showReady={status === 'ready_check' || status === 'full'}
-                  />
-                ))
-              ) : (
-                <div className="match-detail__participant-empty">Waiting for player...</div>
-              )}
+            {/* VS center */}
+            <div
+              style={{
+                position: 'relative',
+                width: 'clamp(120px, 12vw, 220px)',
+                alignSelf: 'stretch',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              {/* Fade left */}
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '40%', background: 'linear-gradient(to right, #0f0404, transparent)', zIndex: 2 }} />
+              {/* Fade right */}
+              <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '40%', background: 'linear-gradient(to left, #0f0404, transparent)', zIndex: 2 }} />
+              <p
+                style={{
+                  fontFamily: F,
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  fontSize: 'clamp(80px, 10.7vw, 205px)',
+                  lineHeight: 1,
+                  opacity: 0.48,
+                  background: 'linear-gradient(180deg, #0f0404 10%, #fff 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  userSelect: 'none',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                VS
+              </p>
             </div>
 
-            <div className="match-detail__vs">VS</div>
-
-            <div className="match-detail__team match-detail__team--b">
-              <div className="match-detail__team-label">
-                {isTeamMatch ? 'Team B' : 'Player 2'}
-              </div>
-              {teamB.length > 0 ? (
-                teamB.map((p) => (
-                  <ParticipantRow
-                    key={p.id}
-                    participant={p}
-                    showReady={status === 'ready_check' || status === 'full'}
-                  />
-                ))
-              ) : (
-                <div className="match-detail__participant-empty">Waiting for opponent...</div>
-              )}
+            {/* Team B */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1vh, 14px)', flex: '0 0 auto', width: 'clamp(220px, 22vw, 368px)' }}>
+              {Array.from({ length: teamSize }).map((_, i) => {
+                const p = teamB[i];
+                return p ? (
+                  <FilledPlayerSlot key={p.id} participant={p} side="B" viewState={viewState} />
+                ) : (
+                  <EmptyPlayerSlot key={`b-empty-${i}`} side="B" />
+                );
+              })}
             </div>
           </div>
 
-          {/* Actions */}
-          {showActions && (
-            <div className="match-detail__actions">
-              {/* Open: creator can cancel, others just see waiting */}
-              {status === 'open' && isCreator && (
-                <>
-                  <div className="match-detail__actions-title">Waiting for opponent</div>
-                  <div className="match-detail__action-row">
-                    <span className="match-detail__waiting">
-                      Your match is live on the board...
-                    </span>
-                    <button
-                      className="match-detail__btn match-detail__btn--cancel"
-                      onClick={handleCancel}
-                      disabled={cancelMatch.isPending}
-                    >
-                      {cancelMatch.isPending ? 'Canceling...' : 'Cancel Match'}
-                    </button>
-                  </div>
-                </>
-              )}
+          {/* Chat panel — only for participants */}
+          {user && isParticipant && (
+            <div
+              style={{
+                width: 'clamp(280px, 24vw, 462px)',
+                background: '#282828',
+                borderRadius: 18,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              {/* Chat header */}
+              <div
+                style={{
+                  padding: '20px 0 0',
+                  textAlign: 'center',
+                  fontFamily: F,
+                  fontWeight: 700,
+                  fontSize: 'clamp(22px, 2.1vw, 40px)',
+                  color: 'white',
+                  flexShrink: 0,
+                }}
+              >
+                MATCH CHAT
+              </div>
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.15)', margin: '12px 24px', flexShrink: 0 }} />
 
-              {status === 'open' && !isCreator && (
-                <div className="match-detail__actions-title">Waiting for the match to fill...</div>
-              )}
-
-              {/* Ready Check */}
-              {(status === 'ready_check' || status === 'full') && (
-                <>
-                  <div className="match-detail__actions-title">Ready Check</div>
-                  <div className="match-detail__action-row">
-                    {amReady ? (
-                      <span className="match-detail__waiting">
-                        You are ready. Waiting for all players...
-                      </span>
-                    ) : (
-                      <button
-                        className="match-detail__btn match-detail__btn--ready"
-                        onClick={handleReady}
-                        disabled={setPlayerReady.isPending}
-                      >
-                        {setPlayerReady.isPending ? 'Readying...' : 'READY UP'}
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* In Progress */}
-              {status === 'in_progress' && (
-                <div className="match-detail__actions-title">
-                  Match in progress — good luck!
-                </div>
-              )}
-
-              {/* Result Pending */}
-              {status === 'result_pending' && !hasSubmittedResult && (
-                <>
-                  <div className="match-detail__actions-title">Declare your result</div>
-                  <div className="match-detail__action-row">
-                    <button
-                      className="match-detail__btn match-detail__btn--win"
-                      onClick={() => handleSubmitResult('WIN')}
-                      disabled={submitResult.isPending}
-                    >
-                      I WON
-                    </button>
-                    <button
-                      className="match-detail__btn match-detail__btn--loss"
-                      onClick={() => handleSubmitResult('LOSS')}
-                      disabled={submitResult.isPending}
-                    >
-                      I LOST
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {status === 'result_pending' && hasSubmittedResult && (
-                <>
-                  <div className="match-detail__actions-title">Result submitted</div>
-                  <span className="match-detail__waiting">
-                    You declared {myParticipant?.result_choice}. Waiting for opponent...
-                  </span>
-                </>
-              )}
-
-              {/* In progress — also show result buttons since backend accepts in_progress too */}
-              {status === 'in_progress' && !hasSubmittedResult && (
-                <>
-                  <div className="match-detail__actions-title" style={{ marginTop: '16px' }}>
-                    Ready to declare?
-                  </div>
-                  <div className="match-detail__action-row">
-                    <button
-                      className="match-detail__btn match-detail__btn--win"
-                      onClick={() => handleSubmitResult('WIN')}
-                      disabled={submitResult.isPending}
-                    >
-                      I WON
-                    </button>
-                    <button
-                      className="match-detail__btn match-detail__btn--loss"
-                      onClick={() => handleSubmitResult('LOSS')}
-                      disabled={submitResult.isPending}
-                    >
-                      I LOST
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Proof Section */}
-          {user && ['in_progress', 'result_pending', 'disputed', 'completed', 'finished'].includes(status) && (
-            <div className="match-detail__section">
-              <h3 className="match-detail__section-title">Proof & Screenshots</h3>
-              <ProofSection
-                matchId={match.id}
-                currentUserId={user.id}
-                isAdmin={false}
-                isParticipant={isParticipant}
-              />
-            </div>
-          )}
-
-          {/* Chat */}
-          {user && (
-            <div className="match-detail__section">
-              <h3 className="match-detail__section-title">Match Chat</h3>
-              <MatchChat
-                matchId={match.id}
-                matchStatus={status}
-                currentUserId={user.id}
-                isAdmin={false}
-                isParticipant={isParticipant}
-              />
+              {/* Chat messages + input */}
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <MatchChat
+                  matchId={match.id}
+                  matchStatus={status}
+                  currentUserId={user.id}
+                  isAdmin={false}
+                  isParticipant={isParticipant}
+                  className="flex-1 bg-transparent border-0 rounded-none overflow-hidden"
+                />
+              </div>
             </div>
           )}
         </div>
-      </section>
-    </PublicLayout>
-  );
-}
+      </div>
 
-function ParticipantRow({
-  participant,
-  showReady,
-}: {
-  participant: MatchParticipant;
-  showReady: boolean;
-}) {
-  const profile = participant.profile as { username?: string; avatar_url?: string | null; discord_avatar_url?: string | null } | undefined;
-  const avatarUrl = getDiscordAvatarUrl(profile);
-  return (
-    <div className="match-detail__participant">
-      {avatarUrl ? (
-        <img
-          className="match-detail__participant-avatar"
-          src={avatarUrl}
-          alt=""
-        />
-      ) : (
-        <div className="match-detail__participant-avatar" />
-      )}
-      <span className="match-detail__participant-name">
-        {profile?.username || 'Unknown Player'}
-      </span>
-      {showReady && (
-        <span
-          className={`match-detail__participant-ready ${
-            participant.ready
-              ? 'match-detail__participant-ready--yes'
-              : 'match-detail__participant-ready--no'
-          }`}
-        >
-          {participant.ready ? 'READY' : 'NOT READY'}
-        </span>
-      )}
+      {/* Bottom neon decoration */}
+      <img
+        src="/figma-assets/figma-neon.png"
+        alt=""
+        aria-hidden
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          height: 96,
+          objectFit: 'cover',
+          zIndex: 5,
+          pointerEvents: 'none',
+          transform: 'scaleY(-1)',
+        }}
+      />
     </div>
   );
 }
