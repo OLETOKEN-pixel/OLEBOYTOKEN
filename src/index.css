@@ -1022,3 +1022,7 @@
       opacity: 0.5;
     }
   }
+
+.match-chat-input::placeholder {
+  color: #9c9c9c;
+}
