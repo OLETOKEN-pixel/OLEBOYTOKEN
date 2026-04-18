@@ -753,7 +753,6 @@ function ReadyLobbyScreen({
     }
 
     const profile = participant.profile as ProfileSummary | undefined;
-    if (profile?.username) return participant;
 
     return {
       ...participant,

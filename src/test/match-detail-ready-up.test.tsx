@@ -380,7 +380,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
             team_side: 'A',
             ready: true,
             profile: {
-              username: undefined as unknown as string,
+              username: 'Host',
               discord_avatar_url: null,
               epic_username: undefined,
             },
@@ -400,9 +400,10 @@ describe('MatchDetail ready-up Figma lobby', () => {
       },
     };
 
-    renderMatchDetail();
+    const { container } = renderMatchDetail();
 
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.getByText('Opponent')).toBeInTheDocument();
+    expect(container.querySelector('img[src="https://cdn.discordapp.com/avatars/host/avatar.png"]')).not.toBeNull();
   });
 });
