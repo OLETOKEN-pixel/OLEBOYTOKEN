@@ -316,6 +316,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.getByText('Opponent')).toBeInTheDocument();
+    expect(screen.getByLabelText('Started status active')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /READY/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'WIN' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'LOSS' })).toBeEnabled();
@@ -324,6 +325,44 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     await waitFor(() => {
       expect(submitResultMock).toHaveBeenCalledWith({ matchId: 'match-ready', result: 'WIN', isTeam: true });
+    });
+  });
+
+  it('lets a player declare loss after the match starts', async () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'in_progress',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            ready: true,
+          }),
+          participantFactory({
+            id: 'participant-b-1',
+            user_id: 'user-b-1',
+            team_side: 'B',
+            ready: true,
+            profile: {
+              username: 'Opponent',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/opponent/avatar.png',
+              epic_username: 'OpponentEpic',
+            },
+          }),
+        ],
+      },
+    };
+    submitResultMock.mockResolvedValue(undefined);
+
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'LOSS' }));
+
+    await waitFor(() => {
+      expect(submitResultMock).toHaveBeenCalledWith({ matchId: 'match-ready', result: 'LOSS', isTeam: true });
     });
   });
 

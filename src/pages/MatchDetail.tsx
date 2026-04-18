@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NavbarFigmaLoggedIn } from '@/components/layout/NavbarFigmaLoggedIn';
 import { MatchChat } from '@/components/matches/MatchChat';
@@ -335,36 +335,77 @@ function FilledPlayerSlot({
 }
 
 // ─── Terminal banner ──────────────────────────────────────────────────────────
-function ReadyStatusProgress() {
-  return (
-    <div aria-label="Match status progress" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-      <div style={{ position: 'absolute', left: 'calc(13.333% + 7px)', top: 297, width: 66, height: 66 }}>
-        <img src={READY_ASSETS.statusCreatedEllipse} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
+function ReadyStatusProgress({ status }: { status: string }) {
+  const isStarted = ['in_progress', 'result_pending', 'started', 'completed', 'finished', 'disputed', 'admin_resolved'].includes(status);
+  const isFinished = ['completed', 'finished', 'admin_resolved'].includes(status);
+  const lineColor = '#ff1654';
+  const lineInactiveColor = '#4b4447';
+  const StatusNode = ({
+    active,
+    baseAsset,
+    label,
+    style,
+  }: {
+    active: boolean;
+    baseAsset: string;
+    label: string;
+    style: CSSProperties;
+  }) => (
+    <div aria-label={`${label} status ${active ? 'active' : 'inactive'}`} style={{ position: 'absolute', width: 66, height: 66, ...style }}>
+      <img src={active ? READY_ASSETS.statusCreatedEllipse : baseAsset} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
+      {active && (
         <img
           src={READY_ASSETS.statusCreatedCheck}
           alt=""
           aria-hidden
           style={{ position: 'absolute', left: 13, top: 17, width: 40, height: 31 }}
         />
-      </div>
-      <img
-        src={READY_ASSETS.statusLineCreatedStarted}
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', left: 'calc(16.667% + 9px)', top: 329, width: 388, height: 3 }}
+      )}
+    </div>
+  );
+
+  return (
+    <div aria-label="Match status progress" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <StatusNode
+        active
+        baseAsset={READY_ASSETS.statusCreatedEllipse}
+        label="Created"
+        style={{ left: 'calc(13.333% + 7px)', top: 297 }}
       />
-      <div style={{ position: 'absolute', left: 'calc(36.667% + 9px)', top: 297, width: 66, height: 66 }}>
-        <img src={READY_ASSETS.statusStartedEllipse} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
-      </div>
-      <img
-        src={READY_ASSETS.statusLineStartedFinished}
-        alt=""
+      <div
         aria-hidden
-        style={{ position: 'absolute', left: 'calc(40% + 11px)', top: 329, width: 385, height: 3 }}
+        style={{
+          position: 'absolute',
+          left: 'calc(16.667% + 9px)',
+          top: 329,
+          width: 388,
+          height: 3,
+          background: isStarted ? lineColor : lineInactiveColor,
+        }}
       />
-      <div style={{ position: 'absolute', left: 'calc(60% + 11px)', top: 297, width: 66, height: 66 }}>
-        <img src={READY_ASSETS.statusFinishedEllipse} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
-      </div>
+      <StatusNode
+        active={isStarted}
+        baseAsset={READY_ASSETS.statusStartedEllipse}
+        label="Started"
+        style={{ left: 'calc(36.667% + 9px)', top: 297 }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: 'calc(40% + 11px)',
+          top: 329,
+          width: 385,
+          height: 3,
+          background: isFinished ? lineColor : lineInactiveColor,
+        }}
+      />
+      <StatusNode
+        active={isFinished}
+        baseAsset={READY_ASSETS.statusFinishedEllipse}
+        label="Finished"
+        style={{ left: 'calc(60% + 11px)', top: 297 }}
+      />
       {[
         { label: 'CREATED', left: 'calc(13.333% - 11px)', top: 376 },
         { label: 'STARTED', left: 'calc(36.667% - 9px)', top: 376 },
@@ -752,7 +793,7 @@ function ReadyLobbyScreen({
           zIndex: 10,
         }}
       >
-        <ReadyStatusProgress />
+        <ReadyStatusProgress status={status} />
 
         <button
           type="button"
