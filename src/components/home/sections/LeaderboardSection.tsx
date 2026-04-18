@@ -35,7 +35,7 @@ export const LeaderboardSection = () => {
             avatarUrl: getDiscordAvatarUrl(p),
             winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
             roundsWon: String(p.wins ?? 0),
-            earnings: p.total_earnings != null ? String(Number(p.total_earnings).toFixed(0)) : '0',
+            earnings: p.weekly_earned != null ? String(Number(p.weekly_earned).toFixed(2)) : '0',
           })));
         } else {
           // Fallback: top 3 all-time leaderboard (global, same for everyone)
@@ -52,7 +52,7 @@ export const LeaderboardSection = () => {
               avatarUrl: getDiscordAvatarUrl(p),
               winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
               roundsWon: String(p.wins ?? 0),
-              earnings: p.total_earnings != null ? String(Number(p.total_earnings).toFixed(0)) : '0',
+              earnings: p.weekly_earned != null ? String(Number(p.weekly_earned).toFixed(2)) : '0',
             })));
           }
         }
