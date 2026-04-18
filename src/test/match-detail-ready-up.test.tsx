@@ -168,6 +168,35 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByTestId('mock-match-chat')).toHaveAttribute('data-variant', 'figmaReady');
   });
 
+  it('uses the Figma lobby instead of the old title/delete layout while the match is open', () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'open',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            profile: {
+              username: 'Host',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/avatar.png',
+              epic_username: 'HostEpic',
+            },
+          }),
+        ],
+      },
+    };
+
+    renderMatchDetail();
+
+    expect(screen.getByTestId('match-ready-lobby')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'READY (0/6)' })).toBeInTheDocument();
+    expect(screen.queryByText('DELETE MATCH')).not.toBeInTheDocument();
+    expect(screen.queryByText(/BOX FIGHT/)).not.toBeInTheDocument();
+  });
+
   it('sets the current participant ready from the Figma ready button', async () => {
     renderMatchDetail();
 

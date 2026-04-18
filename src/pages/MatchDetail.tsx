@@ -29,7 +29,7 @@ const FONT_EXPANDED_BLACK_OBLIQUE =
   "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial-ExpandedBlack Oblique', 'Base Neue Trial', sans-serif";
 
 const READY_ASSETS = {
-  epicLogo: '/figma-assets/match-ready/epic-games-logo.svg',
+  epicLogo: '/figma-assets/match-ready/epic-games-logo.png',
   playerActionRed: '/figma-assets/match-ready/player-action-red.svg',
   playerActionGreen: [
     '/figma-assets/match-ready/player-action-green-1.svg',
@@ -482,10 +482,10 @@ function ReadyPlayerSlot({
           overflow: 'hidden',
         }}
       >
-        <img src={READY_ASSETS.epicLogo} alt="" aria-hidden style={{ width: 16, height: 19, flexShrink: 0, opacity: 0.75 }} />
         <span
           style={{
             minWidth: 0,
+            maxWidth: 170,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -497,6 +497,7 @@ function ReadyPlayerSlot({
         >
           {epicName}
         </span>
+        <img src={READY_ASSETS.epicLogo} alt="" aria-hidden style={{ width: 16, height: 19, flexShrink: 0, opacity: 0.75 }} />
       </div>
 
       <img
@@ -588,7 +589,7 @@ function ReadyChatPanel({
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        zIndex: 4,
+        zIndex: 30,
       }}
     >
       <h2
@@ -968,7 +969,7 @@ export default function MatchDetail() {
     navigate('/rules');
   };
 
-  if (viewState === 'READY_UP') {
+  if (viewState === 'WAIT' || viewState === 'READY_UP') {
     return (
       <ReadyLobbyScreen
         match={match}

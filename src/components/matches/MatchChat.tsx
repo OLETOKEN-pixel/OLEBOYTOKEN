@@ -202,6 +202,8 @@ export function MatchChat({
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
+        ) : messages.length === 0 && isFigmaReady ? (
+          <div aria-label="No chat messages yet" style={{ height: '100%' }} />
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-6">
             <MessagesSquare className="w-8 h-8 text-muted-foreground/40 mb-2" />
