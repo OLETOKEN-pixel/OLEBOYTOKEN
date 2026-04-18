@@ -905,9 +905,9 @@ function ReadyLobbyScreen({
           <div
             style={{
               position: 'absolute',
-              left: 'calc(26.667% + 7px)',
-              top: 390,
-              width: 'calc(46.666% + 500px)',
+              left: 'calc(36.667% + 50px)',
+              top: 400,
+              width: 450,
               display: 'flex',
               justifyContent: 'center',
             }}
