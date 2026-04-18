@@ -706,6 +706,9 @@ function ReadyLobbyScreen({
   onCancel,
   onSubmitResult,
   onRules,
+  isWinner,
+  prize = 0,
+  entryFee = 0,
 }: {
   match: Match;
   status: string;
@@ -730,12 +733,16 @@ function ReadyLobbyScreen({
   onCancel: () => void;
   onSubmitResult: (result: 'WIN' | 'LOSS') => void;
   onRules: () => void;
+  isWinner?: boolean;
+  prize?: number;
+  entryFee?: number;
 }) {
   const slots = Array.from({ length: teamSize });
   const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
   const isWaitingForAcceptance = viewState === 'WAIT';
   const isReadyCheck = viewState === 'READY_UP';
   const isPlaying = viewState === 'WIN_LOSS';
+  const isTerminal = viewState === 'TERMINAL';
   const shouldMaskParticipants = isWaitingForAcceptance || isReadyCheck;
   const actionLabel = isWaitingForAcceptance ? 'CANCEL' : `READY (${readyCount}/${readyTotal})`;
   const actionDisabled = isWaitingForAcceptance
@@ -799,27 +806,29 @@ function ReadyLobbyScreen({
       >
         <ReadyStatusProgress status={status} />
 
-        <button
-          type="button"
-          onClick={onRules}
-          style={{
-            position: 'absolute',
-            left: 'calc(26.667% + 7px)',
-            top: 426,
-            width: 218,
-            height: 52,
-            borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.5)',
-            background: '#282828',
-            fontFamily: FONT_BOLD,
-            fontSize: 24,
-            lineHeight: 1,
-            color: '#ffffff',
-            cursor: 'pointer',
-          }}
-        >
-          SEE RULES
-        </button>
+        {!isTerminal && (
+          <button
+            type="button"
+            onClick={onRules}
+            style={{
+              position: 'absolute',
+              left: 'calc(26.667% + 7px)',
+              top: 426,
+              width: 218,
+              height: 52,
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,0.5)',
+              background: '#282828',
+              fontFamily: FONT_BOLD,
+              fontSize: 24,
+              lineHeight: 1,
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
+          >
+            SEE RULES
+          </button>
+        )}
 
         {(isWaitingForAcceptance || isReadyCheck) && (
           <button
@@ -889,6 +898,28 @@ function ReadyLobbyScreen({
             }}
           >
             Waiting for opponent result...
+          </div>
+        )}
+
+        {isTerminal && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 'calc(26.667% + 7px)',
+              top: 390,
+              width: 'calc(46.666% + 500px)',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <TerminalBanner
+              status={status}
+              isWinner={isWinner}
+              isParticipant={isParticipant}
+              prize={prize}
+              entryFee={entryFee}
+              teamSize={teamSize}
+            />
           </div>
         )}
 
@@ -1149,7 +1180,7 @@ export default function MatchDetail() {
     navigate('/rules');
   };
 
-  if (viewState === 'WAIT' || viewState === 'READY_UP' || viewState === 'WIN_LOSS') {
+  if (viewState === 'WAIT' || viewState === 'READY_UP' || viewState === 'WIN_LOSS' || viewState === 'TERMINAL') {
     return (
       <ReadyLobbyScreen
         match={match}
@@ -1175,310 +1206,13 @@ export default function MatchDetail() {
         onCancel={handleCancel}
         onSubmitResult={handleSubmitResult}
         onRules={handleRules}
+        isWinner={isWinner as boolean | undefined}
+        prize={prize}
+        entryFee={entryFee}
       />
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-  return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
-
-      {/* Top neon decoration */}
-      <img
-        src="/figma-assets/figma-neon.png"
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 146, objectFit: 'cover', zIndex: 5, pointerEvents: 'none' }}
-      />
-
-      {/* Navbar — renders as position:fixed internally, z-50. No wrapper needed. */}
-      <NavbarFigmaLoggedIn />
-
-      {/* ── Content area — starts below navbar (55px top + 91px height + 14px gap = 160px) ── */}
-      <div style={{ position: 'absolute', top: 160, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 10 }}>
-
-        {/* Match title */}
-        <div style={{ textAlign: 'center', padding: 'clamp(4px, 1.2vh, 16px) 0 0' }}>
-          <h1
-            style={{
-              fontFamily: F,
-              fontWeight: 900,
-              fontStyle: 'italic',
-              fontSize: 'clamp(28px, 4.2vw, 80px)',
-              color: 'white',
-              margin: 0,
-              lineHeight: 1.1,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {`${teamSize}V${teamSize} ${String(match.mode ?? '').toUpperCase() || 'MATCH'} ${formatEntryFee(match)}`}
-            {/* Dot indicator like Figma */}
-            <span style={{ color: '#ff1654', fontSize: '0.5em', verticalAlign: 'middle', marginLeft: 8 }}>●</span>
-          </h1>
-        </div>
-
-        {/* Status progress bar */}
-        <div style={{ padding: 'clamp(6px, 1.5vh, 20px) 0 0' }}>
-          <MatchStatusProgress status={status} />
-        </div>
-
-        {/* Action area (center, above players) */}
-        {isParticipant && viewState !== 'TERMINAL' && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(4px, 1vh, 12px) 0', gap: 24, flexShrink: 0 }}>
-
-            {/* READY UP */}
-            {viewState === 'READY_UP' && !amReady && (
-              <button
-                onClick={handleReady}
-                disabled={setPlayerReady.isPending}
-                style={{
-                  background: '#1aff16',
-                  border: 'none',
-                  borderRadius: 23,
-                  width: 246,
-                  height: 69,
-                  fontFamily: F,
-                  fontWeight: 900,
-                  fontSize: 'clamp(20px, 1.875vw, 36px)',
-                  color: 'white',
-                  cursor: setPlayerReady.isPending ? 'not-allowed' : 'pointer',
-                  opacity: setPlayerReady.isPending ? 0.7 : 1,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                {setPlayerReady.isPending ? 'READYING...' : 'READY UP'}
-              </button>
-            )}
-
-            {viewState === 'READY_UP' && amReady && (
-              <div style={{ fontFamily: F, fontStyle: 'italic', fontSize: 18, color: '#46f32f', height: 69, display: 'flex', alignItems: 'center' }}>
-                You are ready. Waiting for all players...
-              </div>
-            )}
-
-            {/* WIN / LOSS */}
-            {viewState === 'WIN_LOSS' && !hasSubmittedResult && (
-              <>
-                <button
-                  onClick={() => handleSubmitResult('WIN')}
-                  disabled={submitResult.isPending}
-                  style={{
-                    background: '#1aff16',
-                    border: 'none',
-                    borderRadius: 23,
-                    width: 246,
-                    height: 69,
-                    fontFamily: F,
-                    fontWeight: 900,
-                    fontSize: 'clamp(20px, 1.875vw, 36px)',
-                    color: 'white',
-                    cursor: submitResult.isPending ? 'not-allowed' : 'pointer',
-                    opacity: submitResult.isPending ? 0.7 : 1,
-                  }}
-                >
-                  WIN
-                </button>
-                <button
-                  onClick={() => handleSubmitResult('LOSS')}
-                  disabled={submitResult.isPending}
-                  style={{
-                    background: '#ff1654',
-                    border: 'none',
-                    borderRadius: 23,
-                    width: 246,
-                    height: 69,
-                    fontFamily: F,
-                    fontWeight: 900,
-                    fontSize: 'clamp(20px, 1.875vw, 36px)',
-                    color: 'white',
-                    cursor: submitResult.isPending ? 'not-allowed' : 'pointer',
-                    opacity: submitResult.isPending ? 0.7 : 1,
-                  }}
-                >
-                  LOSS
-                </button>
-              </>
-            )}
-
-            {viewState === 'WIN_LOSS' && hasSubmittedResult && (
-              <div style={{ fontFamily: F, fontStyle: 'italic', fontSize: 18, color: '#9c9c9c', height: 69, display: 'flex', alignItems: 'center' }}>
-                You declared {myParticipant?.result_choice}. Waiting for opponent...
-              </div>
-            )}
-
-            {/* DELETE MATCH */}
-            {viewState === 'WAIT' && isCreator && (
-              <button
-                onClick={handleCancel}
-                disabled={cancelMatch.isPending}
-                style={{
-                  background: '#ff0000',
-                  border: 'none',
-                  borderRadius: 23,
-                  width: 237,
-                  height: 51,
-                  fontFamily: F,
-                  fontWeight: 900,
-                  fontSize: 'clamp(16px, 1.25vw, 24px)',
-                  color: 'white',
-                  cursor: cancelMatch.isPending ? 'not-allowed' : 'pointer',
-                  opacity: cancelMatch.isPending ? 0.7 : 1,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                {cancelMatch.isPending ? 'DELETING...' : 'DELETE MATCH'}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Terminal banner */}
-        {viewState === 'TERMINAL' && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 'clamp(4px, 1vh, 12px) 0', flexShrink: 0 }}>
-            <TerminalBanner
-              status={status}
-              isWinner={isWinner}
-              isParticipant={isParticipant}
-              prize={prize}
-              entryFee={entryFee}
-              teamSize={teamSize}
-            />
-          </div>
-        )}
-
-        {/* ── Main row: Teams + Chat ── */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: '0 clamp(12px, 1.5vw, 28px) clamp(8px, 1.5vh, 20px)', gap: 'clamp(8px, 1vw, 16px)', minHeight: 0 }}>
-
-          {/* Left content: VS + teams */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, minWidth: 0, overflow: 'hidden' }}>
-
-            {/* Team A */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1vh, 14px)', flex: '0 0 auto', width: 'clamp(220px, 22vw, 368px)' }}>
-              {Array.from({ length: teamSize }).map((_, i) => {
-                const p = teamA[i];
-                return p ? (
-                  <FilledPlayerSlot key={p.id} participant={p} side="A" viewState={viewState} />
-                ) : (
-                  <EmptyPlayerSlot key={`a-empty-${i}`} side="A" />
-                );
-              })}
-            </div>
-
-            {/* VS center */}
-            <div
-              style={{
-                position: 'relative',
-                width: 'clamp(120px, 12vw, 220px)',
-                alignSelf: 'stretch',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-                flexShrink: 0,
-              }}
-            >
-              {/* Fade left */}
-              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '22%', background: 'linear-gradient(to right, #0f0404, transparent)', zIndex: 2 }} />
-              {/* Fade right */}
-              <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '22%', background: 'linear-gradient(to left, #0f0404, transparent)', zIndex: 2 }} />
-              <p
-                style={{
-                  fontFamily: F,
-                  fontWeight: 900,
-                  fontStyle: 'italic',
-                  fontSize: 'clamp(80px, 10.7vw, 205px)',
-                  lineHeight: 1,
-                  opacity: 0.48,
-                  background: 'linear-gradient(180deg, #0f0404 10%, #fff 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  margin: 0,
-                  userSelect: 'none',
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                VS
-              </p>
-            </div>
-
-            {/* Team B */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1vh, 14px)', flex: '0 0 auto', width: 'clamp(220px, 22vw, 368px)' }}>
-              {Array.from({ length: teamSize }).map((_, i) => {
-                const p = teamB[i];
-                return p ? (
-                  <FilledPlayerSlot key={p.id} participant={p} side="B" viewState={viewState} />
-                ) : (
-                  <EmptyPlayerSlot key={`b-empty-${i}`} side="B" />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Chat panel — only for participants */}
-          {user && isParticipant && (
-            <div
-              style={{
-                width: 'clamp(280px, 24vw, 462px)',
-                background: '#282828',
-                borderRadius: 18,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                flexShrink: 0,
-              }}
-            >
-              {/* Chat header */}
-              <div
-                style={{
-                  padding: '20px 0 0',
-                  textAlign: 'center',
-                  fontFamily: F,
-                  fontWeight: 700,
-                  fontSize: 'clamp(22px, 2.1vw, 40px)',
-                  color: 'white',
-                  flexShrink: 0,
-                }}
-              >
-                MATCH CHAT
-              </div>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.15)', margin: '12px 24px', flexShrink: 0 }} />
-
-              {/* Chat messages + input */}
-              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <MatchChat
-                  matchId={match.id}
-                  matchStatus={status}
-                  currentUserId={user.id}
-                  isAdmin={false}
-                  isParticipant={isParticipant}
-                  hideHeader={true}
-                  teamMap={teamMap}
-                  className="flex-1 bg-transparent border-0 rounded-none overflow-hidden"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom neon decoration */}
-      <img
-        src="/figma-assets/figma-neon.png"
-        alt=""
-        aria-hidden
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          height: 96,
-          objectFit: 'cover',
-          zIndex: 5,
-          pointerEvents: 'none',
-          transform: 'scaleY(-1)',
-        }}
-      />
-    </div>
-  );
+  // Fallback — should never be reached since all viewStates are handled above
+  return null;
 }
