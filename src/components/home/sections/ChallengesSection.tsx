@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useChallenges } from '@/hooks/useChallenges';
+import { getLevel, getXpInLevel, getXpToNext, getLevelXpRequired } from '@/lib/xp';
 import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface ChallengeDisplay {
@@ -36,12 +37,13 @@ export const ChallengesSection = () => {
   const checkBg = (c: ChallengeDisplay) =>
     c.completed ? 'bg-[#ff1654]' : 'bg-[rgba(0,0,0,0.42)]';
 
-  const level = Math.floor(userXp / 100);
-  const xpInLevel = userXp % 100;
-  const xpToNext = xpInLevel === 0 ? 100 : 100 - xpInLevel;
+  const level = getLevel(userXp);
+  const xpInLevel = getXpInLevel(userXp);
+  const xpToNext = getXpToNext(userXp);
+  const xpRequired = getLevelXpRequired(level);
   const RING_R = 70;
   const RING_CIRC = 2 * Math.PI * RING_R;
-  const ringOffset = RING_CIRC * (1 - xpInLevel / 100);
+  const ringOffset = RING_CIRC * (1 - xpInLevel / xpRequired);
 
   /* Row y-offsets inside the card (5 fixed positions matching the Anima layout) */
   const ROW_Y = [33, 88, 143, 240, 296];

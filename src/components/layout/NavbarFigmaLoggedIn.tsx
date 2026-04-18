@@ -25,6 +25,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
+import { getLevel } from '@/lib/xp';
 
 const NAV_SECTIONS: Record<string, string> = {
   matches: 's-matches',
@@ -64,7 +65,7 @@ export function NavbarFigmaLoggedIn() {
       if (data != null) setNavXp(data as number);
     });
   }, [profile]);
-  const level = Math.floor(navXp / 100);
+  const level = getLevel(navXp);
 
   const isOnHome = location.pathname === '/';
   const navItems = Object.keys(NAV_SECTIONS) as NavItem[];
