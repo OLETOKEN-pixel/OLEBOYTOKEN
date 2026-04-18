@@ -615,12 +615,14 @@ function ReadyChatPanel({
   currentUserId,
   isParticipant,
   teamMap,
+  profileMap,
 }: {
   matchId: string;
   status: string;
   currentUserId?: string;
   isParticipant: boolean;
   teamMap: Record<string, 'A' | 'B'>;
+  profileMap: Record<string, ProfileSummary>;
 }) {
   if (!currentUserId || !isParticipant) return null;
 
@@ -671,6 +673,7 @@ function ReadyChatPanel({
           isParticipant={isParticipant}
           hideHeader
           teamMap={teamMap}
+          profileMap={profileMap}
           variant="figmaReady"
           className="flex-1 bg-transparent border-0 rounded-none overflow-hidden"
         />
@@ -693,6 +696,7 @@ function ReadyLobbyScreen({
   teamA,
   teamB,
   teamMap,
+  profileMap,
   readyCount,
   readyTotal,
   readyPending,
@@ -716,6 +720,7 @@ function ReadyLobbyScreen({
   teamA: MatchParticipant[];
   teamB: MatchParticipant[];
   teamMap: Record<string, 'A' | 'B'>;
+  profileMap: Record<string, ProfileSummary>;
   readyCount: number;
   readyTotal: number;
   readyPending: boolean;
@@ -946,6 +951,7 @@ function ReadyLobbyScreen({
           currentUserId={currentUserId}
           isParticipant={isParticipant}
           teamMap={teamMap}
+          profileMap={profileMap}
         />
       </div>
 
@@ -1095,11 +1101,18 @@ export default function MatchDetail() {
 
   // teamMap: userId → 'A' | 'B' — passed to chat for team-colored usernames
   const teamMap: Record<string, 'A' | 'B'> = {};
+  const profileMap: Record<string, ProfileSummary> = {};
   participants.forEach((p) => {
     if (p.team_side === 'A' || p.team_side === 'B') {
       teamMap[p.user_id] = p.team_side;
     }
+    if (p.profile) {
+      profileMap[p.user_id] = p.profile as ProfileSummary;
+    }
   });
+  if (match.creator) {
+    profileMap[match.creator_id] = match.creator as ProfileSummary;
+  }
 
   const status = match.status ?? 'open';
   const viewState = getViewState(status);
@@ -1153,6 +1166,7 @@ export default function MatchDetail() {
         teamA={teamA}
         teamB={teamB}
         teamMap={teamMap}
+        profileMap={profileMap}
         readyCount={readyCount}
         readyTotal={readyTotal}
         readyPending={setPlayerReady.isPending}

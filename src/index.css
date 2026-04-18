@@ -508,6 +508,12 @@
       border-radius: var(--radius);
     }
 
+    .match-chat-root :is(input, button, a):focus,
+    .match-chat-root :is(input, button, a):focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
     /* Hide scrollbars globally */
     ::-webkit-scrollbar {
       display: none;

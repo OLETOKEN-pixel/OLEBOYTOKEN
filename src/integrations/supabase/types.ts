@@ -377,6 +377,8 @@ export type Database = {
       }
       match_chat_messages: {
         Row: {
+          attachment_path: string | null
+          attachment_type: string | null
           created_at: string | null
           id: string
           is_system: boolean | null
@@ -385,6 +387,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachment_path?: string | null
+          attachment_type?: string | null
           created_at?: string | null
           id?: string
           is_system?: boolean | null
@@ -393,6 +397,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachment_path?: string | null
+          attachment_type?: string | null
           created_at?: string | null
           id?: string
           is_system?: boolean | null
@@ -1669,6 +1675,9 @@ export type Database = {
       }
       match_chat_messages_view: {
         Row: {
+          attachment_path: string | null
+          attachment_type: string | null
+          avatar_url: string | null
           created_at: string | null
           discord_avatar_url: string | null
           display_name: string | null
