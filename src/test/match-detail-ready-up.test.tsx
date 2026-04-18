@@ -162,11 +162,53 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByText('STARTED')).toBeInTheDocument();
     expect(screen.getByText('FINISHED')).toBeInTheDocument();
     expect(screen.getByText('Host')).toBeInTheDocument();
-    expect(screen.getByText('Opponent')).toBeInTheDocument();
+    expect(screen.queryByText('Opponent')).not.toBeInTheDocument();
     expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'READY (0/6)' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'SEE RULES' })).toBeInTheDocument();
     expect(screen.getByTestId('mock-match-chat')).toHaveAttribute('data-variant', 'figmaReady');
+  });
+
+  it('keeps the host identity hidden from opponents through ready-up', () => {
+    authState.value = { user: { id: 'user-b-1' } };
+
+    renderMatchDetail();
+
+    expect(screen.getByText('Opponent')).toBeInTheDocument();
+    expect(screen.queryByText('Host')).not.toBeInTheDocument();
+    expect(screen.queryByText('HostEpic')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
+  });
+
+  it('reflects ready count changes in the Figma ready button', () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            ready: true,
+            profile: {
+              username: 'Host',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/avatar.png',
+              epic_username: 'HostEpic',
+            },
+          }),
+          participantFactory({
+            id: 'participant-b-1',
+            user_id: 'user-b-1',
+            team_side: 'B',
+          }),
+        ],
+      },
+    };
+
+    renderMatchDetail();
+
+    expect(screen.getByRole('button', { name: 'READY (1/6)' })).toBeDisabled();
   });
 
   it('uses the pre-accept Figma lobby with cancel while the match is open', () => {
@@ -233,6 +275,55 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     await waitFor(() => {
       expect(setReadyMock).toHaveBeenCalledWith('match-ready');
+    });
+  });
+
+  it('reveals all players and shows win/loss after all players are ready and the match starts', async () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'in_progress',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            ready: true,
+            profile: {
+              username: 'Host',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/avatar.png',
+              epic_username: 'HostEpic',
+            },
+          }),
+          participantFactory({
+            id: 'participant-b-1',
+            user_id: 'user-b-1',
+            team_side: 'B',
+            ready: true,
+            profile: {
+              username: 'Opponent',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/opponent/avatar.png',
+              epic_username: 'OpponentEpic',
+            },
+          }),
+        ],
+      },
+    };
+    submitResultMock.mockResolvedValue(undefined);
+
+    renderMatchDetail();
+
+    expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getByText('Opponent')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /READY/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'WIN' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'LOSS' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'WIN' }));
+
+    await waitFor(() => {
+      expect(submitResultMock).toHaveBeenCalledWith({ matchId: 'match-ready', result: 'WIN', isTeam: true });
     });
   });
 });

@@ -394,23 +394,25 @@ function ReadyPlayerSlot({
   participant,
   side,
   actionAsset,
+  maskIdentity,
   emptyLabel = 'Unknown',
   emptySubtitle = 'Unknown',
 }: {
   participant?: MatchParticipant;
   side: 'A' | 'B';
   actionAsset: string;
+  maskIdentity?: boolean;
   emptyLabel?: string;
   emptySubtitle?: string;
 }) {
-  const profile = participant?.profile as {
+  const profile = !maskIdentity ? participant?.profile as {
     username?: string;
     avatar_url?: string | null;
     discord_avatar_url?: string | null;
     epic_username?: string | null;
     fortnite_username?: string | null;
-  } | undefined;
-  const avatarUrl = participant ? getDiscordAvatarUrl(profile) : null;
+  } | undefined : undefined;
+  const avatarUrl = participant && !maskIdentity ? getDiscordAvatarUrl(profile) : null;
   const username = profile?.username || emptyLabel;
   const epicName = profile?.fortnite_username || profile?.epic_username || emptySubtitle;
   const accent = side === 'A' ? '#ff1654' : '#d8ff16';
@@ -641,9 +643,11 @@ function ReadyLobbyScreen({
   status,
   viewState,
   currentUserId,
+  currentTeamSide,
   isParticipant,
   isCreator,
   amReady,
+  hasSubmittedResult,
   teamSize,
   teamA,
   teamB,
@@ -652,17 +656,21 @@ function ReadyLobbyScreen({
   readyTotal,
   readyPending,
   cancelPending,
+  submitPending,
   onReady,
   onCancel,
+  onSubmitResult,
   onRules,
 }: {
   match: Match;
   status: string;
   viewState: ViewState;
   currentUserId?: string;
+  currentTeamSide?: 'A' | 'B';
   isParticipant: boolean;
   isCreator: boolean;
   amReady: boolean;
+  hasSubmittedResult: boolean;
   teamSize: number;
   teamA: MatchParticipant[];
   teamB: MatchParticipant[];
@@ -671,18 +679,39 @@ function ReadyLobbyScreen({
   readyTotal: number;
   readyPending: boolean;
   cancelPending: boolean;
+  submitPending: boolean;
   onReady: () => void;
   onCancel: () => void;
+  onSubmitResult: (result: 'WIN' | 'LOSS') => void;
   onRules: () => void;
 }) {
   const slots = Array.from({ length: teamSize });
   const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
   const isWaitingForAcceptance = viewState === 'WAIT';
+  const isReadyCheck = viewState === 'READY_UP';
+  const isPlaying = viewState === 'WIN_LOSS';
+  const shouldMaskParticipants = isWaitingForAcceptance || isReadyCheck;
   const actionLabel = isWaitingForAcceptance ? 'CANCEL' : `READY (${readyCount}/${readyTotal})`;
   const actionDisabled = isWaitingForAcceptance
     ? !isCreator || cancelPending
     : !isParticipant || amReady || readyPending;
   const handlePrimaryAction = isWaitingForAcceptance ? onCancel : onReady;
+  const shouldMaskSlot = (participant?: MatchParticipant) =>
+    !!participant &&
+    shouldMaskParticipants &&
+    (!currentTeamSide || participant.team_side !== currentTeamSide);
+
+  const actionButtonBase = {
+    position: 'absolute' as const,
+    top: 426,
+    width: 218,
+    height: 52,
+    borderRadius: 16,
+    fontFamily: FONT_BOLD,
+    fontSize: 24,
+    lineHeight: 1,
+    color: '#ffffff',
+  };
 
   return (
     <div data-testid="match-ready-lobby" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
@@ -726,29 +755,76 @@ function ReadyLobbyScreen({
           SEE RULES
         </button>
 
-        <button
-          type="button"
-          onClick={handlePrimaryAction}
-          disabled={actionDisabled}
-          style={{
-            position: 'absolute',
-            left: 'calc(36.667% + 50px)',
-            top: 426,
-            width: 218,
-            height: 52,
-            borderRadius: 16,
-            border: '1px solid #ff1654',
-            background: 'rgba(255,22,84,0.34)',
-            fontFamily: FONT_BOLD,
-            fontSize: 24,
-            lineHeight: 1,
-            color: '#ffffff',
-            cursor: actionDisabled ? 'default' : 'pointer',
-            opacity: readyPending || cancelPending ? 0.72 : 1,
-          }}
-        >
-          {actionLabel}
-        </button>
+        {(isWaitingForAcceptance || isReadyCheck) && (
+          <button
+            type="button"
+            onClick={handlePrimaryAction}
+            disabled={actionDisabled}
+            style={{
+              ...actionButtonBase,
+              left: 'calc(36.667% + 50px)',
+              border: '1px solid #ff1654',
+              background: 'rgba(255,22,84,0.34)',
+              cursor: actionDisabled ? 'default' : 'pointer',
+              opacity: readyPending || cancelPending ? 0.72 : 1,
+            }}
+          >
+            {actionLabel}
+          </button>
+        )}
+
+        {isPlaying && !hasSubmittedResult && (
+          <>
+            <button
+              type="button"
+              onClick={() => onSubmitResult('WIN')}
+              disabled={!isParticipant || submitPending}
+              style={{
+                ...actionButtonBase,
+                left: 'calc(36.667% + 50px)',
+                border: '1px solid #1aff16',
+                background: 'rgba(26,255,22,0.28)',
+                cursor: !isParticipant || submitPending ? 'default' : 'pointer',
+                opacity: submitPending ? 0.72 : 1,
+              }}
+            >
+              WIN
+            </button>
+            <button
+              type="button"
+              onClick={() => onSubmitResult('LOSS')}
+              disabled={!isParticipant || submitPending}
+              style={{
+                ...actionButtonBase,
+                left: 'calc(36.667% + 282px)',
+                border: '1px solid #ff1654',
+                background: 'rgba(255,22,84,0.34)',
+                cursor: !isParticipant || submitPending ? 'default' : 'pointer',
+                opacity: submitPending ? 0.72 : 1,
+              }}
+            >
+              LOSS
+            </button>
+          </>
+        )}
+
+        {isPlaying && hasSubmittedResult && (
+          <div
+            style={{
+              ...actionButtonBase,
+              left: 'calc(36.667% + 50px)',
+              width: 450,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#9c9c9c',
+              fontFamily: FONT_BOLD_OBLIQUE,
+              fontSize: 18,
+            }}
+          >
+            Waiting for opponent result...
+          </div>
+        )}
 
         <ReadyVsMark />
 
@@ -770,6 +846,7 @@ function ReadyLobbyScreen({
               participant={teamA[index]}
               side="A"
               actionAsset={READY_ASSETS.playerActionRed}
+              maskIdentity={shouldMaskSlot(teamA[index])}
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
             />
@@ -794,6 +871,7 @@ function ReadyLobbyScreen({
               participant={teamB[index]}
               side="B"
               actionAsset={READY_ASSETS.playerActionGreen[index % READY_ASSETS.playerActionGreen.length]}
+              maskIdentity={shouldMaskSlot(teamB[index])}
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
             />
@@ -929,6 +1007,9 @@ export default function MatchDetail() {
   const myParticipant = user ? participants.find((p) => p.user_id === user.id) : undefined;
   const isParticipant = !!myParticipant;
   const isCreator = match.creator_id === user?.id;
+  const currentTeamSide = myParticipant?.team_side === 'A' || myParticipant?.team_side === 'B'
+    ? myParticipant.team_side
+    : undefined;
   const isTeamMatch = (match.team_size ?? 1) > 1;
   const hasSubmittedResult = !!myParticipant?.result_choice;
   const amReady = !!myParticipant?.ready;
@@ -994,16 +1075,18 @@ export default function MatchDetail() {
     navigate('/rules');
   };
 
-  if (viewState === 'WAIT' || viewState === 'READY_UP') {
+  if (viewState === 'WAIT' || viewState === 'READY_UP' || viewState === 'WIN_LOSS') {
     return (
       <ReadyLobbyScreen
         match={match}
         status={status}
         viewState={viewState}
         currentUserId={user?.id}
+        currentTeamSide={currentTeamSide}
         isParticipant={isParticipant}
         isCreator={isCreator}
         amReady={amReady}
+        hasSubmittedResult={hasSubmittedResult}
         teamSize={teamSize}
         teamA={teamA}
         teamB={teamB}
@@ -1012,8 +1095,10 @@ export default function MatchDetail() {
         readyTotal={readyTotal}
         readyPending={setPlayerReady.isPending}
         cancelPending={cancelMatch.isPending}
+        submitPending={submitResult.isPending}
         onReady={handleReady}
         onCancel={handleCancel}
+        onSubmitResult={handleSubmitResult}
         onRules={handleRules}
       />
     );
