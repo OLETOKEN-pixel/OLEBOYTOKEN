@@ -394,10 +394,14 @@ function ReadyPlayerSlot({
   participant,
   side,
   actionAsset,
+  emptyLabel = 'Unknown',
+  emptySubtitle = 'Unknown',
 }: {
   participant?: MatchParticipant;
   side: 'A' | 'B';
   actionAsset: string;
+  emptyLabel?: string;
+  emptySubtitle?: string;
 }) {
   const profile = participant?.profile as {
     username?: string;
@@ -407,9 +411,10 @@ function ReadyPlayerSlot({
     fortnite_username?: string | null;
   } | undefined;
   const avatarUrl = participant ? getDiscordAvatarUrl(profile) : null;
-  const username = profile?.username || 'Unknown';
-  const epicName = profile?.fortnite_username || profile?.epic_username || 'Unknown';
+  const username = profile?.username || emptyLabel;
+  const epicName = profile?.fortnite_username || profile?.epic_username || emptySubtitle;
   const accent = side === 'A' ? '#ff1654' : '#d8ff16';
+  const showEpicLogo = !!participant || emptySubtitle !== '............';
 
   return (
     <div
@@ -497,7 +502,9 @@ function ReadyPlayerSlot({
         >
           {epicName}
         </span>
-        <img src={READY_ASSETS.epicLogo} alt="" aria-hidden style={{ width: 16, height: 19, flexShrink: 0, opacity: 0.75 }} />
+        {showEpicLogo && (
+          <img src={READY_ASSETS.epicLogo} alt="" aria-hidden style={{ width: 16, height: 19, flexShrink: 0, opacity: 0.75 }} />
+        )}
       </div>
 
       <img
@@ -632,8 +639,10 @@ function ReadyChatPanel({
 function ReadyLobbyScreen({
   match,
   status,
+  viewState,
   currentUserId,
   isParticipant,
+  isCreator,
   amReady,
   teamSize,
   teamA,
@@ -642,13 +651,17 @@ function ReadyLobbyScreen({
   readyCount,
   readyTotal,
   readyPending,
+  cancelPending,
   onReady,
+  onCancel,
   onRules,
 }: {
   match: Match;
   status: string;
+  viewState: ViewState;
   currentUserId?: string;
   isParticipant: boolean;
+  isCreator: boolean;
   amReady: boolean;
   teamSize: number;
   teamA: MatchParticipant[];
@@ -657,11 +670,19 @@ function ReadyLobbyScreen({
   readyCount: number;
   readyTotal: number;
   readyPending: boolean;
+  cancelPending: boolean;
   onReady: () => void;
+  onCancel: () => void;
   onRules: () => void;
 }) {
   const slots = Array.from({ length: teamSize });
   const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
+  const isWaitingForAcceptance = viewState === 'WAIT';
+  const actionLabel = isWaitingForAcceptance ? 'CANCEL' : `READY (${readyCount}/${readyTotal})`;
+  const actionDisabled = isWaitingForAcceptance
+    ? !isCreator || cancelPending
+    : !isParticipant || amReady || readyPending;
+  const handlePrimaryAction = isWaitingForAcceptance ? onCancel : onReady;
 
   return (
     <div data-testid="match-ready-lobby" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
@@ -707,8 +728,8 @@ function ReadyLobbyScreen({
 
         <button
           type="button"
-          onClick={onReady}
-          disabled={!isParticipant || amReady || readyPending}
+          onClick={handlePrimaryAction}
+          disabled={actionDisabled}
           style={{
             position: 'absolute',
             left: 'calc(36.667% + 50px)',
@@ -722,11 +743,11 @@ function ReadyLobbyScreen({
             fontSize: 24,
             lineHeight: 1,
             color: '#ffffff',
-            cursor: !isParticipant || amReady || readyPending ? 'default' : 'pointer',
-            opacity: readyPending ? 0.72 : 1,
+            cursor: actionDisabled ? 'default' : 'pointer',
+            opacity: readyPending || cancelPending ? 0.72 : 1,
           }}
         >
-          {`READY (${readyCount}/${readyTotal})`}
+          {actionLabel}
         </button>
 
         <ReadyVsMark />
@@ -749,6 +770,8 @@ function ReadyLobbyScreen({
               participant={teamA[index]}
               side="A"
               actionAsset={READY_ASSETS.playerActionRed}
+              emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
+              emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
             />
           ))}
         </div>
@@ -771,6 +794,8 @@ function ReadyLobbyScreen({
               participant={teamB[index]}
               side="B"
               actionAsset={READY_ASSETS.playerActionGreen[index % READY_ASSETS.playerActionGreen.length]}
+              emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
+              emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
             />
           ))}
         </div>
@@ -974,8 +999,10 @@ export default function MatchDetail() {
       <ReadyLobbyScreen
         match={match}
         status={status}
+        viewState={viewState}
         currentUserId={user?.id}
         isParticipant={isParticipant}
+        isCreator={isCreator}
         amReady={amReady}
         teamSize={teamSize}
         teamA={teamA}
@@ -984,7 +1011,9 @@ export default function MatchDetail() {
         readyCount={readyCount}
         readyTotal={readyTotal}
         readyPending={setPlayerReady.isPending}
+        cancelPending={cancelMatch.isPending}
         onReady={handleReady}
+        onCancel={handleCancel}
         onRules={handleRules}
       />
     );

@@ -110,6 +110,7 @@ function renderMatchDetail(children?: ReactNode) {
     <MemoryRouter initialEntries={['/matches/match-ready']}>
       <Routes>
         <Route path="/matches/:id" element={<MatchDetail />} />
+        <Route path="/matches" element={<div>Matches page</div>} />
         <Route path="/rules" element={children ?? <div>Rules page</div>} />
       </Routes>
     </MemoryRouter>,
@@ -168,7 +169,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByTestId('mock-match-chat')).toHaveAttribute('data-variant', 'figmaReady');
   });
 
-  it('uses the Figma lobby instead of the old title/delete layout while the match is open', () => {
+  it('uses the pre-accept Figma lobby with cancel while the match is open', () => {
     matchState.value = {
       ...matchState.value,
       data: {
@@ -192,9 +193,37 @@ describe('MatchDetail ready-up Figma lobby', () => {
     renderMatchDetail();
 
     expect(screen.getByTestId('match-ready-lobby')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'READY (0/6)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'CANCEL' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'READY (0/6)' })).not.toBeInTheDocument();
+    expect(screen.getAllByText('Wait for a player').length).toBeGreaterThan(0);
     expect(screen.queryByText('DELETE MATCH')).not.toBeInTheDocument();
     expect(screen.queryByText(/BOX FIGHT/)).not.toBeInTheDocument();
+  });
+
+  it('cancels the open lobby from the Figma cancel button', async () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'open',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+          }),
+        ],
+      },
+    };
+    cancelMatchMock.mockResolvedValue(undefined);
+
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'CANCEL' }));
+
+    await waitFor(() => {
+      expect(cancelMatchMock).toHaveBeenCalledWith('match-ready');
+    });
   });
 
   it('sets the current participant ready from the Figma ready button', async () => {
