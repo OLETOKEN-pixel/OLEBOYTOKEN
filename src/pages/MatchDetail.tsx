@@ -13,7 +13,7 @@ import {
 import { formatEntryFee } from '@/lib/matchFormatters';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { PLATFORM_FEE } from '@/types';
-import type { Match, MatchParticipant } from '@/types';
+import type { Match, MatchParticipant, ProfileSummary } from '@/types';
 
 // ─── fonts shorthand ─────────────────────────────────────────────────────────
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
@@ -700,6 +700,27 @@ function ReadyLobbyScreen({
     !!participant &&
     shouldMaskParticipants &&
     (!currentTeamSide || participant.team_side !== currentTeamSide);
+  const creatorProfile = match.creator as ProfileSummary | undefined;
+  const getVisibleParticipant = (participant?: MatchParticipant): MatchParticipant | undefined => {
+    if (!participant || !isPlaying || participant.user_id !== match.creator_id || !creatorProfile) {
+      return participant;
+    }
+
+    const profile = participant.profile as ProfileSummary | undefined;
+    if (profile?.username) return participant;
+
+    return {
+      ...participant,
+      profile: {
+        ...creatorProfile,
+        ...profile,
+        username: profile?.username || creatorProfile.username,
+        avatar_url: profile?.avatar_url || creatorProfile.avatar_url,
+        discord_avatar_url: profile?.discord_avatar_url || creatorProfile.discord_avatar_url,
+        epic_username: profile?.epic_username || creatorProfile.epic_username,
+      },
+    };
+  };
 
   const actionButtonBase = {
     position: 'absolute' as const,
@@ -843,7 +864,7 @@ function ReadyLobbyScreen({
           {slots.map((_, index) => (
             <ReadyPlayerSlot
               key={teamA[index]?.id ?? `ready-a-empty-${index}`}
-              participant={teamA[index]}
+              participant={getVisibleParticipant(teamA[index])}
               side="A"
               actionAsset={READY_ASSETS.playerActionRed}
               maskIdentity={shouldMaskSlot(teamA[index])}
@@ -868,7 +889,7 @@ function ReadyLobbyScreen({
           {slots.map((_, index) => (
             <ReadyPlayerSlot
               key={teamB[index]?.id ?? `ready-b-empty-${index}`}
-              participant={teamB[index]}
+              participant={getVisibleParticipant(teamB[index])}
               side="B"
               actionAsset={READY_ASSETS.playerActionGreen[index % READY_ASSETS.playerActionGreen.length]}
               maskIdentity={shouldMaskSlot(teamB[index])}

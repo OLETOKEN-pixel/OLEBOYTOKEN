@@ -326,4 +326,44 @@ describe('MatchDetail ready-up Figma lobby', () => {
       expect(submitResultMock).toHaveBeenCalledWith({ matchId: 'match-ready', result: 'WIN', isTeam: true });
     });
   });
+
+  it('uses creator fallback so opponents see the host after the match starts', () => {
+    authState.value = { user: { id: 'user-b-1' } };
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'in_progress',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            ready: true,
+            profile: {
+              username: undefined as unknown as string,
+              discord_avatar_url: null,
+              epic_username: undefined,
+            },
+          }),
+          participantFactory({
+            id: 'participant-b-1',
+            user_id: 'user-b-1',
+            team_side: 'B',
+            ready: true,
+            profile: {
+              username: 'Opponent',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/opponent/avatar.png',
+              epic_username: 'OpponentEpic',
+            },
+          }),
+        ],
+      },
+    };
+
+    renderMatchDetail();
+
+    expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getByText('Opponent')).toBeInTheDocument();
+  });
 });
