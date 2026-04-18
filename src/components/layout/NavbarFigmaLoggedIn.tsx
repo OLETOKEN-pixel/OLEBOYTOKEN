@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,7 +57,14 @@ export function NavbarFigmaLoggedIn() {
   const isMobile = useIsMobile();
   const avatarUrl = getDiscordAvatarUrl(profile);
   const balance = wallet?.balance?.toFixed(2) ?? '0.00';
-  const level = (profile as any)?.level ?? 1;
+  const [navXp, setNavXp] = useState(0);
+  useEffect(() => {
+    if (!profile) return;
+    supabase.rpc('get_user_xp').then(({ data }) => {
+      if (data != null) setNavXp(data as number);
+    });
+  }, [profile]);
+  const level = Math.floor(navXp / 100);
 
   const isOnHome = location.pathname === '/';
   const navItems = Object.keys(NAV_SECTIONS) as NavItem[];

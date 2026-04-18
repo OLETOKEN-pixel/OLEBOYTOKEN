@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
+import { useChallenges } from '@/hooks/useChallenges';
 import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface ChallengeDisplay {
@@ -12,76 +11,26 @@ interface ChallengeDisplay {
 }
 
 export const ChallengesSection = () => {
-  const { user } = useAuth();
-  const [challenges, setChallenges] = useState<ChallengeDisplay[]>([]);
-  const [userXp, setUserXp] = useState(0);
+  const { challenges, userXp, claimChallenge } = useChallenges();
 
+  // Auto-claim any completed-but-unclaimed challenges
   useEffect(() => {
-    if (!user) return;
+    challenges
+      .filter(c => c.is_completed && !c.is_claimed)
+      .forEach(c => { claimChallenge(c.id, c.period_key).catch(() => {}); });
+  }, [challenges, claimChallenge]);
 
-    const fetchData = async () => {
-      // Fetch active challenges (max 5)
-      const { data: challengeRows } = await supabase
-        .from('challenges')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at')
-        .limit(5);
-
-      if (!challengeRows || challengeRows.length === 0) return;
-
-      // Build period keys for today (daily) and this week (weekly)
-      const now = new Date();
-      const dailyKey = now.toISOString().split('T')[0];
-      const mon = new Date(now);
-      mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-      const weeklyKey = mon.toISOString().split('T')[0];
-
-      // Fetch this user's progress for these challenges in current period
-      const { data: progressRows } = await supabase
-        .from('user_challenge_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('challenge_id', challengeRows.map((c: any) => c.id))
-        .in('period_key', [dailyKey, weeklyKey]);
-
-      const progressMap = new Map<string, any>();
-      (progressRows || []).forEach((p: any) => progressMap.set(p.challenge_id, p));
-
-      setChallenges(
-        challengeRows.map((c: any) => {
-          const p = progressMap.get(c.id);
-          const pct = p
-            ? Math.min(100, Math.round((p.progress_value / c.target_value) * 100))
-            : 0;
-          const rewardText =
-            c.reward_xp > 0
-              ? `+${c.reward_xp}XP`
-              : Number(c.reward_coin) > 0
-                ? `+${c.reward_coin}OBC`
-                : '';
-          return {
-            id: c.id,
-            title: c.title,
-            reward: rewardText,
-            progress: pct,
-            completed: p?.is_completed ?? false,
-          };
-        }),
-      );
-
-      // Fetch user XP for level badge
-      const { data: xpRow } = await supabase
-        .from('user_xp')
-        .select('total_xp')
-        .eq('user_id', user.id)
-        .single();
-
-      if (xpRow) setUserXp(xpRow.total_xp);
-    };
-
-    fetchData();
-  }, [user]);
+  const displayChallenges: ChallengeDisplay[] = challenges.slice(0, 5).map(c => ({
+    id: c.id,
+    title: c.title,
+    reward: c.reward_xp > 0
+      ? `+${c.reward_xp}XP`
+      : Number(c.reward_coin) > 0 ? `+${Number(c.reward_coin)}OBC` : '',
+    progress: c.target_value > 0
+      ? Math.min(100, Math.round((c.progress_value / c.target_value) * 100))
+      : 0,
+    completed: c.is_completed,
+  }));
 
   /* ---- helpers for per-row styling ---- */
   const checkBg = (c: ChallengeDisplay) =>
@@ -169,7 +118,7 @@ export const ChallengesSection = () => {
           </div>
 
           {/* Challenge rows — dynamically rendered from DB */}
-          {challenges.map((c, i) => {
+          {displayChallenges.map((c, i) => {
             if (i >= 5) return null;
             const y = ROW_Y[i];
             return (
