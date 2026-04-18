@@ -149,6 +149,31 @@ async function enrichMatchWithDiscordAvatars(match: Match | null): Promise<Match
   return enrichedMatch ?? null;
 }
 
+type MatchDetailsRpcResponse = {
+  success?: boolean;
+  match?: Match;
+};
+
+async function fetchParticipantScopedMatchDetails(matchId: string): Promise<Match | null> {
+  const { data, error } = await supabase.rpc('get_match_details', { p_match_id: matchId });
+  if (error) return null;
+
+  const payload = data as MatchDetailsRpcResponse | null;
+  if (!payload?.success || !payload.match) return null;
+
+  return payload.match;
+}
+
+function mergeMatchDetails(baseMatch: Match, scopedMatch: Match): Match {
+  return {
+    ...baseMatch,
+    ...scopedMatch,
+    creator: scopedMatch.creator ?? baseMatch.creator,
+    participants: Array.isArray(scopedMatch.participants) ? scopedMatch.participants : baseMatch.participants,
+    result: scopedMatch.result ?? baseMatch.result,
+  };
+}
+
 export function useOpenMatches(filters: MatchFilters = {}) {
   const queryClient = useQueryClient();
 
@@ -417,7 +442,11 @@ export function useMatchDetail(matchId: string | undefined) {
         .maybeSingle();
 
       if (error) throw error;
-      return enrichMatchWithDiscordAvatars(data as Match | null);
+      const baseMatch = data as Match | null;
+      const scopedMatch = baseMatch ? await fetchParticipantScopedMatchDetails(matchId) : null;
+      const matchWithVisibleParticipants = baseMatch && scopedMatch ? mergeMatchDetails(baseMatch, scopedMatch) : baseMatch;
+
+      return enrichMatchWithDiscordAvatars(matchWithVisibleParticipants);
     },
     enabled: !!matchId,
     staleTime: 5_000,
