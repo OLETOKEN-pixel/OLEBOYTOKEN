@@ -29,9 +29,14 @@ interface MatchChatProps {
   className?: string;
   hideHeader?: boolean;
   teamMap?: Record<string, 'A' | 'B'>;
+  variant?: 'default' | 'figmaReady';
 }
 
 const ACTIVE_STATUSES = ['open', 'joined', 'ready_check', 'in_progress', 'result_pending', 'disputed', 'full'];
+const READY_CHAT_ASSETS = {
+  emotes: '/figma-assets/match-ready/chat-emotes.svg',
+  sendButton: '/figma-assets/match-ready/chat-send-button.svg',
+};
 
 function normalizeChatMessageAvatar(message: ChatMessage): ChatMessage {
   return {
@@ -56,6 +61,7 @@ export function MatchChat({
   className,
   hideHeader,
   teamMap,
+  variant = 'default',
 }: MatchChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,6 +179,8 @@ export function MatchChat({
 
   if (!isParticipant && !isAdmin) return null;
 
+  const isFigmaReady = variant === 'figmaReady';
+
   return (
     <div className={cn("flex flex-col h-full bg-card rounded-lg border border-border/50 overflow-hidden", className)}>
       {/* Header — hidden when parent renders its own title */}
@@ -189,7 +197,7 @@ export function MatchChat({
       )}
 
       {/* Messages Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }} ref={scrollRef}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isFigmaReady ? '8px 0 0' : '8px 0' }} ref={scrollRef}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -251,8 +259,28 @@ export function MatchChat({
       </div>
 
       {/* Input Area */}
-      <div style={{ padding: '12px 16px', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ flex: 1, background: '#1c1c1c', borderRadius: 10, padding: '0 16px', height: 53, display: 'flex', alignItems: 'center' }}>
+      <div
+        style={{
+          padding: isFigmaReady ? '11px 24px 19px' : '12px 16px',
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+          flexShrink: 0,
+          borderTop: isFigmaReady ? '0' : '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            background: '#1c1c1c',
+            borderRadius: 10,
+            padding: isFigmaReady ? '0 14px 0 16px' : '0 16px',
+            height: 53,
+            display: 'flex',
+            alignItems: 'center',
+            minWidth: 0,
+          }}
+        >
           <input
             className="match-chat-input"
             style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', fontFamily: F, fontSize: 15, color: '#ffffff' } as React.CSSProperties}
@@ -263,20 +291,32 @@ export function MatchChat({
             disabled={sending || !canSendMessage}
             maxLength={500}
           />
+          {isFigmaReady && (
+            <img
+              src={READY_CHAT_ASSETS.emotes}
+              alt=""
+              aria-hidden
+              style={{ width: 20, height: 20, flexShrink: 0, opacity: 0.85 }}
+            />
+          )}
         </div>
         <button
           onClick={handleSendMessage}
           disabled={sending || !newMessage.trim() || !canSendMessage}
           style={{
-            width: 53, height: 53, borderRadius: '50%', background: '#ff1654',
+            width: 53, height: 53, borderRadius: isFigmaReady ? 10 : '50%', background: isFigmaReady ? 'transparent' : '#ff1654',
             border: 'none', cursor: canSendMessage && newMessage.trim() ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, opacity: (!newMessage.trim() || !canSendMessage) ? 0.35 : 1,
+            flexShrink: 0, opacity: (!newMessage.trim() || !canSendMessage) ? (isFigmaReady ? 0.75 : 0.35) : 1,
             transition: 'opacity 0.15s',
+            padding: 0,
+            overflow: 'hidden',
           }}
         >
           {sending ? (
             <Loader2 style={{ width: 22, height: 22, color: 'white' }} className="animate-spin" />
+          ) : isFigmaReady ? (
+            <img src={READY_CHAT_ASSETS.sendButton} alt="" aria-hidden style={{ width: 53, height: 53, display: 'block' }} />
           ) : (
             <Send style={{ width: 20, height: 20, color: 'white' }} />
           )}

@@ -10,16 +10,40 @@ import {
   useSubmitResult,
   useCancelMatch,
 } from '@/hooks/useMatches';
-import {
-  formatMatchTitle,
-  formatEntryFee,
-} from '@/lib/matchFormatters';
+import { formatEntryFee } from '@/lib/matchFormatters';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { PLATFORM_FEE } from '@/types';
 import type { Match, MatchParticipant } from '@/types';
 
 // ─── fonts shorthand ─────────────────────────────────────────────────────────
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
+const FONT_REGULAR =
+  "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
+const FONT_BOLD =
+  "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
+const FONT_BOLD_OBLIQUE =
+  "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BOLD =
+  "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BLACK_OBLIQUE =
+  "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial-ExpandedBlack Oblique', 'Base Neue Trial', sans-serif";
+
+const READY_ASSETS = {
+  epicLogo: '/figma-assets/match-ready/epic-games-logo.svg',
+  playerActionRed: '/figma-assets/match-ready/player-action-red.svg',
+  playerActionGreen: [
+    '/figma-assets/match-ready/player-action-green-1.svg',
+    '/figma-assets/match-ready/player-action-green-2.svg',
+    '/figma-assets/match-ready/player-action-green-3.svg',
+  ],
+  statusCreatedEllipse: '/figma-assets/match-ready/status-created-ellipse.svg',
+  statusStartedEllipse: '/figma-assets/match-ready/status-started-ellipse.svg',
+  statusFinishedEllipse: '/figma-assets/match-ready/status-finished-ellipse.svg',
+  statusCreatedCheck: '/figma-assets/match-ready/status-created-check.svg',
+  statusLineCreatedStarted: '/figma-assets/match-ready/status-line-created-started.svg',
+  statusLineStartedFinished: '/figma-assets/match-ready/status-line-started-finished.svg',
+  chatDivider: '/figma-assets/match-ready/chat-divider.svg',
+};
 
 // ─── Epic Games logo SVG (inline) ────────────────────────────────────────────
 function EpicIcon() {
@@ -311,6 +335,474 @@ function FilledPlayerSlot({
 }
 
 // ─── Terminal banner ──────────────────────────────────────────────────────────
+function ReadyStatusProgress() {
+  return (
+    <div aria-label="Match status progress" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', left: 'calc(13.333% + 7px)', top: 297, width: 66, height: 66 }}>
+        <img src={READY_ASSETS.statusCreatedEllipse} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
+        <img
+          src={READY_ASSETS.statusCreatedCheck}
+          alt=""
+          aria-hidden
+          style={{ position: 'absolute', left: 13, top: 17, width: 40, height: 31 }}
+        />
+      </div>
+      <img
+        src={READY_ASSETS.statusLineCreatedStarted}
+        alt=""
+        aria-hidden
+        style={{ position: 'absolute', left: 'calc(16.667% + 9px)', top: 329, width: 388, height: 3 }}
+      />
+      <div style={{ position: 'absolute', left: 'calc(36.667% + 9px)', top: 297, width: 66, height: 66 }}>
+        <img src={READY_ASSETS.statusStartedEllipse} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
+      </div>
+      <img
+        src={READY_ASSETS.statusLineStartedFinished}
+        alt=""
+        aria-hidden
+        style={{ position: 'absolute', left: 'calc(40% + 11px)', top: 329, width: 385, height: 3 }}
+      />
+      <div style={{ position: 'absolute', left: 'calc(60% + 11px)', top: 297, width: 66, height: 66 }}>
+        <img src={READY_ASSETS.statusFinishedEllipse} alt="" aria-hidden style={{ display: 'block', width: 66, height: 66 }} />
+      </div>
+      {[
+        { label: 'CREATED', left: 'calc(13.333% - 11px)', top: 376 },
+        { label: 'STARTED', left: 'calc(36.667% - 9px)', top: 376 },
+        { label: 'FINISHED', left: 'calc(60% - 7px)', top: 376 },
+      ].map((step) => (
+        <span
+          key={step.label}
+          style={{
+            position: 'absolute',
+            left: step.left,
+            top: step.top,
+            fontFamily: FONT_BOLD,
+            fontSize: 24,
+            lineHeight: 1,
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {step.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ReadyPlayerSlot({
+  participant,
+  side,
+  actionAsset,
+}: {
+  participant?: MatchParticipant;
+  side: 'A' | 'B';
+  actionAsset: string;
+}) {
+  const profile = participant?.profile as {
+    username?: string;
+    avatar_url?: string | null;
+    discord_avatar_url?: string | null;
+    epic_username?: string | null;
+    fortnite_username?: string | null;
+  } | undefined;
+  const avatarUrl = participant ? getDiscordAvatarUrl(profile) : null;
+  const username = profile?.username || 'Unknown';
+  const epicName = profile?.fortnite_username || profile?.epic_username || 'Unknown';
+  const accent = side === 'A' ? '#ff1654' : '#d8ff16';
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: 368,
+        height: 87,
+        borderRadius: 18,
+        border: `1px solid ${accent}`,
+        background: '#282828',
+        overflow: 'hidden',
+      }}
+    >
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          style={{
+            position: 'absolute',
+            left: 26,
+            top: 15,
+            width: 58,
+            height: 58,
+            borderRadius: '50%',
+            objectFit: 'cover',
+          }}
+        />
+      ) : (
+        <div
+          aria-label="Player avatar missing"
+          style={{
+            position: 'absolute',
+            left: 26,
+            top: 15,
+            width: 58,
+            height: 58,
+            borderRadius: '50%',
+            background: '#565656',
+          }}
+        />
+      )}
+
+      <span
+        style={{
+          position: 'absolute',
+          left: 87,
+          top: 22,
+          maxWidth: 202,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontFamily: FONT_BOLD,
+          fontSize: 20,
+          lineHeight: '24px',
+          color: accent,
+        }}
+      >
+        {username}
+      </span>
+
+      <div
+        style={{
+          position: 'absolute',
+          left: 87,
+          top: 51,
+          width: 210,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          overflow: 'hidden',
+        }}
+      >
+        <img src={READY_ASSETS.epicLogo} alt="" aria-hidden style={{ width: 16, height: 19, flexShrink: 0, opacity: 0.75 }} />
+        <span
+          style={{
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: FONT_BOLD_OBLIQUE,
+            fontSize: 15,
+            lineHeight: '18px',
+            color: '#9c9c9c',
+          }}
+        >
+          {epicName}
+        </span>
+      </div>
+
+      <img
+        src={actionAsset}
+        alt=""
+        aria-hidden
+        style={{ position: 'absolute', right: 11, top: 20, width: 47, height: 47 }}
+      />
+    </div>
+  );
+}
+
+function ReadyVsMark() {
+  return (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+      <p
+        style={{
+          position: 'absolute',
+          left: 'calc(26.667% + 36px)',
+          top: 600,
+          width: 364,
+          height: 229,
+          margin: 0,
+          fontFamily: FONT_EXPANDED_BLACK_OBLIQUE,
+          fontSize: 205,
+          fontStyle: 'italic',
+          fontWeight: 900,
+          lineHeight: 1,
+          opacity: 0.48,
+          background: 'linear-gradient(180.2deg, #0f0404 10.117%, #ffffff 99.722%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          userSelect: 'none',
+        }}
+      >
+        VS
+      </p>
+      <div
+        style={{
+          position: 'absolute',
+          left: 'calc(26.667% + 5px)',
+          top: 560,
+          width: 213,
+          height: 289,
+          background: 'linear-gradient(to left, rgba(15,4,4,0) 0%, #0f0404 75.962%)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 'calc(36.667% + 33px)',
+          top: 570,
+          width: 213,
+          height: 289,
+          background: 'linear-gradient(to left, #0f0404 24.038%, rgba(15,4,4,0) 100%)',
+        }}
+      />
+    </div>
+  );
+}
+
+function ReadyChatPanel({
+  matchId,
+  status,
+  currentUserId,
+  isParticipant,
+  teamMap,
+}: {
+  matchId: string;
+  status: string;
+  currentUserId?: string;
+  isParticipant: boolean;
+  teamMap: Record<string, 'A' | 'B'>;
+}) {
+  if (!currentUserId || !isParticipant) return null;
+
+  return (
+    <section
+      aria-label="Match chat"
+      style={{
+        position: 'absolute',
+        right: 44,
+        top: 202,
+        width: 462,
+        height: 680,
+        borderRadius: 18,
+        background: '#282828',
+        boxShadow: '0px 0px 28.2px 7px rgba(255,22,84,0.12)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 4,
+      }}
+    >
+      <h2
+        style={{
+          margin: 0,
+          paddingTop: 18,
+          height: 79,
+          fontFamily: FONT_EXPANDED_BOLD,
+          fontSize: 40,
+          lineHeight: '48px',
+          color: '#ffffff',
+          textAlign: 'center',
+        }}
+      >
+        MATCH CHAT
+      </h2>
+      <img
+        src={READY_ASSETS.chatDivider}
+        alt=""
+        aria-hidden
+        style={{ width: 350, height: 2, margin: '0 auto', flexShrink: 0 }}
+      />
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <MatchChat
+          matchId={matchId}
+          matchStatus={status}
+          currentUserId={currentUserId}
+          isAdmin={false}
+          isParticipant={isParticipant}
+          hideHeader
+          teamMap={teamMap}
+          variant="figmaReady"
+          className="flex-1 bg-transparent border-0 rounded-none overflow-hidden"
+        />
+      </div>
+    </section>
+  );
+}
+
+function ReadyLobbyScreen({
+  match,
+  status,
+  currentUserId,
+  isParticipant,
+  amReady,
+  teamSize,
+  teamA,
+  teamB,
+  teamMap,
+  readyCount,
+  readyTotal,
+  readyPending,
+  onReady,
+  onRules,
+}: {
+  match: Match;
+  status: string;
+  currentUserId?: string;
+  isParticipant: boolean;
+  amReady: boolean;
+  teamSize: number;
+  teamA: MatchParticipant[];
+  teamB: MatchParticipant[];
+  teamMap: Record<string, 'A' | 'B'>;
+  readyCount: number;
+  readyTotal: number;
+  readyPending: boolean;
+  onReady: () => void;
+  onRules: () => void;
+}) {
+  const slots = Array.from({ length: teamSize });
+  const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
+
+  return (
+    <div data-testid="match-ready-lobby" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
+      <img
+        src="/figma-assets/figma-neon.png"
+        alt=""
+        aria-hidden
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 146, objectFit: 'cover', zIndex: 5, pointerEvents: 'none' }}
+      />
+      <NavbarFigmaLoggedIn />
+
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          minWidth: 1280,
+          zIndex: 10,
+        }}
+      >
+        <ReadyStatusProgress />
+
+        <button
+          type="button"
+          onClick={onRules}
+          style={{
+            position: 'absolute',
+            left: 'calc(26.667% + 7px)',
+            top: 426,
+            width: 218,
+            height: 52,
+            borderRadius: 16,
+            border: '1px solid rgba(255,255,255,0.5)',
+            background: '#282828',
+            fontFamily: FONT_BOLD,
+            fontSize: 24,
+            lineHeight: 1,
+            color: '#ffffff',
+            cursor: 'pointer',
+          }}
+        >
+          SEE RULES
+        </button>
+
+        <button
+          type="button"
+          onClick={onReady}
+          disabled={!isParticipant || amReady || readyPending}
+          style={{
+            position: 'absolute',
+            left: 'calc(36.667% + 50px)',
+            top: 426,
+            width: 218,
+            height: 52,
+            borderRadius: 16,
+            border: '1px solid #ff1654',
+            background: 'rgba(255,22,84,0.34)',
+            fontFamily: FONT_BOLD,
+            fontSize: 24,
+            lineHeight: 1,
+            color: '#ffffff',
+            cursor: !isParticipant || amReady || readyPending ? 'default' : 'pointer',
+            opacity: readyPending ? 0.72 : 1,
+          }}
+        >
+          {`READY (${readyCount}/${readyTotal})`}
+        </button>
+
+        <ReadyVsMark />
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(13.333% + 7px)',
+            top: teamTop,
+            width: 368,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 9,
+            zIndex: 3,
+          }}
+        >
+          {slots.map((_, index) => (
+            <ReadyPlayerSlot
+              key={teamA[index]?.id ?? `ready-a-empty-${index}`}
+              participant={teamA[index]}
+              side="A"
+              actionAsset={READY_ASSETS.playerActionRed}
+            />
+          ))}
+        </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 'calc(43.333% + 29px)',
+            top: teamTop,
+            width: 368,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 9,
+            zIndex: 3,
+          }}
+        >
+          {slots.map((_, index) => (
+            <ReadyPlayerSlot
+              key={teamB[index]?.id ?? `ready-b-empty-${index}`}
+              participant={teamB[index]}
+              side="B"
+              actionAsset={READY_ASSETS.playerActionGreen[index % READY_ASSETS.playerActionGreen.length]}
+            />
+          ))}
+        </div>
+
+        <ReadyChatPanel
+          matchId={match.id}
+          status={status}
+          currentUserId={currentUserId}
+          isParticipant={isParticipant}
+          teamMap={teamMap}
+        />
+      </div>
+
+      <img
+        src="/figma-assets/figma-neon.png"
+        alt=""
+        aria-hidden
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          height: 146,
+          objectFit: 'cover',
+          zIndex: 5,
+          pointerEvents: 'none',
+          transform: 'scaleY(-1)',
+        }}
+      />
+    </div>
+  );
+}
+
 function TerminalBanner({
   status,
   isWinner,
@@ -418,6 +910,8 @@ export default function MatchDetail() {
   const teamSize = Math.max(Number(match.team_size ?? 1), 1);
   const teamA = participants.filter((p) => p.team_side === 'A');
   const teamB = participants.filter((p) => p.team_side === 'B');
+  const readyTotal = teamSize * 2;
+  const readyCount = participants.filter((p) => p.ready).length;
 
   const matchResult = Array.isArray(match.result) ? match.result[0] : match.result;
   const isWinner = matchResult
@@ -429,6 +923,14 @@ export default function MatchDetail() {
   const entryFee = Number(match.entry_fee ?? 0);
   const totalPot = entryFee * teamSize * 2;
   const prize = totalPot * (1 - PLATFORM_FEE);
+
+  // teamMap: userId → 'A' | 'B' — passed to chat for team-colored usernames
+  const teamMap: Record<string, 'A' | 'B'> = {};
+  participants.forEach((p) => {
+    if (p.team_side === 'A' || p.team_side === 'B') {
+      teamMap[p.user_id] = p.team_side;
+    }
+  });
 
   const status = match.status ?? 'open';
   const viewState = getViewState(status);
@@ -462,6 +964,31 @@ export default function MatchDetail() {
     }
   };
 
+  const handleRules = () => {
+    navigate('/rules');
+  };
+
+  if (viewState === 'READY_UP') {
+    return (
+      <ReadyLobbyScreen
+        match={match}
+        status={status}
+        currentUserId={user?.id}
+        isParticipant={isParticipant}
+        amReady={amReady}
+        teamSize={teamSize}
+        teamA={teamA}
+        teamB={teamB}
+        teamMap={teamMap}
+        readyCount={readyCount}
+        readyTotal={readyTotal}
+        readyPending={setPlayerReady.isPending}
+        onReady={handleReady}
+        onRules={handleRules}
+      />
+    );
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
@@ -494,7 +1021,7 @@ export default function MatchDetail() {
               letterSpacing: '-0.02em',
             }}
           >
-            {formatMatchTitle(match).toUpperCase()} {formatEntryFee(match)}
+            {`${teamSize}V${teamSize} ${String(match.mode ?? '').toUpperCase() || 'MATCH'} ${formatEntryFee(match)}`}
             {/* Dot indicator like Figma */}
             <span style={{ color: '#ff1654', fontSize: '0.5em', verticalAlign: 'middle', marginLeft: 8 }}>●</span>
           </h1>
@@ -736,6 +1263,7 @@ export default function MatchDetail() {
                   isAdmin={false}
                   isParticipant={isParticipant}
                   hideHeader={true}
+                  teamMap={teamMap}
                   className="flex-1 bg-transparent border-0 rounded-none overflow-hidden"
                 />
               </div>
