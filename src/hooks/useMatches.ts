@@ -17,7 +17,7 @@ export interface MatchFilters {
 
 const MY_MATCHES_SELECT = `
   *,
-  creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+  creator:profiles_public!matches_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, epic_username),
   participants:match_participants(
     id,
     match_id,
@@ -30,7 +30,7 @@ const MY_MATCHES_SELECT = `
     result_at,
     status,
     joined_at,
-    profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+    profile:profiles_public!match_participants_user_id_fkey(user_id, username, avatar_url, discord_avatar_url, epic_username)
   ),
   result:match_results(*)
 `;
@@ -174,6 +174,17 @@ function mergeMatchDetails(baseMatch: Match, scopedMatch: Match): Match {
   };
 }
 
+async function hydrateMatchesWithScopedDetails(matches: Match[]): Promise<Match[]> {
+  return Promise.all(
+    matches.map(async (match) => {
+      if (!match.id) return match;
+
+      const scopedMatch = await fetchParticipantScopedMatchDetails(match.id);
+      return scopedMatch ? mergeMatchDetails(match, scopedMatch) : match;
+    }),
+  );
+}
+
 export function useOpenMatches(filters: MatchFilters = {}) {
   const queryClient = useQueryClient();
 
@@ -184,7 +195,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, epic_username),
           participants:match_participants(
             id,
             match_id,
@@ -197,7 +208,7 @@ export function useOpenMatches(filters: MatchFilters = {}) {
             result_at,
             status,
             joined_at,
-            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+            profile:profiles_public!match_participants_user_id_fkey(user_id, username, avatar_url, discord_avatar_url, epic_username)
           )
         `)
         .eq('status', 'open')
@@ -330,7 +341,9 @@ export function useMyMatches() {
         if (match?.id) mergedMatches.set(match.id, match);
       });
 
-      return sortMyMatches(await enrichMatchesWithDiscordAvatars(Array.from(mergedMatches.values())));
+      const scopedMatches = await hydrateMatchesWithScopedDetails(Array.from(mergedMatches.values()));
+
+      return sortMyMatches(await enrichMatchesWithDiscordAvatars(scopedMatches));
     },
     enabled: !!user,
     staleTime: 30_000,
@@ -421,7 +434,7 @@ export function useMatchDetail(matchId: string | undefined) {
         .from('matches')
         .select(`
           *,
-          creator:profiles_public!matches_creator_id_fkey(username, avatar_url, epic_username),
+          creator:profiles_public!matches_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, epic_username),
           participants:match_participants(
             id,
             match_id,
@@ -434,7 +447,7 @@ export function useMatchDetail(matchId: string | undefined) {
             result_at,
             status,
             joined_at,
-            profile:profiles_public!match_participants_user_id_fkey(username, avatar_url, epic_username)
+            profile:profiles_public!match_participants_user_id_fkey(user_id, username, avatar_url, discord_avatar_url, epic_username)
           ),
           result:match_results(*)
         `)

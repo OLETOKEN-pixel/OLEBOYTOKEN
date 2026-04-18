@@ -207,6 +207,53 @@ describe('MyMatches page', () => {
     expect(grid.style.columnGap).toBe('100px');
   });
 
+  it('uses the creator avatar when the matching participant profile is partial', () => {
+    myMatchesState.value = {
+      data: [
+        matchFactory({
+          id: 'creator-open',
+          creator_id: 'user-1',
+          creator: {
+            username: 'Host',
+            discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/discord-host.png',
+            epic_username: 'HostEpic',
+          },
+          participants: [
+            {
+              id: 'participant-host',
+              match_id: 'creator-open',
+              user_id: 'user-1',
+              team_id: null,
+              team_side: 'A',
+              ready: false,
+              ready_at: null,
+              result_choice: null,
+              result_at: null,
+              status: 'joined',
+              joined_at: new Date().toISOString(),
+              profile: {
+                username: 'Host',
+                avatar_url: null,
+                discord_avatar_url: null,
+                epic_username: 'HostEpic',
+              },
+            },
+          ],
+        }),
+      ],
+      isPending: false,
+      isError: false,
+      error: null,
+    };
+
+    renderMyMatches();
+
+    expect(screen.getByRole('img', { name: 'Host' })).toHaveAttribute(
+      'src',
+      'https://cdn.discordapp.com/avatars/host/discord-host.png',
+    );
+  });
+
   it('uses the mobile layout below 768px without horizontal overflow wrappers', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 390 });
 

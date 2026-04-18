@@ -31,6 +31,22 @@ function getProfileName(profile?: ProfileSummary | null): string {
   return profile?.username || profile?.epic_username || 'Player';
 }
 
+function mergeCardProfile(
+  primary?: ProfileSummary | null,
+  fallback?: ProfileSummary | null,
+): ProfileSummary | null {
+  if (!primary && !fallback) return null;
+
+  const avatarUrl = getDiscordAvatarUrl(primary) ?? getDiscordAvatarUrl(fallback);
+
+  return {
+    ...((fallback ?? {}) as ProfileSummary),
+    ...((primary ?? {}) as ProfileSummary),
+    avatar_url: primary?.avatar_url ?? fallback?.avatar_url ?? avatarUrl,
+    discord_avatar_url: avatarUrl,
+  } as ProfileSummary;
+}
+
 function getCardPlayers(match: Match) {
   const participants = (match.participants ?? []) as MatchParticipant[];
   const creatorProfile = match.creator as ProfileSummary | undefined;
@@ -41,8 +57,9 @@ function getCardPlayers(match: Match) {
     participants.find((participant) => participant.team_side === 'B') ??
     participants.find((participant) => participant.user_id !== match.creator_id);
 
-  const creator = creatorParticipant?.profile ?? creatorProfile ?? null;
-  const opponent = opponentParticipant?.profile ?? null;
+  const creator = mergeCardProfile(creatorParticipant?.profile as ProfileSummary | undefined, creatorProfile);
+  const opponentFallback = opponentParticipant?.user_id === match.creator_id ? creatorProfile : null;
+  const opponent = mergeCardProfile(opponentParticipant?.profile as ProfileSummary | undefined, opponentFallback);
 
   return {
     creator,

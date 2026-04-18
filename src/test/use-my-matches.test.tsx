@@ -11,6 +11,8 @@ const {
   fromMock,
   matchesInMock,
   participantEqMock,
+  profilesInMock,
+  rpcMock,
   unsubscribeMock,
 } = vi.hoisted(() => {
   const unsubscribe = vi.fn();
@@ -26,6 +28,8 @@ const {
     fromMock: vi.fn(),
     matchesInMock: vi.fn(),
     participantEqMock: vi.fn(),
+    profilesInMock: vi.fn(),
+    rpcMock: vi.fn(),
     unsubscribeMock: unsubscribe,
   };
 });
@@ -39,6 +43,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: fromMock,
+    rpc: rpcMock,
     channel: vi.fn(() => channelBuilder),
   },
 }));
@@ -115,11 +120,21 @@ describe('useMyMatches', () => {
       ],
       error: null,
     });
+    profilesInMock.mockResolvedValue({ data: [], error: null });
+    rpcMock.mockResolvedValue({ data: { success: false, match: null }, error: null });
     fromMock.mockImplementation((table: string) => {
       if (table === 'match_participants') {
         return {
           select: vi.fn(() => ({
             eq: participantEqMock,
+          })),
+        };
+      }
+
+      if (table === 'profiles') {
+        return {
+          select: vi.fn(() => ({
+            in: profilesInMock,
           })),
         };
       }
@@ -146,5 +161,147 @@ describe('useMyMatches', () => {
     ]);
     expect(creatorEqMock).toHaveBeenCalledWith('creator_id', 'user-1');
     expect(matchesInMock).toHaveBeenCalledWith('id', ['participant-completed', 'creator-open']);
+  });
+
+  it('hydrates opponent avatars from the scoped match details RPC', async () => {
+    matchesInMock.mockResolvedValue({
+      data: [
+        matchFactory({
+          id: 'participant-completed',
+          creator_id: 'user-2',
+          status: 'in_progress',
+          created_at: '2026-04-12T09:00:00.000Z',
+          creator: {
+            user_id: 'user-2',
+            username: 'owener1',
+            avatar_url: null,
+            discord_avatar_url: null,
+            epic_username: 'marv',
+          },
+          participants: [
+            {
+              id: 'creator-participant',
+              match_id: 'participant-completed',
+              user_id: 'user-2',
+              team_id: null,
+              team_side: 'A',
+              ready: true,
+              ready_at: null,
+              result_choice: null,
+              result_at: null,
+              status: 'playing',
+              joined_at: '2026-04-12T09:01:00.000Z',
+              profile: {
+                user_id: 'user-2',
+                username: 'owener1',
+                avatar_url: null,
+                discord_avatar_url: null,
+                epic_username: 'marv',
+              },
+            },
+            {
+              id: 'current-participant',
+              match_id: 'participant-completed',
+              user_id: 'user-1',
+              team_id: null,
+              team_side: 'B',
+              ready: true,
+              ready_at: null,
+              result_choice: null,
+              result_at: null,
+              status: 'playing',
+              joined_at: '2026-04-12T09:02:00.000Z',
+              profile: {
+                user_id: 'user-1',
+                username: 'marv',
+                avatar_url: 'https://cdn.discordapp.com/avatars/user-1/current.png',
+                discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-1/current.png',
+                epic_username: 'Marv17_',
+              },
+            },
+          ],
+        }),
+      ],
+      error: null,
+    });
+    rpcMock.mockImplementation((_fn: string, args: { p_match_id: string }) => {
+      if (args.p_match_id !== 'participant-completed') {
+        return Promise.resolve({ data: { success: false, match: null }, error: null });
+      }
+
+      return Promise.resolve({
+        data: {
+          success: true,
+          match: matchFactory({
+            id: 'participant-completed',
+            creator_id: 'user-2',
+            status: 'in_progress',
+            creator: {
+              user_id: 'user-2',
+              username: 'owener1',
+              avatar_url: 'https://cdn.discordapp.com/avatars/user-2/opponent.png',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-2/opponent.png',
+              epic_username: 'marv',
+            },
+            participants: [
+              {
+                id: 'creator-participant',
+                match_id: 'participant-completed',
+                user_id: 'user-2',
+                team_id: null,
+                team_side: 'A',
+                ready: true,
+                ready_at: null,
+                result_choice: null,
+                result_at: null,
+                status: 'playing',
+                joined_at: '2026-04-12T09:01:00.000Z',
+                profile: {
+                  user_id: 'user-2',
+                  username: 'owener1',
+                  avatar_url: 'https://cdn.discordapp.com/avatars/user-2/opponent.png',
+                  discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-2/opponent.png',
+                  epic_username: 'marv',
+                },
+              },
+              {
+                id: 'current-participant',
+                match_id: 'participant-completed',
+                user_id: 'user-1',
+                team_id: null,
+                team_side: 'B',
+                ready: true,
+                ready_at: null,
+                result_choice: null,
+                result_at: null,
+                status: 'playing',
+                joined_at: '2026-04-12T09:02:00.000Z',
+                profile: {
+                  user_id: 'user-1',
+                  username: 'marv',
+                  avatar_url: 'https://cdn.discordapp.com/avatars/user-1/current.png',
+                  discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-1/current.png',
+                  epic_username: 'Marv17_',
+                },
+              },
+            ],
+          }),
+        },
+        error: null,
+      });
+    });
+
+    const { result } = renderHook(() => useMyMatches(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    const match = result.current.data?.find((item) => item.id === 'participant-completed');
+    const opponent = match?.participants?.find((participant) => participant.user_id === 'user-2');
+
+    expect(match?.creator?.discord_avatar_url).toBe('https://cdn.discordapp.com/avatars/user-2/opponent.png');
+    expect(opponent?.profile?.discord_avatar_url).toBe('https://cdn.discordapp.com/avatars/user-2/opponent.png');
+    expect(rpcMock).toHaveBeenCalledWith('get_match_details', { p_match_id: 'participant-completed' });
   });
 });
