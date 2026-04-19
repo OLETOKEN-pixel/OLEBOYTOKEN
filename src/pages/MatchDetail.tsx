@@ -627,55 +627,52 @@ function ReadyPlayerSlot({
 }
 
 function ReadyVsMark() {
+  const baseLayerStyle: CSSProperties = {
+    position: 'absolute',
+    left: 'calc(26.667% + 36px)',
+    top: 600,
+    width: 364,
+    height: 229,
+    margin: 0,
+    fontFamily: FONT_EXPANDED_BLACK_OBLIQUE,
+    fontSize: 205.331,
+    fontStyle: 'oblique',
+    fontWeight: 900,
+    lineHeight: 'normal',
+    whiteSpace: 'nowrap',
+    display: 'inline-block',
+    paddingRight: 18,
+    opacity: 0.48,
+    color: 'transparent',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    userSelect: 'none',
+  };
+
   return (
     <div data-testid="match-ready-vs" aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
       <p
-        data-testid="match-ready-vs-text"
+        data-testid="match-ready-vs-stroke"
         style={{
-          position: 'absolute',
-          left: 'calc(26.667% + 36px)',
-          top: 600,
-          width: 364,
-          height: 229,
-          margin: 0,
-          fontFamily: FONT_EXPANDED_BLACK_OBLIQUE,
-          fontSize: 205.331,
-          fontStyle: 'normal',
-          fontWeight: 'normal',
-          lineHeight: 'normal',
-          opacity: 0.48,
-          color: 'transparent',
-          backgroundImage: 'linear-gradient(180.20163242201932deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          userSelect: 'none',
+          ...baseLayerStyle,
+          WebkitTextStroke: '2.06px transparent',
+          background: 'linear-gradient(180.075deg, #FFFFFF 0%, #0F0404 100%)',
+          zIndex: 1,
         }}
       >
         VS
       </p>
-      <div
-        data-testid="match-ready-vs-left-fade"
+      <p
+        data-testid="match-ready-vs-text"
         style={{
-          position: 'absolute',
-          left: 'calc(26.667% + 5px)',
-          top: 560,
-          width: 213,
-          height: 289,
-          background: 'linear-gradient(270deg, rgba(15,4,4,0) 0%, #0f0404 75.962%)',
+          ...baseLayerStyle,
+          backgroundImage: 'linear-gradient(180.075deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
+          zIndex: 2,
         }}
-      />
-      <div
-        data-testid="match-ready-vs-right-fade"
-        style={{
-          position: 'absolute',
-          left: 'calc(36.667% + 33px)',
-          top: 570,
-          width: 213,
-          height: 289,
-          background: 'linear-gradient(270deg, #0f0404 24.038%, rgba(15,4,4,0) 100%)',
-        }}
-      />
+      >
+        VS
+      </p>
     </div>
   );
 }

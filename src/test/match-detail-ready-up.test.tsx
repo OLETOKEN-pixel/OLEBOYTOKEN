@@ -176,11 +176,11 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByText('STARTED')).toBeInTheDocument();
     expect(screen.getByText('FINISHED')).toBeInTheDocument();
     expect(screen.getByTestId('match-ready-vs')).toBeInTheDocument();
-    expect(screen.getByTestId('match-ready-vs-left-fade')).toHaveStyle({
-      background: 'linear-gradient(270deg, rgba(15,4,4,0) 0%, #0f0404 75.962%)',
+    expect(screen.getByTestId('match-ready-vs-stroke')).toHaveStyle({
+      background: 'linear-gradient(180.075deg, #FFFFFF 0%, #0F0404 100%)',
     });
-    expect(screen.getByTestId('match-ready-vs-right-fade')).toHaveStyle({
-      background: 'linear-gradient(270deg, #0f0404 24.038%, rgba(15,4,4,0) 100%)',
+    expect(screen.getByTestId('match-ready-vs-text')).toHaveStyle({
+      backgroundImage: 'linear-gradient(180.075deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
     });
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.queryByText('Opponent')).not.toBeInTheDocument();
