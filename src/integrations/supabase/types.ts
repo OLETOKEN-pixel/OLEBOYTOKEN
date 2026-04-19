@@ -1958,6 +1958,7 @@ export type Database = {
       }
       get_match_details: { Args: { p_match_id: string }; Returns: Json }
       get_match_public_details: { Args: { p_match_id: string }; Returns: Json }
+      get_player_profile_view: { Args: { p_user_id: string }; Returns: Json }
       get_player_rank: { Args: { p_user_id: string }; Returns: number }
       get_player_stats: { Args: { p_user_id: string }; Returns: Json }
       get_team_members: { Args: { p_team_id: string }; Returns: Json }

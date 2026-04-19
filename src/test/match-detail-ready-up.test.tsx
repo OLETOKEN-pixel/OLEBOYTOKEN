@@ -41,6 +41,12 @@ vi.mock('@/components/matches/MatchChat', () => ({
   ),
 }));
 
+vi.mock('@/components/player/PlayerStatsModal', () => ({
+  PlayerStatsModal: ({ open, userId }: { open: boolean; userId: string }) => (
+    open ? <div data-testid="mock-player-profile">PROFILE VIEW {userId}</div> : null
+  ),
+}));
+
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => authState.value,
 }));
@@ -278,6 +284,25 @@ describe('MatchDetail ready-up Figma lobby', () => {
     });
   });
 
+  it('opens the profile tab from a visible player arrow', () => {
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Host profile' }));
+
+    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-a-1');
+  });
+
+  it('does not open a profile from a masked opponent arrow before reveal', () => {
+    renderMatchDetail();
+
+    expect(screen.queryByRole('button', { name: 'Open Opponent profile' })).not.toBeInTheDocument();
+
+    const unavailableButtons = screen.getAllByRole('button', { name: 'Player profile unavailable' });
+    fireEvent.click(unavailableButtons[0]);
+
+    expect(screen.queryByTestId('mock-player-profile')).not.toBeInTheDocument();
+  });
+
   it('reveals all players and shows win/loss after all players are ready and the match starts', async () => {
     matchState.value = {
       ...matchState.value,
@@ -316,6 +341,9 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.getByText('Opponent')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Opponent profile' }));
+    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-b-1');
+
     expect(screen.getByLabelText('Started status active')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /READY/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'WIN' })).toBeEnabled();

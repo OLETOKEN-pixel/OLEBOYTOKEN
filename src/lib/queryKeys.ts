@@ -13,6 +13,7 @@ export const queryKeys = {
   },
   wallet: (userId: string) => ['wallet', userId] as const,
   profile: (userId: string) => ['profile', userId] as const,
+  playerProfile: (userId: string) => ['player-profile', userId] as const,
   transactions: (userId: string) => ['transactions', userId] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
   fortniteMap: ['fortnite', 'map'] as const,

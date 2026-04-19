@@ -1,7 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NavbarFigmaLoggedIn } from '@/components/layout/NavbarFigmaLoggedIn';
 import { MatchChat } from '@/components/matches/MatchChat';
+import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -30,11 +32,11 @@ const FONT_EXPANDED_BLACK_OBLIQUE =
 
 const READY_ASSETS = {
   epicLogo: '/figma-assets/match-ready/epic-games-logo.png',
-  playerActionRed: '/figma-assets/match-ready/player-action-red.svg',
+  playerActionRed: '/figma-assets/player-profile/see-more-red.svg',
   playerActionGreen: [
-    '/figma-assets/match-ready/player-action-green-1.svg',
-    '/figma-assets/match-ready/player-action-green-2.svg',
-    '/figma-assets/match-ready/player-action-green-3.svg',
+    '/figma-assets/player-profile/see-more-green.svg',
+    '/figma-assets/player-profile/see-more-green.svg',
+    '/figma-assets/player-profile/see-more-green.svg',
   ],
   statusCreatedEllipse: '/figma-assets/match-ready/status-created-ellipse.svg',
   statusStartedEllipse: '/figma-assets/match-ready/status-started-ellipse.svg',
@@ -438,6 +440,7 @@ function ReadyPlayerSlot({
   maskIdentity,
   emptyLabel = 'Unknown',
   emptySubtitle = 'Unknown',
+  onOpenProfile,
 }: {
   participant?: MatchParticipant;
   side: 'A' | 'B';
@@ -445,6 +448,7 @@ function ReadyPlayerSlot({
   maskIdentity?: boolean;
   emptyLabel?: string;
   emptySubtitle?: string;
+  onOpenProfile?: (participant: MatchParticipant) => void;
 }) {
   const profile = !maskIdentity ? participant?.profile as {
     username?: string;
@@ -458,6 +462,8 @@ function ReadyPlayerSlot({
   const epicName = profile?.fortnite_username || profile?.epic_username || emptySubtitle;
   const accent = side === 'A' ? '#ff1654' : '#d8ff16';
   const showEpicLogo = !!participant || emptySubtitle !== '............';
+  const canOpenProfile = !!participant && !maskIdentity && !!participant.user_id;
+  const profileButtonLabel = canOpenProfile ? `Open ${username} profile` : 'Player profile unavailable';
 
   return (
     <div
@@ -550,12 +556,34 @@ function ReadyPlayerSlot({
         )}
       </div>
 
-      <img
-        src={actionAsset}
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', right: 11, top: 20, width: 47, height: 47 }}
-      />
+      <button
+        type="button"
+        aria-label={profileButtonLabel}
+        disabled={!canOpenProfile}
+        onClick={() => {
+          if (participant && canOpenProfile) onOpenProfile?.(participant);
+        }}
+        style={{
+          position: 'absolute',
+          right: 11,
+          top: 20,
+          width: 47,
+          height: 47,
+          padding: 0,
+          border: 0,
+          borderRadius: '50%',
+          background: 'transparent',
+          cursor: canOpenProfile ? 'pointer' : 'default',
+          opacity: canOpenProfile ? 1 : 0.62,
+        }}
+      >
+        <img
+          src={actionAsset}
+          alt=""
+          aria-hidden
+          style={{ display: 'block', width: 47, height: 47 }}
+        />
+      </button>
     </div>
   );
 }
@@ -737,6 +765,7 @@ function ReadyLobbyScreen({
   prize?: number;
   entryFee?: number;
 }) {
+  const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
   const slots = Array.from({ length: teamSize });
   const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
   const isWaitingForAcceptance = viewState === 'WAIT';
@@ -772,6 +801,11 @@ function ReadyLobbyScreen({
         epic_username: profile?.epic_username || creatorProfile.epic_username,
       },
     };
+  };
+
+  const handleOpenProfile = (participant: MatchParticipant) => {
+    if (!participant.user_id) return;
+    setSelectedProfileUserId(participant.user_id);
   };
 
   const actionButtonBase = {
@@ -946,6 +980,7 @@ function ReadyLobbyScreen({
               maskIdentity={shouldMaskSlot(teamA[index])}
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
+              onOpenProfile={handleOpenProfile}
             />
           ))}
         </div>
@@ -971,6 +1006,7 @@ function ReadyLobbyScreen({
               maskIdentity={shouldMaskSlot(teamB[index])}
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
+              onOpenProfile={handleOpenProfile}
             />
           ))}
         </div>
@@ -984,6 +1020,14 @@ function ReadyLobbyScreen({
           profileMap={profileMap}
         />
       </div>
+
+      <PlayerStatsModal
+        open={!!selectedProfileUserId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProfileUserId(null);
+        }}
+        userId={selectedProfileUserId || ''}
+      />
 
       <img
         src="/figma-assets/figma-neon.png"
