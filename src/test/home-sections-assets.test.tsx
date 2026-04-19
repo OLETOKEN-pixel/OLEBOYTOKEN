@@ -38,7 +38,8 @@ describe('logged home section assets', () => {
     const { container } = renderWithRouter(<TeamsSection />);
     const srcs = getImageSources(container);
 
-    expect(srcs).toContain('/figma-assets/figma-spaccato-title1.svg');
+    expect(srcs).toContain('/figma-assets/teams-spaccato-title.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-spaccato-title1.svg');
     expect(srcs).toContain('/figma-assets/figma-star-shape.svg');
     expect(srcs).toContain('/figma-assets/figma-arrow-stroke.svg');
     expect(srcs).toContain('/figma-assets/figma-bw-arrow.svg');
@@ -50,7 +51,8 @@ describe('logged home section assets', () => {
     const { container } = renderWithRouter(<ShopSection />);
     const srcs = getImageSources(container);
 
-    expect(srcs).toContain('/figma-assets/figma-spaccato-title1.svg');
+    expect(srcs).toContain('/figma-assets/shop-spaccato-title.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-spaccato-title1.svg');
     expect(srcs).toContain('/figma-assets/figma-star-shape.svg');
     expect(srcs).toContain('/figma-assets/figma-arrow-stroke.svg');
     expect(srcs).toContain('/figma-assets/figma-bw-arrow.svg');

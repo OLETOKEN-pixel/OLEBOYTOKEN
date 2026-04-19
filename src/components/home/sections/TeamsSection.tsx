@@ -6,7 +6,7 @@ const imgStarShape = '/figma-assets/figma-star-shape.svg';
 const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
 const imgBwArrow = '/figma-assets/figma-bw-arrow.svg';
 const imgFwArrow = '/figma-assets/figma-fw-arrow.svg';
-const imgSpaccatoTitle = '/figma-assets/figma-spaccato-title1.svg';
+const imgSpaccatoTitle = '/figma-assets/teams-spaccato-title.svg';
 
 interface TeamDisplay {
   rank: number;
