@@ -275,58 +275,70 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
           <ProfileAvatar profile={profile} size={132} />
         </div>
 
-        <p
+        <div
           style={{
             position: 'absolute',
-            left: 228,
-            top: 205,
-            margin: 0,
-            maxWidth: 300,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontFamily: FONT_BOLD_OBLIQUE,
-            fontSize: 36,
-            lineHeight: '43px',
-            color: '#ffffff',
+            left: 247,
+            top: 195,
+            height: 43,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            maxWidth: 410,
+            minWidth: 0,
           }}
         >
-          {profile.username}
-        </p>
+          <p
+            style={{
+              margin: 0,
+              maxWidth: 270,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontFamily: FONT_BOLD_OBLIQUE,
+              fontSize: 36,
+              lineHeight: '43px',
+              color: '#ffffff',
+              flexShrink: 1,
+            }}
+          >
+            {profile.username}
+          </p>
 
-        <div style={{ position: 'absolute', left: 428, top: 216, display: 'flex', gap: 6, alignItems: 'center' }}>
-          {getSocials(profile).map((social) => {
-            const icon = (
-              <img
-                src={social.src}
-                alt=""
-                aria-hidden
-                style={{ width: 24, height: 24, objectFit: 'contain', opacity: social.active ? 1 : 0.32, display: 'block' }}
-              />
-            );
-
-            if (!social.href) {
-              return (
-                <span key={social.key} aria-label={social.label} title={social.label} style={{ width: 24, height: 24, display: 'inline-flex' }}>
-                  {icon}
-                </span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+            {getSocials(profile).map((social) => {
+              const icon = (
+                <img
+                  src={social.src}
+                  alt=""
+                  aria-hidden
+                  style={{ width: 24, height: 24, objectFit: 'contain', opacity: social.active ? 1 : 0.32, display: 'block' }}
+                />
               );
-            }
 
-            return (
-              <a
-                key={social.key}
-                href={social.href}
-                aria-label={social.label}
-                title={social.label}
-                target="_blank"
-                rel="noreferrer"
-                style={{ width: 24, height: 24, display: 'inline-flex' }}
-              >
-                {icon}
-              </a>
-            );
-          })}
+              if (!social.href) {
+                return (
+                  <span key={social.key} aria-label={social.label} title={social.label} style={{ width: 24, height: 24, display: 'inline-flex' }}>
+                    {icon}
+                  </span>
+                );
+              }
+
+              return (
+                <a
+                  key={social.key}
+                  href={social.href}
+                  aria-label={social.label}
+                  title={social.label}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ width: 24, height: 24, display: 'inline-flex' }}
+                >
+                  {icon}
+                </a>
+              );
+            })}
+          </div>
         </div>
 
         <div
@@ -339,13 +351,13 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
             borderRadius: 30,
             border: '1px solid #ff1654',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'baseline',
             justifyContent: 'center',
             boxSizing: 'border-box',
           }}
         >
-          <span style={{ fontFamily: FONT_BOLD, fontSize: 18, lineHeight: 1, color: '#ffffff' }}>LVL.</span>
-          <span style={{ fontFamily: FONT_BOLD, fontSize: 40, lineHeight: 1, color: '#ffffff' }}>{profile.level}</span>
+          <span style={{ fontFamily: FONT_BOLD, fontSize: 18, lineHeight: '18px', color: '#ffffff' }}>LVL.</span>
+          <span style={{ fontFamily: FONT_BOLD, fontSize: 44, lineHeight: '44px', color: '#ffffff', transform: 'translateY(-2px)' }}>{profile.level}</span>
         </div>
 
         <div style={{ position: 'absolute', left: 247, top: 265, display: 'flex', gap: 14 }}>
