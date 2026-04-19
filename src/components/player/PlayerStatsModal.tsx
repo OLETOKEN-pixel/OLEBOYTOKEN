@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayerProfileView, type PlayerProfileHistoryItem, type PlayerProfileView } from '@/hooks/usePlayerProfileView';
+import { useToast } from '@/hooks/use-toast';
+import { copyTextToClipboard } from '@/lib/copyToClipboard';
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
 const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
@@ -105,6 +107,7 @@ function getSocials(profile: PlayerProfileView) {
       label: epic ? `Epic: ${epic}` : 'Epic not linked',
       href: null,
       active: !!epic,
+      copyValue: epic,
     },
     {
       key: 'twitch',
@@ -112,6 +115,7 @@ function getSocials(profile: PlayerProfileView) {
       label: twitch ? `Twitch: ${twitch}` : 'Twitch not linked',
       href: twitch ? `https://www.twitch.tv/${encodeURIComponent(twitch)}` : null,
       active: !!twitch,
+      copyValue: null,
     },
     {
       key: 'x',
@@ -119,6 +123,7 @@ function getSocials(profile: PlayerProfileView) {
       label: x ? `X: ${x}` : 'X not linked',
       href: x ? `https://x.com/${encodeURIComponent(x)}` : null,
       active: !!x,
+      copyValue: null,
     },
     {
       key: 'tracker',
@@ -126,6 +131,7 @@ function getSocials(profile: PlayerProfileView) {
       label: epic ? `Fortnite Tracker: ${epic}` : 'Fortnite Tracker unavailable',
       href: epic ? `https://fortnitetracker.com/profile/all/${encodeURIComponent(epic)}` : null,
       active: !!epic,
+      copyValue: null,
     },
   ];
 }
@@ -258,6 +264,7 @@ function ProfileErrorState({ message }: { message: string }) {
 }
 
 function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
+  const { toast } = useToast();
   const winRate = Math.max(0, Math.min(100, profile.stats.win_rate));
   const lossRate = 100 - winRate;
   const history = profile.history.length > 0
@@ -267,6 +274,23 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
         status: 'pending' as const,
         finished_at: null,
       }));
+
+  const handleCopyEpicName = async (epicName: string) => {
+    try {
+      const copied = await copyTextToClipboard(epicName);
+      toast({
+        title: copied ? 'Epic username copied' : 'Copy unavailable',
+        description: copied ? epicName : 'Copy it manually from the profile.',
+        variant: copied ? undefined : 'destructive',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Copy failed',
+        description: err?.message || 'Unable to copy Epic username.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <>
@@ -317,6 +341,30 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
               );
 
               if (!social.href) {
+                if (social.copyValue) {
+                  return (
+                    <button
+                      key={social.key}
+                      type="button"
+                      aria-label={`Copy Epic username ${social.copyValue}`}
+                      title="Copy Epic username"
+                      onClick={() => handleCopyEpicName(social.copyValue!)}
+                      style={{
+                        width: 24,
+                        height: 24,
+                        padding: 0,
+                        border: 0,
+                        outline: 'none',
+                        background: 'transparent',
+                        display: 'inline-flex',
+                        cursor: 'copy',
+                      }}
+                    >
+                      {icon}
+                    </button>
+                  );
+                }
+
                 return (
                   <span key={social.key} aria-label={social.label} title={social.label} style={{ width: 24, height: 24, display: 'inline-flex' }}>
                     {icon}

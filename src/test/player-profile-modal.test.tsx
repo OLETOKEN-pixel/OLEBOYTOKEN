@@ -4,14 +4,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 
-const { rpcMock } = vi.hoisted(() => ({
+const writeTextMock = vi.fn();
+
+const { rpcMock, toastMock } = vi.hoisted(() => ({
   rpcMock: vi.fn(),
+  toastMock: vi.fn(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: rpcMock,
   },
+}));
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast: toastMock }),
 }));
 
 function createWrapper() {
@@ -75,6 +82,13 @@ const profilePayload = {
 describe('PlayerStatsModal', () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockReset();
+    writeTextMock.mockReset();
+    writeTextMock.mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextMock },
+      configurable: true,
+    });
   });
 
   it('renders the Figma profile tab with live profile stats', async () => {
@@ -102,6 +116,25 @@ describe('PlayerStatsModal', () => {
     expect(screen.getByText('50.32')).toBeInTheDocument();
     expect(screen.getAllByLabelText('History win')).toHaveLength(2);
     expect(document.body.querySelector('img[src="https://cdn.discordapp.com/avatars/user-1/avatar.png"]')).not.toBeNull();
+  });
+
+  it('copies the Epic username from the profile Epic icon', async () => {
+    rpcMock.mockResolvedValue({ data: profilePayload, error: null });
+
+    render(
+      <PlayerStatsModal open onOpenChange={vi.fn()} userId="user-1" />,
+      { wrapper: createWrapper() },
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Copy Epic username LOIS OPENDA 20' }));
+
+    await waitFor(() => {
+      expect(writeTextMock).toHaveBeenCalledWith('LOIS OPENDA 20');
+    });
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Epic username copied',
+      description: 'LOIS OPENDA 20',
+    }));
   });
 
   it('closes from Escape without adding a visible close control', async () => {

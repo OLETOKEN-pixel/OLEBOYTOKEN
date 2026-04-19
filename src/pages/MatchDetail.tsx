@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useMatches';
 import { formatEntryFee } from '@/lib/matchFormatters';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
+import { copyTextToClipboard } from '@/lib/copyToClipboard';
 import { PLATFORM_FEE } from '@/types';
 import type { Match, MatchParticipant, ProfileSummary } from '@/types';
 
@@ -441,6 +442,7 @@ function ReadyPlayerSlot({
   emptyLabel = 'Unknown',
   emptySubtitle = 'Unknown',
   onOpenProfile,
+  onCopyEpicName,
 }: {
   participant?: MatchParticipant;
   side: 'A' | 'B';
@@ -449,7 +451,9 @@ function ReadyPlayerSlot({
   emptyLabel?: string;
   emptySubtitle?: string;
   onOpenProfile?: (participant: MatchParticipant) => void;
+  onCopyEpicName?: (epicName: string) => void;
 }) {
+  const [isEpicHovered, setIsEpicHovered] = useState(false);
   const profile = !maskIdentity ? participant?.profile as {
     username?: string;
     avatar_url?: string | null;
@@ -463,6 +467,7 @@ function ReadyPlayerSlot({
   const accent = side === 'A' ? '#ff1654' : '#d8ff16';
   const showEpicLogo = !!participant || emptySubtitle !== '............';
   const canOpenProfile = !!participant && !maskIdentity && !!participant.user_id;
+  const canCopyEpicName = !!participant && !maskIdentity && !!epicName && !['Unknown', '............'].includes(epicName);
   const profileButtonLabel = canOpenProfile ? `Open ${username} profile` : 'Player profile unavailable';
 
   return (
@@ -536,21 +541,54 @@ function ReadyPlayerSlot({
           overflow: 'hidden',
         }}
       >
-        <span
-          style={{
-            minWidth: 0,
-            maxWidth: 170,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontFamily: FONT_BOLD_OBLIQUE,
-            fontSize: 15,
-            lineHeight: '18px',
-            color: '#9c9c9c',
-          }}
-        >
-          {epicName}
-        </span>
+        {canCopyEpicName ? (
+          <button
+            type="button"
+            aria-label={`Copy Epic username ${epicName}`}
+            title="Copy Epic username"
+            onClick={() => onCopyEpicName?.(epicName)}
+            onMouseEnter={() => setIsEpicHovered(true)}
+            onMouseLeave={() => setIsEpicHovered(false)}
+            style={{
+              minWidth: 0,
+              maxWidth: 170,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              padding: 0,
+              border: 0,
+              outline: 'none',
+              background: 'transparent',
+              fontFamily: FONT_BOLD_OBLIQUE,
+              fontSize: 15,
+              lineHeight: '18px',
+              color: '#9c9c9c',
+              cursor: 'copy',
+              textDecorationLine: isEpicHovered ? 'underline' : 'none',
+              textDecorationColor: accent,
+              textDecorationThickness: 2,
+              textUnderlineOffset: 3,
+            }}
+          >
+            {epicName}
+          </button>
+        ) : (
+          <span
+            style={{
+              minWidth: 0,
+              maxWidth: 170,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontFamily: FONT_BOLD_OBLIQUE,
+              fontSize: 15,
+              lineHeight: '18px',
+              color: '#9c9c9c',
+            }}
+          >
+            {epicName}
+          </span>
+        )}
         {showEpicLogo && (
           <img src={READY_ASSETS.epicLogo} alt="" aria-hidden style={{ width: 16, height: 19, flexShrink: 0, opacity: 0.75 }} />
         )}
@@ -766,6 +804,7 @@ function ReadyLobbyScreen({
   entryFee?: number;
 }) {
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
+  const { toast } = useToast();
   const slots = Array.from({ length: teamSize });
   const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
   const isWaitingForAcceptance = viewState === 'WAIT';
@@ -806,6 +845,23 @@ function ReadyLobbyScreen({
   const handleOpenProfile = (participant: MatchParticipant) => {
     if (!participant.user_id) return;
     setSelectedProfileUserId(participant.user_id);
+  };
+
+  const handleCopyEpicName = async (epicName: string) => {
+    try {
+      const copied = await copyTextToClipboard(epicName);
+      toast({
+        title: copied ? 'Epic username copied' : 'Copy unavailable',
+        description: copied ? epicName : 'Copy it manually from the card.',
+        variant: copied ? undefined : 'destructive',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Copy failed',
+        description: err?.message || 'Unable to copy Epic username.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const actionButtonBase = {
@@ -981,6 +1037,7 @@ function ReadyLobbyScreen({
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
               onOpenProfile={handleOpenProfile}
+              onCopyEpicName={handleCopyEpicName}
             />
           ))}
         </div>
@@ -1007,6 +1064,7 @@ function ReadyLobbyScreen({
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
               onOpenProfile={handleOpenProfile}
+              onCopyEpicName={handleCopyEpicName}
             />
           ))}
         </div>

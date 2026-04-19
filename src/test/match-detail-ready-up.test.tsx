@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import MatchDetail from '@/pages/MatchDetail';
 import type { Match, MatchParticipant } from '@/types';
 
+const writeTextMock = vi.fn();
+
 const {
   authState,
   matchState,
@@ -130,6 +132,12 @@ describe('MatchDetail ready-up Figma lobby', () => {
     submitResultMock.mockReset();
     cancelMatchMock.mockReset();
     toastMock.mockReset();
+    writeTextMock.mockReset();
+    writeTextMock.mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextMock },
+      configurable: true,
+    });
     authState.value = { user: { id: 'user-a-1' } };
     matchState.value = {
       data: matchFactory([
@@ -354,6 +362,52 @@ describe('MatchDetail ready-up Figma lobby', () => {
     await waitFor(() => {
       expect(submitResultMock).toHaveBeenCalledWith({ matchId: 'match-ready', result: 'WIN', isTeam: true });
     });
+  });
+
+  it('copies a visible Epic username from a player card', async () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'in_progress',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            ready: true,
+            profile: {
+              username: 'Host',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/avatar.png',
+              epic_username: 'HostEpic',
+            },
+          }),
+          participantFactory({
+            id: 'participant-b-1',
+            user_id: 'user-b-1',
+            team_side: 'B',
+            ready: true,
+            profile: {
+              username: 'Opponent',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/opponent/avatar.png',
+              epic_username: 'OpponentEpic',
+            },
+          }),
+        ],
+      },
+    };
+
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Epic username OpponentEpic' }));
+
+    await waitFor(() => {
+      expect(writeTextMock).toHaveBeenCalledWith('OpponentEpic');
+    });
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Epic username copied',
+      description: 'OpponentEpic',
+    }));
   });
 
   it('lets a player declare loss after the match starts', async () => {
