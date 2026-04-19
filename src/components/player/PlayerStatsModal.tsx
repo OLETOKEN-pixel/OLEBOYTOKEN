@@ -350,14 +350,25 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
             height: 60,
             borderRadius: 30,
             border: '1px solid #ff1654',
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'center',
             boxSizing: 'border-box',
           }}
         >
-          <span style={{ fontFamily: FONT_BOLD, fontSize: 18, lineHeight: '18px', color: '#ffffff' }}>LVL.</span>
-          <span style={{ fontFamily: FONT_BOLD, fontSize: 44, lineHeight: '44px', color: '#ffffff', transform: 'translateY(-2px)' }}>{profile.level}</span>
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: 6,
+              height: 48,
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ fontFamily: FONT_BOLD, fontSize: 18, lineHeight: '18px', color: '#ffffff' }}>LVL.</span>
+            <span style={{ fontFamily: FONT_BOLD, fontSize: 48, lineHeight: '48px', color: '#ffffff' }}>{profile.level}</span>
+          </div>
         </div>
 
         <div style={{ position: 'absolute', left: 247, top: 265, display: 'flex', gap: 14 }}>
