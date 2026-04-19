@@ -8,6 +8,8 @@ interface ChallengeDisplay {
   title: string;
   reward: string;
   progress: number; // 0-100
+  progressValue: number;
+  targetValue: number;
   completed: boolean;
 }
 
@@ -30,6 +32,8 @@ export const ChallengesSection = () => {
     progress: c.target_value > 0
       ? Math.min(100, Math.round((c.progress_value / c.target_value) * 100))
       : 0,
+    progressValue: c.progress_value,
+    targetValue: c.target_value,
     completed: c.is_completed || c.is_claimed,
   }));
 
@@ -140,9 +144,15 @@ export const ChallengesSection = () => {
                   <img className="absolute top-3.5 left-[18px] w-5 h-5" alt="" src={ACTIVE_HOME_ASSETS.challenges.checkmark} />
                 )}
                 {/* Title */}
-                <div className="absolute top-[15px] left-[57px] w-[230px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap overflow-hidden text-ellipsis">
+                <div className="absolute top-[15px] left-[57px] w-[200px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[normal] whitespace-nowrap overflow-hidden text-ellipsis">
                   {c.title}
                 </div>
+                {/* Progress counter for multi-step challenges */}
+                {!c.completed && c.targetValue > 1 && (
+                  <div className="absolute top-[15px] left-[260px] [font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-[#ff1654] text-[12px] leading-normal whitespace-nowrap">
+                    {c.progressValue}/{c.targetValue}
+                  </div>
+                )}
                 {/* Reward + dot (dot only if completed) */}
                 {c.reward && (
                   <div className="absolute top-[15px] right-[6px] flex items-center gap-[4px]">
