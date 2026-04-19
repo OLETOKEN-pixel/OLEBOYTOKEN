@@ -56,10 +56,14 @@ $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- PART B: Drop old update_challenge_progress(UUID, TEXT, UUID) overload.
---         Only the lifetime version (UUID, TEXT, TEXT) should remain.
+-- PART B: Drop old overloads that used UUID as 3rd parameter.
+--   - update_challenge_progress(UUID, TEXT, UUID): used daily/weekly period_key
+--   - record_challenge_event(UUID, TEXT, UUID): called the old update overload
+--     → when finalize_match_payout passed p_match_id (uuid), PostgreSQL resolved
+--       to this overload → crashed calling the now-dropped update function.
 -- ─────────────────────────────────────────────────────────────────────────────
 DROP FUNCTION IF EXISTS public.update_challenge_progress(uuid, text, uuid);
+DROP FUNCTION IF EXISTS public.record_challenge_event(uuid, text, uuid);
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
