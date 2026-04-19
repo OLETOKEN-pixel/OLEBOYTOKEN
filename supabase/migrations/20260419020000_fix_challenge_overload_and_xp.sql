@@ -63,7 +63,23 @@ $$;
 --       to this overload → crashed calling the now-dropped update function.
 -- ─────────────────────────────────────────────────────────────────────────────
 DROP FUNCTION IF EXISTS public.update_challenge_progress(uuid, text, uuid);
-DROP FUNCTION IF EXISTS public.record_challenge_event(uuid, text, uuid);
+
+-- Re-add record_challenge_event(UUID, TEXT, UUID) as a thin wrapper that casts
+-- to TEXT and delegates to the main (UUID, TEXT, TEXT) function.
+-- This covers ALL callers (finalize_match_payout, set_player_ready, etc.) that
+-- pass p_match_id as UUID — no need to modify each caller individually.
+CREATE OR REPLACE FUNCTION public.record_challenge_event(
+  p_user_id    uuid,
+  p_event_type text,
+  p_source_id  uuid
+)
+RETURNS json
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT public.record_challenge_event(p_user_id, p_event_type, p_source_id::text);
+$$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
