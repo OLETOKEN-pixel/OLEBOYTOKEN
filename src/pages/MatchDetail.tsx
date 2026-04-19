@@ -649,13 +649,33 @@ function ReadyVsMark() {
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 20px, #000 182px, #000 189px, rgba(0,0,0,0) 351px, rgba(0,0,0,0) 100%)',
-          maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 20px, #000 182px, #000 189px, rgba(0,0,0,0) 351px, rgba(0,0,0,0) 100%)',
           userSelect: 'none',
         }}
       >
         VS
       </p>
+      <div
+        data-testid="match-ready-vs-left-fade"
+        style={{
+          position: 'absolute',
+          left: 'calc(26.667% + 5px)',
+          top: 560,
+          width: 213,
+          height: 289,
+          background: 'linear-gradient(270deg, rgba(15,4,4,0) 0%, #0f0404 75.962%)',
+        }}
+      />
+      <div
+        data-testid="match-ready-vs-right-fade"
+        style={{
+          position: 'absolute',
+          left: 'calc(36.667% + 33px)',
+          top: 570,
+          width: 213,
+          height: 289,
+          background: 'linear-gradient(270deg, #0f0404 24.038%, rgba(15,4,4,0) 100%)',
+        }}
+      />
     </div>
   );
 }
