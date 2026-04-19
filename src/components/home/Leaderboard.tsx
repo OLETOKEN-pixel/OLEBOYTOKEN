@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CoinDisplay } from '@/components/common/CoinDisplay';
+import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { supabase } from '@/integrations/supabase/client';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { LeaderboardEntry } from '@/types';
@@ -18,6 +19,7 @@ const rankIcons = [
 export function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -39,7 +41,8 @@ export function Leaderboard() {
   }, []);
 
   return (
-    <Card className="bg-card border-border">
+    <>
+      <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-accent" />
@@ -87,12 +90,19 @@ export function Leaderboard() {
                   </div>
 
                   {/* Avatar */}
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={entry.discord_avatar_url ?? undefined} />
-                    <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                      {entry.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <button
+                    type="button"
+                    aria-label={`Open ${entry.username} profile`}
+                    onClick={() => setSelectedUserId(entry.user_id)}
+                    className="rounded-full border-0 bg-transparent p-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={entry.discord_avatar_url ?? undefined} />
+                      <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                        {entry.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
 
                   {/* Name & Stats */}
                   <div className="flex-1 min-w-0">
@@ -110,6 +120,15 @@ export function Leaderboard() {
           </div>
         )}
       </CardContent>
-    </Card>
+      </Card>
+
+      <PlayerStatsModal
+        open={!!selectedUserId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedUserId(null);
+        }}
+        userId={selectedUserId || ''}
+      />
+    </>
   );
 }

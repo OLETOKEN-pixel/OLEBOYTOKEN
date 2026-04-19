@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Match } from '@/types';
+import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
 
 interface HomeRegisteredMobileProps {
@@ -21,6 +22,7 @@ interface MatchDisplay {
 }
 
 interface PlayerDisplay {
+  userId: string | null;
   rank: number;
   username: string;
   avatarUrl: string | null;
@@ -63,9 +65,9 @@ const PLACEHOLDER_MATCHES: MatchDisplay[] = [
 ];
 
 const PLACEHOLDER_PLAYERS: PlayerDisplay[] = [
-  { rank: 1, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' },
-  { rank: 2, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' },
-  { rank: 3, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' },
+  { userId: null, rank: 1, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' },
+  { userId: null, rank: 2, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' },
+  { userId: null, rank: 3, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' },
 ];
 
 const PLACEHOLDER_TEAMS: TeamDisplay[] = [
@@ -578,6 +580,7 @@ function SmallValue({ label, value }: { label: string; value: string }) {
 
 function LeaderboardMobile() {
   const [players, setPlayers] = useState<PlayerDisplay[]>(PLACEHOLDER_PLAYERS);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -606,6 +609,7 @@ function LeaderboardMobile() {
           }
 
           setPlayers(lbData.map((p: any, i: number) => ({
+            userId: p.user_id || null,
             rank: i + 1,
             username: p.username || `Player${i + 1}`,
             avatarUrl: avatarMap[p.user_id] || null,
@@ -622,6 +626,7 @@ function LeaderboardMobile() {
 
           if (profiles && profiles.length > 0) {
             setPlayers(profiles.map((p: any, i: number) => ({
+              userId: p.user_id || null,
               rank: i + 1,
               username: p.discord_display_name || p.username || `Player${i + 1}`,
               avatarUrl: getDiscordAvatarUrl(p),
@@ -665,7 +670,24 @@ function LeaderboardMobile() {
         {rows.map((player) => (
           <Panel key={player.rank}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '14px' }}>
-              <AvatarBlock src={player.avatarUrl} alt={player.username} size={54} />
+              {player.userId ? (
+                <button
+                  type="button"
+                  aria-label={`Open ${player.username} profile`}
+                  onClick={() => setSelectedUserId(player.userId)}
+                  style={{
+                    padding: 0,
+                    border: 0,
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
+                >
+                  <AvatarBlock src={player.avatarUrl} alt={player.username} size={54} />
+                </button>
+              ) : (
+                <AvatarBlock src={player.avatarUrl} alt={player.username} size={54} />
+              )}
               <div style={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
                 <p style={{ margin: 0, fontFamily: FE, fontWeight: 900, fontStyle: 'oblique', fontSize: '20px', lineHeight: '23px', color: '#ff1654' }}>
                   #{player.rank}
@@ -684,6 +706,13 @@ function LeaderboardMobile() {
         ))}
       </div>
       <MobileCta ariaLabel="Rank up">RANK UP</MobileCta>
+      <PlayerStatsModal
+        open={!!selectedUserId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedUserId(null);
+        }}
+        userId={selectedUserId || ''}
+      />
     </MobileSection>
   );
 }

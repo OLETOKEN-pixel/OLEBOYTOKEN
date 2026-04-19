@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
+import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 interface PlayerDisplay {
+  userId: string | null;
   rank: number;
   username: string;
   avatarUrl: string | null;
@@ -14,6 +16,7 @@ interface PlayerDisplay {
 
 export const LeaderboardSection = () => {
   const [players, setPlayers] = useState<PlayerDisplay[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const handlePrev = useCallback(() => { const el = document.getElementById('s-matches'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }, []);
   const handleNext = useCallback(() => { const el = document.getElementById('s-challenges'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }, []);
@@ -30,6 +33,7 @@ export const LeaderboardSection = () => {
 
         if (!lbErr && lbData && lbData.length > 0) {
           setPlayers(lbData.map((p: any, i: number) => ({
+            userId: p.user_id || null,
             rank: i + 1,
             username: p.username || `Player${i + 1}`,
             avatarUrl: getDiscordAvatarUrl(p),
@@ -47,6 +51,7 @@ export const LeaderboardSection = () => {
 
           if (profiles && profiles.length > 0) {
             setPlayers(profiles.map((p: any, i: number) => ({
+              userId: p.user_id || null,
               rank: i + 1,
               username: p.username || `Player${i + 1}`,
               avatarUrl: getDiscordAvatarUrl(p),
@@ -64,21 +69,35 @@ export const LeaderboardSection = () => {
   }, []);
 
   // Pad to 3 players minimum with empty placeholders
-  const first: PlayerDisplay = players[0] ?? { rank: 1, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
-  const second: PlayerDisplay = players[1] ?? { rank: 2, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
-  const third: PlayerDisplay = players[2] ?? { rank: 3, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const first: PlayerDisplay = players[0] ?? { userId: null, rank: 1, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const second: PlayerDisplay = players[1] ?? { userId: null, rank: 2, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
+  const third: PlayerDisplay = players[2] ?? { userId: null, rank: 3, username: '-', avatarUrl: null, winRate: '0%', roundsWon: '0', earnings: '0' };
 
-  const Avatar = ({ url, alt, size }: { url: string | null; alt: string; size: string }) => (
-    url ? (
-      <img className={`${size} object-cover rounded-full`} alt={alt} src={url} />
+  const Avatar = ({ player, size }: { player: PlayerDisplay; size: string }) => {
+    const image = player.avatarUrl ? (
+      <img className={`${size} object-cover rounded-full pointer-events-none`} alt={player.username} src={player.avatarUrl} />
     ) : (
-      <div className={`${size} rounded-full bg-white/[0.06] ring-1 ring-white/[0.1]`} />
-    )
-  );
+      <div className={`${size} rounded-full bg-white/[0.06] ring-1 ring-white/[0.1] pointer-events-none`} />
+    );
+
+    if (!player.userId) return image;
+
+    return (
+      <button
+        type="button"
+        aria-label={`Open ${player.username} profile`}
+        onClick={() => setSelectedUserId(player.userId)}
+        className="block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-transform duration-150 hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff1654]"
+      >
+        {image}
+      </button>
+    );
+  };
 
   return (
-    <div id="s-leaderboard" className="z-[3] w-[1920px] h-[955px] flex bg-[#0f0404]">
-      <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
+    <>
+      <div id="s-leaderboard" className="z-[3] w-[1920px] h-[955px] flex bg-[#0f0404]">
+        <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
         {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button onClick={handlePrev} className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center">
@@ -113,7 +132,7 @@ export const LeaderboardSection = () => {
           <div className="absolute top-[78px] left-[417px] w-[169px] h-[300px]">
             <div className="absolute -top-px -left-px w-[169px] h-[302px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-6 left-[26px]">
-              <Avatar url={third.avatarUrl} alt={third.username} size="w-[116px] h-[116px]" />
+              <Avatar player={third} size="w-[116px] h-[116px]" />
             </div>
             <div className="absolute top-[150px] left-0 right-0 text-center px-2">
               <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[22px] leading-normal">#3</div>
@@ -125,7 +144,7 @@ export const LeaderboardSection = () => {
           <div className="absolute top-[78px] left-0 w-[169px] h-[300px]">
             <div className="absolute -top-px -left-px w-[169px] h-[302px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-6 left-[26px]">
-              <Avatar url={second.avatarUrl} alt={second.username} size="w-[116px] h-[116px]" />
+              <Avatar player={second} size="w-[116px] h-[116px]" />
             </div>
             <div className="absolute top-[150px] left-0 right-0 text-center px-2">
               <div className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[#ff1654] text-[20px] leading-normal">#2</div>
@@ -137,7 +156,7 @@ export const LeaderboardSection = () => {
           <div className="absolute top-0 left-7 w-[530px] h-[378px]">
             <div className="absolute -top-px left-[158px] w-[212px] h-[380px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-[30px] left-48">
-              <Avatar url={first.avatarUrl} alt={first.username} size="w-[146px] h-[146px]" />
+              <Avatar player={first} size="w-[146px] h-[146px]" />
             </div>
 
             {/* 1st place stats */}
@@ -211,5 +230,14 @@ export const LeaderboardSection = () => {
         </div>
       </div>
     </div>
+
+      <PlayerStatsModal
+        open={!!selectedUserId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedUserId(null);
+        }}
+        userId={selectedUserId || ''}
+      />
+    </>
   );
 };
