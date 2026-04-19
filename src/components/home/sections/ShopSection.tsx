@@ -5,19 +5,16 @@ const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
 const imgBwArrow = '/figma-assets/figma-bw-arrow.svg';
 const imgFwArrow = '/figma-assets/figma-fw-arrow.svg';
 const imgSpaccatoTitle = '/figma-assets/shop-spaccato-title.svg';
+
 interface ShopItem {
-  type: 'cosmetic' | 'vip';
   image: string;
-  price: string;
-  label?: string;
-  sublabel?: string;
+  name: string;
+  levelRequired: number;
 }
 
 const shopItems: ShopItem[] = [
-  { type: 'cosmetic', image: '/showreel/shop-item-1.png', price: '500' },
-  { type: 'cosmetic', image: '/showreel/shop-item-2.png', price: '300' },
-  { type: 'cosmetic', image: '/showreel/shop-item-3.png', price: '999' },
-  { type: 'vip', image: '/showreel/vip-icon.svg', price: '€9,99', label: 'VIP', sublabel: '1 MONTH' },
+  { image: '/shop/tappetino.png', name: 'TAPPETINO', levelRequired: 15 },
+  { image: '/shop/mouse.webp',    name: 'MOUSE',     levelRequired: 30 },
 ];
 
 const CARD_WIDTH = 227;
@@ -61,9 +58,9 @@ export const ShopSection = () => {
           </button>
 
           <div className="absolute top-[186px] left-[118px] flex h-[184px] w-[620px] flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-[48px] leading-[58px] text-white text-center tracking-[0]">
-            <span className="whitespace-nowrap">Cosmetics, coins, VIP.</span>
-            <span className="whitespace-nowrap">Everything you need</span>
-            <span className="whitespace-nowrap">to set you up!</span>
+            <span className="whitespace-nowrap">Reach levels.</span>
+            <span className="whitespace-nowrap">Unlock real</span>
+            <span className="whitespace-nowrap">rewards!</span>
           </div>
         </div>
 
@@ -79,57 +76,32 @@ export const ShopSection = () => {
                 className="flex-shrink-0 relative bg-[#3a0000] rounded-[17px] overflow-hidden"
                 style={{ width: `${CARD_WIDTH}px`, height: '272px', marginRight: `${CARD_GAP}px` }}
               >
-                {item.type === 'cosmetic' ? (
-                  <>
-                    <img
-                      src={item.image}
-                      alt="Cosmetic"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    {/* Bottom fade */}
-                    <div className="absolute bottom-0 left-0 right-0 h-[154px] bg-gradient-to-t from-[#3a0000] to-transparent" />
-                    {/* Price */}
-                    <div className="absolute bottom-[14px] left-[14px] flex items-center gap-2">
-                      <img src="/showreel/coin-icon.svg" alt="coin" className="w-[24px] h-[24px]" />
-                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[31px] leading-[normal]">
-                        {item.price}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* VIP card */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <img src={item.image} alt="VIP" className="w-[76px] h-[63px] mb-3" />
-                      <span
-                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[31px] leading-[normal]"
-                        style={{
-                          background: 'linear-gradient(to bottom, #ff1654, #3a0000)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {item.label}
-                      </span>
-                      <span
-                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[14px] mt-1"
-                        style={{
-                          background: 'linear-gradient(to bottom, white, #0f0404)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {item.sublabel}
-                      </span>
-                    </div>
-                    {/* Price */}
-                    <div className="absolute bottom-[14px] left-[14px]">
-                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[31px] leading-[normal]">
-                        {item.price}
-                      </span>
-                    </div>
-                  </>
-                )}
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* Bottom fade */}
+                <div className="absolute bottom-0 left-0 right-0 h-[120px] bg-gradient-to-t from-[#3a0000] to-transparent" />
+                {/* Level + FREE label */}
+                <div className="absolute bottom-[14px] left-[14px] flex items-center gap-[6px]">
+                  <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[18px] leading-normal whitespace-nowrap">
+                    Lvl {item.levelRequired}
+                  </span>
+                  <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[18px] leading-normal">
+                    -
+                  </span>
+                  <span
+                    className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-[18px] leading-normal whitespace-nowrap"
+                    style={{
+                      background: 'linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,78,125,1) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    FREE
+                  </span>
+                </div>
               </div>
             ))}
           </div>
