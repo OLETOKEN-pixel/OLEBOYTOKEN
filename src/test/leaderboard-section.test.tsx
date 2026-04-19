@@ -48,6 +48,22 @@ describe('LeaderboardSection', () => {
           total_matches: 10,
           weekly_earned: 2.4,
         },
+        {
+          user_id: 'user-top-2',
+          username: 'marv',
+          discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-2/avatar.png',
+          wins: 8,
+          total_matches: 10,
+          weekly_earned: 1.5,
+        },
+        {
+          user_id: 'user-top-3',
+          username: 'cosmos',
+          discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-3/avatar.png',
+          wins: 6,
+          total_matches: 10,
+          weekly_earned: 1,
+        },
       ],
     });
 
@@ -56,5 +72,35 @@ describe('LeaderboardSection', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Open owener1 profile' }));
 
     expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-1');
+  });
+
+  it('opens the player profile tab from the second place avatar too', async () => {
+    limitMock.mockResolvedValue({
+      error: null,
+      data: [
+        {
+          user_id: 'user-top-1',
+          username: 'owener1',
+          discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-1/avatar.png',
+          wins: 10,
+          total_matches: 10,
+          weekly_earned: 2.4,
+        },
+        {
+          user_id: 'user-top-2',
+          username: 'marv',
+          discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-2/avatar.png',
+          wins: 8,
+          total_matches: 10,
+          weekly_earned: 1.5,
+        },
+      ],
+    });
+
+    render(<LeaderboardSection />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Open marv profile' }));
+
+    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-2');
   });
 });

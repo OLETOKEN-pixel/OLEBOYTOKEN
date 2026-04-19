@@ -87,7 +87,7 @@ export const LeaderboardSection = () => {
         type="button"
         aria-label={`Open ${player.username} profile`}
         onClick={() => setSelectedUserId(player.userId)}
-        className="block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-transform duration-150 hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff1654]"
+        className="pointer-events-auto block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-transform duration-150 hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff1654]"
       >
         {image}
       </button>
@@ -153,7 +153,7 @@ export const LeaderboardSection = () => {
           </div>
 
           {/* 1st place - center, larger */}
-          <div className="absolute top-0 left-7 w-[530px] h-[378px]">
+          <div className="pointer-events-none absolute top-0 left-7 w-[530px] h-[378px]">
             <div className="absolute -top-px left-[158px] w-[212px] h-[380px] bg-[#272727] rounded-2xl border border-solid border-[#ff1654] shadow-[0px_4px_4px_#00000040]" />
             <div className="absolute top-[30px] left-48">
               <Avatar player={first} size="w-[146px] h-[146px]" />
