@@ -175,6 +175,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByText('CREATED')).toBeInTheDocument();
     expect(screen.getByText('STARTED')).toBeInTheDocument();
     expect(screen.getByText('FINISHED')).toBeInTheDocument();
+    expect(screen.getByTestId('match-ready-vs')).toBeInTheDocument();
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.queryByText('Opponent')).not.toBeInTheDocument();
     expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
@@ -446,6 +447,40 @@ describe('MatchDetail ready-up Figma lobby', () => {
     await waitFor(() => {
       expect(submitResultMock).toHaveBeenCalledWith({ matchId: 'match-ready', result: 'LOSS', isTeam: true });
     });
+  });
+
+  it('keeps the same Figma VS mark when the match is finished', () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        status: 'completed',
+        participants: [
+          participantFactory({
+            id: 'participant-a-1',
+            user_id: 'user-a-1',
+            team_side: 'A',
+            ready: true,
+          }),
+          participantFactory({
+            id: 'participant-b-1',
+            user_id: 'user-b-1',
+            team_side: 'B',
+            ready: true,
+            profile: {
+              username: 'Opponent',
+              discord_avatar_url: 'https://cdn.discordapp.com/avatars/opponent/avatar.png',
+              epic_username: 'OpponentEpic',
+            },
+          }),
+        ],
+      },
+    };
+
+    renderMatchDetail();
+
+    expect(screen.getByTestId('match-ready-vs')).toBeInTheDocument();
+    expect(screen.getByLabelText('Finished status active')).toBeInTheDocument();
   });
 
   it('uses creator fallback so opponents see the host after the match starts', () => {

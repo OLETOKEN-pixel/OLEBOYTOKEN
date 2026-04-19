@@ -628,7 +628,7 @@ function ReadyPlayerSlot({
 
 function ReadyVsMark() {
   return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+    <div data-testid="match-ready-vs" aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
       <p
         style={{
           position: 'absolute',
@@ -648,31 +648,13 @@ function ReadyVsMark() {
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
+          WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 19%, #000 78%, rgba(0,0,0,0) 100%)',
+          maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 19%, #000 78%, rgba(0,0,0,0) 100%)',
           userSelect: 'none',
         }}
       >
         VS
       </p>
-      <div
-        style={{
-          position: 'absolute',
-          left: 'calc(26.667% + 5px)',
-          top: 560,
-          width: 213,
-          height: 289,
-          background: 'linear-gradient(to left, rgba(15,4,4,0) 0%, #0f0404 75.962%)',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          left: 'calc(36.667% + 33px)',
-          top: 570,
-          width: 213,
-          height: 289,
-          background: 'linear-gradient(to left, #0f0404 24.038%, rgba(15,4,4,0) 100%)',
-        }}
-      />
     </div>
   );
 }
