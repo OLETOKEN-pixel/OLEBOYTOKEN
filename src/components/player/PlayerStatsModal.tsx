@@ -6,7 +6,7 @@ import { usePlayerProfileView, type PlayerProfileHistoryItem, type PlayerProfile
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
 const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
 const FONT_BOLD_OBLIQUE = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
-const FONT_EXPANDED_BLACK = "'Base_Neue_Trial:Expanded_Black', 'Base Neue Trial-Black', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BLACK = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
 
 const PROFILE_ASSETS = {
   epicLogo: '/figma-assets/player-profile/epic-games-logo.png',
@@ -15,6 +15,7 @@ const PROFILE_ASSETS = {
   fortniteTracker: '/figma-assets/player-profile/fortnite-tracker.png',
   dividerTop: '/figma-assets/player-profile/divider-top.svg',
   dividerMiddle: '/figma-assets/player-profile/divider-middle.svg',
+  historyIcons: '/figma-assets/player-profile/history-icons.svg',
   teamUser: '/figma-assets/player-profile/team-user.svg',
   teamUserSmall: '/figma-assets/player-profile/team-user-small.svg',
 };
@@ -159,27 +160,44 @@ function HistoryIcon({ item }: { item?: PlayerProfileHistoryItem }) {
   const isWin = status === 'win';
   const isLoss = status === 'loss';
   const color = isWin ? '#77fe5c' : isLoss ? '#ff1654' : '#6c6c6c';
-  const label = isWin ? 'W' : isLoss ? 'X' : '-';
+  const label = isWin ? 'History win' : isLoss ? 'History loss' : 'History pending';
 
   return (
-    <span
-      aria-label={`History ${status}`}
+    <svg
+      aria-label={label}
+      role="img"
+      viewBox="0 0 35 35"
+      width="35"
+      height="35"
       style={{
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        background: color,
-        color: '#ffffff',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: FONT_BOLD,
-        fontSize: 10,
-        lineHeight: 1,
+        width: 35,
+        height: 35,
+        display: 'block',
+        flexShrink: 0,
       }}
     >
-      {label}
-    </span>
+      <circle cx="17" cy="17" r="17" fill={color} fillOpacity={isWin ? 0.79 : 1} />
+      {isWin && (
+        <path
+          d="M25 24H8V10L11.5417 17L10.8333 20.85L16.7931 10L20.75 17L20.3958 20.85L25 10V24Z"
+          fill="#ffffff"
+        />
+      )}
+      {isLoss && (
+        <path
+          d="M16.8496 13.3137L21.7994 6.94975L26.7491 11.8995L18.8642 18.3701L21.9761 18.0867L23.5671 19.3241L26.7491 21.799L21.7994 26.7487L16.8496 20.3848L11.8999 26.7487L6.95011 21.799L13.3141 16.8492L6.95011 11.8995L11.8999 6.94975L16.8496 13.3137Z"
+          fill="#ffffff"
+        />
+      )}
+      {!isWin && !isLoss && (
+        <path
+          d="M12 17.5H23"
+          stroke="#9c9c9c"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
   );
 }
 
@@ -413,7 +431,18 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
 
         <section style={{ ...smallCardStyle, position: 'relative' }} aria-label="Player history">
           <h3 style={{ ...sectionTitleStyle, position: 'absolute', left: 26, top: 14 }}>HISTORY</h3>
-          <div style={{ position: 'absolute', left: 26, top: 66, width: 278, height: 35, display: 'flex', alignItems: 'center', gap: 18 }}>
+          <div
+            style={{
+              position: 'absolute',
+              left: 26,
+              top: 66,
+              width: 278,
+              height: 35,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             {history.slice(0, 5).map((item) => (
               <HistoryIcon key={item.match_id} item={item} />
             ))}

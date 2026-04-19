@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 278 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="icons">
+<circle id="Ellipse 23" cx="17" cy="17" r="17" fill="var(--fill-0, #FF1654)"/>
+<circle id="Ellipse 25" cx="139" cy="18" r="17" fill="var(--fill-0, #FF1654)"/>
+<circle id="Ellipse 24" cx="78" cy="18" r="17" fill="var(--fill-0, #77FE5C)" fill-opacity="0.79"/>
+<circle id="Ellipse 26" cx="200" cy="17" r="17" fill="var(--fill-0, #FF1654)"/>
+<circle id="Ellipse 27" cx="261" cy="17" r="17" fill="var(--fill-0, #77FE5C)" fill-opacity="0.79"/>
+<path id="Vector 38" d="M16.8496 13.3137L21.7994 6.94975L26.7491 11.8995L18.8642 18.3701L21.9761 18.0867L23.5671 19.3241L26.7491 21.799L21.7994 26.7487L16.8496 20.3848L11.8999 26.7487L6.95011 21.799L13.3141 16.8492L6.95011 11.8995L11.8999 6.94975L16.8496 13.3137Z" fill="var(--fill-0, white)"/>
+<path id="Vector 39" d="M138.85 14.3137L143.799 7.94975L148.749 12.8995L140.864 19.3701L143.976 19.0867L145.567 20.3241L148.749 22.799L143.799 27.7487L138.85 21.3848L133.9 27.7487L128.95 22.799L135.314 17.8492L128.95 12.8995L133.9 7.94975L138.85 14.3137Z" fill="var(--fill-0, white)"/>
+<path id="Vector 40" d="M199.85 13.3137L204.799 6.94975L209.749 11.8995L201.864 18.3701L204.976 18.0867L206.567 19.3241L209.749 21.799L204.799 26.7487L199.85 20.3848L194.9 26.7487L189.95 21.799L196.314 16.8492L189.95 11.8995L194.9 6.94975L199.85 13.3137Z" fill="var(--fill-0, white)"/>
+<path id="Vector 24" d="M86 25H69V11L72.5417 18L71.8333 21.85L77.7931 11L81.75 18L81.3958 21.85L86 11V25Z" fill="var(--fill-0, white)"/>
+<path id="Vector 25" d="M269 24H252V10L255.542 17L254.833 20.85L260.793 10L264.75 17L264.396 20.85L269 10V24Z" fill="var(--fill-0, white)"/>
+</g>
+</svg>
