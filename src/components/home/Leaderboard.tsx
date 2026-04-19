@@ -20,6 +20,7 @@ export function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -93,7 +94,10 @@ export function Leaderboard() {
                   <button
                     type="button"
                     aria-label={`Open ${entry.username} profile`}
-                    onClick={() => setSelectedUserId(entry.user_id)}
+                    onClick={() => {
+                      setSelectedUserId(entry.user_id);
+                      setSelectedRank(index + 1);
+                    }}
                     className="rounded-full border-0 bg-transparent p-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <Avatar className="w-8 h-8">
@@ -125,9 +129,13 @@ export function Leaderboard() {
       <PlayerStatsModal
         open={!!selectedUserId}
         onOpenChange={(open) => {
-          if (!open) setSelectedUserId(null);
+          if (!open) {
+            setSelectedUserId(null);
+            setSelectedRank(null);
+          }
         }}
         userId={selectedUserId || ''}
+        rankOverride={selectedRank}
       />
     </>
   );

@@ -581,6 +581,7 @@ function SmallValue({ label, value }: { label: string; value: string }) {
 function LeaderboardMobile() {
   const [players, setPlayers] = useState<PlayerDisplay[]>(PLACEHOLDER_PLAYERS);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -674,7 +675,10 @@ function LeaderboardMobile() {
                 <button
                   type="button"
                   aria-label={`Open ${player.username} profile`}
-                  onClick={() => setSelectedUserId(player.userId)}
+                  onClick={() => {
+                    setSelectedUserId(player.userId);
+                    setSelectedRank(player.rank);
+                  }}
                   style={{
                     padding: 0,
                     border: 0,
@@ -709,9 +713,13 @@ function LeaderboardMobile() {
       <PlayerStatsModal
         open={!!selectedUserId}
         onOpenChange={(open) => {
-          if (!open) setSelectedUserId(null);
+          if (!open) {
+            setSelectedUserId(null);
+            setSelectedRank(null);
+          }
         }}
         userId={selectedUserId || ''}
+        rankOverride={selectedRank}
       />
     </MobileSection>
   );

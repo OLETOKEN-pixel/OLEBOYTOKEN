@@ -26,6 +26,7 @@ interface PlayerStatsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
+  rankOverride?: number | null;
 }
 
 const overlayStyle: CSSProperties = {
@@ -263,10 +264,11 @@ function ProfileErrorState({ message }: { message: string }) {
   );
 }
 
-function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
+function PlayerProfileContent({ profile, rankOverride }: { profile: PlayerProfileView; rankOverride?: number | null }) {
   const { toast } = useToast();
   const winRate = Math.max(0, Math.min(100, profile.stats.win_rate));
   const lossRate = 100 - winRate;
+  const displayRank = rankOverride ?? profile.rank;
   const history = profile.history.length > 0
     ? profile.history
     : Array.from({ length: 5 }, (_, index) => ({
@@ -435,7 +437,7 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
               fontSize: 14,
             }}
           >
-            Rank: {profile.rank ? `#${profile.rank}` : '--'}
+            Rank: {displayRank ? `#${displayRank}` : '--'}
           </div>
           <div
             style={{
@@ -532,7 +534,7 @@ function PlayerProfileContent({ profile }: { profile: PlayerProfileView }) {
   );
 }
 
-function PlayerStatsModalSurface({ userId, onClose }: { userId: string; onClose: () => void }) {
+function PlayerStatsModalSurface({ userId, onClose, rankOverride }: { userId: string; onClose: () => void; rankOverride?: number | null }) {
   const { data, isPending, error } = usePlayerProfileView(userId, true);
 
   return (
@@ -571,13 +573,13 @@ function PlayerStatsModalSurface({ userId, onClose }: { userId: string; onClose:
 
         {isPending && <ProfileLoadingState />}
         {error && <ProfileErrorState message={error instanceof Error ? error.message : 'Player profile unavailable'} />}
-        {data && <PlayerProfileContent profile={data} />}
+        {data && <PlayerProfileContent profile={data} rankOverride={rankOverride} />}
       </section>
     </div>
   );
 }
 
-export function PlayerStatsModal({ open, onOpenChange, userId }: PlayerStatsModalProps) {
+export function PlayerStatsModal({ open, onOpenChange, userId, rankOverride }: PlayerStatsModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -592,7 +594,7 @@ export function PlayerStatsModal({ open, onOpenChange, userId }: PlayerStatsModa
   if (!open || !userId || typeof document === 'undefined') return null;
 
   return createPortal(
-    <PlayerStatsModalSurface userId={userId} onClose={() => onOpenChange(false)} />,
+    <PlayerStatsModalSurface userId={userId} rankOverride={rankOverride} onClose={() => onOpenChange(false)} />,
     document.body,
   );
 }

@@ -17,6 +17,7 @@ interface PlayerDisplay {
 export const LeaderboardSection = () => {
   const [players, setPlayers] = useState<PlayerDisplay[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
 
   const handlePrev = useCallback(() => { const el = document.getElementById('s-matches'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }, []);
   const handleNext = useCallback(() => { const el = document.getElementById('s-challenges'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }, []);
@@ -86,7 +87,10 @@ export const LeaderboardSection = () => {
       <button
         type="button"
         aria-label={`Open ${player.username} profile`}
-        onClick={() => setSelectedUserId(player.userId)}
+        onClick={() => {
+          setSelectedUserId(player.userId);
+          setSelectedRank(player.rank);
+        }}
         className="pointer-events-auto block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-transform duration-150 hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff1654]"
       >
         {image}
@@ -234,9 +238,13 @@ export const LeaderboardSection = () => {
       <PlayerStatsModal
         open={!!selectedUserId}
         onOpenChange={(open) => {
-          if (!open) setSelectedUserId(null);
+          if (!open) {
+            setSelectedUserId(null);
+            setSelectedRank(null);
+          }
         }}
         userId={selectedUserId || ''}
+        rankOverride={selectedRank}
       />
     </>
   );

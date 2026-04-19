@@ -14,8 +14,8 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 vi.mock('@/components/player/PlayerStatsModal', () => ({
-  PlayerStatsModal: ({ open, userId }: { open: boolean; userId: string }) => (
-    open ? <div data-testid="mock-player-profile">PROFILE VIEW {userId}</div> : null
+  PlayerStatsModal: ({ open, userId, rankOverride }: { open: boolean; userId: string; rankOverride?: number | null }) => (
+    open ? <div data-testid="mock-player-profile">PROFILE VIEW {userId} RANK {rankOverride}</div> : null
   ),
 }));
 
@@ -71,7 +71,7 @@ describe('LeaderboardSection', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open owener1 profile' }));
 
-    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-1');
+    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-1 RANK 1');
   });
 
   it('opens the player profile tab from the second place avatar too', async () => {
@@ -101,6 +101,6 @@ describe('LeaderboardSection', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open marv profile' }));
 
-    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-2');
+    expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-2 RANK 2');
   });
 });

@@ -137,6 +137,19 @@ describe('PlayerStatsModal', () => {
     }));
   });
 
+  it('uses the leaderboard rank override when provided', async () => {
+    rpcMock.mockResolvedValue({ data: profilePayload, error: null });
+
+    render(
+      <PlayerStatsModal open onOpenChange={vi.fn()} userId="user-1" rankOverride={2} />,
+      { wrapper: createWrapper() },
+    );
+
+    expect(await screen.findByRole('dialog', { name: 'PROFILE VIEW' })).toBeInTheDocument();
+    expect(await screen.findByText('Rank: #2')).toBeInTheDocument();
+    expect(screen.queryByText('Rank: #294')).not.toBeInTheDocument();
+  });
+
   it('closes from Escape without adding a visible close control', async () => {
     const onOpenChange = vi.fn();
     rpcMock.mockResolvedValue({ data: profilePayload, error: null });

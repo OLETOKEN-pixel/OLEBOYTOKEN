@@ -26,6 +26,7 @@ export function LeaderboardWeekly() {
   const [entries, setEntries] = useState<WeeklyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchWeeklyLeaderboard = async () => {
@@ -98,7 +99,10 @@ export function LeaderboardWeekly() {
                       'flex items-center gap-3 p-2.5 rounded-lg transition-colors hover:bg-secondary/50 cursor-pointer',
                       index < 3 && 'bg-secondary/30'
                     )}
-                    onClick={() => setSelectedUserId(entry.user_id)}
+                    onClick={() => {
+                      setSelectedUserId(entry.user_id);
+                      setSelectedRank(index + 1);
+                    }}
                   >
                     {/* Rank */}
                     <div className="w-7 text-center">
@@ -134,8 +138,14 @@ export function LeaderboardWeekly() {
 
       <PlayerStatsModal
         open={!!selectedUserId}
-        onOpenChange={(open) => !open && setSelectedUserId(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedUserId(null);
+            setSelectedRank(null);
+          }
+        }}
         userId={selectedUserId || ''}
+        rankOverride={selectedRank}
       />
     </>
   );
