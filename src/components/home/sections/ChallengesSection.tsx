@@ -30,7 +30,7 @@ export const ChallengesSection = () => {
     progress: c.target_value > 0
       ? Math.min(100, Math.round((c.progress_value / c.target_value) * 100))
       : 0,
-    completed: c.is_completed,
+    completed: c.is_completed || c.is_claimed,
   }));
 
   /* ---- helpers for per-row styling ---- */
