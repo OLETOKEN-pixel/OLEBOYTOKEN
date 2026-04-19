@@ -630,6 +630,7 @@ function ReadyVsMark() {
   return (
     <div data-testid="match-ready-vs" aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
       <p
+        data-testid="match-ready-vs-text"
         style={{
           position: 'absolute',
           left: 'calc(26.667% + 36px)',
@@ -648,8 +649,8 @@ function ReadyVsMark() {
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 19%, #000 78%, rgba(0,0,0,0) 100%)',
-          maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 19%, #000 78%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 20px, #000 182px, #000 189px, rgba(0,0,0,0) 351px, rgba(0,0,0,0) 100%)',
+          maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 20px, #000 182px, #000 189px, rgba(0,0,0,0) 351px, rgba(0,0,0,0) 100%)',
           userSelect: 'none',
         }}
       >

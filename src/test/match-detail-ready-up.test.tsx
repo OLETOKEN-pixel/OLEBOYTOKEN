@@ -176,6 +176,9 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByText('STARTED')).toBeInTheDocument();
     expect(screen.getByText('FINISHED')).toBeInTheDocument();
     expect(screen.getByTestId('match-ready-vs')).toBeInTheDocument();
+    expect(screen.getByTestId('match-ready-vs-text')).toHaveStyle({
+      maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 20px, #000 182px, #000 189px, rgba(0,0,0,0) 351px, rgba(0,0,0,0) 100%)',
+    });
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.queryByText('Opponent')).not.toBeInTheDocument();
     expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
