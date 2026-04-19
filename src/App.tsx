@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLoadingGuard } from "@/components/common/AppLoadingGuard";
@@ -64,6 +64,33 @@ function CanonicalDomainRedirect() {
   return null;
 }
 
+function GlobalBottomNeon() {
+  const { pathname } = useLocation();
+  const isMatchDetail = /^\/matches\/(?!create(?:\/|$))[^/]+$/.test(pathname);
+
+  if (isMatchDetail) return null;
+
+  return (
+    <img
+      aria-hidden="true"
+      data-global-neon="true"
+      src="/figma-assets/figma-neon.png"
+      alt=""
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        width: '100vw',
+        height: '146px',
+        objectFit: 'cover',
+        pointerEvents: 'none',
+        zIndex: 7,
+        transform: 'scaleY(-1)',
+      }}
+    />
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -74,24 +101,8 @@ function App() {
           <BrowserRouter>
             <CanonicalDomainRedirect />
             <AuthenticatedGlobalListeners />
-            {/* Fixed bottom neon — always visible on all pages, matches Figma node 205:855 */}
-            <img
-              aria-hidden="true"
-              data-global-neon="true"
-              src="/figma-assets/figma-neon.png"
-              alt=""
-              style={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                width: '100vw',
-                height: '146px',
-                objectFit: 'cover',
-                pointerEvents: 'none',
-                zIndex: 7,
-                transform: 'scaleY(-1)',
-              }}
-            />
+            {/* Match detail uses its own Figma neon layer. */}
+            <GlobalBottomNeon />
             <AppLoadingGuard>
               <Routes>
                 <Route path="/" element={<Index />} />
