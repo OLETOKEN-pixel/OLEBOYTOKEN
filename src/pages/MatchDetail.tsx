@@ -657,7 +657,8 @@ function ReadyVsMark() {
         style={{
           ...baseLayerStyle,
           WebkitTextStroke: '2.06px transparent',
-          background: 'linear-gradient(180.075deg, #FFFFFF 0%, #0F0404 100%)',
+          backgroundColor: 'transparent',
+          backgroundImage: 'linear-gradient(180.075deg, #FFFFFF 0%, #0F0404 100%)',
           zIndex: 1,
         }}
       >
@@ -667,6 +668,7 @@ function ReadyVsMark() {
         data-testid="match-ready-vs-text"
         style={{
           ...baseLayerStyle,
+          backgroundColor: 'transparent',
           backgroundImage: 'linear-gradient(180.075deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
           zIndex: 2,
         }}
