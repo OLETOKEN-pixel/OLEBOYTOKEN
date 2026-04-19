@@ -157,4 +157,24 @@ describe('MatchChat', () => {
     expect(inserted.attachment_type).toBe('image');
     expect(inserted.attachment_path).toContain('match-1/user-current/');
   });
+
+  it('allows high quality screenshots above the old 5 MB limit', async () => {
+    const { container } = renderChat();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['image'], 'screenshot.png', { type: 'image/png' });
+    Object.defineProperty(file, 'size', { value: 12 * 1024 * 1024 });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(uploadMock).toHaveBeenCalled();
+      expect(insertMock).toHaveBeenCalled();
+    });
+
+    expect(toastMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Image too large',
+      }),
+    );
+  });
 });

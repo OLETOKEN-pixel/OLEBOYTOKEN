@@ -38,9 +38,10 @@ interface MatchChatProps {
   variant?: 'default' | 'figmaReady';
 }
 
-const ACTIVE_STATUSES = ['open', 'joined', 'ready_check', 'in_progress', 'result_pending', 'disputed', 'full'];
+const ACTIVE_STATUSES = ['open', 'joined', 'ready_check', 'in_progress', 'result_pending', 'disputed', 'full', 'started'];
 const CHAT_IMAGE_BUCKET = 'match-chat-images';
-const MAX_CHAT_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_CHAT_IMAGE_SIZE_MB = 50;
+const MAX_CHAT_IMAGE_SIZE = MAX_CHAT_IMAGE_SIZE_MB * 1024 * 1024;
 const READY_CHAT_ASSETS = {
   emotes: '/figma-assets/match-ready/chat-emotes.svg',
   uploadButton: '/figma-assets/match-ready/chat-send-button.svg',
@@ -174,7 +175,10 @@ export function MatchChat({
             .maybeSingle();
 
           const [message] = await enrichMessages([(enriched || newMsg) as unknown as ChatMessage]);
-          setMessages(prev => [...prev, message]);
+          setMessages(prev => {
+            if (prev.some((item) => item.id === message.id)) return prev;
+            return [...prev, message];
+          });
         }
       )
       .subscribe();
@@ -245,7 +249,7 @@ export function MatchChat({
     if (file.size > MAX_CHAT_IMAGE_SIZE) {
       toast({
         title: 'Image too large',
-        description: 'Images cannot exceed 5 MB.',
+        description: `Images cannot exceed ${MAX_CHAT_IMAGE_SIZE_MB} MB.`,
         variant: 'destructive',
       });
       return;
@@ -264,7 +268,8 @@ export function MatchChat({
       const { error: uploadError } = await supabase.storage
         .from(CHAT_IMAGE_BUCKET)
         .upload(storagePath, file, {
-          contentType: file.type,
+          contentType: file.type || 'image/png',
+          cacheControl: '3600',
           upsert: false,
         });
 
@@ -285,6 +290,8 @@ export function MatchChat({
         await supabase.storage.from(CHAT_IMAGE_BUCKET).remove([storagePath]);
         throw insertError;
       }
+
+      await fetchMessages();
     } catch (error) {
       console.error('Upload chat image error:', error);
       toast({
@@ -500,7 +507,7 @@ export function MatchChat({
           ref={fileInputRef}
           className="match-chat-upload-input"
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept="image/*"
           onChange={handleFileChange}
           style={{ display: 'none' }}
         />
