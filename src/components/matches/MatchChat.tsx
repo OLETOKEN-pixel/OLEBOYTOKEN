@@ -46,7 +46,32 @@ const READY_CHAT_ASSETS = {
   emotes: '/figma-assets/match-ready/chat-emotes.svg',
   uploadButton: '/figma-assets/match-ready/chat-send-button.svg',
 };
-const QUICK_EMOJIS = ['😀', '😂', '🔥', '💀', '👀', '😤', '😎', '😭', '🤝', '🏆', '✅', '❌', '❤️', '😅', '😮‍💨', '🫡'];
+const _B = 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/';
+const QUICK_EMOJIS = [
+  { char: '🤡', url: _B + 'Clown%20Face.png',                          name: 'clown' },
+  { char: '🙊', url: _B + 'Speak-No-Evil%20Monkey.png',                name: 'speak-no-evil' },
+  { char: '🙉', url: _B + 'Hear-No-Evil%20Monkey.png',                 name: 'hear-no-evil' },
+  { char: '😡', url: _B + 'Pouting%20Face.png',                        name: 'pouting' },
+  { char: '🙈', url: _B + 'See-No-Evil%20Monkey.png',                  name: 'see-no-evil' },
+  { char: '👹', url: _B + 'Ogre.png',                                  name: 'ogre' },
+  { char: '💀', url: _B + 'Skull.png',                                 name: 'skull' },
+  { char: '🤯', url: _B + 'Exploding%20Head.png',                      name: 'exploding-head' },
+  { char: '☠️', url: _B + 'Skull%20and%20Crossbones.png',              name: 'skull-crossbones' },
+  { char: '🤮', url: _B + 'Face%20Vomiting.png',                       name: 'vomiting' },
+  { char: '👿', url: _B + 'Angry%20Face%20with%20Horns.png',           name: 'horns' },
+  { char: '💩', url: _B + 'Pile%20of%20Poo.png',                       name: 'poo' },
+  { char: '😅', url: _B + 'Grinning%20Face%20with%20Sweat.png',        name: 'sweat' },
+  { char: '👽', url: _B + 'Alien.png',                                 name: 'alien' },
+  { char: '👻', url: _B + 'Ghost.png',                                 name: 'ghost' },
+  { char: '🤣', url: _B + 'Rolling%20on%20the%20Floor%20Laughing.png', name: 'rofl' },
+  { char: '🤢', url: _B + 'Nauseated%20Face.png',                      name: 'nauseated' },
+  { char: '👺', url: _B + 'Goblin.png',                                name: 'goblin' },
+  { char: '🤬', url: _B + 'Face%20with%20Symbols%20on%20Mouth.png',    name: 'symbols-mouth' },
+  { char: '🤑', url: _B + 'Money-Mouth%20Face.png',                    name: 'money-mouth' },
+  { char: '🥶', url: _B + 'Cold%20Face.png',                           name: 'cold' },
+  { char: '🤐', url: _B + 'Zipper-Mouth%20Face.png',                   name: 'zipper-mouth' },
+  { char: '🤖', url: _B + 'Robot.png',                                 name: 'robot' },
+];
 
 function normalizeChatMessageAvatar(message: ChatMessage, profileMap?: Record<string, ProfileSummary>): ChatMessage {
   const mappedProfile = profileMap?.[message.user_id];
@@ -469,36 +494,47 @@ export function MatchChat({
               position: 'absolute',
               right: 82,
               bottom: 75,
-              width: 236,
-              padding: 10,
-              borderRadius: 8,
+              width: 292,
+              padding: 12,
+              borderRadius: 12,
               background: '#1c1c1c',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.55)',
               display: 'grid',
-              gridTemplateColumns: 'repeat(8, 1fr)',
-              gap: 4,
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: 6,
               zIndex: 5,
             }}
           >
             {QUICK_EMOJIS.map((emoji) => (
               <button
-                key={emoji}
+                key={emoji.name}
                 type="button"
                 className="match-chat-emoji-option"
-                onClick={() => insertEmoji(emoji)}
+                onClick={() => insertEmoji(emoji.char)}
+                title={emoji.name}
                 style={{
-                  width: 24,
-                  height: 24,
+                  width: 48,
+                  height: 48,
                   border: 'none',
-                  borderRadius: 6,
+                  borderRadius: 8,
                   background: 'transparent',
                   cursor: 'pointer',
-                  fontSize: 17,
-                  lineHeight: '24px',
-                  padding: 0,
+                  padding: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background 0.15s',
                 }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                {emoji}
+                <img
+                  src={emoji.url}
+                  alt={emoji.name}
+                  width={40}
+                  height={40}
+                  style={{ display: 'block', pointerEvents: 'none' }}
+                />
               </button>
             ))}
           </div>
