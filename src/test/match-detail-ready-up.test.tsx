@@ -86,24 +86,30 @@ function participantFactory(overrides: Partial<MatchParticipant>): MatchParticip
   };
 }
 
+function todayAtLobbyTime(): string {
+  const date = new Date();
+  date.setHours(17, 23, 0, 0);
+  return date.toISOString();
+}
+
 function matchFactory(participants: MatchParticipant[]): Match {
   return {
     id: 'match-ready',
     creator_id: 'user-a-1',
     game: 'Fortnite',
     region: 'EU',
-    platform: 'PC',
+    platform: 'All',
     mode: 'Box Fight',
     team_size: 3,
     first_to: 5,
     entry_fee: 0.5,
     is_private: false,
-    private_code: null,
+    private_code: '1111 - 2222 - 333',
     status: 'ready_check',
     expires_at: null,
     started_at: null,
     finished_at: null,
-    created_at: '2026-04-18T10:00:00.000Z',
+    created_at: todayAtLobbyTime(),
     creator: {
       username: 'Host',
       discord_avatar_url: 'https://cdn.discordapp.com/avatars/host/avatar.png',
@@ -171,6 +177,17 @@ describe('MatchDetail ready-up Figma lobby', () => {
     renderMatchDetail();
 
     expect(screen.getByTestId('match-ready-lobby')).toBeInTheDocument();
+    expect(screen.getByText('3V3 BOXFIGHT')).toBeInTheDocument();
+    expect(screen.getByText('Entry:')).toBeInTheDocument();
+    expect(screen.getByText('0.50')).toBeInTheDocument();
+    expect(screen.getByText('Prize:')).toBeInTheDocument();
+    expect(screen.getByText('2.85')).toBeInTheDocument();
+    expect(screen.getByText('First to:')).toBeInTheDocument();
+    expect(screen.getByText('5+2')).toBeInTheDocument();
+    expect(screen.getByText('Platform:')).toBeInTheDocument();
+    expect(screen.getByText('ANY')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy match code 1111 - 2222 - 333' })).toBeInTheDocument();
+    expect(screen.getByText('Today, 5:23PM')).toBeInTheDocument();
     expect(screen.getByText('MATCH CHAT')).toBeInTheDocument();
     expect(screen.getByText('CREATED')).toBeInTheDocument();
     expect(screen.getByText('STARTED')).toBeInTheDocument();
@@ -185,6 +202,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
       backgroundImage: 'linear-gradient(180.075deg, rgb(15, 4, 4) 10.117%, rgb(255, 255, 255) 99.722%)',
     });
     expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getByAltText('Match creator')).toBeInTheDocument();
     expect(screen.queryByText('Opponent')).not.toBeInTheDocument();
     expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'READY (0/6)' })).toBeEnabled();
@@ -201,6 +219,21 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.queryByText('Host')).not.toBeInTheDocument();
     expect(screen.queryByText('HostEpic')).not.toBeInTheDocument();
     expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
+    expect(screen.queryByAltText('Match creator')).not.toBeInTheDocument();
+  });
+
+  it('copies the private match code from the Figma lobby header', async () => {
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy match code 1111 - 2222 - 333' }));
+
+    await waitFor(() => {
+      expect(writeTextMock).toHaveBeenCalledWith('1111 - 2222 - 333');
+    });
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Match code copied',
+      description: '1111 - 2222 - 333',
+    }));
   });
 
   it('reflects ready count changes in the Figma ready button', () => {
@@ -262,7 +295,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.queryByRole('button', { name: 'READY (0/6)' })).not.toBeInTheDocument();
     expect(screen.getAllByText('Wait for a player').length).toBeGreaterThan(0);
     expect(screen.queryByText('DELETE MATCH')).not.toBeInTheDocument();
-    expect(screen.queryByText(/BOX FIGHT/)).not.toBeInTheDocument();
+    expect(screen.getByText('3V3 BOXFIGHT')).toBeInTheDocument();
   });
 
   it('cancels the open lobby from the Figma cancel button', async () => {
@@ -358,6 +391,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.getByText('Opponent')).toBeInTheDocument();
+    expect(screen.getByAltText('Match creator')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Open Opponent profile' }));
     expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-b-1');
 

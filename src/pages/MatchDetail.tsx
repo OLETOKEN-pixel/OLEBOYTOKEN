@@ -33,6 +33,9 @@ const FONT_EXPANDED_BLACK_OBLIQUE =
 
 const READY_ASSETS = {
   epicLogo: '/figma-assets/match-ready/epic-games-logo.png',
+  lobbyTitleTriangles: '/figma-assets/match-ready/lobby-title-triangles.svg',
+  lobbyCopy: '/figma-assets/match-ready/lobby-copy.svg',
+  creatorCrown: '/figma-assets/match-ready/creator-crown.svg',
   playerActionRed: '/figma-assets/player-profile/see-more-red.svg',
   playerActionGreen: [
     '/figma-assets/player-profile/see-more-green.svg',
@@ -71,6 +74,43 @@ function getViewState(status: string): ViewState {
   if (['ready_check', 'full'].includes(status)) return 'READY_UP';
   if (['in_progress', 'result_pending', 'started'].includes(status)) return 'WIN_LOSS';
   return 'TERMINAL';
+}
+
+function formatLobbyTitle(match: Match): string {
+  const size = Math.max(Number(match.team_size ?? 1), 1);
+  const mode = String(match.mode ?? 'MATCH').replace(/\s+/g, '').toUpperCase();
+  return `${size}V${size} ${mode || 'MATCH'}`;
+}
+
+function formatLobbyPlatform(platform: Match['platform']): string {
+  if (platform === 'All') return 'ANY';
+  if (platform === 'Console') return 'PS5';
+  return String(platform ?? 'ANY').toUpperCase();
+}
+
+function formatLobbyDateTime(value?: string | null): string {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+
+  const now = new Date();
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  const time = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date).replace(/\s/g, '');
+
+  if (isToday) return `Today, ${time}`;
+
+  const day = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+  return `${day}, ${time}`;
 }
 
 // ─── Status progress ─────────────────────────────────────────────────────────
@@ -373,14 +413,14 @@ function ReadyStatusProgress({ status }: { status: string }) {
         active
         baseAsset={READY_ASSETS.statusCreatedEllipse}
         label="Created"
-        style={{ left: 'calc(13.333% + 7px)', top: 297 }}
+        style={{ left: 'calc(13.333% + 7px)', top: 353 }}
       />
       <div
         aria-hidden
         style={{
           position: 'absolute',
           left: 'calc(16.667% + 9px)',
-          top: 329,
+          top: 386,
           width: 388,
           height: 3,
           background: isStarted ? lineColor : lineInactiveColor,
@@ -390,14 +430,14 @@ function ReadyStatusProgress({ status }: { status: string }) {
         active={isStarted}
         baseAsset={READY_ASSETS.statusStartedEllipse}
         label="Started"
-        style={{ left: 'calc(36.667% + 9px)', top: 297 }}
+        style={{ left: 'calc(36.667% + 9px)', top: 353 }}
       />
       <div
         aria-hidden
         style={{
           position: 'absolute',
           left: 'calc(40% + 11px)',
-          top: 329,
+          top: 386,
           width: 385,
           height: 3,
           background: isFinished ? lineColor : lineInactiveColor,
@@ -407,12 +447,12 @@ function ReadyStatusProgress({ status }: { status: string }) {
         active={isFinished}
         baseAsset={READY_ASSETS.statusFinishedEllipse}
         label="Finished"
-        style={{ left: 'calc(60% + 11px)', top: 297 }}
+        style={{ left: 'calc(60% + 11px)', top: 353 }}
       />
       {[
-        { label: 'CREATED', left: 'calc(13.333% - 11px)', top: 376 },
-        { label: 'STARTED', left: 'calc(36.667% - 9px)', top: 376 },
-        { label: 'FINISHED', left: 'calc(60% - 7px)', top: 376 },
+        { label: 'CREATED', left: 'calc(13.333% - 11px)', top: 432 },
+        { label: 'STARTED', left: 'calc(36.667% - 9px)', top: 432 },
+        { label: 'FINISHED', left: 'calc(60% - 7px)', top: 432 },
       ].map((step) => (
         <span
           key={step.label}
@@ -439,6 +479,7 @@ function ReadyPlayerSlot({
   side,
   actionAsset,
   maskIdentity,
+  isCreatorSlot = false,
   emptyLabel = 'Unknown',
   emptySubtitle = 'Unknown',
   onOpenProfile,
@@ -448,6 +489,7 @@ function ReadyPlayerSlot({
   side: 'A' | 'B';
   actionAsset: string;
   maskIdentity?: boolean;
+  isCreatorSlot?: boolean;
   emptyLabel?: string;
   emptySubtitle?: string;
   onOpenProfile?: (participant: MatchParticipant) => void;
@@ -466,6 +508,7 @@ function ReadyPlayerSlot({
   const epicName = profile?.fortnite_username || profile?.epic_username || emptySubtitle;
   const accent = side === 'A' ? '#ff1654' : '#d8ff16';
   const showEpicLogo = !!participant || emptySubtitle !== '............';
+  const showCreatorCrown = !!participant && !maskIdentity && isCreatorSlot;
   const canOpenProfile = !!participant && !maskIdentity && !!participant.user_id;
   const canCopyEpicName = !!participant && !maskIdentity && !!epicName && !['Unknown', '............'].includes(epicName);
   const profileButtonLabel = canOpenProfile ? `Open ${username} profile` : 'Player profile unavailable';
@@ -511,23 +554,41 @@ function ReadyPlayerSlot({
         />
       )}
 
-      <span
+      <div
         style={{
           position: 'absolute',
           left: 87,
           top: 22,
           maxWidth: 202,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          fontFamily: FONT_BOLD,
-          fontSize: 20,
-          lineHeight: '24px',
-          color: accent,
         }}
       >
-        {username}
-      </span>
+        <span
+          style={{
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: FONT_BOLD,
+            fontSize: 20,
+            lineHeight: '24px',
+            color: accent,
+          }}
+        >
+          {username}
+        </span>
+        {showCreatorCrown && (
+          <img
+            src={READY_ASSETS.creatorCrown}
+            alt="Match creator"
+            data-testid="creator-crown"
+            style={{ width: 20, height: 20, flexShrink: 0 }}
+          />
+        )}
+      </div>
 
       <div
         style={{
@@ -679,6 +740,142 @@ function ReadyVsMark() {
   );
 }
 
+function LobbyInfoChip({
+  label,
+  value,
+  left,
+  width,
+  top = 290,
+}: {
+  label?: string;
+  value: string;
+  left: string;
+  width: number;
+  top?: number;
+}) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width,
+        height: 30,
+        border: '1px solid #ff1654',
+        borderRadius: 22,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#ffffff',
+        fontFamily: FONT_EXPANDED_BOLD,
+        fontSize: 16,
+        lineHeight: 'normal',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label && <span style={{ fontFamily: FONT_REGULAR }}>{label}:&nbsp;</span>}
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function ReadyLobbyHeader({
+  match,
+  prize,
+  onCopyCode,
+}: {
+  match: Match;
+  prize: number;
+  onCopyCode: (code: string) => void;
+}) {
+  const privateCode = match.private_code?.trim();
+
+  return (
+    <div aria-label="Match lobby header" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
+      <img
+        src={READY_ASSETS.lobbyTitleTriangles}
+        alt=""
+        aria-hidden
+        style={{ position: 'absolute', left: 'calc(10% + 34px)', top: 185, width: 59.333, height: 89 }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 'calc(13.333% + 7px)',
+          top: 290,
+          width: 797,
+          fontFamily: FONT_EXPANDED_BLACK_OBLIQUE,
+          fontSize: 53,
+          lineHeight: 'normal',
+          color: '#ffffff',
+          whiteSpace: 'nowrap',
+          transform: 'translateY(-100%)',
+        }}
+      >
+        {formatLobbyTitle(match)}
+      </div>
+
+      <LobbyInfoChip label="Entry" value={formatEntryFee(match)} left="calc(13.333% + 7px)" width={137} />
+      <LobbyInfoChip label="Prize" value={prize.toFixed(2)} left="calc(20% + 23px)" width={146} />
+      <LobbyInfoChip label="First to" value={`${Number(match.first_to ?? 5)}+2`} left="calc(26.667% + 48px)" width={162} />
+      <LobbyInfoChip label="Platform" value={formatLobbyPlatform(match.platform)} left="calc(36.667% + 25px)" width={183} />
+
+      {privateCode && (
+        <button
+          type="button"
+          aria-label={`Copy match code ${privateCode}`}
+          onClick={() => onCopyCode(privateCode)}
+          style={{
+            position: 'absolute',
+            left: 'calc(43.333% - 7px)',
+            top: 244,
+            width: 214,
+            height: 30,
+            border: '1px solid #ff1654',
+            borderRadius: 22,
+            background: 'rgba(255,22,84,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 7,
+            color: '#ffffff',
+            fontFamily: FONT_REGULAR,
+            fontSize: 16,
+            lineHeight: 'normal',
+            cursor: 'copy',
+            pointerEvents: 'auto',
+          }}
+        >
+          <img src={READY_ASSETS.lobbyCopy} alt="" aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
+          <span>{privateCode}</span>
+        </button>
+      )}
+
+      <div
+        style={{
+          position: 'absolute',
+          left: 'calc(53.333% + 22px)',
+          top: 244,
+          width: 183,
+          height: 30,
+          border: '1px solid rgba(255,255,255,0.5)',
+          borderRadius: 22,
+          background: '#282828',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'rgba(255,255,255,0.7)',
+          fontFamily: FONT_REGULAR,
+          fontSize: 16,
+          lineHeight: 'normal',
+        }}
+      >
+        {formatLobbyDateTime(match.created_at)}
+      </div>
+    </div>
+  );
+}
+
 function ReadyChatPanel({
   matchId,
   status,
@@ -810,7 +1007,9 @@ function ReadyLobbyScreen({
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const slots = Array.from({ length: teamSize });
-  const teamTop = 666 - Math.max(teamSize - 1, 0) * 48;
+  const slotHeight = 87;
+  const slotGap = 9;
+  const teamTop = 593 + (Math.max(3 - teamSize, 0) * (slotHeight + slotGap)) / 2;
   const isWaitingForAcceptance = viewState === 'WAIT';
   const isReadyCheck = viewState === 'READY_UP';
   const isPlaying = viewState === 'WIN_LOSS';
@@ -868,10 +1067,27 @@ function ReadyLobbyScreen({
     }
   };
 
+  const handleCopyMatchCode = async (code: string) => {
+    try {
+      const copied = await copyTextToClipboard(code);
+      toast({
+        title: copied ? 'Match code copied' : 'Copy unavailable',
+        description: copied ? code : 'Copy it manually from the lobby header.',
+        variant: copied ? undefined : 'destructive',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Copy failed',
+        description: err?.message || 'Unable to copy match code.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const actionButtonBase = {
     position: 'absolute' as const,
-    top: 426,
-    width: 218,
+    top: 478,
+    width: 181,
     height: 52,
     borderRadius: 16,
     fontFamily: FONT_BOLD,
@@ -898,6 +1114,7 @@ function ReadyLobbyScreen({
           zIndex: 10,
         }}
       >
+        <ReadyLobbyHeader match={match} prize={prize} onCopyCode={handleCopyMatchCode} />
         <ReadyStatusProgress status={status} />
 
         {!isTerminal && (
@@ -906,9 +1123,9 @@ function ReadyLobbyScreen({
             onClick={onRules}
             style={{
               position: 'absolute',
-              left: 'calc(26.667% + 7px)',
-              top: 426,
-              width: 218,
+              left: 'calc(26.667% + 43px)',
+              top: 478,
+              width: 181,
               height: 52,
               borderRadius: 16,
               border: '1px solid rgba(255,255,255,0.5)',
@@ -931,7 +1148,7 @@ function ReadyLobbyScreen({
             disabled={actionDisabled}
             style={{
               ...actionButtonBase,
-              left: 'calc(36.667% + 50px)',
+              left: 'calc(40% - 12px)',
               border: '1px solid #ff1654',
               background: 'rgba(255,22,84,0.34)',
               cursor: actionDisabled ? 'default' : 'pointer',
@@ -950,7 +1167,7 @@ function ReadyLobbyScreen({
               disabled={!isParticipant || submitPending}
               style={{
                 ...actionButtonBase,
-                left: 'calc(36.667% + 50px)',
+                left: 'calc(40% - 12px)',
                 border: '1px solid #1aff16',
                 background: 'rgba(26,255,22,0.28)',
                 cursor: !isParticipant || submitPending ? 'default' : 'pointer',
@@ -965,7 +1182,7 @@ function ReadyLobbyScreen({
               disabled={!isParticipant || submitPending}
               style={{
                 ...actionButtonBase,
-                left: 'calc(36.667% + 282px)',
+                left: 'calc(40% + 183px)',
                 border: '1px solid #ff1654',
                 background: 'rgba(255,22,84,0.34)',
                 cursor: !isParticipant || submitPending ? 'default' : 'pointer',
@@ -981,7 +1198,7 @@ function ReadyLobbyScreen({
           <div
             style={{
               ...actionButtonBase,
-              left: 'calc(36.667% + 50px)',
+              left: 'calc(40% - 12px)',
               width: 450,
               display: 'flex',
               alignItems: 'center',
@@ -1038,6 +1255,7 @@ function ReadyLobbyScreen({
               side="A"
               actionAsset={READY_ASSETS.playerActionRed}
               maskIdentity={shouldMaskSlot(teamA[index])}
+              isCreatorSlot={teamA[index]?.user_id === match.creator_id}
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
               onOpenProfile={handleOpenProfile}
@@ -1065,6 +1283,7 @@ function ReadyLobbyScreen({
               side="B"
               actionAsset={READY_ASSETS.playerActionGreen[index % READY_ASSETS.playerActionGreen.length]}
               maskIdentity={shouldMaskSlot(teamB[index])}
+              isCreatorSlot={teamB[index]?.user_id === match.creator_id}
               emptyLabel={isWaitingForAcceptance ? 'Wait for a player' : 'Unknown'}
               emptySubtitle={isWaitingForAcceptance ? '............' : 'Unknown'}
               onOpenProfile={handleOpenProfile}
