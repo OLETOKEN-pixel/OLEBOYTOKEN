@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NavbarFigmaLoggedIn } from '@/components/layout/NavbarFigmaLoggedIn';
 import { MatchChat } from '@/components/matches/MatchChat';
+import { MatchRulesOverlay } from '@/components/matches/MatchRulesOverlay';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -972,7 +973,6 @@ function ReadyLobbyScreen({
   onReady,
   onCancel,
   onSubmitResult,
-  onRules,
   isWinner,
   prize = 0,
   entryFee = 0,
@@ -999,12 +999,12 @@ function ReadyLobbyScreen({
   onReady: () => void;
   onCancel: () => void;
   onSubmitResult: (result: 'WIN' | 'LOSS') => void;
-  onRules: () => void;
   isWinner?: boolean;
   prize?: number;
   entryFee?: number;
 }) {
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const { toast } = useToast();
   const slots = Array.from({ length: teamSize });
   const slotHeight = 87;
@@ -1120,7 +1120,7 @@ function ReadyLobbyScreen({
         {!isTerminal && (
           <button
             type="button"
-            onClick={onRules}
+            onClick={() => setRulesOpen(true)}
             style={{
               position: 'absolute',
               left: 'calc(26.667% + 43px)',
@@ -1309,6 +1309,8 @@ function ReadyLobbyScreen({
         }}
         userId={selectedProfileUserId || ''}
       />
+
+      <MatchRulesOverlay open={rulesOpen} mode={match.mode} onClose={() => setRulesOpen(false)} />
 
       <img
         src="/figma-assets/figma-neon.png"
@@ -1501,10 +1503,6 @@ export default function MatchDetail() {
     }
   };
 
-  const handleRules = () => {
-    navigate('/rules');
-  };
-
   if (viewState === 'WAIT' || viewState === 'READY_UP' || viewState === 'WIN_LOSS' || viewState === 'TERMINAL') {
     return (
       <ReadyLobbyScreen
@@ -1530,7 +1528,6 @@ export default function MatchDetail() {
         onReady={handleReady}
         onCancel={handleCancel}
         onSubmitResult={handleSubmitResult}
-        onRules={handleRules}
         isWinner={isWinner as boolean | undefined}
         prize={prize}
         entryFee={entryFee}

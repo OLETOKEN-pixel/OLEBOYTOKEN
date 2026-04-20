@@ -236,6 +236,70 @@ describe('MatchDetail ready-up Figma lobby', () => {
     }));
   });
 
+  it('opens Box Fight rules in the lobby overlay without navigating away', () => {
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
+
+    expect(screen.getByRole('dialog', { name: 'MATCH RULES' })).toBeInTheDocument();
+    expect(screen.getByText('BOXFIGHT')).toBeInTheDocument();
+    expect(screen.getByText('2640-2394-7508')).toBeInTheDocument();
+    expect(screen.getByText('Elite Box Fights')).toBeInTheDocument();
+    expect(screen.getByText('Boxfight Rules')).toBeInTheDocument();
+    expect(screen.getByText('You must not exploit bugs to keep extra loot from round to round.')).toBeInTheDocument();
+    expect(screen.getByText('General Rules')).toBeInTheDocument();
+    expect(screen.getByText(/maximum of 10 minutes from the match starting/i)).toBeInTheDocument();
+    expect(screen.getByTestId('match-ready-lobby')).toBeInTheDocument();
+    expect(screen.queryByText('Rules page')).not.toBeInTheDocument();
+  });
+
+  it('opens Realistic rules for Realistic matches', () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        mode: 'Realistic',
+      },
+    };
+
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
+
+    expect(screen.getByText('REALISTIC')).toBeInTheDocument();
+    expect(screen.getByText('9854-1829-8735')).toBeInTheDocument();
+    expect(screen.getByText('Finest Realistics')).toBeInTheDocument();
+    expect(screen.getByText('Realistic Rules')).toBeInTheDocument();
+    expect(screen.getByText(/Opening chests, ammo crates, collecting floor loot/i)).toBeInTheDocument();
+    expect(screen.getByText("'Zone Wars' and 'Comp Mode' options must be enabled.")).toBeInTheDocument();
+  });
+
+  it('opens Zone Wars rules and closes with Escape or outside click', () => {
+    matchState.value = {
+      ...matchState.value,
+      data: {
+        ...matchState.value.data!,
+        mode: 'Zone Wars',
+      },
+    };
+
+    renderMatchDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
+
+    expect(screen.getByText('ZONE WARS')).toBeInTheDocument();
+    expect(screen.getByText('3537-4087-0888')).toBeInTheDocument();
+    expect(screen.getByText('If damage is dealt, the round counts regardless of the circumstances.')).toBeInTheDocument();
+    expect(screen.getByText('If no players go through the portal, the round will not count.')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'MATCH RULES' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
+    fireEvent.mouseDown(screen.getByTestId('match-rules-overlay'));
+    expect(screen.queryByRole('dialog', { name: 'MATCH RULES' })).not.toBeInTheDocument();
+  });
+
   it('reflects ready count changes in the Figma ready button', () => {
     matchState.value = {
       ...matchState.value,
