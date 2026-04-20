@@ -1,13 +1,15 @@
 import type { CSSProperties } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { GENERAL_MATCH_RULES, getModeRules } from '@/lib/matchRules';
 import type { GameMode } from '@/types';
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
 const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
+const FONT_BOLD_OBLIQUE = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
 const FONT_EXPANDED_BOLD = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
 const FONT_EXPANDED_BLACK = "'Base_Neue_Trial:Expanded_Black', 'Base Neue Trial-ExpandedBlack', 'Base Neue Trial', sans-serif";
+const TITLE_TRIANGLES = '/figma-assets/match-ready/lobby-title-triangles.svg';
 
 interface MatchRulesOverlayProps {
   open: boolean;
@@ -26,11 +28,9 @@ const frameWrapStyle: CSSProperties = {
   position: 'absolute',
   left: '50%',
   top: '50%',
-  width: 903,
-  maxWidth: 'calc(100vw - 32px)',
-  height: 800,
-  maxHeight: 'calc(100vh - 32px)',
-  transform: 'translate(-50%, -50%)',
+  width: 536,
+  height: 476,
+  transformOrigin: 'center center',
 };
 
 const panelStyle: CSSProperties = {
@@ -52,7 +52,7 @@ function RuleList({ rules, bulletColor = '#ff1654' }: { rules: string[]; bulletC
         margin: 0,
         padding: 0,
         display: 'grid',
-        gap: 13,
+        gap: 10,
         listStyle: 'none',
       }}
     >
@@ -62,11 +62,11 @@ function RuleList({ rules, bulletColor = '#ff1654' }: { rules: string[]; bulletC
           style={{
             display: 'grid',
             gridTemplateColumns: '12px 1fr',
-            columnGap: 13,
+            columnGap: 11,
             alignItems: 'start',
             fontFamily: FONT_REGULAR,
-            fontSize: 20,
-            lineHeight: '24px',
+            fontSize: 15,
+            lineHeight: '18px',
             color: 'rgba(255,255,255,0.88)',
           }}
         >
@@ -90,6 +90,22 @@ function RuleList({ rules, bulletColor = '#ff1654' }: { rules: string[]; bulletC
 
 export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProps) {
   const modeRules = getModeRules(mode);
+  const [frameScale, setFrameScale] = useState(1);
+  const [activeTab, setActiveTab] = useState<'mode' | 'general'>('mode');
+
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return;
+
+    setActiveTab('mode');
+
+    const updateScale = () => {
+      setFrameScale(Math.max(Math.min((window.innerWidth - 32) / 536, (window.innerHeight - 32) / 476, 1), 0.6));
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -104,6 +120,9 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
 
   if (!open || typeof document === 'undefined') return null;
 
+  const activeRules = activeTab === 'mode' ? modeRules.rules : GENERAL_MATCH_RULES.rules;
+  const activeTitle = activeTab === 'mode' ? modeRules.rulesTitle : GENERAL_MATCH_RULES.title;
+
   const overlay = (
     <div
       data-testid="match-rules-overlay"
@@ -112,7 +131,7 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div style={frameWrapStyle}>
+      <div style={{ ...frameWrapStyle, transform: `translate(-50%, -50%) scale(${frameScale})` }}>
         <section
           role="dialog"
           aria-modal="true"
@@ -121,10 +140,11 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
           onMouseDown={(event) => event.stopPropagation()}
         >
           <div
+            data-testid="match-rules-content"
             style={{
               height: '100%',
-              overflowY: 'auto',
-              padding: '37px 74px 54px',
+              overflow: 'hidden',
+              padding: '18px 56px 42px',
               boxSizing: 'border-box',
             }}
           >
@@ -133,8 +153,8 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
               style={{
                 margin: 0,
                 fontFamily: FONT_EXPANDED_BLACK,
-                fontSize: 64,
-                lineHeight: '77px',
+                fontSize: 42,
+                lineHeight: '50px',
                 textAlign: 'center',
                 color: '#ffffff',
               }}
@@ -142,114 +162,115 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
               MATCH RULES
             </h2>
 
-            <div style={{ width: 615, maxWidth: '100%', height: 2, margin: '17px auto 34px', background: '#d9d9d9' }} />
+            <div style={{ width: 363, maxWidth: '100%', height: 2, margin: '8px auto 0', background: '#d9d9d9' }} />
+
+            <div
+              role="tablist"
+              aria-label="Match rule sections"
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 106,
+                marginTop: 60,
+              }}
+            >
+              {[
+                { key: 'mode' as const, label: modeRules.title },
+                { key: 'general' as const, label: 'GENERAL' },
+              ].map((tab) => {
+                const selected = activeTab === tab.key;
+
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setActiveTab(tab.key)}
+                    style={{
+                      position: 'relative',
+                      padding: 0,
+                      border: 0,
+                      background: 'transparent',
+                      color: '#ffffff',
+                      fontFamily: selected ? FONT_BOLD : FONT_REGULAR,
+                      fontSize: 18,
+                      lineHeight: '22px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tab.label}
+                    {selected && (
+                      <span
+                        aria-hidden
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: 27,
+                          height: 3,
+                          background: '#ff1654',
+                        }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
             <section
-              aria-label={`${modeRules.rulesTitle} map code`}
+              aria-label={activeTitle}
               style={{
-                borderRadius: 14,
-                border: '1px solid rgba(255,22,84,0.72)',
-                background: 'rgba(15,4,4,0.43)',
-                padding: '22px 28px',
+                position: 'relative',
+                marginTop: 71,
+                minHeight: 220,
+                paddingLeft: 0,
                 boxSizing: 'border-box',
               }}
             >
-              <div
+              <img
+                src={TITLE_TRIANGLES}
+                alt=""
+                aria-hidden
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 24,
-                  alignItems: 'baseline',
-                  flexWrap: 'wrap',
+                  position: 'absolute',
+                  left: -16,
+                  top: 2,
+                  width: 28,
+                  height: 42,
+                  objectFit: 'contain',
+                }}
+              />
+              <h3
+                style={{
+                  margin: '0 0 6px',
+                  paddingLeft: 0,
+                  fontFamily: FONT_EXPANDED_BOLD,
+                  fontSize: 34,
+                  lineHeight: '41px',
+                  color: '#ffffff',
+                  textTransform: 'uppercase',
                 }}
               >
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: FONT_EXPANDED_BOLD,
-                    fontSize: 38,
-                    lineHeight: '46px',
-                    color: '#ffffff',
-                  }}
-                >
-                  {modeRules.title}
-                </h3>
+                {activeTitle}
+              </h3>
+
+              {activeTab === 'mode' && (
                 <p
                   style={{
-                    margin: 0,
-                    fontFamily: FONT_BOLD,
-                    fontSize: 24,
-                    lineHeight: '29px',
-                    color: '#ffffff',
+                    margin: '0 0 13px',
+                    fontFamily: FONT_BOLD_OBLIQUE,
+                    fontSize: 16,
+                    lineHeight: '19px',
+                    color: 'rgba(255,255,255,0.86)',
                   }}
                 >
-                  Map Code: <span style={{ color: '#ff1654' }}>{modeRules.mapCode}</span>
+                  Map Code: <span style={{ color: '#ff1654' }}>{modeRules.mapCode}</span> ({modeRules.mapName})
                 </p>
-              </div>
-              <p
-                style={{
-                  margin: '8px 0 0',
-                  fontFamily: FONT_REGULAR,
-                  fontSize: 20,
-                  lineHeight: '24px',
-                  color: 'rgba(255,255,255,0.72)',
-                }}
-              >
-                {modeRules.mapName}
-              </p>
+              )}
+
+              <RuleList rules={activeRules} bulletColor={activeTab === 'mode' ? '#ff1654' : '#d8ff16'} />
             </section>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
-              <section
-                aria-label={modeRules.rulesTitle}
-                style={{
-                  minHeight: 330,
-                  borderRadius: 14,
-                  background: 'rgba(15,4,4,0.43)',
-                  padding: '24px 25px 28px',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <h3
-                  style={{
-                    margin: '0 0 22px',
-                    fontFamily: FONT_EXPANDED_BOLD,
-                    fontSize: 32,
-                    lineHeight: '38px',
-                    color: '#ffffff',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {modeRules.rulesTitle}
-                </h3>
-                <RuleList rules={modeRules.rules} />
-              </section>
-
-              <section
-                aria-label={GENERAL_MATCH_RULES.title}
-                style={{
-                  minHeight: 330,
-                  borderRadius: 14,
-                  background: 'rgba(15,4,4,0.43)',
-                  padding: '24px 25px 28px',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <h3
-                  style={{
-                    margin: '0 0 22px',
-                    fontFamily: FONT_EXPANDED_BOLD,
-                    fontSize: 32,
-                    lineHeight: '38px',
-                    color: '#ffffff',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {GENERAL_MATCH_RULES.title}
-                </h3>
-                <RuleList rules={GENERAL_MATCH_RULES.rules} bulletColor="#d8ff16" />
-              </section>
-            </div>
           </div>
         </section>
       </div>

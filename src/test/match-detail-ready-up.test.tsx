@@ -242,11 +242,14 @@ describe('MatchDetail ready-up Figma lobby', () => {
     fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
 
     expect(screen.getByRole('dialog', { name: 'MATCH RULES' })).toBeInTheDocument();
+    expect(screen.getByTestId('match-rules-content')).toHaveStyle({ overflow: 'hidden' });
     expect(screen.getByText('BOXFIGHT')).toBeInTheDocument();
     expect(screen.getByText('2640-2394-7508')).toBeInTheDocument();
-    expect(screen.getByText('Elite Box Fights')).toBeInTheDocument();
+    expect(screen.getByText(/Elite Box Fights/)).toBeInTheDocument();
     expect(screen.getByText('Boxfight Rules')).toBeInTheDocument();
     expect(screen.getByText('You must not exploit bugs to keep extra loot from round to round.')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'GENERAL' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'GENERAL' }));
     expect(screen.getByText('General Rules')).toBeInTheDocument();
     expect(screen.getByText(/maximum of 10 minutes from the match starting/i)).toBeInTheDocument();
     expect(screen.getByTestId('match-ready-lobby')).toBeInTheDocument();
@@ -268,7 +271,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     expect(screen.getByText('REALISTIC')).toBeInTheDocument();
     expect(screen.getByText('9854-1829-8735')).toBeInTheDocument();
-    expect(screen.getByText('Finest Realistics')).toBeInTheDocument();
+    expect(screen.getByText(/Finest Realistics/)).toBeInTheDocument();
     expect(screen.getByText('Realistic Rules')).toBeInTheDocument();
     expect(screen.getByText(/Opening chests, ammo crates, collecting floor loot/i)).toBeInTheDocument();
     expect(screen.getByText("'Zone Wars' and 'Comp Mode' options must be enabled.")).toBeInTheDocument();
