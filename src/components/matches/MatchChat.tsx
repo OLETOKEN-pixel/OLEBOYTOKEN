@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Send, Loader2, MessagesSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -72,6 +72,30 @@ const QUICK_EMOJIS = [
   { char: '🤐', url: _B + 'Zipper-Mouth%20Face.png',                   name: 'zipper-mouth' },
   { char: '🤖', url: _B + 'Robot.png',                                 name: 'robot' },
 ];
+
+const _EMOJI_MAP = new Map(QUICK_EMOJIS.map(e => [e.char, e]));
+const _EMOJI_RE = new RegExp(
+  '(' + QUICK_EMOJIS.map(e => e.char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')',
+  'gu'
+);
+function renderWithEmojis(text: string): React.ReactNode {
+  const parts = text.split(_EMOJI_RE);
+  return parts.map((part, i) => {
+    const emoji = _EMOJI_MAP.get(part);
+    if (emoji) {
+      return (
+        <img
+          key={i}
+          src={emoji.url}
+          alt={emoji.char}
+          title={emoji.name}
+          style={{ width: 40, height: 40, display: 'inline-block', verticalAlign: 'middle', marginBottom: -4 }}
+        />
+      );
+    }
+    return part ? <React.Fragment key={i}>{part}</React.Fragment> : null;
+  });
+}
 
 function normalizeChatMessageAvatar(message: ChatMessage, profileMap?: Record<string, ProfileSummary>): ChatMessage {
   const mappedProfile = profileMap?.[message.user_id];
@@ -442,7 +466,7 @@ export function MatchChat({
                     </div>
                     {hasText && (
                       <p style={{ fontFamily: F, fontSize: isAdminMessage ? 16 : 14, color: '#ffffff', margin: '2px 0 0 0', wordBreak: 'break-word', lineHeight: 1.4 }}>
-                        {msg.message}
+                        {renderWithEmojis(msg.message!)}
                       </p>
                     )}
                     {msg.attachment_type === 'image' && msg.attachment_url && (
