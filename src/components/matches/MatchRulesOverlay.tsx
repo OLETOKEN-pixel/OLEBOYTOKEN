@@ -243,17 +243,17 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
                 aria-hidden
                 style={{
                   position: 'absolute',
-                  left: 0,
-                  top: 10,
-                  width: 22,
-                  height: 33,
+                  left: 1,
+                  top: -25,
+                  width: 26,
+                  height: 39,
                   objectFit: 'contain',
                 }}
               />
               <h3
                 style={{
                   margin: '0 0 6px',
-                  paddingLeft: 28,
+                  paddingLeft: 29,
                   fontFamily: FONT_EXPANDED_BOLD,
                   fontSize: 31,
                   lineHeight: '37px',
