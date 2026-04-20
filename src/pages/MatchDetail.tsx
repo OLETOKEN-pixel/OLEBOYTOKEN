@@ -1094,6 +1094,7 @@ function ReadyLobbyScreen({
     lineHeight: 1,
     color: '#ffffff',
   };
+  const startedWideStatusLeft = 'calc(36.667% - 183.5px)';
 
   return (
     <div data-testid="match-ready-lobby" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0f0404' }}>
@@ -1197,7 +1198,7 @@ function ReadyLobbyScreen({
           <div
             style={{
               ...actionButtonBase,
-              left: 'calc(36.667% - 49px)',
+              left: startedWideStatusLeft,
               width: 450,
               display: 'flex',
               alignItems: 'center',
@@ -1213,10 +1214,11 @@ function ReadyLobbyScreen({
 
         {isTerminal && (
           <div
+            data-testid="match-terminal-status"
             style={{
               position: 'absolute',
-              left: 'calc(36.667% + 50px)',
-              top: 400,
+              left: startedWideStatusLeft,
+              top: 478,
               width: 450,
               display: 'flex',
               justifyContent: 'center',

@@ -593,6 +593,11 @@ describe('MatchDetail ready-up Figma lobby', () => {
 
     expect(screen.getByTestId('match-ready-vs')).toBeInTheDocument();
     expect(screen.getByLabelText('Finished status active')).toBeInTheDocument();
+    expect(screen.getByTestId('match-terminal-status')).toHaveStyle({
+      left: 'calc(36.667% - 183.5px)',
+      top: '478px',
+      width: '450px',
+    });
   });
 
   it('uses creator fallback so opponents see the host after the match starts', () => {
