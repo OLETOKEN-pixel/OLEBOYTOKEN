@@ -14,6 +14,7 @@ import {
   useCancelMatch,
 } from '@/hooks/useMatches';
 import { formatEntryFee } from '@/lib/matchFormatters';
+import { getModeRules } from '@/lib/matchRules';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { copyTextToClipboard } from '@/lib/copyToClipboard';
 import { PLATFORM_FEE } from '@/types';
@@ -789,7 +790,7 @@ function ReadyLobbyHeader({
   prize: number;
   onCopyCode: (code: string) => void;
 }) {
-  const privateCode = match.private_code?.trim();
+  const mapCode = getModeRules(match.mode).mapCode;
 
   return (
     <div aria-label="Match lobby header" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
@@ -821,36 +822,34 @@ function ReadyLobbyHeader({
       <LobbyInfoChip label="First to" value={`${Number(match.first_to ?? 5)}+2`} left="calc(26.667% + 48px)" width={162} />
       <LobbyInfoChip label="Platform" value={formatLobbyPlatform(match.platform)} left="calc(36.667% + 25px)" width={183} />
 
-      {privateCode && (
-        <button
-          type="button"
-          aria-label={`Copy match code ${privateCode}`}
-          onClick={() => onCopyCode(privateCode)}
-          style={{
-            position: 'absolute',
-            left: 'calc(43.333% - 7px)',
-            top: 244,
-            width: 214,
-            height: 30,
-            border: '1px solid #ff1654',
-            borderRadius: 22,
-            background: 'rgba(255,22,84,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 7,
-            color: '#ffffff',
-            fontFamily: FONT_REGULAR,
-            fontSize: 16,
-            lineHeight: 'normal',
-            cursor: 'copy',
-            pointerEvents: 'auto',
-          }}
-        >
-          <img src={READY_ASSETS.lobbyCopy} alt="" aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
-          <span>{privateCode}</span>
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label={`Copy map code ${mapCode}`}
+        onClick={() => onCopyCode(mapCode)}
+        style={{
+          position: 'absolute',
+          left: 'calc(43.333% - 7px)',
+          top: 244,
+          width: 214,
+          height: 30,
+          border: '1px solid #ff1654',
+          borderRadius: 22,
+          background: 'rgba(255,22,84,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 7,
+          color: '#ffffff',
+          fontFamily: FONT_REGULAR,
+          fontSize: 16,
+          lineHeight: 'normal',
+          cursor: 'copy',
+          pointerEvents: 'auto',
+        }}
+      >
+        <img src={READY_ASSETS.lobbyCopy} alt="" aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
+        <span>{mapCode}</span>
+      </button>
 
       <div
         style={{
@@ -1071,7 +1070,7 @@ function ReadyLobbyScreen({
     try {
       const copied = await copyTextToClipboard(code);
       toast({
-        title: copied ? 'Match code copied' : 'Copy unavailable',
+        title: copied ? 'Map code copied' : 'Copy unavailable',
         description: copied ? code : 'Copy it manually from the lobby header.',
         variant: copied ? undefined : 'destructive',
       });

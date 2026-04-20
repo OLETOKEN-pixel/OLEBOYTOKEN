@@ -186,7 +186,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByText('5+2')).toBeInTheDocument();
     expect(screen.getByText('Platform:')).toBeInTheDocument();
     expect(screen.getByText('ANY')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Copy match code 1111 - 2222 - 333' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy map code 2640-2394-7508' })).toBeInTheDocument();
     expect(screen.getByText('Today, 5:23PM')).toBeInTheDocument();
     expect(screen.getByText('MATCH CHAT')).toBeInTheDocument();
     expect(screen.getByText('CREATED')).toBeInTheDocument();
@@ -222,17 +222,17 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.queryByAltText('Match creator')).not.toBeInTheDocument();
   });
 
-  it('copies the private match code from the Figma lobby header', async () => {
+  it('copies the mode map code from the Figma lobby header', async () => {
     renderMatchDetail();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Copy match code 1111 - 2222 - 333' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy map code 2640-2394-7508' }));
 
     await waitFor(() => {
-      expect(writeTextMock).toHaveBeenCalledWith('1111 - 2222 - 333');
+      expect(writeTextMock).toHaveBeenCalledWith('2640-2394-7508');
     });
     expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Match code copied',
-      description: '1111 - 2222 - 333',
+      title: 'Map code copied',
+      description: '2640-2394-7508',
     }));
   });
 
@@ -244,7 +244,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getByRole('dialog', { name: 'MATCH RULES' })).toBeInTheDocument();
     expect(screen.getByTestId('match-rules-content')).toHaveStyle({ overflow: 'hidden' });
     expect(screen.getByText('BOXFIGHT')).toBeInTheDocument();
-    expect(screen.getByText('2640-2394-7508')).toBeInTheDocument();
+    expect(screen.getAllByText('2640-2394-7508').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(/Elite Box Fights/)).toBeInTheDocument();
     expect(screen.getByText('Boxfight Rules')).toBeInTheDocument();
     expect(screen.getByText('You must not exploit bugs to keep extra loot from round to round.')).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
 
     expect(screen.getByText('REALISTIC')).toBeInTheDocument();
-    expect(screen.getByText('9854-1829-8735')).toBeInTheDocument();
+    expect(screen.getAllByText('9854-1829-8735').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(/Finest Realistics/)).toBeInTheDocument();
     expect(screen.getByText('Realistic Rules')).toBeInTheDocument();
     expect(screen.getByText(/Opening chests, ammo crates, collecting floor loot/i)).toBeInTheDocument();
@@ -291,7 +291,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     fireEvent.click(screen.getByRole('button', { name: 'SEE RULES' }));
 
     expect(screen.getByText('ZONE WARS')).toBeInTheDocument();
-    expect(screen.getByText('3537-4087-0888')).toBeInTheDocument();
+    expect(screen.getAllByText('3537-4087-0888').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('If damage is dealt, the round counts regardless of the circumstances.')).toBeInTheDocument();
     expect(screen.getByText('If no players go through the portal, the round will not count.')).toBeInTheDocument();
 
