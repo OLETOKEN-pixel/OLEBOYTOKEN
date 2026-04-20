@@ -25,42 +25,19 @@ export const LeaderboardSection = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        // Try leaderboard_weekly view first
-        const { data: lbData, error: lbErr } = await supabase
-          .from('leaderboard_weekly')
-          .select('*')
-          .order('weekly_earned', { ascending: false })
-          .limit(3);
+        const { data, error } = await supabase
+          .rpc('get_leaderboard', { p_limit: 3, p_offset: 0 });
 
-        if (!lbErr && lbData && lbData.length > 0) {
-          setPlayers(lbData.map((p: any, i: number) => ({
+        if (!error && data && data.length > 0) {
+          setPlayers(data.map((p: any, i: number) => ({
             userId: p.user_id || null,
             rank: i + 1,
             username: p.username || `Player${i + 1}`,
             avatarUrl: getDiscordAvatarUrl(p),
             winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
             roundsWon: String(p.wins ?? 0),
-            earnings: p.weekly_earned != null ? String(Number(p.weekly_earned).toFixed(2)) : '0',
+            earnings: String(Number(p.total_earnings ?? 0).toFixed(2)),
           })));
-        } else {
-          // Fallback: top 3 all-time leaderboard (global, same for everyone)
-          const { data: profiles } = await supabase
-            .from('leaderboard')
-            .select('user_id, username, discord_avatar_url, wins, total_matches, total_earnings')
-            .order('total_earnings', { ascending: false })
-            .limit(3);
-
-          if (profiles && profiles.length > 0) {
-            setPlayers(profiles.map((p: any, i: number) => ({
-              userId: p.user_id || null,
-              rank: i + 1,
-              username: p.username || `Player${i + 1}`,
-              avatarUrl: getDiscordAvatarUrl(p),
-              winRate: p.total_matches > 0 ? `${Math.round((p.wins / p.total_matches) * 100)}%` : '0%',
-              roundsWon: String(p.wins ?? 0),
-              earnings: p.weekly_earned != null ? String(Number(p.weekly_earned).toFixed(2)) : '0',
-            })));
-          }
         }
       } catch (err) {
         console.error('Leaderboard fetch error:', err);
