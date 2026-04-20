@@ -45,14 +45,22 @@ const panelStyle: CSSProperties = {
   boxShadow: '0 30px 100px rgba(0,0,0,0.45)',
 };
 
-function RuleList({ rules, bulletColor = '#ff1654' }: { rules: string[]; bulletColor?: string }) {
+function RuleList({
+  rules,
+  bulletColor = '#ff1654',
+  compact = false,
+}: {
+  rules: string[];
+  bulletColor?: string;
+  compact?: boolean;
+}) {
   return (
     <ul
       style={{
         margin: 0,
         padding: 0,
         display: 'grid',
-        gap: 10,
+        gap: compact ? 7 : 10,
         listStyle: 'none',
       }}
     >
@@ -65,8 +73,8 @@ function RuleList({ rules, bulletColor = '#ff1654' }: { rules: string[]; bulletC
             columnGap: 11,
             alignItems: 'start',
             fontFamily: FONT_REGULAR,
-            fontSize: 15,
-            lineHeight: '18px',
+            fontSize: compact ? 14 : 15,
+            lineHeight: compact ? '16px' : '18px',
             color: 'rgba(255,255,255,0.88)',
           }}
         >
@@ -122,6 +130,7 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
 
   const activeRules = activeTab === 'mode' ? modeRules.rules : GENERAL_MATCH_RULES.rules;
   const activeTitle = activeTab === 'mode' ? modeRules.rulesTitle : GENERAL_MATCH_RULES.title;
+  const isGeneralTab = activeTab === 'general';
 
   const overlay = (
     <div
@@ -222,7 +231,7 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
               aria-label={activeTitle}
               style={{
                 position: 'relative',
-                marginTop: 71,
+                marginTop: 43,
                 minHeight: 220,
                 paddingLeft: 0,
                 boxSizing: 'border-box',
@@ -234,22 +243,23 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
                 aria-hidden
                 style={{
                   position: 'absolute',
-                  left: -16,
-                  top: 2,
-                  width: 28,
-                  height: 42,
+                  left: 0,
+                  top: 10,
+                  width: 22,
+                  height: 33,
                   objectFit: 'contain',
                 }}
               />
               <h3
                 style={{
                   margin: '0 0 6px',
-                  paddingLeft: 0,
+                  paddingLeft: 28,
                   fontFamily: FONT_EXPANDED_BOLD,
-                  fontSize: 34,
-                  lineHeight: '41px',
+                  fontSize: 31,
+                  lineHeight: '37px',
                   color: '#ffffff',
                   textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {activeTitle}
@@ -269,7 +279,7 @@ export function MatchRulesOverlay({ open, mode, onClose }: MatchRulesOverlayProp
                 </p>
               )}
 
-              <RuleList rules={activeRules} bulletColor={activeTab === 'mode' ? '#ff1654' : '#d8ff16'} />
+              <RuleList rules={activeRules} bulletColor={isGeneralTab ? '#d8ff16' : '#ff1654'} compact={isGeneralTab} />
             </section>
           </div>
         </section>
