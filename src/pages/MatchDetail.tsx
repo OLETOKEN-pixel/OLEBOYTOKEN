@@ -1122,7 +1122,7 @@ function ReadyLobbyScreen({
             onClick={() => setRulesOpen(true)}
             style={{
               position: 'absolute',
-              left: 'calc(26.667% + 43px)',
+              left: 'calc(36.667% - 244px)',
               top: 478,
               width: 181,
               height: 52,
@@ -1147,7 +1147,7 @@ function ReadyLobbyScreen({
             disabled={actionDisabled}
             style={{
               ...actionButtonBase,
-              left: 'calc(40% - 12px)',
+              left: 'calc(36.667% - 49px)',
               border: '1px solid #ff1654',
               background: 'rgba(255,22,84,0.34)',
               cursor: actionDisabled ? 'default' : 'pointer',
@@ -1166,7 +1166,7 @@ function ReadyLobbyScreen({
               disabled={!isParticipant || submitPending}
               style={{
                 ...actionButtonBase,
-                left: 'calc(40% - 12px)',
+                left: 'calc(36.667% - 49px)',
                 border: '1px solid #1aff16',
                 background: 'rgba(26,255,22,0.28)',
                 cursor: !isParticipant || submitPending ? 'default' : 'pointer',
@@ -1181,7 +1181,7 @@ function ReadyLobbyScreen({
               disabled={!isParticipant || submitPending}
               style={{
                 ...actionButtonBase,
-                left: 'calc(40% + 183px)',
+                left: 'calc(36.667% + 146px)',
                 border: '1px solid #ff1654',
                 background: 'rgba(255,22,84,0.34)',
                 cursor: !isParticipant || submitPending ? 'default' : 'pointer',
@@ -1197,7 +1197,7 @@ function ReadyLobbyScreen({
           <div
             style={{
               ...actionButtonBase,
-              left: 'calc(40% - 12px)',
+              left: 'calc(36.667% - 49px)',
               width: 450,
               display: 'flex',
               alignItems: 'center',

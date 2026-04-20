@@ -207,6 +207,7 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.getAllByText('Unknown').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'READY (0/6)' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'SEE RULES' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'SEE RULES' })).toHaveStyle({ left: 'calc(36.667% - 244px)' });
     expect(screen.getByTestId('mock-match-chat')).toHaveAttribute('data-variant', 'figmaReady');
   });
 
@@ -466,6 +467,8 @@ describe('MatchDetail ready-up Figma lobby', () => {
     expect(screen.queryByRole('button', { name: /READY/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'WIN' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'LOSS' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'WIN' })).toHaveStyle({ left: 'calc(36.667% - 49px)' });
+    expect(screen.getByRole('button', { name: 'LOSS' })).toHaveStyle({ left: 'calc(36.667% + 146px)' });
 
     fireEvent.click(screen.getByRole('button', { name: 'WIN' }));
 
