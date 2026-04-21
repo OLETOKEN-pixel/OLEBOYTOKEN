@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { ExternalLink, Info, Loader2, Plus, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { FooterSection } from '@/components/home/sections/FooterSection';
@@ -730,38 +730,202 @@ function HighlightsToolbar({
   );
 }
 
-function RankingTitle({ children }: { children: string; wide?: boolean }) {
-  const [titlePrefix, titleSuffix] = children.split(' - ');
+type RankingMode = 'week' | 'month';
 
-  return (
-    <div className="relative z-[2] inline-block max-w-full">
-      <img
-        src="/highlights/title-triangles.svg"
-        alt=""
-        aria-hidden="true"
-        className="absolute -left-[49px] -top-[58px] h-[136px] w-[91px] xl:-left-[71px] xl:-top-[77px] xl:h-[186px] xl:w-[124px]"
-      />
-      <h1
-        className="relative m-0 max-w-full text-[36px] leading-[43px] text-white sm:text-[56px] sm:leading-[66px] xl:whitespace-nowrap xl:text-[80px] xl:leading-[95px]"
-        style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
-      >
-        {titleSuffix ? (
-          <>
-            <span className="block xl:inline">{titlePrefix} -</span>{' '}
-            <span className="block xl:inline">{titleSuffix}</span>
-          </>
-        ) : (
-          children
-        )}
-      </h1>
-      <img
-        src="/highlights/title-underline.svg"
-        alt=""
-        aria-hidden="true"
-        className="mt-[-7px] h-[12px] w-full max-w-full xl:mt-[-10px] xl:h-[16px]"
-      />
-    </div>
-  );
+type RankingTitleConfig = {
+  text: string;
+  outlineTop: number;
+  outlineWidth: number;
+  outlineHeight: number;
+  outlineInnerHeight: number;
+};
+
+type RankingCardLayout = {
+  imageLeft: string;
+  imageTop: number;
+  avatarLeft: string;
+  avatarTop: number;
+  titleLeft: string;
+  titleTop: number;
+  authorLeft: string;
+  authorTop: number;
+  likeLeft: string;
+  likeTop: number;
+  likeIconLeft: string;
+  likeIconTop: number;
+  likeTextLeft: string;
+  likeTextTop: number;
+  hotByDefault?: boolean;
+};
+
+type RankingBadgeLayout = {
+  starLeft: string;
+  starTop: number;
+  textLeft: string;
+  textTop: number;
+};
+
+const RANKING_TITLE: Record<RankingMode, RankingTitleConfig> = {
+  week: {
+    text: 'HIGHLIGHTS - TOP WEEK',
+    outlineTop: 318.56,
+    outlineWidth: 1662.208,
+    outlineHeight: 24.232,
+    outlineInnerHeight: 1662.154,
+  },
+  month: {
+    text: 'HIGHLIGHTS - TOP MONTH',
+    outlineTop: 318.18,
+    outlineWidth: 1770.982,
+    outlineHeight: 24.612,
+    outlineInnerHeight: 1770.929,
+  },
+};
+
+const RANKING_NOMINEES_TITLE: Record<RankingMode, RankingTitleConfig> = {
+  week: {
+    text: 'THIS WEEK NOMINEES',
+    outlineTop: 1273.97,
+    outlineWidth: 1545.249,
+    outlineHeight: 23.823,
+    outlineInnerHeight: 1545.194,
+  },
+  month: {
+    text: 'THIS MONTH NOMINEES',
+    outlineTop: 1273.67,
+    outlineWidth: 1630.798,
+    outlineHeight: 24.122,
+    outlineInnerHeight: 1630.744,
+  },
+};
+
+const HERO_CARD_LAYOUT: RankingCardLayout = {
+  imageLeft: 'calc(60% + 1px)',
+  imageTop: 496,
+  avatarLeft: 'calc(60% + 1px)',
+  avatarTop: 815.93,
+  titleLeft: 'calc(64% + 9.16px)',
+  titleTop: 815.93,
+  authorLeft: 'calc(64% + 9.16px)',
+  authorTop: 874.42,
+  likeLeft: 'calc(80% + 30px)',
+  likeTop: 834,
+  likeIconLeft: 'calc(80% + 48.28px)',
+  likeIconTop: 841.31,
+  likeTextLeft: 'calc(84% + 31.61px)',
+  likeTextTop: 842.53,
+  hotByDefault: true,
+};
+
+const NOMINEE_CARD_LAYOUTS: RankingCardLayout[] = [
+  {
+    imageLeft: 'calc(16% + 41.8px)',
+    imageTop: 1407,
+    avatarLeft: 'calc(16% + 41.8px)',
+    avatarTop: 1726.93,
+    titleLeft: 'calc(20% + 49.96px)',
+    titleTop: 1726.93,
+    authorLeft: 'calc(20% + 49.96px)',
+    authorTop: 1785.42,
+    likeLeft: 'calc(40% - 5.99px)',
+    likeTop: 1746,
+    likeIconLeft: 'calc(40% + 12.29px)',
+    likeIconTop: 1753.31,
+    likeTextLeft: 'calc(40% + 72.41px)',
+    likeTextTop: 1754.53,
+    hotByDefault: true,
+  },
+  {
+    imageLeft: 'calc(56% + 1.8px)',
+    imageTop: 1407,
+    avatarLeft: 'calc(56% + 1.8px)',
+    avatarTop: 1726.93,
+    titleLeft: 'calc(60% + 9.96px)',
+    titleTop: 1726.93,
+    authorLeft: 'calc(60% + 9.96px)',
+    authorTop: 1785.42,
+    likeLeft: 'calc(76% + 30.81px)',
+    likeTop: 1746,
+    likeIconLeft: 'calc(76% + 49.09px)',
+    likeIconTop: 1753.31,
+    likeTextLeft: 'calc(80% + 32.91px)',
+    likeTextTop: 1754.53,
+  },
+  {
+    imageLeft: 'calc(16% + 47.8px)',
+    imageTop: 1917,
+    avatarLeft: 'calc(16% + 47.8px)',
+    avatarTop: 2236.93,
+    titleLeft: 'calc(20% + 55.96px)',
+    titleTop: 2236.93,
+    authorLeft: 'calc(20% + 55.96px)',
+    authorTop: 2295.42,
+    likeLeft: 'calc(40% + 0.01px)',
+    likeTop: 2256,
+    likeIconLeft: 'calc(40% + 18.29px)',
+    likeIconTop: 2263.31,
+    likeTextLeft: 'calc(40% + 78.91px)',
+    likeTextTop: 2264.53,
+  },
+  {
+    imageLeft: 'calc(56% + 7.8px)',
+    imageTop: 1917,
+    avatarLeft: 'calc(56% + 7.8px)',
+    avatarTop: 2236.93,
+    titleLeft: 'calc(60% + 15.96px)',
+    titleTop: 2236.93,
+    authorLeft: 'calc(60% + 15.96px)',
+    authorTop: 2295.42,
+    likeLeft: 'calc(76% + 36.81px)',
+    likeTop: 2256,
+    likeIconLeft: 'calc(76% + 55.09px)',
+    likeIconTop: 2263.31,
+    likeTextLeft: 'calc(80% + 38.41px)',
+    likeTextTop: 2264.53,
+  },
+];
+
+const RANK_BADGE_LAYOUTS: RankingBadgeLayout[] = [
+  { starLeft: 'calc(12% + 28.6px)', starTop: 1317, textLeft: 'calc(16% + 72.8px)', textTop: 1378 },
+  { starLeft: 'calc(48% + 65.4px)', starTop: 1317, textLeft: 'calc(52% + 109.6px)', textTop: 1378 },
+  { starLeft: 'calc(12% + 34.6px)', starTop: 1827, textLeft: 'calc(16% + 78.8px)', textTop: 1888 },
+  { starLeft: 'calc(52% - 5.4px)', starTop: 1827, textLeft: 'calc(52% + 115.6px)', textTop: 1888 },
+];
+
+const RANKING_TITLE_BY_AUTHOR: Record<string, string> = {
+  peterbot: '1st FNCS GRAND FINALS...',
+  clix: 'Never Change \u{1F494} | Clix',
+  eomzo: 'Pricey \u{1F4B8} | Eomzo Highligh...',
+  malibuca: 'Malibuca | Highlights #2',
+};
+
+const RANKING_VISUAL_AUTHOR: Record<string, string> = {
+  peterbot: 'peterbot',
+  clix: 'clix',
+  eomzo: 'eomzo',
+  malibuca: 'malibuca',
+};
+
+function rankingAsset(mode: RankingMode, name: string) {
+  return `${HIGHLIGHTS_ASSETS}/rank-${mode}-${name}`;
+}
+
+function getRankingVisualAuthor(authorName: string) {
+  return RANKING_VISUAL_AUTHOR[getCuratedAssetKey(authorName)];
+}
+
+function getRankingDisplayTitle(highlight: HighlightCard) {
+  return RANKING_TITLE_BY_AUTHOR[getCuratedAssetKey(highlight.authorName)] ?? highlight.title;
+}
+
+function getRankingThumbnail(mode: RankingMode, highlight: HighlightCard) {
+  const author = getRankingVisualAuthor(highlight.authorName);
+  return author ? rankingAsset(mode, `thumb-${author}.jpg`) : highlight.thumbnailUrl;
+}
+
+function getRankingAvatar(mode: RankingMode, highlight: HighlightCard) {
+  const author = getRankingVisualAuthor(highlight.authorName);
+  return author ? rankingAsset(mode, `avatar-${author}.png`) : highlight.authorAvatarUrl;
 }
 
 function HighlightsRankingPage({
@@ -790,8 +954,6 @@ function HighlightsRankingPage({
   onVote: (highlightId: string) => void;
 }) {
   const isWeek = mode === 'week';
-  const title = isWeek ? 'HIGHLIGHTS - TOP WEEK' : 'HIGHLIGHTS - TOP MONTH';
-  const nomineesTitle = isWeek ? 'THIS WEEK NOMINEES' : 'THIS MONTH NOMINEES';
   const heroCopy = isWeek ? 'Winner of the week\nearns EXTRA coins!*' : 'Winner of the month\ngets a FREE montage!*';
   const note = isWeek
     ? '*The winner of the week will receive 5 coins for free!'
@@ -801,120 +963,661 @@ function HighlightsRankingPage({
   const nominees = highlights.slice(0, 4);
 
   return (
-    <div className="w-full bg-[#0f0404] text-white">
-      <section className="relative isolate overflow-hidden px-5 pb-20 pt-[172px] xl:min-h-[2529px] xl:px-0 xl:pb-0 xl:pt-0">
+    <div className="w-full overflow-x-auto bg-[#0f0404] text-white">
+      <section className="relative h-[2547px] w-[1920px] overflow-hidden bg-[#0f0404] text-white">
         <img
-          src="/figma-assets/figma-neon.png"
+          src={rankingAsset(mode, 'top-neon.png')}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0 h-[146px] w-full object-cover"
+          className="pointer-events-none absolute left-0 top-0 h-[146px] w-[1920px] object-cover"
         />
 
-        <div className="relative xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[233px]">
-          <RankingTitle wide>{title}</RankingTitle>
-        </div>
-        <div className="relative z-[5] mt-9 xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[396px] xl:mt-0 xl:w-[calc(88%_-_11.2px)]">
-          <HighlightsToolbar
-            activeTab={mode}
-            query={query}
-            onQueryChange={onQueryChange}
-            onUploadClick={onUploadClick}
-            withBottomMargin={false}
+        <ExactRankingTitle mode={mode} config={RANKING_TITLE[mode]} top={156} textTop={233} />
+        <ExactRankingToolbar
+          mode={mode}
+          query={query}
+          onQueryChange={onQueryChange}
+          onUploadClick={onUploadClick}
+        />
+
+        <ExactHeroFeature mode={mode} copy={heroCopy} note={note} />
+
+        {loading ? (
+          <ExactLoadingCard left="calc(60% + 1px)" top={496} />
+        ) : winner ? (
+          <ExactRankingCard
+            mode={mode}
+            highlight={winner}
+            totalVotes={getTotalVotes(winner, voteCounts)}
+            voteState={getVoteState(winner.id)}
+            isVoting={isVoting}
+            layout={HERO_CARD_LAYOUT}
+            onOpen={() => onOpen(winner)}
+            onVote={() => onVote(winner.id)}
           />
-        </div>
+        ) : null}
 
+        <div id="highlight-nominees" className="absolute left-0 top-[955px] h-[955px] w-[1920px] bg-[#0f0404]" />
+        <ExactRankingTitle mode={mode} config={RANKING_NOMINEES_TITLE[mode]} top={1111} textTop={1188} />
+
+        {loading ? (
+          <div className="absolute left-[348px] top-[1407px] grid h-[360px] w-[1258px] place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
+          </div>
+        ) : nominees.length > 0 ? (
+          nominees.map((highlight, index) => (
+            <ExactNominee
+              key={highlight.id}
+              mode={mode}
+              rank={index + 1}
+              highlight={highlight}
+              totalVotes={getTotalVotes(highlight, voteCounts)}
+              voteState={getVoteState(highlight.id)}
+              isVoting={isVoting}
+              onOpen={() => onOpen(highlight)}
+              onVote={() => onVote(highlight.id)}
+            />
+          ))
+        ) : (
+          <p
+            className="absolute left-[348px] top-[1407px] text-[24px] text-white/60"
+            style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
+          >
+            No highlights found.
+          </p>
+        )}
+
+        <ExactBottomCta mode={mode} label={bottomCta} />
+      </section>
+      <div className="w-[1920px]">
+        <FooterSection />
+      </div>
+    </div>
+  );
+}
+
+function ExactRankingTitle({
+  mode,
+  config,
+  top,
+  textTop,
+}: {
+  mode: RankingMode;
+  config: RankingTitleConfig;
+  top: number;
+  textTop: number;
+}) {
+  return (
+    <>
+      <p
+        className="absolute z-[2] m-0 whitespace-nowrap text-[80px] leading-normal text-white"
+        style={{
+          left: 'calc(12% + 5.6px)',
+          top: textTop,
+          fontFamily: F_HEAD,
+          letterSpacing: 0,
+        }}
+      >
+        {config.text}
+      </p>
+      <ExactOutline
+        src={rankingAsset(mode, `${textTop === 233 ? 'outline-title' : 'outline-nominees'}.svg`)}
+        left="calc(12% - 6.09px)"
+        top={config.outlineTop}
+        width={config.outlineWidth}
+        height={config.outlineHeight}
+        innerHeight={config.outlineInnerHeight}
+      />
+      <img
+        src={rankingAsset(mode, 'triangles.svg')}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute z-[2] h-[185.808px] w-[123.872px]"
+        style={{ left: 'calc(8% + 11.4px)', top }}
+      />
+    </>
+  );
+}
+
+function ExactOutline({
+  src,
+  left,
+  top,
+  width,
+  height,
+  innerHeight,
+}: {
+  src: string;
+  left: string;
+  top: number;
+  width: number;
+  height: number;
+  innerHeight: number;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute z-[1] flex items-center justify-center"
+      style={{ left, top, width, height }}
+    >
+      <div style={{ transform: 'rotate(89.8deg) scaleY(-1)', flex: 'none' }}>
+        <div className="relative w-[18.421px]" style={{ height: innerHeight }}>
+          <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
+            <img alt="" className="block h-full w-full max-w-none" src={src} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExactRankingToolbar({
+  mode,
+  query,
+  onQueryChange,
+  onUploadClick,
+}: {
+  mode: RankingMode;
+  query: string;
+  onQueryChange: (value: string) => void;
+  onUploadClick: () => void;
+}) {
+  return (
+    <div className="absolute left-0 top-0 z-[5] h-[500px] w-[1920px]">
+      <label
+        className="absolute block h-[47px] w-[400px]"
+        style={{ left: 'calc(12% + 5.6px)', top: 396 }}
+      >
+        <span className="sr-only">Search by title or author</span>
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Search by title or author"
+          className="h-full w-full rounded-[12px] border border-white/[0.15] bg-[#282828] pl-[15px] pr-[52px] text-[20px] text-white outline-none placeholder:text-white/50"
+          style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}
+        />
+      </label>
+      <img
+        src={rankingAsset(mode, 'search.svg')}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute h-[31.113px] w-[31.113px]"
+        style={{ left: 'calc(28% + 55.4px)', top: 404, transform: 'rotate(-45deg)' }}
+      />
+      <ExactToolbarButton
+        as="button"
+        label="REWARDS"
+        left="calc(40% - 8px)"
+        top={396}
+        width={211}
+        border="rgba(255,255,255,0.5)"
+        background="rgba(40,40,40,0.8)"
+      >
         <img
-          src="/highlights/star-shape.svg"
+          src={rankingAsset(mode, 'info.svg')}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute -left-[98px] top-[620px] z-0 h-[430px] w-[625px] -rotate-[15deg] object-contain opacity-90 xl:left-[calc(8%_+_14.4px)] xl:top-[500px] xl:h-[596px] xl:w-[866px]"
+          className="absolute h-4 w-4"
+          style={{ left: 16, top: 16 }}
         />
-        <p
-          className="relative z-[2] mt-20 max-w-[350px] whitespace-pre-line text-[34px] leading-[36px] text-white sm:max-w-[520px] sm:text-[42px] sm:leading-[43px] xl:absolute xl:left-[calc(12%_+_11.6px)] xl:top-[598px] xl:mt-0 xl:max-w-none xl:text-[48px] xl:leading-[47px]"
-          style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
+        <span
+          className="absolute -translate-x-1/2 whitespace-nowrap text-[24px] leading-normal text-white"
+          style={{ left: 113, top: 10, fontFamily: F_BOLD, letterSpacing: 0 }}
         >
-          {heroCopy}
-        </p>
-        <button
-          type="button"
-          onClick={() => document.getElementById('highlight-nominees')?.scrollIntoView({ behavior: 'smooth' })}
-          className="relative z-[2] mt-8 flex h-[58px] w-full max-w-[292px] items-center justify-center gap-[14px] rounded-full border border-[#ff1654] bg-[#ff1654]/25 text-[28px] text-white shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)] xl:absolute xl:left-[calc(24%_+_7.2px)] xl:top-[727px] xl:mt-0 xl:h-[65px] xl:w-[292px] xl:max-w-none xl:text-[32px]"
-          style={{ fontFamily: "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif", letterSpacing: 0 }}
+          REWARDS
+        </span>
+      </ExactToolbarButton>
+      <ExactToolbarButton
+        as="link"
+        to="/highlights/month"
+        label="TOP MONTH"
+        left="calc(48% + 66.4px)"
+        top={395}
+        width={250}
+        border="#d8ff16"
+        background={mode === 'month' ? '#d8ff16' : 'rgba(216,255,22,0.2)'}
+      >
+        <img
+          src={rankingAsset(mode, 'icon-month.svg')}
+          alt=""
+          aria-hidden="true"
+          className="absolute h-[19px] w-[23px]"
+          style={{ left: 17, top: 14 }}
+        />
+        <span
+          className="absolute whitespace-nowrap text-[24px] leading-normal"
+          style={{
+            left: 55,
+            top: 10,
+            color: mode === 'month' ? '#0f0404' : '#ffffff',
+            fontFamily: F_BOLD,
+            letterSpacing: 0,
+          }}
+        >
+          TOP MONTH
+        </span>
+      </ExactToolbarButton>
+      <ExactToolbarButton
+        as="link"
+        to="/highlights/week"
+        label="TOP WEEK"
+        left="calc(64% + 26.2px)"
+        top={395}
+        width={230}
+        border="#625afa"
+        background={mode === 'week' ? '#625afa' : 'rgba(98,90,250,0.2)'}
+      >
+        <img
+          src={rankingAsset(mode, 'icon-week.svg')}
+          alt=""
+          aria-hidden="true"
+          className="absolute h-[19px] w-[23px]"
+          style={{ left: 18, top: 14 }}
+        />
+        <span
+          className="absolute -translate-x-1/2 whitespace-nowrap text-[24px] leading-normal text-white"
+          style={{ left: 135, top: 10, fontFamily: F_BOLD, letterSpacing: 0 }}
+        >
+          TOP WEEK
+        </span>
+      </ExactToolbarButton>
+      <ExactToolbarButton
+        as="button"
+        label="UPLOAD"
+        left="calc(76% + 42.8px)"
+        top={395}
+        width={182}
+        border="#ff1654"
+        background="rgba(255,22,84,0.2)"
+        onClick={onUploadClick}
+      >
+        <img
+          src={rankingAsset(mode, 'plus.svg')}
+          alt=""
+          aria-hidden="true"
+          className="absolute h-[18px] w-[18px]"
+          style={{ left: 20, top: 14 }}
+        />
+        <span
+          className="absolute -translate-x-1/2 whitespace-nowrap text-[24px] leading-normal text-white"
+          style={{ left: 103, top: 9, fontFamily: F_BOLD, letterSpacing: 0 }}
+        >
+          UPLOAD
+        </span>
+      </ExactToolbarButton>
+    </div>
+  );
+}
+
+function ExactToolbarButton({
+  as,
+  to,
+  label,
+  left,
+  top,
+  width,
+  border,
+  background,
+  onClick,
+  children,
+}: {
+  as: 'button' | 'link';
+  to?: string;
+  label: string;
+  left: string;
+  top: number;
+  width: number;
+  border: string;
+  background: string;
+  onClick?: () => void;
+  children: ReactNode;
+}) {
+  const style = {
+    position: 'absolute' as const,
+    left,
+    top,
+    width,
+    height: 47,
+    borderRadius: 16,
+    border: `1px solid ${border}`,
+    background,
+    color: '#ffffff',
+    textDecoration: 'none',
+  };
+
+  if (as === 'link' && to) {
+    return (
+      <Link to={to} aria-label={label} style={style}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" aria-label={label} onClick={onClick} style={{ ...style, padding: 0 }}>
+      {children}
+    </button>
+  );
+}
+
+function ExactHeroFeature({ mode, copy, note }: { mode: RankingMode; copy: string; note: string }) {
+  const isWeek = mode === 'week';
+
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="absolute z-0 flex items-center justify-center"
+        style={{ left: 'calc(8% + 14.4px)', top: 383, width: 866.424, height: 596.408 }}
+      >
+        <div style={{ transform: 'rotate(-15.44deg)', flex: 'none' }}>
+          <div className="relative h-[401.031px] w-[788.09px]">
+            <div className="absolute bottom-[-0.22%] left-0 right-0 top-[-0.26%]">
+              <img
+                src={rankingAsset(mode, 'hero-star.svg')}
+                alt=""
+                className="block h-full w-full max-w-none"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <p
+        className="absolute z-[2] m-0 whitespace-pre-line text-[48px] leading-normal text-white"
+        style={{
+          left: isWeek ? 'calc(16% - 17.2px)' : 'calc(12% + 11.6px)',
+          top: 598,
+          fontFamily: F_BOLD,
+          letterSpacing: 0,
+        }}
+      >
+        {copy}
+      </p>
+      <button
+        type="button"
+        onClick={() => document.getElementById('highlight-nominees')?.scrollIntoView({ behavior: 'smooth' })}
+        className="absolute z-[3] h-[65px] w-[292px] rounded-[50px] border border-[#ff1654] bg-[#ff1654]/[0.23] text-white shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)]"
+        style={{
+          left: isWeek ? 'calc(24% + 7.2px)' : 'calc(24% + 11.2px)',
+          top: 727,
+          fontFamily: "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif",
+          letterSpacing: 0,
+        }}
+      >
+        <span
+          className="absolute -translate-x-1/2 whitespace-nowrap text-[32px] leading-normal"
+          style={{ left: isWeek ? 126.5 : 126.5, top: 14 }}
         >
           NOMINEES
-          <img src="/highlights/arrow-down.svg" alt="" aria-hidden="true" className="h-[27px] w-[19px]" />
-        </button>
-        <p
-          className="relative z-[2] mt-10 max-w-[330px] whitespace-pre-line text-[12px] leading-[15px] text-white sm:max-w-[470px] sm:text-[13px] sm:leading-[16px] xl:absolute xl:left-[calc(4%_+_1.2px)] xl:top-[855px] xl:mt-0 xl:max-w-none"
-          style={{ fontFamily: "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif", letterSpacing: 0 }}
-        >
-          {note}
-        </p>
+        </span>
+        <img
+          src={rankingAsset(mode, 'arrow-down.svg')}
+          alt=""
+          aria-hidden="true"
+          className="absolute h-[27px] w-[19px]"
+          style={{ left: 241.6, top: 19 }}
+        />
+      </button>
+      <p
+        className="absolute z-[2] m-0 whitespace-pre-line text-[13px] leading-normal text-white"
+        style={{
+          left: 'calc(4% + 1.2px)',
+          top: isWeek ? 870 : 855,
+          fontFamily: "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif",
+          letterSpacing: 0,
+        }}
+      >
+        {note}
+      </p>
+    </>
+  );
+}
 
-        <div className="relative z-[2] mt-12 xl:absolute xl:right-[calc(12%_-_6px)] xl:top-[496px] xl:mt-0">
-          {loading ? (
-            <div className="grid h-[299px] w-[min(100%,531px)] place-items-center rounded-[11px] bg-[#181818] xl:w-[531px]">
-              <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
-            </div>
-          ) : winner ? (
-            <HighlightCardView
-              highlight={winner}
-              totalVotes={getTotalVotes(winner, voteCounts)}
-              voteState={getVoteState(winner.id)}
-              isVoting={isVoting}
-              onOpen={() => onOpen(winner)}
-              onVote={() => onVote(winner.id)}
-              size="large"
-            />
-          ) : null}
-        </div>
-
-        <div id="highlight-nominees" className="relative mt-24 w-full bg-[#0f0404] xl:absolute xl:left-0 xl:top-[955px] xl:mt-0 xl:h-[955px]">
-          <div className="relative xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[233px]">
-            <RankingTitle wide>{nomineesTitle}</RankingTitle>
-          </div>
-
-          {loading ? (
-            <div className="grid h-[360px] place-items-center xl:absolute xl:left-[348px] xl:top-[452px] xl:w-[1258px]">
-              <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
-            </div>
-          ) : nominees.length > 0 ? (
-            <div className="relative mt-12 grid grid-cols-1 justify-items-center gap-y-14 lg:grid-cols-2 lg:gap-x-10 xl:absolute xl:left-[calc(16%_+_41.8px)] xl:top-[452px] xl:mt-0 xl:grid-cols-2 xl:justify-items-start xl:gap-x-[196px] xl:gap-y-[92px]">
-              {nominees.map((highlight, index) => (
-                <HighlightCardView
-                  key={highlight.id}
-                  highlight={highlight}
-                  totalVotes={getTotalVotes(highlight, voteCounts)}
-                  voteState={getVoteState(highlight.id)}
-                  isVoting={isVoting}
-                  onOpen={() => onOpen(highlight)}
-                  onVote={() => onVote(highlight.id)}
-                  size="large"
-                  rank={index + 1}
-                />
-              ))}
-            </div>
-          ) : (
-            <p
-              className="relative mt-12 text-[22px] text-white/60 xl:absolute xl:left-[348px] xl:top-[452px] xl:mt-0 xl:text-[24px]"
-              style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
-            >
-              No highlights found.
-            </p>
-          )}
-        </div>
-
-        <Link
-          to={isWeek ? '/highlights/month' : '/highlights'}
-          className="relative z-[2] mx-auto mt-16 flex h-[58px] items-center justify-center gap-[14px] rounded-full border border-[#ff1654] bg-[#ff1654]/25 px-[28px] text-[22px] text-white no-underline shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)] xl:absolute xl:left-1/2 xl:top-[2416px] xl:mt-0 xl:h-[65px] xl:-translate-x-1/2 xl:px-[33px] xl:text-[24px]"
-          style={{ minWidth: isWeek ? 337 : 201, fontFamily: "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif", letterSpacing: 0 }}
-        >
-          {bottomCta}
-          <img src="/highlights/arrow-right.svg" alt="" aria-hidden="true" className="h-[16px] w-[21px]" />
-        </Link>
-      </section>
-      <FooterSection />
+function ExactLoadingCard({ left, top }: { left: string; top: number }) {
+  return (
+    <div
+      className="absolute grid h-[298.688px] w-[531px] place-items-center rounded-[11px] bg-[#181818]"
+      style={{ left, top }}
+    >
+      <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
     </div>
+  );
+}
+
+function ExactNominee({
+  mode,
+  rank,
+  highlight,
+  totalVotes,
+  voteState,
+  isVoting,
+  onOpen,
+  onVote,
+}: {
+  mode: RankingMode;
+  rank: number;
+  highlight: HighlightCard;
+  totalVotes: number;
+  voteState: VoteState;
+  isVoting: boolean;
+  onOpen: () => void;
+  onVote: () => void;
+}) {
+  const cardLayout = NOMINEE_CARD_LAYOUTS[rank - 1];
+  const badgeLayout = RANK_BADGE_LAYOUTS[rank - 1];
+
+  if (!cardLayout || !badgeLayout) return null;
+
+  return (
+    <>
+      <ExactRankBadge mode={mode} rank={rank} layout={badgeLayout} />
+      <ExactRankingCard
+        mode={mode}
+        highlight={highlight}
+        totalVotes={totalVotes}
+        voteState={voteState}
+        isVoting={isVoting}
+        layout={cardLayout}
+        onOpen={onOpen}
+        onVote={onVote}
+      />
+    </>
+  );
+}
+
+function ExactRankingCard({
+  mode,
+  highlight,
+  totalVotes,
+  voteState,
+  isVoting,
+  layout,
+  onOpen,
+  onVote,
+}: {
+  mode: RankingMode;
+  highlight: HighlightCard;
+  totalVotes: number;
+  voteState: VoteState;
+  isVoting: boolean;
+  layout: RankingCardLayout;
+  onOpen: () => void;
+  onVote: () => void;
+}) {
+  const votedThis = voteState === 'VOTED_THIS';
+  const isHot = Boolean(layout.hotByDefault || votedThis);
+  const title = getRankingDisplayTitle(highlight);
+
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="absolute h-[298.688px] w-[531px] rounded-[11px] opacity-50 blur-[110.65px]"
+        style={{ left: layout.imageLeft, top: layout.imageTop }}
+      >
+        <img
+          src={getRankingThumbnail(mode, highlight)}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full max-w-none rounded-[11px] object-cover"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Play ${highlight.title}`}
+        className="absolute h-[298.688px] w-[531px] overflow-hidden rounded-[11px] border-0 bg-transparent p-0 text-left"
+        style={{ left: layout.imageLeft, top: layout.imageTop }}
+      >
+        <img
+          src={getRankingThumbnail(mode, highlight)}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full max-w-none rounded-[11px] object-cover"
+        />
+      </button>
+      <AvatarCircle
+        src={getRankingAvatar(mode, highlight)}
+        label={highlight.authorName}
+        size={63.72}
+        className="absolute"
+        style={{ left: layout.avatarLeft, top: layout.avatarTop }}
+      />
+      <p
+        className="absolute m-0 h-[58px] w-[317.272px] overflow-hidden text-[24px] leading-normal text-white"
+        style={{
+          left: layout.titleLeft,
+          top: layout.titleTop,
+          fontFamily: F_BOLD,
+          letterSpacing: 0,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {title}
+      </p>
+      <p
+        className="absolute m-0 h-[22.567px] w-[71.685px] overflow-hidden whitespace-nowrap text-[14px] leading-normal text-white/50"
+        style={{
+          left: layout.authorLeft,
+          top: layout.authorTop,
+          fontFamily: "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif",
+          letterSpacing: 0,
+        }}
+      >
+        {highlight.authorName}
+      </p>
+      <button
+        type="button"
+        onClick={onVote}
+        disabled={isVoting}
+        aria-label={`${votedThis ? 'Remove vote from' : 'Vote for'} ${highlight.title}`}
+        className="absolute h-[39px] w-[118.219px] rounded-[60.938px] bg-[#282828] disabled:opacity-65"
+        style={{
+          left: layout.likeLeft,
+          top: layout.likeTop,
+          border: isHot ? '0 solid transparent' : '1px solid #ff1654',
+        }}
+      />
+      <img
+        src={rankingAsset(mode, isHot ? 'like-hot.svg' : 'like-muted.svg')}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute h-[19.449px] w-[21.938px]"
+        style={{ left: layout.likeIconLeft, top: layout.likeIconTop }}
+      />
+      <p
+        className="pointer-events-none absolute m-0 -translate-x-1/2 whitespace-nowrap text-center text-[19.5px] leading-normal text-white"
+        style={{
+          left: layout.likeTextLeft,
+          top: layout.likeTextTop,
+          fontFamily: F_BOLD,
+          letterSpacing: 0,
+        }}
+      >
+        {formatVoteCount(totalVotes)}
+      </p>
+    </>
+  );
+}
+
+function ExactRankBadge({
+  mode,
+  rank,
+  layout,
+}: {
+  mode: RankingMode;
+  rank: number;
+  layout: RankingBadgeLayout;
+}) {
+  const starName = rank === 4 ? 'star-4' : `star-${rank}`;
+
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="absolute flex h-[179.799px] w-[179.799px] items-center justify-center"
+        style={{ left: layout.starLeft, top: layout.starTop }}
+      >
+        <div style={{ transform: 'rotate(9.9deg)', flex: 'none' }}>
+          <div className="relative h-[155.401px] w-[155.401px]">
+            {rank === 4 ? (
+              <div className="absolute inset-[-46.07%]">
+                <img
+                  src={rankingAsset(mode, 'star-4-shadow.svg')}
+                  alt=""
+                  className="block h-full w-full max-w-none"
+                />
+              </div>
+            ) : null}
+            <img
+              src={rankingAsset(mode, `${starName}.svg`)}
+              alt=""
+              className="absolute inset-0 block h-full w-full max-w-none"
+            />
+          </div>
+        </div>
+      </div>
+      <p
+        aria-hidden="true"
+        className="absolute m-0 -translate-x-full whitespace-nowrap text-right text-[0px] leading-[0] text-white"
+        style={{ left: layout.textLeft, top: layout.textTop, fontFamily: F_HEAD, letterSpacing: 0 }}
+      >
+        <span
+          className="text-[44px] leading-normal"
+          style={{ fontFamily: "'Atkinson_Hyperlegible_Mono:ExtraBold_Italic', monospace" }}
+        >
+          #
+        </span>
+        <span className="text-[44px] leading-normal">{rank}</span>
+      </p>
+    </>
+  );
+}
+
+function ExactBottomCta({ mode, label }: { mode: RankingMode; label: string }) {
+  const isWeek = mode === 'week';
+
+  return (
+    <Link
+      to={isWeek ? '/highlights/month' : '/highlights'}
+      className="absolute flex h-[65px] -translate-x-1/2 items-center justify-center gap-[14px] rounded-[50px] border border-[#ff1654] bg-[#ff1654]/[0.23] text-[24px] leading-normal text-white no-underline shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)]"
+      style={{
+        left: 'calc(50% + 0.5px)',
+        top: 2416,
+        width: isWeek ? 337 : 201,
+        fontFamily: "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif",
+        letterSpacing: 0,
+      }}
+    >
+      <span className="whitespace-nowrap">{label}</span>
+      <img
+        src={rankingAsset(mode, 'arrow-right.svg')}
+        alt=""
+        aria-hidden="true"
+        className="h-[15.653px] w-[21.071px]"
+        style={{ transform: 'rotate(90deg) scaleY(-1)' }}
+      />
+    </Link>
   );
 }
 
@@ -1068,18 +1771,22 @@ function AvatarCircle({
   label,
   size,
   fallback,
+  className,
+  style,
 }: {
   src: string | null;
   label: string;
   size: number;
   fallback?: string;
+  className?: string;
+  style?: CSSProperties;
 }) {
   const initial = fallback || label.trim().charAt(0).toUpperCase() || 'P';
 
   return (
     <div
-      className="overflow-hidden rounded-full border border-white/10 bg-[#ff1654]/25"
-      style={{ width: size, height: size }}
+      className={`overflow-hidden rounded-full border border-white/10 bg-[#ff1654]/25 ${className ?? ''}`}
+      style={{ width: size, height: size, ...style }}
       aria-hidden="true"
     >
       {src ? (
