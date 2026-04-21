@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ExternalLink, Info, Loader2, Plus, Search, ThumbsUp, Trophy } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Plus, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { FooterSection } from '@/components/home/sections/FooterSection';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import {
   Dialog,
@@ -209,6 +210,10 @@ function sortHighlights(a: HighlightCard, b: HighlightCard) {
   return bTime - aTime;
 }
 
+function getTotalVotes(highlight: HighlightCard, voteCounts: Record<string, number>) {
+  return highlight.baseVoteCount + (voteCounts[highlight.id] || 0);
+}
+
 export default function Highlights() {
   const location = useLocation();
   const { user, profile } = useAuth();
@@ -342,23 +347,16 @@ export default function Highlights() {
     : location.pathname.endsWith('/month')
       ? 'month'
       : 'all';
-  const pageTitle = activeTab === 'week'
-    ? 'HIGHLIGHTS - TOP WEEK'
-    : activeTab === 'month'
-      ? 'HIGHLIGHTS - TOP MONTH'
-      : 'HIGHLIGHTS';
   const isRankingPage = activeTab !== 'all';
 
-  const visibleHighlights = useMemo(() => {
-    if (!isRankingPage) return filteredHighlights;
-
+  const rankedHighlights = useMemo(() => {
     return [...filteredHighlights].sort((a, b) => {
-      const bTotal = b.baseVoteCount + (voteCounts[b.id] || 0);
-      const aTotal = a.baseVoteCount + (voteCounts[a.id] || 0);
+      const bTotal = getTotalVotes(b, voteCounts);
+      const aTotal = getTotalVotes(a, voteCounts);
       if (bTotal !== aTotal) return bTotal - aTotal;
       return sortHighlights(a, b);
-    });
-  }, [filteredHighlights, isRankingPage, voteCounts]);
+    }).slice(0, 4);
+  }, [filteredHighlights, voteCounts]);
 
   const handleVote = async (highlightId: string) => {
     const state = getVoteState(highlightId);
@@ -429,98 +427,90 @@ export default function Highlights() {
 
   return (
     <PublicLayout>
-      <section className="min-h-screen bg-[#0f0404] pt-[156px] text-white">
-        <img
-          aria-hidden="true"
-          src="/figma-assets/figma-neon.png"
-          alt=""
-          className="pointer-events-none fixed left-0 top-0 z-[6] h-[146px] w-full object-cover opacity-90"
+      {isRankingPage ? (
+        <HighlightsRankingPage
+          mode={activeTab === 'week' ? 'week' : 'month'}
+          highlights={rankedHighlights}
+          loading={loadingHighlights}
+          query={query}
+          voteCounts={voteCounts}
+          isVoting={isVoting}
+          getVoteState={getVoteState}
+          onQueryChange={setQuery}
+          onUploadClick={handleUploadClick}
+          onOpen={(highlight) => setPlayerVideo(highlight)}
+          onVote={(highlightId) => void handleVote(highlightId)}
         />
+      ) : (
+        <section className="min-h-screen bg-[#0f0404] pt-[156px] text-white">
+          <img
+            aria-hidden="true"
+            src="/figma-assets/figma-neon.png"
+            alt=""
+            className="pointer-events-none fixed left-0 top-0 z-[6] h-[146px] w-full object-cover opacity-90"
+          />
 
-        <div className="mx-auto w-full max-w-[1532px] px-8 pb-32">
-          <header className="relative min-h-[205px]">
-            <img
-              aria-hidden="true"
-              src="/highlights/title-triangles.svg"
-              alt=""
-              className="absolute left-[-71px] top-0 h-[185.808px] w-[123.872px]"
-            />
-            <h1
-              className={`absolute left-0 top-[77px] m-0 leading-none text-white ${isRankingPage ? 'text-[70px]' : 'text-[80px]'}`}
-              style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
-            >
-              {pageTitle}
-            </h1>
-            <div
-              aria-hidden="true"
-              className="absolute left-[-12px] top-[165.5px] flex h-[21.289px] w-[820.394px] max-w-[72vw] items-center justify-center overflow-visible"
-            >
-              <div className="h-[820.335px] w-[18.421px] flex-none rotate-[89.8deg] -scale-y-100">
-                <div className="relative h-full w-full">
-                  <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
-                    <img
-                      src="/highlights/title-underline-raw.svg"
-                      alt=""
-                      className="block h-full w-full max-w-none"
-                    />
+          <div className="mx-auto w-full max-w-[1532px] px-8 pb-32">
+            <header className="relative min-h-[205px]">
+              <img
+                aria-hidden="true"
+                src="/highlights/title-triangles.svg"
+                alt=""
+                className="absolute left-[-71px] top-0 h-[185.808px] w-[123.872px]"
+              />
+              <h1
+                className="absolute left-0 top-[77px] m-0 text-[80px] leading-none text-white"
+                style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
+              >
+                HIGHLIGHTS
+              </h1>
+              <div
+                aria-hidden="true"
+                className="absolute left-[-12px] top-[165.5px] flex h-[21.289px] w-[820.394px] max-w-[72vw] items-center justify-center overflow-visible"
+              >
+                <div className="h-[820.335px] w-[18.421px] flex-none rotate-[89.8deg] -scale-y-100">
+                  <div className="relative h-full w-full">
+                    <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
+                      <img
+                        src="/highlights/title-underline-raw.svg"
+                        alt=""
+                        className="block h-full w-full max-w-none"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          <div className="mb-[54px] flex flex-wrap items-center gap-6">
-            <label className="relative block h-[47px] w-[400px] max-w-full">
-              <span className="sr-only">Search by title or author</span>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by title or author"
-                className="h-full w-full rounded-[12px] border border-white/[0.15] bg-[#282828] pl-4 pr-12 text-[20px] text-white outline-none placeholder:text-white/50"
-                style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}
-              />
-              <Search aria-hidden="true" className="absolute right-4 top-1/2 h-[22px] w-[22px] -translate-y-1/2 text-white/50" />
-            </label>
+            <HighlightsToolbar
+              activeTab={activeTab}
+              query={query}
+              onQueryChange={setQuery}
+              onUploadClick={handleUploadClick}
+            />
 
-            <ToolbarButton label="REWARDS" tone="gray" icon={<Info aria-hidden="true" className="h-4 w-4" />} />
-            <ToolbarButton
-              label="TOP MONTH"
-              tone="lime"
-              icon={<Trophy aria-hidden="true" className="h-[19px] w-[23px]" />}
-              to="/highlights/month"
-              active={activeTab === 'month'}
-            />
-            <ToolbarButton
-              label="TOP WEEK"
-              tone="purple"
-              icon={<Trophy aria-hidden="true" className="h-[19px] w-[23px]" />}
-              to="/highlights/week"
-              active={activeTab === 'week'}
-            />
-            <ToolbarButton label="UPLOAD" tone="pink" icon={<Plus aria-hidden="true" className="h-5 w-5" />} onClick={handleUploadClick} />
+            {loadingHighlights ? (
+              <div className="grid min-h-[360px] place-items-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-x-[124px] gap-y-[50px] md:grid-cols-2 xl:grid-cols-3">
+                {filteredHighlights.map((highlight) => (
+                  <HighlightCardView
+                    key={highlight.id}
+                    highlight={highlight}
+                    totalVotes={getTotalVotes(highlight, voteCounts)}
+                    voteState={getVoteState(highlight.id)}
+                    isVoting={isVoting}
+                    onOpen={() => setPlayerVideo(highlight)}
+                    onVote={() => void handleVote(highlight.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          {loadingHighlights ? (
-            <div className="grid min-h-[360px] place-items-center">
-              <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-x-[124px] gap-y-[50px] md:grid-cols-2 xl:grid-cols-3">
-              {visibleHighlights.map((highlight) => (
-                <HighlightCardView
-                  key={highlight.id}
-                  highlight={highlight}
-                  totalVotes={highlight.baseVoteCount + (voteCounts[highlight.id] || 0)}
-                  voteState={getVoteState(highlight.id)}
-                  isVoting={isVoting}
-                  onOpen={() => setPlayerVideo(highlight)}
-                  onVote={() => void handleVote(highlight.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
 
       <Dialog open={Boolean(playerVideo)} onOpenChange={(open) => !open && setPlayerVideo(null)}>
         <DialogContent className="max-w-[1040px] border-[#ff1654]/70 bg-[#0f0404] p-0 text-white sm:rounded-[8px]">
@@ -688,6 +678,246 @@ function ToolbarButton({
   );
 }
 
+function HighlightsToolbar({
+  activeTab,
+  query,
+  onQueryChange,
+  onUploadClick,
+  withBottomMargin = true,
+}: {
+  activeTab: 'all' | 'week' | 'month';
+  query: string;
+  onQueryChange: (value: string) => void;
+  onUploadClick: () => void;
+  withBottomMargin?: boolean;
+}) {
+  return (
+    <div className={`${withBottomMargin ? 'mb-[54px]' : ''} flex flex-wrap items-center gap-6 xl:gap-[17px]`}>
+      <label className="relative block h-[47px] w-[400px] max-w-full">
+        <span className="sr-only">Search by title or author</span>
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Search by title or author"
+          className="h-full w-full rounded-[12px] border border-white/[0.15] bg-[#282828] pl-4 pr-12 text-[20px] text-white outline-none placeholder:text-white/50"
+          style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}
+        />
+        <Search aria-hidden="true" className="absolute right-4 top-1/2 h-[22px] w-[22px] -translate-y-1/2 text-white/50" />
+      </label>
+
+      <ToolbarButton label="REWARDS" tone="gray" icon={<Info aria-hidden="true" className="h-4 w-4" />} />
+      <ToolbarButton
+        label="TOP MONTH"
+        tone="lime"
+        icon={<img src="/highlights/icon-top-month.svg" alt="" aria-hidden="true" className="h-[19px] w-[23px]" />}
+        to="/highlights/month"
+        active={activeTab === 'month'}
+      />
+      <ToolbarButton
+        label="TOP WEEK"
+        tone="purple"
+        icon={<img src="/highlights/icon-top-week.svg" alt="" aria-hidden="true" className="h-[19px] w-[23px]" />}
+        to="/highlights/week"
+        active={activeTab === 'week'}
+      />
+      <ToolbarButton
+        label="UPLOAD"
+        tone="pink"
+        icon={<Plus aria-hidden="true" className="h-5 w-5" />}
+        onClick={onUploadClick}
+      />
+    </div>
+  );
+}
+
+function RankingTitle({ children, wide = false }: { children: string; wide?: boolean }) {
+  const [titlePrefix, titleSuffix] = children.split(' - ');
+
+  return (
+    <div className="relative z-[2] max-w-full">
+      <img
+        src="/highlights/title-triangles.svg"
+        alt=""
+        aria-hidden="true"
+        className="absolute -left-[49px] -top-[58px] h-[136px] w-[91px] xl:-left-[71px] xl:-top-[77px] xl:h-[186px] xl:w-[124px]"
+      />
+      <h1
+        className="relative m-0 max-w-full text-[36px] leading-[43px] text-white sm:text-[56px] sm:leading-[66px] xl:whitespace-nowrap xl:text-[80px] xl:leading-[95px]"
+        style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
+      >
+        {titleSuffix ? (
+          <>
+            <span className="block xl:inline">{titlePrefix} -</span>{' '}
+            <span className="block xl:inline">{titleSuffix}</span>
+          </>
+        ) : (
+          children
+        )}
+      </h1>
+      <img
+        src="/highlights/title-underline.svg"
+        alt=""
+        aria-hidden="true"
+        className={`mt-[-7px] h-[12px] max-w-full xl:mt-[-10px] xl:h-[16px] ${wide ? 'w-full xl:w-[1188px]' : 'w-[min(100%,620px)] xl:w-[620px]'}`}
+      />
+    </div>
+  );
+}
+
+function HighlightsRankingPage({
+  mode,
+  highlights,
+  loading,
+  query,
+  voteCounts,
+  isVoting,
+  getVoteState,
+  onQueryChange,
+  onUploadClick,
+  onOpen,
+  onVote,
+}: {
+  mode: 'week' | 'month';
+  highlights: HighlightCard[];
+  loading: boolean;
+  query: string;
+  voteCounts: Record<string, number>;
+  isVoting: boolean;
+  getVoteState: (highlightId: string) => VoteState;
+  onQueryChange: (value: string) => void;
+  onUploadClick: () => void;
+  onOpen: (highlight: HighlightCard) => void;
+  onVote: (highlightId: string) => void;
+}) {
+  const isWeek = mode === 'week';
+  const title = isWeek ? 'HIGHLIGHTS - TOP WEEK' : 'HIGHLIGHTS - TOP MONTH';
+  const nomineesTitle = isWeek ? 'THIS WEEK NOMINEES' : 'THIS MONTH NOMINEES';
+  const heroCopy = isWeek ? 'Winner of the week\nearns EXTRA coins!*' : 'Winner of the month\ngets a FREE montage!*';
+  const note = isWeek
+    ? '*The winner of the week will receive 5 coins for free!'
+    : '*The winner will choose the editor he likes the most.\nOLEBOY will pay for the video. No extra-fees.';
+  const bottomCta = isWeek ? 'BEST OF THE MONTH' : 'FOR YOU';
+  const winner = highlights[0] ?? null;
+  const nominees = highlights.slice(0, 4);
+
+  return (
+    <div className="w-full bg-[#0f0404] text-white">
+      <section className="relative overflow-hidden px-5 pb-20 pt-[172px] xl:min-h-[2529px] xl:px-0 xl:pb-0 xl:pt-0">
+        <img
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 h-[146px] w-full object-cover"
+        />
+
+        <div className="relative xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[233px]">
+          <RankingTitle wide>{title}</RankingTitle>
+        </div>
+        <div className="relative mt-9 xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[396px] xl:mt-0 xl:w-[calc(88%_-_11.2px)]">
+          <HighlightsToolbar
+            activeTab={mode}
+            query={query}
+            onQueryChange={onQueryChange}
+            onUploadClick={onUploadClick}
+            withBottomMargin={false}
+          />
+        </div>
+
+        <img
+          src="/highlights/star-shape.svg"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-[98px] top-[560px] h-[430px] w-[625px] -rotate-[15deg] object-contain opacity-90 xl:left-[calc(8%_+_14.4px)] xl:top-[383px] xl:h-[596px] xl:w-[866px]"
+        />
+        <p
+          className="relative z-[2] mt-20 max-w-[350px] whitespace-pre-line text-[34px] leading-[36px] text-white sm:max-w-[520px] sm:text-[42px] sm:leading-[43px] xl:absolute xl:left-[calc(12%_+_11.6px)] xl:top-[598px] xl:mt-0 xl:max-w-none xl:text-[48px] xl:leading-[47px]"
+          style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
+        >
+          {heroCopy}
+        </p>
+        <button
+          type="button"
+          onClick={() => document.getElementById('highlight-nominees')?.scrollIntoView({ behavior: 'smooth' })}
+          className="relative z-[2] mt-8 flex h-[58px] w-full max-w-[292px] items-center justify-center gap-[14px] rounded-full border border-[#ff1654] bg-[#ff1654]/25 text-[28px] text-white shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)] xl:absolute xl:left-[calc(24%_+_7.2px)] xl:top-[727px] xl:mt-0 xl:h-[65px] xl:w-[292px] xl:max-w-none xl:text-[32px]"
+          style={{ fontFamily: "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif", letterSpacing: 0 }}
+        >
+          NOMINEES
+          <img src="/highlights/arrow-down.svg" alt="" aria-hidden="true" className="h-[27px] w-[19px]" />
+        </button>
+        <p
+          className="relative z-[2] mt-10 max-w-[330px] whitespace-pre-line text-[12px] leading-[15px] text-white sm:max-w-[470px] sm:text-[13px] sm:leading-[16px] xl:absolute xl:left-[calc(4%_+_1.2px)] xl:top-[855px] xl:mt-0 xl:max-w-none"
+          style={{ fontFamily: "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif", letterSpacing: 0 }}
+        >
+          {note}
+        </p>
+
+        <div className="relative z-[2] mt-12 xl:absolute xl:right-[calc(12%_-_6px)] xl:top-[496px] xl:mt-0">
+          {loading ? (
+            <div className="grid h-[299px] w-[min(100%,531px)] place-items-center rounded-[11px] bg-[#181818] xl:w-[531px]">
+              <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
+            </div>
+          ) : winner ? (
+            <HighlightCardView
+              highlight={winner}
+              totalVotes={getTotalVotes(winner, voteCounts)}
+              voteState={getVoteState(winner.id)}
+              isVoting={isVoting}
+              onOpen={() => onOpen(winner)}
+              onVote={() => onVote(winner.id)}
+              size="large"
+            />
+          ) : null}
+        </div>
+
+        <div id="highlight-nominees" className="relative mt-24 w-full bg-[#0f0404] xl:absolute xl:left-0 xl:top-[955px] xl:mt-0 xl:h-[955px]">
+          <div className="relative xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[233px]">
+            <RankingTitle wide>{nomineesTitle}</RankingTitle>
+          </div>
+
+          {loading ? (
+            <div className="grid h-[360px] place-items-center xl:absolute xl:left-[348px] xl:top-[452px] xl:w-[1258px]">
+              <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
+            </div>
+          ) : nominees.length > 0 ? (
+            <div className="relative mt-12 grid grid-cols-1 justify-items-center gap-y-14 lg:grid-cols-2 lg:gap-x-10 xl:absolute xl:left-1/2 xl:top-[452px] xl:mt-0 xl:grid-cols-2 xl:justify-items-start xl:gap-x-[196px] xl:gap-y-[92px] xl:-translate-x-1/2">
+              {nominees.map((highlight, index) => (
+                <HighlightCardView
+                  key={highlight.id}
+                  highlight={highlight}
+                  totalVotes={getTotalVotes(highlight, voteCounts)}
+                  voteState={getVoteState(highlight.id)}
+                  isVoting={isVoting}
+                  onOpen={() => onOpen(highlight)}
+                  onVote={() => onVote(highlight.id)}
+                  size="large"
+                  rank={index + 1}
+                />
+              ))}
+            </div>
+          ) : (
+            <p
+              className="relative mt-12 text-[22px] text-white/60 xl:absolute xl:left-[348px] xl:top-[452px] xl:mt-0 xl:text-[24px]"
+              style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
+            >
+              No highlights found.
+            </p>
+          )}
+        </div>
+
+        <Link
+          to={isWeek ? '/highlights/month' : '/highlights'}
+          className="relative z-[2] mx-auto mt-16 flex h-[58px] items-center justify-center gap-[14px] rounded-full border border-[#ff1654] bg-[#ff1654]/25 px-[28px] text-[22px] text-white no-underline shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)] xl:absolute xl:left-1/2 xl:top-[2416px] xl:mt-0 xl:h-[65px] xl:-translate-x-1/2 xl:px-[33px] xl:text-[24px]"
+          style={{ minWidth: isWeek ? 337 : 201, fontFamily: "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif", letterSpacing: 0 }}
+        >
+          {bottomCta}
+          <img src="/highlights/arrow-right.svg" alt="" aria-hidden="true" className="h-[16px] w-[21px]" />
+        </Link>
+      </section>
+      <FooterSection />
+    </div>
+  );
+}
+
 function HighlightCardView({
   highlight,
   totalVotes,
@@ -695,6 +925,8 @@ function HighlightCardView({
   isVoting,
   onOpen,
   onVote,
+  size = 'grid',
+  rank,
 }: {
   highlight: HighlightCard;
   totalVotes: number;
@@ -702,15 +934,19 @@ function HighlightCardView({
   isVoting: boolean;
   onOpen: () => void;
   onVote: () => void;
+  size?: 'grid' | 'large';
+  rank?: number;
 }) {
   const votedThis = voteState === 'VOTED_THIS';
+  const isLarge = size === 'large';
 
   return (
-    <article className="relative w-full max-w-[400px]">
+    <article className={`relative w-full ${isLarge ? 'max-w-[531px]' : 'max-w-[400px]'}`}>
+      {rank ? <RankBadge rank={rank} /> : null}
       <button
         type="button"
         onClick={onOpen}
-        className="group relative block h-[225px] w-full overflow-hidden rounded-[11px] bg-[#181818] text-left"
+        className={`group relative block w-full overflow-hidden rounded-[11px] bg-[#181818] text-left ${isLarge ? 'h-[298.688px]' : 'h-[225px]'}`}
         aria-label={`Play ${highlight.title}`}
       >
         <img
@@ -721,15 +957,15 @@ function HighlightCardView({
         <div className="absolute inset-0 rounded-[11px] bg-black/0 transition group-hover:bg-black/15" />
       </button>
 
-      <div className="mt-4 grid grid-cols-[48px_minmax(0,1fr)_97px] gap-4">
+      <div className={`grid gap-4 ${isLarge ? 'mt-5 grid-cols-[64px_minmax(0,1fr)_118px]' : 'mt-4 grid-cols-[48px_minmax(0,1fr)_97px]'}`}>
         <AvatarCircle
           src={highlight.authorAvatarUrl}
           label={highlight.authorName}
-          size={48}
+          size={isLarge ? 64 : 48}
         />
         <div className="min-w-0">
           <p
-            className="line-clamp-2 text-[24px] leading-[26px] text-white"
+            className={`line-clamp-2 text-[24px] text-white ${isLarge ? 'leading-[27px]' : 'leading-[26px]'}`}
             style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
           >
             {highlight.title}
@@ -746,16 +982,48 @@ function HighlightCardView({
           onClick={onVote}
           disabled={isVoting}
           aria-label={`${votedThis ? 'Remove vote from' : 'Vote for'} ${highlight.title}`}
-          className={`mt-2 flex h-[32px] w-[97px] shrink-0 items-center justify-center gap-2 rounded-full border text-[16px] text-white disabled:opacity-65 ${
+          className={`mt-2 flex shrink-0 items-center justify-center gap-2 rounded-full border text-white disabled:opacity-65 ${isLarge ? 'h-[39px] w-[118px] text-[19.5px]' : 'h-[32px] w-[97px] text-[16px]'} ${
             votedThis ? 'border-[#ff1654] bg-[#ff1654]/50' : 'border-[#ff1654] bg-[#282828]'
           }`}
           style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
         >
-          <ThumbsUp className="h-4 w-4" />
+          <img
+            src={votedThis ? '/highlights/like-hot.svg' : '/highlights/like-muted.svg'}
+            alt=""
+            aria-hidden="true"
+            className={isLarge ? 'h-[19px] w-[22px]' : 'h-4 w-[18px]'}
+          />
           <span>{formatVoteCount(totalVotes)}</span>
         </button>
       </div>
     </article>
+  );
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  const fill = rank === 1 ? '#d7a437' : rank === 2 ? '#d6d6d6' : rank === 3 ? '#8d2044' : '#5b1630';
+  const opacity = rank === 4 ? 0.34 : 0.88;
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute -left-[20px] -top-[20px] z-[3] grid h-[78px] w-[78px] place-items-center xl:-left-[36px] xl:-top-[36px] xl:h-[108px] xl:w-[108px]"
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background: fill,
+          clipPath: 'polygon(50% 0%,61% 27%,90% 14%,73% 42%,100% 50%,73% 58%,90% 86%,61% 73%,50% 100%,39% 73%,10% 86%,27% 58%,0% 50%,27% 42%,10% 14%,39% 27%)',
+          opacity,
+        }}
+      />
+      <span
+        className="relative -translate-y-1 text-[24px] leading-none text-white xl:text-[32px]"
+        style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
+      >
+        #{rank}
+      </span>
+    </div>
   );
 }
 
@@ -787,7 +1055,7 @@ function HighlightPreview({
           className="mt-2 flex h-[32px] w-[97px] shrink-0 items-center justify-center gap-2 rounded-full border border-[#ff1654] bg-[#282828] text-[16px] text-white"
           style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
         >
-          <ThumbsUp className="h-4 w-4" />
+          <img src="/highlights/like-muted.svg" alt="" aria-hidden="true" className="h-4 w-[18px]" />
           <span>0</span>
         </div>
       </div>

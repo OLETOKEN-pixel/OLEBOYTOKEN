@@ -154,4 +154,20 @@ describe('Highlights page', () => {
     expect(await screen.findByRole('link', { name: /top month/i })).toHaveAttribute('href', '/highlights/month');
     expect(screen.getByRole('link', { name: /top week/i })).toHaveAttribute('href', '/highlights/week');
   });
+
+  it('renders the dedicated top week ranking design', async () => {
+    renderHighlights('/highlights/week');
+
+    expect((await screen.findAllByText(/Winner of the week/i)).length).toBeGreaterThan(0);
+    expect(screen.getByText('THIS WEEK NOMINEES')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /best of the month/i })).toHaveAttribute('href', '/highlights/month');
+  });
+
+  it('renders the dedicated top month ranking design', async () => {
+    renderHighlights('/highlights/month');
+
+    expect(await screen.findByText(/Winner of the month/i)).toBeInTheDocument();
+    expect(screen.getByText('THIS MONTH NOMINEES')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /for you/i })).toHaveAttribute('href', '/highlights');
+  });
 });
