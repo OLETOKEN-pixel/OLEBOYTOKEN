@@ -70,7 +70,7 @@ function HighlightsTitle({ children, wide = false }: { children: string; wide?: 
         src="/highlights/title-underline.svg"
         alt=""
         aria-hidden="true"
-        className={`mt-[-3px] h-[14px] max-w-full xl:mt-[-6px] xl:h-[21px] ${wide ? 'w-[780px]' : 'w-[620px]'}`}
+        className={`mt-[-7px] h-[12px] max-w-full xl:mt-[-10px] xl:h-[16px] ${wide ? 'w-full xl:w-[1188px]' : 'w-[min(100%,620px)] xl:w-[620px]'}`}
       />
     </div>
   );
