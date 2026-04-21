@@ -312,34 +312,52 @@ export type Database = {
       }
       highlights: {
         Row: {
+          author_avatar_url: string | null
+          author_name: string | null
+          base_vote_count: number
           created_at: string | null
           id: string
+          is_curated: boolean
           is_weekly_winner: boolean | null
+          sort_order: number | null
+          thumbnail_url: string | null
           title: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           winner_week: string | null
           youtube_url: string
           youtube_video_id: string
         }
         Insert: {
+          author_avatar_url?: string | null
+          author_name?: string | null
+          base_vote_count?: number
           created_at?: string | null
           id?: string
+          is_curated?: boolean
           is_weekly_winner?: boolean | null
+          sort_order?: number | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           winner_week?: string | null
           youtube_url: string
           youtube_video_id: string
         }
         Update: {
+          author_avatar_url?: string | null
+          author_name?: string | null
+          base_vote_count?: number
           created_at?: string | null
           id?: string
+          is_curated?: boolean
           is_weekly_winner?: boolean | null
+          sort_order?: number | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           winner_week?: string | null
           youtube_url?: string
           youtube_video_id?: string
