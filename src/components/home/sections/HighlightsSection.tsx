@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
 
 const videoItems = [
@@ -7,6 +8,7 @@ const videoItems = [
 ];
 
 export const HighlightsSection = () => {
+  const navigate = useNavigate();
 
   return (
     <div id="s-highlights" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
@@ -25,14 +27,19 @@ export const HighlightsSection = () => {
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
           <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.highlights.star} />
 
-          <div className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
+          <button
+            type="button"
+            aria-label="Open highlights page"
+            onClick={() => navigate('/highlights')}
+            className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040] cursor-pointer"
+          >
             <div className="mt-3.5 w-[212px] ml-[34px] flex gap-[11px]">
               <div className="w-[167px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
                 WATCH
               </div>
               <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
-          </div>
+          </button>
 
           <div className="absolute top-[216px] left-[118px] w-[600px] h-[167px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
             <span>Publish and vote.</span>

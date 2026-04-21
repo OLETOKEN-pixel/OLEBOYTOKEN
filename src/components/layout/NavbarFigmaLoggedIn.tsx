@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { getLevel } from '@/lib/xp';
+import type { Profile } from '@/types';
 
 const NAV_SECTIONS: Record<string, string> = {
   matches: 's-matches',
@@ -47,12 +48,15 @@ const PROFILE_AVATAR_FALLBACK = 'linear-gradient(135deg, rgba(255,255,255,0.11),
 /* Standalone routes that should still mark a nav item as active */
 const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   matches: '/matches',
+  hls: '/highlights',
 };
 
 type NavItem = keyof typeof NAV_SECTIONS;
+type NavbarProfile = Profile & { level?: number | null };
 
 export function NavbarFigmaLoggedIn() {
   const { profile, wallet, signOut } = useAuth();
+  const navbarProfile = profile as NavbarProfile | null;
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -136,7 +140,7 @@ export function NavbarFigmaLoggedIn() {
         avatarUrl={avatarUrl}
         balance={balance}
         level={level}
-        profile={profile}
+        profile={navbarProfile}
         navItems={navItems}
         isNavItemActive={isNavItemActive}
         onNavItemClick={handleNavItemClick}
@@ -445,9 +449,9 @@ export function NavbarFigmaLoggedIn() {
                   <div className="min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff8ead]">My Profile</p>
                     <p className="mt-1 truncate text-[15px] font-semibold uppercase tracking-[0.08em] text-white">
-                      {profile?.discord_display_name || profile?.username || 'Player'}
+                      {navbarProfile?.discord_display_name || navbarProfile?.username || 'Player'}
                     </p>
-                    <p className="truncate text-[11px] uppercase tracking-[0.12em] text-white/42">{profile?.email}</p>
+                    <p className="truncate text-[11px] uppercase tracking-[0.12em] text-white/42">{navbarProfile?.email}</p>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -546,7 +550,7 @@ type LoggedInMobileNavbarProps = {
   avatarUrl: string | null;
   balance: string;
   level: number;
-  profile: any;
+  profile: NavbarProfile | null;
   navItems: NavItem[];
   isNavItemActive: (item: NavItem) => boolean;
   onNavItemClick: (item: NavItem) => void;
