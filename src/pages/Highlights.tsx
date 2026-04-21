@@ -357,9 +357,9 @@ export default function Highlights() {
           <header className="relative min-h-[205px]">
             <img
               aria-hidden="true"
-              src="/figma-assets/figma-zaps.svg"
+              src="/highlights/title-triangles.svg"
               alt=""
-              className="absolute left-[-48px] top-[-2px] h-[186px] w-[124px]"
+              className="absolute left-[-71px] top-0 h-[185.808px] w-[123.872px]"
             />
             <h1
               className="absolute left-0 top-[77px] m-0 text-[80px] leading-none text-white"
@@ -367,12 +367,22 @@ export default function Highlights() {
             >
               HIGHLIGHTS
             </h1>
-            <img
+            <div
               aria-hidden="true"
-              src="/figma-assets/figma-outline-s2.svg"
-              alt=""
-              className="absolute left-0 top-[165px] h-[18px] w-[820px] max-w-[72vw]"
-            />
+              className="absolute left-[-12px] top-[165.5px] flex h-[21.289px] w-[820.394px] max-w-[72vw] items-center justify-center overflow-visible"
+            >
+              <div className="h-[820.335px] w-[18.421px] flex-none rotate-[89.8deg] -scale-y-100">
+                <div className="relative h-full w-full">
+                  <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
+                    <img
+                      src="/highlights/title-underline-raw.svg"
+                      alt=""
+                      className="block h-full w-full max-w-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </header>
 
           <div className="mb-[54px] flex flex-wrap items-center gap-6">
