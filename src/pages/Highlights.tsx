@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ExternalLink, Info, Loader2, Plus, Search, ThumbsUp, Trophy } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import {
   Dialog,
@@ -54,16 +55,60 @@ type OEmbedResponse = {
 const F_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif";
 const F_BOLD = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif";
 const F_HEAD = "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif";
+const HIGHLIGHTS_ASSETS = '/highlights';
+
+const CURATED_AVATAR_BY_AUTHOR: Record<string, string> = {
+  dodoeu: `${HIGHLIGHTS_ASSETS}/avatar-dodoeu.png`,
+  piz: `${HIGHLIGHTS_ASSETS}/avatar-piz.png`,
+  clix: `${HIGHLIGHTS_ASSETS}/avatar-clix.png`,
+  peterbot: `${HIGHLIGHTS_ASSETS}/avatar-peterbot.png`,
+  eomzo: `${HIGHLIGHTS_ASSETS}/avatar-eomzo.png`,
+  malibuca: `${HIGHLIGHTS_ASSETS}/avatar-malibuca.png`,
+};
+
+const CURATED_THUMBNAIL_BY_AUTHOR: Record<string, string> = {
+  dodoeu: `${HIGHLIGHTS_ASSETS}/thumb-godzilla.png`,
+  piz: `${HIGHLIGHTS_ASSETS}/thumb-piz.png`,
+  clix: `${HIGHLIGHTS_ASSETS}/thumb-clix.png`,
+  peterbot: `${HIGHLIGHTS_ASSETS}/thumb-peterbot.png`,
+  eomzo: `${HIGHLIGHTS_ASSETS}/thumb-eomzo.png`,
+  malibuca: `${HIGHLIGHTS_ASSETS}/thumb-malibuca.png`,
+};
+
+function getCuratedAssetKey(authorName: string) {
+  return authorName.trim().toLowerCase();
+}
+
+function getCuratedAvatarUrl(authorName: string) {
+  return CURATED_AVATAR_BY_AUTHOR[getCuratedAssetKey(authorName)] ?? null;
+}
+
+function getCuratedThumbnailUrl(authorName: string) {
+  return CURATED_THUMBNAIL_BY_AUTHOR[getCuratedAssetKey(authorName)] ?? null;
+}
 
 const CURATED_HIGHLIGHTS: HighlightCard[] = [
+  {
+    id: '00000000-0000-4000-8000-000000000101',
+    youtubeUrl: 'https://youtu.be/JWlBCQIQags?si=-6gGHkedcxMRwoF-',
+    youtubeVideoId: 'JWlBCQIQags',
+    title: 'Godzilla',
+    authorName: 'Dodoeu',
+    authorAvatarUrl: `${HIGHLIGHTS_ASSETS}/avatar-dodoeu.png`,
+    thumbnailUrl: `${HIGHLIGHTS_ASSETS}/thumb-godzilla.png`,
+    baseVoteCount: 273,
+    isCurated: true,
+    sortOrder: 10,
+    createdAt: null,
+  },
   {
     id: '00000000-0000-4000-8000-000000000102',
     youtubeUrl: 'https://youtu.be/HxRTrHyWB0Y?si=VdsoQIswI9eOlHG5',
     youtubeVideoId: 'HxRTrHyWB0Y',
     title: 'IL MIGLIOR HIGHLIGHTS...',
     authorName: 'Piz',
-    authorAvatarUrl: null,
-    thumbnailUrl: '/showreel/highlight-video-1.png',
+    authorAvatarUrl: `${HIGHLIGHTS_ASSETS}/avatar-piz.png`,
+    thumbnailUrl: `${HIGHLIGHTS_ASSETS}/thumb-piz.png`,
     baseVoteCount: 655,
     isCurated: true,
     sortOrder: 20,
@@ -75,8 +120,8 @@ const CURATED_HIGHLIGHTS: HighlightCard[] = [
     youtubeVideoId: 'CtK-fV6TsBY',
     title: 'Never Change | Clix',
     authorName: 'Clix',
-    authorAvatarUrl: null,
-    thumbnailUrl: getYouTubeThumbnailUrl('CtK-fV6TsBY'),
+    authorAvatarUrl: `${HIGHLIGHTS_ASSETS}/avatar-clix.png`,
+    thumbnailUrl: `${HIGHLIGHTS_ASSETS}/thumb-clix.png`,
     baseVoteCount: 1200,
     isCurated: true,
     sortOrder: 30,
@@ -88,8 +133,8 @@ const CURATED_HIGHLIGHTS: HighlightCard[] = [
     youtubeVideoId: 'K5MZeXFPsGc',
     title: '1st FNCS GRAND FINALS...',
     authorName: 'Peterbot',
-    authorAvatarUrl: null,
-    thumbnailUrl: getYouTubeThumbnailUrl('K5MZeXFPsGc'),
+    authorAvatarUrl: `${HIGHLIGHTS_ASSETS}/avatar-peterbot.png`,
+    thumbnailUrl: `${HIGHLIGHTS_ASSETS}/thumb-peterbot.png`,
     baseVoteCount: 5300,
     isCurated: true,
     sortOrder: 40,
@@ -101,8 +146,8 @@ const CURATED_HIGHLIGHTS: HighlightCard[] = [
     youtubeVideoId: '4xv3O_VrW0M',
     title: 'Pricey | Eomzo Highlig...',
     authorName: 'Eomzo',
-    authorAvatarUrl: null,
-    thumbnailUrl: getYouTubeThumbnailUrl('4xv3O_VrW0M'),
+    authorAvatarUrl: `${HIGHLIGHTS_ASSETS}/avatar-eomzo.png`,
+    thumbnailUrl: `${HIGHLIGHTS_ASSETS}/thumb-eomzo.png`,
     baseVoteCount: 973,
     isCurated: true,
     sortOrder: 50,
@@ -114,8 +159,8 @@ const CURATED_HIGHLIGHTS: HighlightCard[] = [
     youtubeVideoId: 'CtK-fV6TsBY',
     title: 'Malibuca | Highlights #2',
     authorName: 'Malibuca',
-    authorAvatarUrl: null,
-    thumbnailUrl: getYouTubeThumbnailUrl('CtK-fV6TsBY'),
+    authorAvatarUrl: `${HIGHLIGHTS_ASSETS}/avatar-malibuca.png`,
+    thumbnailUrl: `${HIGHLIGHTS_ASSETS}/thumb-malibuca.png`,
     baseVoteCount: 802,
     isCurated: true,
     sortOrder: 60,
@@ -124,19 +169,34 @@ const CURATED_HIGHLIGHTS: HighlightCard[] = [
 ];
 
 function normalizeHighlight(row: HighlightRow): HighlightCard {
+  const authorName = row.author_name || 'Player';
+  const isCurated = Boolean(row.is_curated);
+  const curatedAvatarUrl = isCurated ? getCuratedAvatarUrl(authorName) : null;
+  const curatedThumbnailUrl = isCurated ? getCuratedThumbnailUrl(authorName) : null;
+
   return {
     id: row.id,
     youtubeUrl: row.youtube_url,
     youtubeVideoId: row.youtube_video_id,
     title: row.title,
-    authorName: row.author_name || 'Player',
-    authorAvatarUrl: row.author_avatar_url,
-    thumbnailUrl: row.thumbnail_url || getYouTubeThumbnailUrl(row.youtube_video_id),
+    authorName,
+    authorAvatarUrl: curatedAvatarUrl || row.author_avatar_url,
+    thumbnailUrl: curatedThumbnailUrl || row.thumbnail_url || getYouTubeThumbnailUrl(row.youtube_video_id),
     baseVoteCount: row.base_vote_count ?? 0,
-    isCurated: Boolean(row.is_curated),
+    isCurated,
     sortOrder: row.sort_order,
     createdAt: row.created_at,
   };
+}
+
+function mergeCuratedHighlights(rows: HighlightCard[]) {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  CURATED_HIGHLIGHTS.forEach((highlight) => {
+    if (!byId.has(highlight.id)) {
+      byId.set(highlight.id, highlight);
+    }
+  });
+  return Array.from(byId.values()).sort(sortHighlights);
 }
 
 function sortHighlights(a: HighlightCard, b: HighlightCard) {
@@ -150,6 +210,7 @@ function sortHighlights(a: HighlightCard, b: HighlightCard) {
 }
 
 export default function Highlights() {
+  const location = useLocation();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [highlights, setHighlights] = useState<HighlightCard[]>(CURATED_HIGHLIGHTS);
@@ -188,7 +249,7 @@ export default function Highlights() {
     }
 
     const rows = (data ?? []).map((row) => normalizeHighlight(row as HighlightRow));
-    setHighlights(rows.length > 0 ? rows.sort(sortHighlights) : CURATED_HIGHLIGHTS);
+    setHighlights(mergeCuratedHighlights(rows));
     setLoadingHighlights(false);
   }, []);
 
@@ -276,6 +337,29 @@ export default function Highlights() {
     });
   }, [highlights, query]);
 
+  const activeTab = location.pathname.endsWith('/week')
+    ? 'week'
+    : location.pathname.endsWith('/month')
+      ? 'month'
+      : 'all';
+  const pageTitle = activeTab === 'week'
+    ? 'HIGHLIGHTS - TOP WEEK'
+    : activeTab === 'month'
+      ? 'HIGHLIGHTS - TOP MONTH'
+      : 'HIGHLIGHTS';
+  const isRankingPage = activeTab !== 'all';
+
+  const visibleHighlights = useMemo(() => {
+    if (!isRankingPage) return filteredHighlights;
+
+    return [...filteredHighlights].sort((a, b) => {
+      const bTotal = b.baseVoteCount + (voteCounts[b.id] || 0);
+      const aTotal = a.baseVoteCount + (voteCounts[a.id] || 0);
+      if (bTotal !== aTotal) return bTotal - aTotal;
+      return sortHighlights(a, b);
+    });
+  }, [filteredHighlights, isRankingPage, voteCounts]);
+
   const handleVote = async (highlightId: string) => {
     const state = getVoteState(highlightId);
     if (state === 'VOTED_THIS') {
@@ -362,10 +446,10 @@ export default function Highlights() {
               className="absolute left-[-71px] top-0 h-[185.808px] w-[123.872px]"
             />
             <h1
-              className="absolute left-0 top-[77px] m-0 text-[80px] leading-none text-white"
+              className={`absolute left-0 top-[77px] m-0 leading-none text-white ${isRankingPage ? 'text-[70px]' : 'text-[80px]'}`}
               style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
             >
-              HIGHLIGHTS
+              {pageTitle}
             </h1>
             <div
               aria-hidden="true"
@@ -399,8 +483,20 @@ export default function Highlights() {
             </label>
 
             <ToolbarButton label="REWARDS" tone="gray" icon={<Info aria-hidden="true" className="h-4 w-4" />} />
-            <ToolbarButton label="TOP MONTH" tone="lime" icon={<Trophy aria-hidden="true" className="h-[19px] w-[23px]" />} />
-            <ToolbarButton label="TOP WEEK" tone="purple" icon={<Trophy aria-hidden="true" className="h-[19px] w-[23px]" />} />
+            <ToolbarButton
+              label="TOP MONTH"
+              tone="lime"
+              icon={<Trophy aria-hidden="true" className="h-[19px] w-[23px]" />}
+              to="/highlights/month"
+              active={activeTab === 'month'}
+            />
+            <ToolbarButton
+              label="TOP WEEK"
+              tone="purple"
+              icon={<Trophy aria-hidden="true" className="h-[19px] w-[23px]" />}
+              to="/highlights/week"
+              active={activeTab === 'week'}
+            />
             <ToolbarButton label="UPLOAD" tone="pink" icon={<Plus aria-hidden="true" className="h-5 w-5" />} onClick={handleUploadClick} />
           </div>
 
@@ -410,7 +506,7 @@ export default function Highlights() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-x-[124px] gap-y-[50px] md:grid-cols-2 xl:grid-cols-3">
-              {filteredHighlights.map((highlight) => (
+              {visibleHighlights.map((highlight) => (
                 <HighlightCardView
                   key={highlight.id}
                   highlight={highlight}
@@ -531,28 +627,63 @@ function ToolbarButton({
   tone,
   icon,
   onClick,
+  to,
+  active = false,
 }: {
   label: string;
   tone: 'gray' | 'lime' | 'purple' | 'pink';
   icon: ReactNode;
   onClick?: () => void;
+  to?: string;
+  active?: boolean;
 }) {
-  const styles = {
-    gray: 'border-white/50 bg-[#282828]/80 text-white min-w-[211px]',
-    lime: 'border-[#d8ff16] bg-[#d8ff16]/20 text-white min-w-[250px]',
-    purple: 'border-[#625afa] bg-[#625afa]/20 text-white min-w-[230px]',
-    pink: 'border-[#ff1654] bg-[#ff1654]/20 text-white min-w-[182px]',
-  }[tone];
+  const toneStyles = {
+    gray: {
+      base: 'border-white/50 bg-[#282828]/80 text-white min-w-[211px]',
+      active: 'border-white/50 bg-[#282828] text-white min-w-[211px]',
+    },
+    lime: {
+      base: 'border-[#d8ff16] bg-[#d8ff16]/20 text-white min-w-[250px]',
+      active: 'border-[#d8ff16] bg-[#d8ff16] text-[#0f0404] min-w-[250px]',
+    },
+    purple: {
+      base: 'border-[#625afa] bg-[#625afa]/20 text-white min-w-[230px]',
+      active: 'border-[#625afa] bg-[#625afa] text-white min-w-[230px]',
+    },
+    pink: {
+      base: 'border-[#ff1654] bg-[#ff1654]/20 text-white min-w-[182px]',
+      active: 'border-[#ff1654] bg-[#ff1654] text-white min-w-[182px]',
+    },
+  } as const;
+  const styles = toneStyles[tone];
+  const className = `flex h-[47px] shrink-0 flex-nowrap items-center justify-center gap-3 rounded-[16px] border px-4 text-[24px] leading-none no-underline ${active ? styles.active : styles.base}`;
+  const content = (
+    <>
+      {icon}
+      <span className="whitespace-nowrap">{label}</span>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className={className}
+        style={{ fontFamily: F_BOLD, letterSpacing: 0, whiteSpace: 'nowrap' }}
+      >
+        {content}
+      </Link>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex h-[47px] shrink-0 flex-nowrap items-center justify-center gap-3 rounded-[16px] border px-4 text-[24px] leading-none ${styles}`}
+      className={className}
       style={{ fontFamily: F_BOLD, letterSpacing: 0, whiteSpace: 'nowrap' }}
     >
-      {icon}
-      <span className="whitespace-nowrap">{label}</span>
+      {content}
     </button>
   );
 }

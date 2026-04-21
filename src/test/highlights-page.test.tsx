@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import Highlights from '@/pages/Highlights';
 
 const { fromMock, insertMock, selectAfterInsertMock, singleMock, castVoteMock, removeVoteMock, switchVoteMock, getVoteStateMock } = vi.hoisted(() => ({
@@ -68,6 +69,14 @@ const highlightRow = {
   sort_order: 10,
 };
 
+function renderHighlights(initialEntry = '/highlights') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Highlights />
+    </MemoryRouter>,
+  );
+}
+
 describe('Highlights page', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -92,13 +101,13 @@ describe('Highlights page', () => {
   });
 
   it('keeps curated base votes while adding realtime votes', async () => {
-    render(<Highlights />);
+    renderHighlights();
 
     expect(await screen.findByText('657')).toBeInTheDocument();
   });
 
   it('opens upload with no preview, then renders YouTube preview and publishes base zero', async () => {
-    render(<Highlights />);
+    renderHighlights();
 
     fireEvent.click(await screen.findByRole('button', { name: /upload/i }));
     expect(screen.getByText('Paste a YouTube link to create the preview.')).toBeInTheDocument();
@@ -123,17 +132,26 @@ describe('Highlights page', () => {
 
   it('removes a vote from the currently voted highlight', async () => {
     getVoteStateMock.mockReturnValue('VOTED_THIS');
-    render(<Highlights />);
+    renderHighlights();
 
-    fireEvent.click(await screen.findByRole('button', { name: /remove vote from/i }));
+    const voteButtons = await screen.findAllByRole('button', { name: /remove vote from/i });
+    fireEvent.click(voteButtons[0]);
     expect(removeVoteMock).toHaveBeenCalled();
   });
 
   it('switches vote to another highlight', async () => {
     getVoteStateMock.mockReturnValue('VOTED_OTHER');
-    render(<Highlights />);
+    renderHighlights();
 
-    fireEvent.click(await screen.findByRole('button', { name: /vote for/i }));
+    const voteButtons = await screen.findAllByRole('button', { name: /vote for/i });
+    fireEvent.click(voteButtons[0]);
     expect(switchVoteMock).toHaveBeenCalledWith('highlight-1');
+  });
+
+  it('links top month and top week to their highlight pages', async () => {
+    renderHighlights();
+
+    expect(await screen.findByRole('link', { name: /top month/i })).toHaveAttribute('href', '/highlights/month');
+    expect(screen.getByRole('link', { name: /top week/i })).toHaveAttribute('href', '/highlights/week');
   });
 });
