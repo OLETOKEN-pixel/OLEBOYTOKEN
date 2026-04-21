@@ -1047,13 +1047,15 @@ function ExactRankingTitle({
   top: number;
   textTop: number;
 }) {
+  const monthOffset = mode === 'month' ? -10 : 0;
+
   return (
     <>
       <p
         className="absolute z-[2] m-0 whitespace-nowrap text-[80px] leading-normal text-white"
         style={{
           left: 'calc(12% + 5.6px)',
-          top: textTop,
+          top: textTop + monthOffset,
           fontFamily: F_HEAD,
           letterSpacing: 0,
         }}
@@ -1063,7 +1065,7 @@ function ExactRankingTitle({
       <ExactOutline
         src={rankingAsset(mode, `${textTop === 233 ? 'outline-title' : 'outline-nominees'}.svg`)}
         left="calc(12% - 6.09px)"
-        top={config.outlineTop}
+        top={config.outlineTop + monthOffset}
         width={config.outlineWidth}
         height={config.outlineHeight}
         innerHeight={config.outlineInnerHeight}
@@ -1073,7 +1075,7 @@ function ExactRankingTitle({
         alt=""
         aria-hidden="true"
         className="pointer-events-none absolute z-[2] h-[185.808px] w-[123.872px]"
-        style={{ left: 'calc(8% + 11.4px)', top }}
+        style={{ left: 'calc(8% + 11.4px)', top: top + monthOffset }}
       />
     </>
   );
@@ -1137,13 +1139,7 @@ function ExactRankingToolbar({
           style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}
         />
       </label>
-      <img
-        src={rankingAsset(mode, 'search.svg')}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute h-[31.113px] w-[31.113px]"
-        style={{ left: 'calc(28% + 55.4px)', top: 404, transform: 'rotate(-45deg)' }}
-      />
+      <ExactSearchIcon mode={mode} />
       <ExactToolbarButton
         as="button"
         label="REWARDS"
@@ -1161,6 +1157,13 @@ function ExactRankingToolbar({
           style={{ left: 16, top: 16 }}
         />
         <span
+          aria-hidden="true"
+          className="absolute flex h-[10px] w-1 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-center text-[13px] leading-none text-[#282828]/80"
+          style={{ left: 24, top: 24, fontFamily: F_BOLD, letterSpacing: 0 }}
+        >
+          i
+        </span>
+        <span
           className="absolute -translate-x-1/2 whitespace-nowrap text-[24px] leading-normal text-white"
           style={{ left: 113, top: 10, fontFamily: F_BOLD, letterSpacing: 0 }}
         >
@@ -1177,13 +1180,7 @@ function ExactRankingToolbar({
         border="#d8ff16"
         background={mode === 'month' ? '#d8ff16' : 'rgba(216,255,22,0.2)'}
       >
-        <img
-          src={rankingAsset(mode, 'icon-month.svg')}
-          alt=""
-          aria-hidden="true"
-          className="absolute h-[19px] w-[23px]"
-          style={{ left: 17, top: 14 }}
-        />
+        <ExactCrownIcon color={mode === 'month' ? '#0f0404' : '#d8ff16'} left={17} top={17} />
         <span
           className="absolute whitespace-nowrap text-[24px] leading-normal"
           style={{
@@ -1207,13 +1204,7 @@ function ExactRankingToolbar({
         border="#625afa"
         background={mode === 'week' ? '#625afa' : 'rgba(98,90,250,0.2)'}
       >
-        <img
-          src={rankingAsset(mode, 'icon-week.svg')}
-          alt=""
-          aria-hidden="true"
-          className="absolute h-[19px] w-[23px]"
-          style={{ left: 18, top: 14 }}
-        />
+        <ExactCrownIcon color={mode === 'week' ? '#ffffff' : '#625afa'} left={18} top={17} />
         <span
           className="absolute -translate-x-1/2 whitespace-nowrap text-[24px] leading-normal text-white"
           style={{ left: 135, top: 10, fontFamily: F_BOLD, letterSpacing: 0 }}
@@ -1246,6 +1237,42 @@ function ExactRankingToolbar({
         </span>
       </ExactToolbarButton>
     </div>
+  );
+}
+
+function ExactSearchIcon({ mode }: { mode: RankingMode }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute flex h-[31.113px] w-[31.113px] items-center justify-center"
+      style={{ left: 'calc(28% + 55.4px)', top: 404 }}
+    >
+      <div style={{ transform: 'rotate(-45deg)', flex: 'none' }}>
+        <div className="relative h-[26px] w-[18px]">
+          <div className="absolute inset-[0_0_-7.69%_0]">
+            <img alt="" className="block h-full w-full max-w-none" src={rankingAsset(mode, 'search.svg')} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExactCrownIcon({ color, left, top }: { color: string; left: number; top: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="absolute h-[19px] w-[23px]"
+      style={{ left, top }}
+      viewBox="0 0 23 19"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M23 19H0V0L4.79167 9.5L3.83333 14.725L11.8966 0L17.25 9.5L16.7708 14.725L23 0V19Z"
+        fill={color}
+      />
+    </svg>
   );
 }
 
@@ -1339,7 +1366,7 @@ function ExactHeroFeature({ mode, copy, note }: { mode: RankingMode; copy: strin
         className="absolute z-[3] h-[65px] w-[292px] rounded-[50px] border border-[#ff1654] bg-[#ff1654]/[0.23] text-white shadow-[inset_0_4px_4px_rgba(255,255,255,0.14),inset_0_-4px_4px_rgba(0,0,0,0.25)]"
         style={{
           left: isWeek ? 'calc(24% + 7.2px)' : 'calc(24% + 11.2px)',
-          top: 727,
+          top: 741,
           fontFamily: "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif",
           letterSpacing: 0,
         }}
@@ -1482,12 +1509,14 @@ function ExactRankingCard({
         style={{ left: layout.avatarLeft, top: layout.avatarTop }}
       />
       <p
-        className="absolute m-0 h-[58px] w-[317.272px] overflow-hidden text-[24px] leading-normal text-white"
+        className="absolute m-0 h-[70px] w-[317.272px] overflow-hidden text-[24px] text-white"
         style={{
           left: layout.titleLeft,
           top: layout.titleTop,
           fontFamily: F_BOLD,
           letterSpacing: 0,
+          lineHeight: '31px',
+          paddingBottom: 8,
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
@@ -1499,7 +1528,7 @@ function ExactRankingCard({
         className="absolute m-0 h-[22.567px] w-[71.685px] overflow-hidden whitespace-nowrap text-[14px] leading-normal text-white/50"
         style={{
           left: layout.authorLeft,
-          top: layout.authorTop,
+          top: layout.authorTop + 8,
           fontFamily: "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif",
           letterSpacing: 0,
         }}
