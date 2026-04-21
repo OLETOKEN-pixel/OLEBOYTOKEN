@@ -730,11 +730,11 @@ function HighlightsToolbar({
   );
 }
 
-function RankingTitle({ children, wide = false }: { children: string; wide?: boolean }) {
+function RankingTitle({ children }: { children: string; wide?: boolean }) {
   const [titlePrefix, titleSuffix] = children.split(' - ');
 
   return (
-    <div className="relative z-[2] max-w-full">
+    <div className="relative z-[2] inline-block max-w-full">
       <img
         src="/highlights/title-triangles.svg"
         alt=""
@@ -758,7 +758,7 @@ function RankingTitle({ children, wide = false }: { children: string; wide?: boo
         src="/highlights/title-underline.svg"
         alt=""
         aria-hidden="true"
-        className={`mt-[-7px] h-[12px] max-w-full xl:mt-[-10px] xl:h-[16px] ${wide ? 'w-full xl:w-[1188px]' : 'w-[min(100%,620px)] xl:w-[620px]'}`}
+        className="mt-[-7px] h-[12px] w-full max-w-full xl:mt-[-10px] xl:h-[16px]"
       />
     </div>
   );
@@ -802,7 +802,7 @@ function HighlightsRankingPage({
 
   return (
     <div className="w-full bg-[#0f0404] text-white">
-      <section className="relative overflow-hidden px-5 pb-20 pt-[172px] xl:min-h-[2529px] xl:px-0 xl:pb-0 xl:pt-0">
+      <section className="relative isolate overflow-hidden px-5 pb-20 pt-[172px] xl:min-h-[2529px] xl:px-0 xl:pb-0 xl:pt-0">
         <img
           src="/figma-assets/figma-neon.png"
           alt=""
@@ -813,7 +813,7 @@ function HighlightsRankingPage({
         <div className="relative xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[233px]">
           <RankingTitle wide>{title}</RankingTitle>
         </div>
-        <div className="relative mt-9 xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[396px] xl:mt-0 xl:w-[calc(88%_-_11.2px)]">
+        <div className="relative z-[5] mt-9 xl:absolute xl:left-[calc(12%_+_5.6px)] xl:top-[396px] xl:mt-0 xl:w-[calc(88%_-_11.2px)]">
           <HighlightsToolbar
             activeTab={mode}
             query={query}
@@ -827,7 +827,7 @@ function HighlightsRankingPage({
           src="/highlights/star-shape.svg"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute -left-[98px] top-[560px] h-[430px] w-[625px] -rotate-[15deg] object-contain opacity-90 xl:left-[calc(8%_+_14.4px)] xl:top-[383px] xl:h-[596px] xl:w-[866px]"
+          className="pointer-events-none absolute -left-[98px] top-[620px] z-0 h-[430px] w-[625px] -rotate-[15deg] object-contain opacity-90 xl:left-[calc(8%_+_14.4px)] xl:top-[500px] xl:h-[596px] xl:w-[866px]"
         />
         <p
           className="relative z-[2] mt-20 max-w-[350px] whitespace-pre-line text-[34px] leading-[36px] text-white sm:max-w-[520px] sm:text-[42px] sm:leading-[43px] xl:absolute xl:left-[calc(12%_+_11.6px)] xl:top-[598px] xl:mt-0 xl:max-w-none xl:text-[48px] xl:leading-[47px]"
@@ -879,7 +879,7 @@ function HighlightsRankingPage({
               <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
             </div>
           ) : nominees.length > 0 ? (
-            <div className="relative mt-12 grid grid-cols-1 justify-items-center gap-y-14 lg:grid-cols-2 lg:gap-x-10 xl:absolute xl:left-1/2 xl:top-[452px] xl:mt-0 xl:grid-cols-2 xl:justify-items-start xl:gap-x-[196px] xl:gap-y-[92px] xl:-translate-x-1/2">
+            <div className="relative mt-12 grid grid-cols-1 justify-items-center gap-y-14 lg:grid-cols-2 lg:gap-x-10 xl:absolute xl:left-[calc(16%_+_41.8px)] xl:top-[452px] xl:mt-0 xl:grid-cols-2 xl:justify-items-start xl:gap-x-[196px] xl:gap-y-[92px]">
               {nominees.map((highlight, index) => (
                 <HighlightCardView
                   key={highlight.id}
@@ -941,7 +941,7 @@ function HighlightCardView({
   const isLarge = size === 'large';
 
   return (
-    <article className={`relative w-full ${isLarge ? 'max-w-[531px]' : 'max-w-[400px]'}`}>
+    <article className={`relative ${isLarge ? 'w-[min(100%,531px)] xl:w-[531px]' : 'w-full max-w-[400px] xl:w-[400px]'}`}>
       {rank ? <RankBadge rank={rank} /> : null}
       <button
         type="button"
