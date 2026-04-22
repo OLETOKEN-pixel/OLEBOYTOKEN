@@ -550,7 +550,7 @@ export default function Highlights() {
                       alt=""
                       aria-hidden="true"
                       className="h-[17px] w-[19px]"
-                      style={{ filter: playerVideoVotedThis ? undefined : 'brightness(0) invert(1)' }}
+                      style={{ filter: 'brightness(0) invert(1)' }}
                     />
                     <span>{formatVoteCount(playerVideoVotes)}</span>
                   </button>
@@ -1581,7 +1581,7 @@ function ExactRankingCard({
         style={{
           left: layout.likeIconLeft,
           top: layout.likeIconTop,
-          filter: votedThis ? undefined : 'brightness(0) invert(1)',
+          filter: 'brightness(0) invert(1)',
         }}
       />
       <p
@@ -1756,7 +1756,7 @@ function HighlightCardView({
             alt=""
             aria-hidden="true"
             className={isLarge ? 'h-[19px] w-[22px]' : 'h-4 w-[18px]'}
-            style={{ filter: votedThis ? undefined : 'brightness(0) invert(1)' }}
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
           <span>{formatVoteCount(totalVotes)}</span>
         </button>
