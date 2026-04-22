@@ -30,6 +30,7 @@ import MyMatches from "./pages/MyMatches";
 import Profile from "./pages/Profile";
 import Wallet from "./pages/Wallet";
 import Highlights from "./pages/Highlights";
+import Teams from "./pages/Teams";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -123,6 +124,7 @@ function App() {
                 <Route path="/highlights" element={<Highlights />} />
                 <Route path="/highlights/week" element={<Highlights />} />
                 <Route path="/highlights/month" element={<Highlights />} />
+                <Route path="/teams" element={<Teams />} />
                 <Route path="/my-matches" element={<MyMatches />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/wallet" element={<Wallet />} />

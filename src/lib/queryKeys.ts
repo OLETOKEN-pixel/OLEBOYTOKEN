@@ -8,6 +8,8 @@ export const queryKeys = {
   },
   teams: {
     all: ['teams'] as const,
+    page: (search: string, userId?: string | null) => [...queryKeys.teams.all, 'page', search, userId ?? 'guest'] as const,
+    invites: (userId: string) => [...queryKeys.teams.all, 'invites', userId] as const,
     my: (userId: string) => [...queryKeys.teams.all, 'my', userId] as const,
     detail: (id: string) => [...queryKeys.teams.all, 'detail', id] as const,
   },

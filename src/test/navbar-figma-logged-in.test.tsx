@@ -47,6 +47,12 @@ vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => isMobileState.value,
 }));
 
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
+  },
+}));
+
 describe('NavbarFigmaLoggedIn', () => {
   beforeEach(() => {
     isMobileState.value = false;
@@ -94,6 +100,19 @@ describe('NavbarFigmaLoggedIn', () => {
     fireEvent.click(screen.getByRole('button', { name: 'MATCHES' }));
 
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/|s-matches');
+  });
+
+  it('routes teams clicks to the standalone teams page', () => {
+    render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <NavbarFigmaLoggedIn />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'teams' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/teams|');
   });
 
   it('routes the desktop profile dropdown to My Matches', async () => {

@@ -48,7 +48,7 @@ export type ResultChoice = 'WIN' | 'LOSS';
 
 export type PaymentMode = 'cover' | 'split';
 
-export type NotificationType = 'team_invite' | 'invite_accepted' | 'invite_declined' | 'removed_from_team' | 'member_left' | 'match_result';
+export type NotificationType = 'team_invite' | 'team_join_request' | 'invite_accepted' | 'invite_declined' | 'removed_from_team' | 'member_left' | 'match_result';
 
 export interface Profile {
   id: string;
@@ -161,6 +161,7 @@ export interface Team {
   tag: string;
   description: string | null;
   logo_url: string | null;
+  max_members?: number | null;
   owner_id: string;
   created_at: string;
   updated_at: string;
@@ -300,6 +301,74 @@ export interface TeamMemberWithBalance {
   role: string;
   balance: number;
   has_sufficient_balance: boolean;
+}
+
+export interface TeamPageRow {
+  id: string;
+  name: string;
+  tag: string;
+  logo_url: string | null;
+  max_members: number;
+  owner_id: string;
+  created_at: string | null;
+  member_count: number;
+  total_matches: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  current_user_status: TeamMemberStatus | null;
+  can_request: boolean;
+}
+
+export interface TeamPageMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  role: TeamMemberRole;
+  status: TeamMemberStatus;
+  created_at: string | null;
+  username: string;
+  avatar_url: string | null;
+  discord_avatar_url: string | null;
+  epic_username: string | null;
+  total_xp: number;
+}
+
+export interface TeamDetailView {
+  id: string;
+  name: string;
+  tag: string;
+  logo_url: string | null;
+  owner_id: string;
+  max_members: number;
+  member_count: number;
+  total_matches: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  current_user_role: TeamMemberRole | null;
+  current_user_status: TeamMemberStatus | null;
+  can_manage: boolean;
+  can_kick: boolean;
+  can_request: boolean;
+}
+
+export type TeamInviteKind = 'invite' | 'request';
+
+export interface TeamInviteRow {
+  id: string;
+  kind: TeamInviteKind;
+  team_id: string;
+  team_name: string;
+  team_logo_url: string | null;
+  target_user_id: string;
+  target_username: string;
+  target_avatar_url: string | null;
+  target_epic_username: string | null;
+  target_total_xp: number;
+  status: TeamMemberStatus;
+  created_at: string | null;
+  win_rate: number;
 }
 
 // Constants

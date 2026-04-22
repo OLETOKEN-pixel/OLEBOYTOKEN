@@ -1199,6 +1199,7 @@ export type Database = {
           description: string | null
           id: string
           logo_url: string | null
+          max_members: number
           name: string
           owner_id: string
           tag: string
@@ -1209,6 +1210,7 @@ export type Database = {
           description?: string | null
           id?: string
           logo_url?: string | null
+          max_members?: number
           name: string
           owner_id: string
           tag: string
@@ -1219,6 +1221,7 @@ export type Database = {
           description?: string | null
           id?: string
           logo_url?: string | null
+          max_members?: number
           name?: string
           owner_id?: string
           tag?: string
@@ -1857,7 +1860,10 @@ export type Database = {
         Args: { p_match_id: string; p_storage_path: string }
         Returns: Json
       }
-      create_team: { Args: { p_name: string }; Returns: Json }
+      create_team: {
+        Args: { p_logo_url?: string | null; p_max_members?: number; p_name: string }
+        Returns: Json
+      }
       create_team_match:
         | {
             Args: {
@@ -1979,6 +1985,8 @@ export type Database = {
       get_player_profile_view: { Args: { p_user_id: string }; Returns: Json }
       get_player_rank: { Args: { p_user_id: string }; Returns: number }
       get_player_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_team_detail: { Args: { p_team_id: string }; Returns: Json }
+      get_team_invites: { Args: never; Returns: Json }
       get_team_members: { Args: { p_team_id: string }; Returns: Json }
       get_team_members_with_balance: {
         Args: { p_team_id: string }
@@ -1990,6 +1998,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      get_teams_page: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: Json
       }
       get_user_challenges: { Args: { p_type?: string }; Returns: Json }
       get_user_xp: { Args: never; Returns: number }
@@ -2085,6 +2097,14 @@ export type Database = {
       }
       respond_to_invite: {
         Args: { p_action: string; p_team_id: string }
+        Returns: Json
+      }
+      respond_to_team_request: {
+        Args: { p_action: string; p_team_id: string; p_user_id: string }
+        Returns: Json
+      }
+      request_join_team: {
+        Args: { p_team_id: string }
         Returns: Json
       }
       search_players_public: {
