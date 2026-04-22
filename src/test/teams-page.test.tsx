@@ -135,6 +135,7 @@ const managedDetailPayload = {
   success: true,
   team: {
     ...detailPayload.team,
+    owner_id: 'user-current',
     current_user_role: 'owner',
     current_user_status: 'accepted',
     can_manage: true,
@@ -142,7 +143,10 @@ const managedDetailPayload = {
     can_request: false,
   },
   members: [
-    detailPayload.members[0],
+    {
+      ...detailPayload.members[0],
+      user_id: 'user-current',
+    },
     {
       id: 'member-mary',
       team_id: 'team-red',
@@ -244,6 +248,7 @@ describe('Teams page', () => {
       if (name === 'respond_to_team_request') return { data: { success: true }, error: null };
       if (name === 'respond_to_invite') return { data: { success: true }, error: null };
       if (name === 'remove_team_member') return { data: { success: true }, error: null };
+      if (name === 'delete_team') return { data: { success: true }, error: null };
       return { data: { success: true }, error: null };
     });
   });
@@ -322,5 +327,44 @@ describe('Teams page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Mary' }));
 
     expect(await screen.findByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-mary');
+  });
+
+  it('lets the owner delete a team from my team', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    rpcMock.mockImplementation(async (name: string) => {
+      if (name === 'get_teams_page') return { data: teamsPayload, error: null };
+      if (name === 'get_team_detail') return { data: managedDetailPayload, error: null };
+      if (name === 'delete_team') return { data: { success: true }, error: null };
+      return { data: { success: true }, error: null };
+    });
+
+    renderTeams();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'MY TEAM' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete Redline' }));
+
+    await waitFor(() => {
+      expect(rpcMock).toHaveBeenCalledWith('delete_team', { p_team_id: 'team-red' });
+    });
+    confirmSpy.mockRestore();
+  });
+
+  it('returns from my team to the team list without opening a team modal', async () => {
+    rpcMock.mockImplementation(async (name: string) => {
+      if (name === 'get_teams_page') return { data: teamsPayload, error: null };
+      if (name === 'get_team_detail') return { data: managedDetailPayload, error: null };
+      return { data: { success: true }, error: null };
+    });
+
+    renderTeams();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'MY TEAM' }));
+    expect(await screen.findByText('Redline - MANAGE')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'MY TEAM' }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Redline - MANAGE')).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'JOIN TEAM' })).not.toBeInTheDocument();
   });
 });

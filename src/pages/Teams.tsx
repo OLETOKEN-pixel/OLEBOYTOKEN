@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { FooterSection } from '@/components/home/sections/FooterSection';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
@@ -86,6 +86,7 @@ const buttonBase: CSSProperties = {
   gap: '8px',
   padding: '0 18px',
   textTransform: 'uppercase',
+  whiteSpace: 'nowrap',
 };
 
 const panelStyle: CSSProperties = {
@@ -409,7 +410,7 @@ function TableHeader({ mode }: { mode: 'teams' | 'members' | 'invites'; }) {
       style={{
         height: 75,
         display: 'grid',
-        gridTemplateColumns: mode === 'teams' ? '1.3fr 0.65fr 0.9fr 180px' : '1.25fr 0.65fr 0.8fr 190px',
+        gridTemplateColumns: mode === 'teams' ? '1.3fr 0.65fr 0.9fr 230px' : '1.25fr 0.65fr 0.8fr 190px',
         alignItems: 'center',
         padding: '0 49px',
         fontFamily: F_BOLD,
@@ -444,7 +445,7 @@ function TeamRow({
         background: 'transparent',
         color: '#fff',
         display: 'grid',
-        gridTemplateColumns: '1.3fr 0.65fr 0.9fr 180px',
+        gridTemplateColumns: '1.3fr 0.65fr 0.9fr 230px',
         alignItems: 'center',
         padding: '0 49px',
         cursor: 'pointer',
@@ -465,7 +466,7 @@ function TeamRow({
         <span
           style={{
             ...buttonBase,
-            width: 176,
+            width: 210,
             height: 47,
             fontSize: 18,
             pointerEvents: 'none',
@@ -1135,21 +1136,29 @@ function InvitesPanel({
 function MyTeamPanel({
   details,
   selectedTeamId,
+  currentUserId,
+  deletingTeamId,
   onSelectTeam,
   onKick,
+  onDeleteTeam,
   onProfile,
   onInvite,
 }: {
   details: TeamDetailResult[];
   selectedTeamId: string | null;
+  currentUserId?: string | null;
+  deletingTeamId?: string | null;
   onSelectTeam: (teamId: string) => void;
   onKick: (teamId: string, userId: string) => void;
+  onDeleteTeam: (teamId: string) => void;
   onProfile: (userId: string) => void;
   onInvite: (teamId: string) => void;
 }) {
   const selected = details.find((detail) => detail.team?.id === selectedTeamId) ?? details[0];
   const team = selected?.team;
   const members = selected?.members ?? [];
+  const isOwner = Boolean(currentUserId && team?.owner_id === currentUserId);
+  const isDeleting = Boolean(team && deletingTeamId === team.id);
 
   if (!team) {
     return <div style={panelStyle}><EmptyState label="No team yet" /></div>;
@@ -1179,8 +1188,39 @@ function MyTeamPanel({
           ))}
         </div>
       )}
-      <div style={{ height: details.length > 1 ? 59 : 75, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F_BOLD, fontSize: 18 }}>
+      <div style={{ height: details.length > 1 ? 59 : 75, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F_BOLD, fontSize: 18, position: 'relative' }}>
         {team.name} - MANAGE
+        {isOwner && (
+          <button
+            type="button"
+            aria-label={`Delete ${team.name}`}
+            disabled={isDeleting}
+            onClick={() => {
+              if (window.confirm(`Delete team "${team.name}"? This will remove the whole team.`)) {
+                onDeleteTeam(team.id);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              right: 49,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 47,
+              height: 47,
+              borderRadius: 8,
+              border: '1px solid #ff1654',
+              background: 'rgba(255,22,84,0.18)',
+              color: '#ff1654',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isDeleting ? 'default' : 'pointer',
+              opacity: isDeleting ? 0.65 : 1,
+            }}
+          >
+            {isDeleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+          </button>
+        )}
       </div>
       {members.map((member) => (
         <div
@@ -1339,6 +1379,31 @@ export default function Teams() {
     onError: (error: Error) => toast({ title: 'Kick failed', description: error.message, variant: 'destructive' }),
   });
 
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (teamId: string) => {
+      const { data, error } = await supabase.rpc('delete_team', { p_team_id: teamId });
+      if (error) throw new Error(error.message);
+      const result = data as { success?: boolean; error?: string } | null;
+      if (!result?.success) throw new Error(result?.error ?? 'Failed to delete team');
+    },
+    onSuccess: () => {
+      toast({ title: 'Team deleted' });
+      setSelectedTeamId(null);
+      setInviteTeamId(null);
+      setView('list');
+      queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
+    },
+    onError: (error: Error) => toast({ title: 'Delete team failed', description: error.message, variant: 'destructive' }),
+  });
+
+  const handleViewChange = (nextView: TeamsView) => {
+    setInviteTeamId(null);
+    if (nextView !== 'my') {
+      setSelectedTeamId(null);
+    }
+    setView(nextView);
+  };
+
   const title = view === 'list' ? 'TEAMS' : view === 'invites' ? 'TEAMS - INVITES' : 'TEAMS - MY TEAM';
 
   const panel = useMemo(() => {
@@ -1362,8 +1427,11 @@ export default function Teams() {
         <MyTeamPanel
           details={myTeamsQuery.data ?? []}
           selectedTeamId={selectedTeamId}
+          currentUserId={user.id}
+          deletingTeamId={deleteTeamMutation.isPending ? deleteTeamMutation.variables ?? null : null}
           onSelectTeam={setSelectedTeamId}
           onKick={(teamId, memberUserId) => kickMutation.mutate({ teamId, userId: memberUserId })}
+          onDeleteTeam={(teamId) => deleteTeamMutation.mutate(teamId)}
           onProfile={setProfileUserId}
           onInvite={setInviteTeamId}
         />
@@ -1387,6 +1455,7 @@ export default function Teams() {
     invitesQuery.isPending,
     invitesTab,
     kickMutation,
+    deleteTeamMutation,
     myTeamsQuery.data,
     myTeamsQuery.isPending,
     respondMutation,
@@ -1410,7 +1479,7 @@ export default function Teams() {
           <SectionTitle label={title} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 53 }}>
             <SearchBar value={search} onChange={setSearch} />
-            <ActionBar view={view} onView={setView} onCreate={() => setCreateOpen(true)} />
+            <ActionBar view={view} onView={handleViewChange} onCreate={() => setCreateOpen(true)} />
           </div>
           {panel}
           <button
