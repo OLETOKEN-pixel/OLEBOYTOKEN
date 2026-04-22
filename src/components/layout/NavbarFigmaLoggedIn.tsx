@@ -49,7 +49,6 @@ const PROFILE_AVATAR_FALLBACK = 'linear-gradient(135deg, rgba(255,255,255,0.11),
 const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   matches: '/matches',
   hls: '/highlights',
-  teams: '/teams',
 };
 
 type NavItem = keyof typeof NAV_SECTIONS;
@@ -128,11 +127,6 @@ export function NavbarFigmaLoggedIn() {
     activeRouteItem === item || activeSection === NAV_SECTIONS[item];
 
   const handleNavItemClick = (item: NavItem) => {
-    if (item === 'teams') {
-      navigate('/teams');
-      return;
-    }
-
     if (isOnHome) {
       scrollToSection(NAV_SECTIONS[item]);
     } else {

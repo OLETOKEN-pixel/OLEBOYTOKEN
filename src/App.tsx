@@ -66,6 +66,19 @@ function CanonicalDomainRedirect() {
   return null;
 }
 
+/**
+ * Resets scroll to top on every route change, EXCEPT when the caller passed
+ * a `scrollTo` state (handled by Index.tsx to scroll to a section instead).
+ */
+function ScrollToTopOnRouteChange() {
+  const { pathname, state } = useLocation();
+  useEffect(() => {
+    if ((state as { scrollTo?: string } | null)?.scrollTo) return;
+    window.scrollTo(0, 0);
+  }, [pathname, state]);
+  return null;
+}
+
 function GlobalBottomNeon() {
   const { pathname } = useLocation();
   const isMatchDetail = /^\/matches\/(?!create(?:\/|$))[^/]+$/.test(pathname);
@@ -102,6 +115,7 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <CanonicalDomainRedirect />
+            <ScrollToTopOnRouteChange />
             <AuthenticatedGlobalListeners />
             {/* Match detail uses its own Figma neon layer. */}
             <GlobalBottomNeon />
