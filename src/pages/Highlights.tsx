@@ -735,14 +735,14 @@ function HighlightsToolbar({
         label="TOP MONTH"
         tone="lime"
         icon={<img src="/highlights/icon-top-month.svg" alt="" aria-hidden="true" className="h-[19px] w-[23px]" />}
-        to="/highlights/month"
+        to={activeTab === 'month' ? '/highlights' : '/highlights/month'}
         active={activeTab === 'month'}
       />
       <ToolbarButton
         label="TOP WEEK"
         tone="purple"
         icon={<img src="/highlights/icon-top-week.svg" alt="" aria-hidden="true" className="h-[19px] w-[23px]" />}
-        to="/highlights/week"
+        to={activeTab === 'week' ? '/highlights' : '/highlights/week'}
         active={activeTab === 'week'}
       />
       <ToolbarButton
@@ -1198,7 +1198,7 @@ function ExactRankingToolbar({
       </ExactToolbarButton>
       <ExactToolbarButton
         as="link"
-        to="/highlights/month"
+        to={mode === 'month' ? '/highlights' : '/highlights/month'}
         label="TOP MONTH"
         left="calc(48% + 66.4px)"
         top={395}
@@ -1222,7 +1222,7 @@ function ExactRankingToolbar({
       </ExactToolbarButton>
       <ExactToolbarButton
         as="link"
-        to="/highlights/week"
+        to={mode === 'week' ? '/highlights' : '/highlights/week'}
         label="TOP WEEK"
         left="calc(64% + 26.2px)"
         top={395}

@@ -332,7 +332,7 @@ function ActionBar({
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
       <button
         type="button"
-        onClick={() => onView('my')}
+        onClick={() => onView(view === 'my' ? 'list' : 'my')}
         style={{
           ...buttonBase,
           width: 187,
@@ -345,7 +345,7 @@ function ActionBar({
       </button>
       <button
         type="button"
-        onClick={() => onView('invites')}
+        onClick={() => onView(view === 'invites' ? 'list' : 'invites')}
         style={{
           ...buttonBase,
           width: 156,
