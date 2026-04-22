@@ -17,15 +17,12 @@ export function useHighlightVotes() {
   const [isVoting, setIsVoting] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Per-highlight lock — prevents rapid double-clicks on the SAME button,
-  // but different highlights can be toggled in parallel.
-  const inflightRef = useRef<Set<string>>(new Set());
-  // Cooldown flag: suppress realtime refetches right after our own write
-  const cooldownRef = useRef(false);
+  // Serializes clicks per-highlight so rapid double-clicks on the same
+  // button don't fire two RPCs out of order. Different highlights can
+  // toggle in parallel.
+  const pendingRef = useRef<Map<string, Promise<void>>>(new Map());
 
   const fetchVotes = useCallback(async () => {
-    if (cooldownRef.current) return;
-
     try {
       const { data: allVotes, error } = await supabase
         .from('highlight_votes')
@@ -43,8 +40,13 @@ export function useHighlightVotes() {
         }
       });
 
-      setVoteCounts(counts);
-      setUserVotedIds(myVotes);
+      // Skip applying server state if a vote is mid-flight — we'd clobber
+      // the optimistic update with a DB view that may not yet reflect the
+      // user's in-progress toggle.
+      if (pendingRef.current.size === 0) {
+        setVoteCounts(counts);
+        setUserVotedIds(myVotes);
+      }
     } catch (error) {
       console.error('Error fetching votes:', error);
     } finally {
@@ -61,9 +63,7 @@ export function useHighlightVotes() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'highlight_votes' },
         () => {
-          if (!cooldownRef.current) {
-            fetchVotes();
-          }
+          fetchVotes();
         }
       )
       .subscribe();
@@ -78,53 +78,43 @@ export function useHighlightVotes() {
     return userVotedIds.has(highlightId) ? 'VOTED_THIS' : 'NOT_VOTED';
   }, [user, userVotedIds]);
 
-  const toggleVote = useCallback(async (highlightId: string) => {
-    if (!user) {
-      toast({ title: 'Login required', description: 'Please login to vote', variant: 'destructive' });
-      return;
-    }
-    if (inflightRef.current.has(highlightId)) return;
-    inflightRef.current.add(highlightId);
-    cooldownRef.current = true;
+  const runToggle = useCallback(async (highlightId: string) => {
     setIsVoting(true);
 
-    const wasVoted = userVotedIds.has(highlightId);
-    const prevVotedIds = new Set(userVotedIds);
-    const prevCounts = { ...voteCounts };
+    // Capture state INSIDE the updater so the rollback values reflect the
+    // state at the moment this toggle actually runs (queued toggles see
+    // fresh state, not the state when they were scheduled).
+    let wasVoted = false;
+    let prevVotedIds: Set<string> = new Set();
+    let prevCounts: VoteCounts = {};
 
-    // Optimistic update
     setUserVotedIds((prev) => {
+      prevVotedIds = new Set(prev);
+      wasVoted = prev.has(highlightId);
       const next = new Set(prev);
       if (wasVoted) next.delete(highlightId);
       else next.add(highlightId);
       return next;
     });
-    setVoteCounts((prev) => ({
-      ...prev,
-      [highlightId]: Math.max(0, (prev[highlightId] || 0) + (wasVoted ? -1 : 1)),
-    }));
+    setVoteCounts((prev) => {
+      prevCounts = { ...prev };
+      return {
+        ...prev,
+        [highlightId]: Math.max(0, (prev[highlightId] || 0) + (wasVoted ? -1 : 1)),
+      };
+    });
 
     try {
       const { data, error } = await supabase.rpc('vote_highlight', {
         p_highlight_id: highlightId,
       });
-
       if (error) throw error;
-
       const result = data as { success: boolean; action?: string; error?: string };
       if (!result.success) {
         throw new Error(result.error || 'Vote failed');
       }
-
-      const expectedAction = wasVoted ? 'unvoted' : 'voted';
-      if (result.action !== expectedAction) {
-        // Server state diverged — refetch ground truth
-        cooldownRef.current = false;
-        await fetchVotes();
-      }
     } catch (error: any) {
       console.error('Vote error:', error);
-      // Rollback optimistic
       setUserVotedIds(prevVotedIds);
       setVoteCounts(prevCounts);
       toast({
@@ -134,28 +124,34 @@ export function useHighlightVotes() {
       });
     } finally {
       setIsVoting(false);
-      setTimeout(() => {
-        cooldownRef.current = false;
-        inflightRef.current.delete(highlightId);
-        fetchVotes();
-      }, 1000);
     }
-  }, [user, userVotedIds, voteCounts, fetchVotes, toast]);
+  }, [toast]);
 
-  // Backwards-compatible API: castVote / removeVote now just route to toggle.
-  // switchVote is kept as an alias for castVote (no more switch semantics).
-  const castVote = useCallback(async (highlightId: string) => {
-    await toggleVote(highlightId);
-  }, [toggleVote]);
+  const toggleVote = useCallback(async (highlightId: string) => {
+    if (!user) {
+      toast({ title: 'Login required', description: 'Please login to vote', variant: 'destructive' });
+      return;
+    }
 
-  const removeVote = useCallback(async (highlightId?: string) => {
-    if (!highlightId) return;
-    await toggleVote(highlightId);
-  }, [toggleVote]);
+    // Chain onto the previous in-flight toggle for this highlight so rapid
+    // clicks are serialized (not dropped). Each click applies.
+    const previous = pendingRef.current.get(highlightId) ?? Promise.resolve();
+    const next = previous.then(() => runToggle(highlightId));
+    pendingRef.current.set(highlightId, next);
+    try {
+      await next;
+    } finally {
+      if (pendingRef.current.get(highlightId) === next) {
+        pendingRef.current.delete(highlightId);
+      }
+    }
+  }, [user, toast, runToggle]);
 
-  const switchVote = useCallback(async (highlightId: string) => {
-    await toggleVote(highlightId);
-  }, [toggleVote]);
+  // Backwards-compatible aliases — callers don't have to care about the
+  // toggle semantics; they just pass the id of the button that was clicked.
+  const castVote = useCallback((id: string) => toggleVote(id), [toggleVote]);
+  const removeVote = useCallback((id?: string) => (id ? toggleVote(id) : Promise.resolve()), [toggleVote]);
+  const switchVote = useCallback((id: string) => toggleVote(id), [toggleVote]);
 
   const topVoted = Object.entries(voteCounts).reduce(
     (top, [id, count]) => (count > (top.count || 0) ? { id, count } : top),
