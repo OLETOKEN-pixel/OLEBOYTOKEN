@@ -385,10 +385,10 @@ export const ENTRY_FEE_PRESETS = [0.5, 1, 5, 10, 25, 50] as const;
 export const PLATFORM_FEE = 0.05; // 5%
 
 export const COIN_PACKAGES: CoinPackage[] = [
+  { id: 'pack-3', coins: 3, price: 3 },
   { id: 'pack-5', coins: 5, price: 5 },
   { id: 'pack-10', coins: 10, price: 10, popular: true },
   { id: 'pack-15', coins: 15, price: 15 },
-  { id: 'pack-20', coins: 20, price: 20 },
   { id: 'pack-25', coins: 25, price: 25 },
   { id: 'pack-50', coins: 50, price: 50, bonus: 5 },
 ];

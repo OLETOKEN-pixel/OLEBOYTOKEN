@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLoadingGuard } from "@/components/common/AppLoadingGuard";
 import { GlobalMatchEventListener } from "@/components/common/GlobalMatchEventListener";
 import { getCanonicalRedirectUrl } from "@/lib/oauth";
+import { WalletPurchaseProvider } from "@/contexts/WalletPurchaseContext";
 
 // Pages
 import Index from "./pages/Index";
@@ -31,6 +32,8 @@ import Profile from "./pages/Profile";
 import Wallet from "./pages/Wallet";
 import Highlights from "./pages/Highlights";
 import Teams from "./pages/Teams";
+import BuyCoins from "./pages/BuyCoins";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,34 +122,38 @@ function App() {
             <AuthenticatedGlobalListeners />
             {/* Match detail uses its own Figma neon layer. */}
             <GlobalBottomNeon />
-            <AppLoadingGuard>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/epic/callback" element={<EpicCallback />} />
-                <Route path="/auth/twitter/callback" element={<TwitterCallback />} />
-                <Route path="/auth/twitch/callback" element={<TwitchCallback />} />
-                <Route path="/auth/discord/callback" element={<DiscordCallback />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/matches/:id" element={<AdminMatchDetail />} />
-                <Route path="/admin/users/:id" element={<AdminUserDetail />} />
-                <Route path="/rules" element={<Rules />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/matches/create" element={<Matches />} />
-                <Route path="/matches/:id" element={<MatchDetail />} />
-                <Route path="/matches" element={<Matches />} />
-                <Route path="/highlights" element={<Highlights />} />
-                <Route path="/highlights/week" element={<Highlights />} />
-                <Route path="/highlights/month" element={<Highlights />} />
-                <Route path="/teams" element={<Teams />} />
-                <Route path="/my-matches" element={<MyMatches />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/comingsoon" element={<ComingSoon />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AppLoadingGuard>
+            <WalletPurchaseProvider>
+              <AppLoadingGuard>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/epic/callback" element={<EpicCallback />} />
+                  <Route path="/auth/twitter/callback" element={<TwitterCallback />} />
+                  <Route path="/auth/twitch/callback" element={<TwitchCallback />} />
+                  <Route path="/auth/discord/callback" element={<DiscordCallback />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/matches/:id" element={<AdminMatchDetail />} />
+                  <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+                  <Route path="/rules" element={<Rules />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/matches/create" element={<Matches />} />
+                  <Route path="/matches/:id" element={<MatchDetail />} />
+                  <Route path="/matches" element={<Matches />} />
+                  <Route path="/highlights" element={<Highlights />} />
+                  <Route path="/highlights/week" element={<Highlights />} />
+                  <Route path="/highlights/month" element={<Highlights />} />
+                  <Route path="/teams" element={<Teams />} />
+                  <Route path="/my-matches" element={<MyMatches />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/wallet" element={<Wallet />} />
+                  <Route path="/buy" element={<BuyCoins />} />
+                  <Route path="/payment/success" element={<PaymentSuccess />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/comingsoon" element={<ComingSoon />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AppLoadingGuard>
+            </WalletPurchaseProvider>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NavbarFigmaLoggedIn } from '@/components/layout/NavbarFigmaLoggedIn';
+import { WalletPurchaseProvider } from '@/contexts/WalletPurchaseContext';
 
 const { isMobileState } = vi.hoisted(() => ({
   isMobileState: {
@@ -141,5 +142,37 @@ describe('NavbarFigmaLoggedIn', () => {
     fireEvent.click(await screen.findByText('My Matches'));
 
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/my-matches|');
+  });
+
+  it('opens the wallet purchase overlay from the desktop plus button', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <WalletPurchaseProvider>
+          <NavbarFigmaLoggedIn />
+          <LocationProbe />
+        </WalletPurchaseProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open wallet purchase' }));
+
+    expect(screen.getByTestId('wallet-purchase-overlay')).toBeInTheDocument();
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/|');
+  });
+
+  it('opens the wallet purchase overlay from the mobile plus button', () => {
+    isMobileState.value = true;
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <WalletPurchaseProvider>
+          <NavbarFigmaLoggedIn />
+        </WalletPurchaseProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open wallet purchase' }));
+
+    expect(screen.getByTestId('wallet-purchase-overlay')).toBeInTheDocument();
   });
 });

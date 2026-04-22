@@ -6,6 +6,7 @@ import { getDiscordAvatarUrl } from '@/lib/avatar';
 import type { Match } from '@/types';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
+import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 
 interface HomeRegisteredMobileProps {
   displayName: string;
@@ -1029,6 +1030,7 @@ function ShopPrice({ price }: { price: string }) {
 
 function ShopMobile() {
   const navigate = useNavigate();
+  const { openWalletPurchase } = useWalletPurchase();
 
   return (
     <MobileSection
@@ -1074,7 +1076,7 @@ function ShopMobile() {
           </Panel>
         ))}
       </div>
-      <MobileCta onClick={() => navigate('/buy')} ariaLabel="Open shop page">SHOP</MobileCta>
+      <MobileCta onClick={openWalletPurchase} ariaLabel="Open shop page">SHOP</MobileCta>
     </MobileSection>
   );
 }

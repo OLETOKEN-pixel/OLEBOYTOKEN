@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { getLevel } from '@/lib/xp';
@@ -49,6 +50,7 @@ const PROFILE_AVATAR_FALLBACK = 'linear-gradient(135deg, rgba(255,255,255,0.11),
 const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   matches: '/matches',
   hls: '/highlights',
+  teams: '/teams',
 };
 
 type NavItem = keyof typeof NAV_SECTIONS;
@@ -56,6 +58,7 @@ type NavbarProfile = Profile & { level?: number | null };
 
 export function NavbarFigmaLoggedIn() {
   const { profile, wallet, signOut } = useAuth();
+  const { openWalletPurchase } = useWalletPurchase();
   const navbarProfile = profile as NavbarProfile | null;
   const location = useLocation();
   const navigate = useNavigate();
@@ -127,6 +130,11 @@ export function NavbarFigmaLoggedIn() {
     activeRouteItem === item || activeSection === NAV_SECTIONS[item];
 
   const handleNavItemClick = (item: NavItem) => {
+    if (item === 'teams') {
+      navigate('/teams');
+      return;
+    }
+
     if (isOnHome) {
       scrollToSection(NAV_SECTIONS[item]);
     } else {
@@ -144,7 +152,7 @@ export function NavbarFigmaLoggedIn() {
         navItems={navItems}
         isNavItemActive={isNavItemActive}
         onNavItemClick={handleNavItemClick}
-        onWalletClick={() => navigate('/wallet')}
+        onWalletClick={openWalletPurchase}
         onProfilePage={openProfilePage}
         onSignOut={handleSignOut}
       />
@@ -314,8 +322,8 @@ export function NavbarFigmaLoggedIn() {
           {/* RECHARGE "+" — Ellipse 16x16 at left:190, top:18 inside TAB */}
           <button
             type="button"
-            onClick={() => navigate('/wallet')}
-            aria-label="Open wallet page"
+            onClick={openWalletPurchase}
+            aria-label="Open wallet purchase"
             style={{
               position: 'absolute',
               left: '190px',
@@ -661,7 +669,7 @@ function NavbarFigmaLoggedInMobile({
           </span>
           <button
             type="button"
-            aria-label="Open wallet page"
+            aria-label="Open wallet purchase"
             onClick={onWalletClick}
             style={{
               width: '24px',

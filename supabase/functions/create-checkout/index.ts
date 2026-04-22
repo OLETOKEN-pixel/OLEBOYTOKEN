@@ -9,12 +9,32 @@ const corsHeaders = {
 };
 
 const logStep = (step: string, details?: unknown) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-const PROCESSING_FEE = 0.50; // Fixed €0.50 fee
-const MIN_COINS = 5; // Minimum purchase 5 coins
+const PROCESSING_FEE = 0.50; // Fixed EUR 0.50 fee
+const COIN_PACKAGES = [
+  { id: "pack-3", coins: 3, price: 3 },
+  { id: "pack-5", coins: 5, price: 5 },
+  { id: "pack-10", coins: 10, price: 10 },
+  { id: "pack-15", coins: 15, price: 15 },
+  { id: "pack-25", coins: 25, price: 25 },
+  { id: "pack-50", coins: 50, price: 50 },
+] as const;
+
+function resolveCoinPackage(body: { packageId?: string; amount?: number }) {
+  if (body.packageId) {
+    return COIN_PACKAGES.find((pack) => pack.id === body.packageId) ?? null;
+  }
+
+  if (typeof body.amount === "number") {
+    return COIN_PACKAGES.find((pack) => pack.coins === body.amount) ?? null;
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,7 +61,6 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("No authorization header");
@@ -53,7 +72,7 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       logStep("Auth error", authError);
       return new Response(
@@ -64,44 +83,42 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { amount } = await req.json();
-    
-    // Validation: minimum 5 coins
-    if (!amount || amount < MIN_COINS) {
-      logStep("Invalid amount", { amount, minRequired: MIN_COINS });
+    const payload = await req.json();
+    const coinPackage = resolveCoinPackage(payload);
+
+    if (!coinPackage) {
+      logStep("Invalid package", { packageId: payload?.packageId, amount: payload?.amount });
       return new Response(
-        JSON.stringify({ error: `Minimo acquisto: ${MIN_COINS} Coins (€${MIN_COINS})` }),
+        JSON.stringify({ error: "Invalid coin package." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const origin = resolveRequestOrigin(req.headers.get("origin"));
-    const totalAmount = amount + PROCESSING_FEE;
+    const totalAmount = coinPackage.price + PROCESSING_FEE;
 
-    logStep("Creating checkout session", { 
-      coins: amount, 
-      fee: PROCESSING_FEE, 
+    logStep("Creating checkout session", {
+      packageId: coinPackage.id,
+      coins: coinPackage.coins,
+      fee: PROCESSING_FEE,
       total: totalAmount,
-      origin 
+      origin,
     });
 
-    // Create Stripe checkout session
-    // Using customer_email to prefill but allowing modification
-    // NOT passing customer ID to allow email change
     const session = await stripe.checkout.sessions.create({
-      customer_email: user.email, // Prefill but editable
-      // Enable card and PayPal (if configured in Stripe dashboard)
-      payment_method_types: ["card", "paypal"],
-      
+      customer_email: user.email,
+      // Dynamic payment methods: Stripe shows every enabled compatible method
+      // from the Dashboard (cards, wallets, PayPal, Amazon Pay, etc.).
+      automatic_payment_methods: { enabled: true },
       line_items: [
         {
           price_data: {
             currency: "eur",
             product_data: {
-              name: `${amount} Coins`,
+              name: `${coinPackage.coins} Coins`,
               description: "OLEBOY TOKEN Gaming Coins",
             },
-            unit_amount: Math.round(amount * 100), // Cents
+            unit_amount: Math.round(coinPackage.price * 100),
           },
           quantity: 1,
         },
@@ -112,32 +129,33 @@ serve(async (req) => {
               name: "Commissione di servizio",
               description: "Processing fee",
             },
-            unit_amount: Math.round(PROCESSING_FEE * 100), // 50 cents
+            unit_amount: Math.round(PROCESSING_FEE * 100),
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `${origin}/payment/success?provider=stripe&success=true&coins=${amount}`,
+      success_url: `${origin}/payment/success?provider=stripe&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/buy?canceled=true`,
       metadata: {
         user_id: user.id,
-        coins: amount.toString(),
+        package_id: coinPackage.id,
+        coins: coinPackage.coins.toString(),
         fee: PROCESSING_FEE.toString(),
       },
     });
 
-    logStep("Checkout session created", { 
-      sessionId: session.id, 
+    logStep("Checkout session created", {
+      sessionId: session.id,
       mode: isLiveMode ? "LIVE" : "TEST",
-      paymentMethods: ["card", "paypal"]
+      packageId: coinPackage.id,
+      dynamicPaymentMethods: true,
     });
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logStep("ERROR", { message: errorMessage });

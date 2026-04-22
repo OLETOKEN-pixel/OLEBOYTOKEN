@@ -12,16 +12,24 @@ import { cn } from '@/lib/utils';
 interface VipModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onBuyCoins?: () => void;
 }
 
 const VIP_COST = 5;
 
-export function VipModal({ open, onOpenChange }: VipModalProps) {
+export function VipModal({ open, onOpenChange, onBuyCoins }: VipModalProps) {
   const { isVip, daysRemaining, expiresAt, purchaseVip, loading } = useVipStatus();
   const { wallet, refreshWallet, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [purchasing, setPurchasing] = useState(false);
+  const openBuyCoins = () => {
+    if (onBuyCoins) {
+      onBuyCoins();
+    } else {
+      navigate('/buy');
+    }
+  };
 
   const canAfford = (wallet?.balance ?? 0) >= VIP_COST;
 
@@ -33,8 +41,8 @@ export function VipModal({ open, onOpenChange }: VipModalProps) {
     }
 
     if (!canAfford) {
-      navigate('/buy');
       onOpenChange(false);
+      openBuyCoins();
       return;
     }
 
@@ -173,8 +181,8 @@ export function VipModal({ open, onOpenChange }: VipModalProps) {
             ) : (
               <Button 
                 onClick={() => {
-                  navigate('/buy');
                   onOpenChange(false);
+                  openBuyCoins();
                 }}
                 variant="outline"
                 className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"

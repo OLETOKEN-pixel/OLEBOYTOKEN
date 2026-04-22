@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 
 const imgStarShape = '/figma-assets/figma-star-shape.svg';
 const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
@@ -20,7 +20,7 @@ const CARD_WIDTH = 227;
 const CARD_GAP = 60;
 
 export const ShopSection = () => {
-  const navigate = useNavigate();
+  const { openWalletPurchase } = useWalletPurchase();
 
   return (
     <div id="s-shop" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
@@ -45,7 +45,7 @@ export const ShopSection = () => {
           />
 
           <button
-            onClick={() => navigate('/buy')}
+            onClick={openWalletPurchase}
             className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex items-center justify-center bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040] cursor-pointer"
           >
             <div className="flex items-center gap-[11px]">

@@ -106,6 +106,7 @@ const mocks = vi.hoisted(() => {
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: mocks.fromMock,
+    rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
   },
 }));
 
@@ -256,7 +257,7 @@ describe('NavbarFigmaLoggedIn mobile navigation', () => {
 
     expect(container.querySelector('[data-mobile-navbar="logged-in"]')).not.toBeNull();
     expect(screen.getByLabelText('Wallet balance')).toHaveTextContent('17.50');
-    expect(screen.getByRole('button', { name: 'Open wallet page' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open wallet purchase' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open profile menu' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
   });
