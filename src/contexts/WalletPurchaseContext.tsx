@@ -15,6 +15,7 @@ import { VipModal } from '@/components/vip/VipModal';
 import { COIN_PACKAGES } from '@/types';
 import type { CoinPackage } from '@/types';
 import { redirectToCheckout } from '@/lib/checkoutRedirect';
+import { extractFunctionErrorMessage } from '@/lib/oauth';
 
 type WalletPurchaseContextValue = {
   openWalletPurchase: () => void;
@@ -115,7 +116,7 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
 
       redirectToCheckout(checkoutUrl);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to start checkout.';
+      const message = await extractFunctionErrorMessage(error, 'Unable to start checkout.');
       toast({
         title: 'Checkout error',
         description: message,

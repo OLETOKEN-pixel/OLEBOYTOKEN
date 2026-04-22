@@ -132,4 +132,11 @@ describe('active app brand hygiene', () => {
       expect(supabaseTypes).not.toContain(fragment);
     }
   });
+
+  it('keeps Stripe Checkout using dashboard dynamic payment methods', () => {
+    const content = readProjectFile('supabase/functions/create-checkout/index.ts');
+
+    expect(content).not.toContain('payment_method_types');
+    expect(content).not.toContain('automatic_payment_methods');
+  });
 });

@@ -107,9 +107,8 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
-      // Dynamic payment methods: Stripe shows every enabled compatible method
-      // from the Dashboard (cards, wallets, PayPal, Amazon Pay, etc.).
-      automatic_payment_methods: { enabled: true },
+      // Stripe Checkout uses the Dashboard-configured dynamic payment methods
+      // when no fixed payment method list is sent.
       line_items: [
         {
           price_data: {
@@ -158,10 +157,35 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logStep("ERROR", { message: errorMessage });
+    const stripeError = error as {
+      statusCode?: number;
+      code?: string;
+      requestId?: string;
+      type?: string;
+    };
+    const status =
+      typeof stripeError.statusCode === "number" &&
+      stripeError.statusCode >= 400 &&
+      stripeError.statusCode < 600
+        ? stripeError.statusCode
+        : 500;
+
+    logStep("ERROR", {
+      message: errorMessage,
+      status,
+      code: stripeError.code,
+      stripeRequestId: stripeError.requestId,
+      type: stripeError.type,
+    });
+
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        error: errorMessage,
+        code: stripeError.code ?? null,
+        stripeRequestId: stripeError.requestId ?? null,
+        type: stripeError.type ?? null,
+      }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
