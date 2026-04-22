@@ -254,6 +254,9 @@ describe('Teams page', () => {
     expect(await screen.findByText('Redline')).toBeInTheDocument();
     expect(screen.getByText('2/4')).toBeInTheDocument();
     expect(screen.getByText('75.00%')).toBeInTheDocument();
+    expect(screen.getByText('REQUEST JOIN')).toBeInTheDocument();
+    expect(screen.getByText('VIEW TEAM')).toBeInTheDocument();
+    expect(screen.queryByText('ACCEPTED')).not.toBeInTheDocument();
     expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'Search a team');
     expect(screen.getByRole('button', { name: /refresh/i })).toBeInTheDocument();
     expect(screen.getByTestId('teams-footer')).toBeInTheDocument();

@@ -157,6 +157,13 @@ function getStatusLabel(status?: TeamMemberStatus | null) {
   return 'REJECTED';
 }
 
+function getTeamRowActionLabel(team: TeamPageRow) {
+  if (team.current_user_status === 'pending') return 'REQUESTED';
+  if (team.current_user_status === 'accepted') return 'VIEW TEAM';
+  if (team.member_count >= team.max_members) return 'FULL';
+  return 'REQUEST JOIN';
+}
+
 function TeamLogo({ url, name, size = 68 }: { url?: string | null; name: string; size?: number }) {
   const style: CSSProperties = {
     width: `${size}px`,
@@ -223,6 +230,8 @@ function PlayerAvatar({
 }
 
 function SectionTitle({ label }: { label: string }) {
+  const underlineWidth = label.includes('-') ? 1120 : 529;
+
   return (
     <div style={{ position: 'relative', height: 187, marginLeft: '-71px', marginBottom: '52px' }}>
       <img
@@ -248,18 +257,19 @@ function SectionTitle({ label }: { label: string }) {
         {label}
       </h1>
       <div
+        aria-hidden="true"
         style={{
           position: 'absolute',
           left: 59,
-          top: 167,
-          width: label.includes('-') ? 1168 : 529,
-          height: 22,
-          overflow: 'hidden',
-          transform: 'rotate(-0.2deg)',
+          top: 170,
+          width: underlineWidth,
+          height: 8,
+          background: '#ff1654',
+          clipPath: 'polygon(0 46%, 100% 0, 100% 100%, 0 100%)',
+          transform: 'rotate(-0.25deg)',
+          transformOrigin: 'left center',
         }}
-      >
-        <img src={`${TEAMS_ASSETS}/title-outline.svg`} alt="" aria-hidden="true" style={{ width: '100%', height: '100%' }} />
-      </div>
+      />
     </div>
   );
 }
@@ -410,15 +420,16 @@ function TeamRow({
         <span
           style={{
             ...buttonBase,
-            width: team.current_user_status ? 176 : 156,
+            width: 176,
             height: 47,
-            fontSize: 20,
+            fontSize: 18,
             pointerEvents: 'none',
-            borderColor: team.current_user_status === 'accepted' ? '#ff1654' : '#ff1654',
-            opacity: team.current_user_status === 'rejected' ? 0.55 : 1,
+            borderColor: team.current_user_status === 'pending' ? '#625afa' : '#ff1654',
+            background: team.current_user_status === 'pending' ? 'rgba(98,90,250,0.18)' : 'rgba(255,22,84,0.2)',
+            opacity: team.member_count >= team.max_members && team.current_user_status !== 'accepted' ? 0.55 : 1,
           }}
         >
-          {getStatusLabel(team.current_user_status)}
+          {getTeamRowActionLabel(team)}
         </span>
       </span>
     </button>
