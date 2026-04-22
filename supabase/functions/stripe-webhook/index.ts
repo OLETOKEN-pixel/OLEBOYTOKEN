@@ -84,6 +84,46 @@ async function findWithdrawalRequest(
   return fallbackResult.data;
 }
 
+function parseCheckoutCoins(session: Stripe.Checkout.Session) {
+  const coins = Number.parseFloat(session.metadata?.coins || "");
+  return Number.isFinite(coins) && coins > 0 ? coins : null;
+}
+
+async function creditCheckoutSession(
+  supabase: ReturnType<typeof createClient>,
+  session: Stripe.Checkout.Session
+) {
+  const userId = session.metadata?.user_id;
+  const coins = parseCheckoutCoins(session);
+
+  if (!userId || !coins) {
+    return { response: new Response("Missing metadata", { status: 400 }) };
+  }
+
+  if (session.payment_status !== "paid") {
+    logStep("Checkout session not paid yet", {
+      sessionId: session.id,
+      status: session.status,
+      paymentStatus: session.payment_status,
+    });
+    return { result: { pending: true } };
+  }
+
+  const { data, error } = await supabase.rpc("credit_stripe_checkout_session", {
+    p_user_id: userId,
+    p_session_id: session.id,
+    p_coins: coins,
+    p_description: `Purchased ${coins} Coins via Stripe`,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  logStep("Checkout session credited", { sessionId: session.id, result: data });
+  return { result: data };
+}
+
 serve(async (req) => {
   const signature = req.headers.get("Stripe-Signature");
   const webhookSecrets = [
@@ -136,59 +176,10 @@ serve(async (req) => {
   logStep("Event received", { type: event.type, id: event.id, account: event.account ?? null });
 
   try {
-    if (event.type === "checkout.session.completed") {
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.user_id;
-      const coins = parseFloat(session.metadata?.coins || "0");
-
-      if (!userId || !coins) {
-        return new Response("Missing metadata", { status: 400 });
-      }
-
-      const { data: existingTx } = await supabase
-        .from("transactions")
-        .select("id")
-        .eq("stripe_session_id", session.id)
-        .maybeSingle();
-
-      if (!existingTx) {
-        const { data: wallet, error: walletError } = await supabase
-          .from("wallets")
-          .select("*")
-          .eq("user_id", userId)
-          .single();
-
-        if (walletError || !wallet) {
-          throw walletError || new Error("Wallet not found");
-        }
-
-        const newBalance = (wallet.balance || 0) + coins;
-
-        const { error: updateError } = await supabase
-          .from("wallets")
-          .update({ balance: newBalance })
-          .eq("user_id", userId);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        const { error: txError } = await supabase
-          .from("transactions")
-          .insert({
-            user_id: userId,
-            type: "deposit",
-            amount: coins,
-            description: `Purchased ${coins} Coins via Stripe`,
-            stripe_session_id: session.id,
-            provider: "stripe",
-            status: "completed",
-          });
-
-        if (txError) {
-          throw txError;
-        }
-      }
+      const { response } = await creditCheckoutSession(supabase, session);
+      if (response) return response;
     }
 
     if (event.type === "account.updated" || event.type === "account.external_account.updated") {

@@ -3,6 +3,9 @@ project_id = "cqpazuydpoxpcayerwxi"
 [functions.create-checkout]
 verify_jwt = false
 
+[functions.confirm-checkout-session]
+verify_jwt = false
+
 [functions.stripe-webhook]
 verify_jwt = false
 
