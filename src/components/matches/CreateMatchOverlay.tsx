@@ -646,11 +646,11 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
   );
 
   const renderTeamsStep = () => (
-    <div className="mt-[24px] flex min-h-0 flex-1 flex-col">
+    <div className="mt-[22px] flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <section className="shrink-0">
           <FigmaSectionLabel>Select team:</FigmaSectionLabel>
-          <div className="mt-[12px] h-[158px] overflow-y-auto pr-2">
+          <div className="mt-[10px] h-[215px] overflow-y-auto pr-2">
             <TeamSelector
               teamSize={teamSize}
               entryFee={isEntryFeeValid ? normalizedEntryFee : 0.5}
@@ -661,9 +661,9 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
           </div>
         </section>
 
-        <section className="mt-[14px] shrink-0">
+        <section className="mt-[18px] shrink-0">
           <FigmaSectionLabel>Payment mode:</FigmaSectionLabel>
-          <div className="mt-[12px]">
+          <div className="mt-[10px]">
             <PaymentModeSelector
               paymentMode={paymentMode}
               onChangePaymentMode={setPaymentMode}
@@ -675,27 +675,17 @@ export function CreateMatchOverlay({ open, onClose, onCreated }: CreateMatchOver
           </div>
         </section>
 
-        <div className="mt-[12px] shrink-0 rounded-[18px] border border-white/10 bg-black/25 px-4 py-3">
-          <div className="flex items-start gap-3">
-            <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#ff6a8f]" />
-            <div className="space-y-1">
-              <p className="text-[15px] text-white/95" style={{ fontFamily: FONT_EXPANDED }}>
-                TEAM PAYMENT
-              </p>
-              <p className="text-[13px] leading-[1.15] text-white/70" style={{ fontFamily: FONT_REGULAR }}>
-                {teamCostCopy}
-              </p>
-            </div>
+        <div className="mt-[10px] shrink-0 rounded-[16px] border border-white/10 bg-[rgba(0,0,0,0.28)] px-[15px] py-[10px]">
+          <div className="flex min-w-0 items-center gap-[10px]">
+            <Users className="h-[16px] w-[16px] shrink-0 text-[#ff1654]" />
+            <p className="min-w-0 truncate text-[14px] text-white/72" style={{ fontFamily: FONT_REGULAR }}>
+              <span className="text-white" style={{ fontFamily: FONT_EXPANDED }}>
+                TEAM PAYMENT:
+              </span>{' '}
+              {teamsStepValid ? teamCostCopy : `Select a team to unlock the token step for ${teamSize}v${teamSize} matches.`}
+            </p>
           </div>
         </div>
-
-        {!teamsStepValid && (
-          <div className="mt-[10px] shrink-0">
-            <StatusNotice>
-              Select a team to unlock the token step for {teamSize}v{teamSize} matches.
-            </StatusNotice>
-          </div>
-        )}
       </div>
 
       <FooterAction label="NEXT STEP" onClick={handleNextStep} disabled={!teamsStepValid} spacing="tight" />
