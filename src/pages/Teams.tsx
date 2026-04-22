@@ -87,6 +87,24 @@ const buttonBase: CSSProperties = {
   padding: '0 18px',
   textTransform: 'uppercase',
   whiteSpace: 'nowrap',
+  outline: 'none',
+  boxShadow: 'none',
+  WebkitTapHighlightColor: 'transparent',
+};
+
+type TeamRealtimeChannel = {
+  on: (
+    event: 'postgres_changes',
+    filter: { event: string; schema: string; table: string },
+    callback: () => void,
+  ) => TeamRealtimeChannel;
+  subscribe: () => TeamRealtimeChannel;
+  unsubscribe?: () => unknown;
+};
+
+type TeamRealtimeClient = {
+  channel?: (topic: string) => TeamRealtimeChannel;
+  removeChannel?: (channel: TeamRealtimeChannel) => unknown;
 };
 
 const panelStyle: CSSProperties = {
@@ -378,6 +396,8 @@ function SearchBar({ value, onChange }: { value: string; onChange: (value: strin
         padding: '0 14px 0 18px',
         boxSizing: 'border-box',
         gap: 12,
+        outline: 'none',
+        boxShadow: 'none',
       }}
     >
       <input
@@ -393,9 +413,11 @@ function SearchBar({ value, onChange }: { value: string; onChange: (value: strin
           fontFamily: F_REGULAR,
           fontSize: 20,
           minWidth: 0,
+          boxShadow: 'none',
+          WebkitTapHighlightColor: 'transparent',
         }}
       />
-      <img src={`${TEAMS_ASSETS}/search-icon.svg`} alt="" aria-hidden="true" style={{ width: 26, height: 26 }} />
+      <img src={`${TEAMS_ASSETS}/search-icon.svg`} alt="" aria-hidden="true" style={{ width: 18, height: 28, objectFit: 'contain' }} />
     </label>
   );
 }
@@ -505,11 +527,13 @@ function ModalShell({
   children,
   width = 903,
   height,
+  radius = 18,
   onClose,
 }: {
   children: ReactNode;
   width?: number;
   height?: number;
+  radius?: number;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -545,7 +569,7 @@ function ModalShell({
           width: `min(${width}px, calc(100vw - 48px))`,
           minHeight: height,
           border: '1px solid #ff1654',
-          borderRadius: 8,
+          borderRadius: radius,
           background: '#282828',
           boxSizing: 'border-box',
           color: '#fff',
@@ -578,6 +602,32 @@ function ModalHeader({ title }: { title: string }) {
       </h2>
       <div style={{ width: '79%', height: 1, background: '#fff', margin: '18px auto 0' }} />
     </>
+  );
+}
+
+function UploadIconPlaceholder() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: 'relative',
+        width: 46,
+        height: 38,
+        display: 'block',
+        margin: '0 auto 6px',
+      }}
+    >
+      <img
+        src={`${TEAMS_ASSETS}/upload-arrow-stroke.svg`}
+        alt=""
+        style={{ position: 'absolute', left: 16, top: 0, width: 14, height: 19, transform: 'rotate(180deg)' }}
+      />
+      <img
+        src={`${TEAMS_ASSETS}/upload-vector.svg`}
+        alt=""
+        style={{ position: 'absolute', left: 12, top: 18, width: 22, height: 11 }}
+      />
+    </span>
   );
 }
 
@@ -656,8 +706,8 @@ function CreateTeamModal({
   return (
     <ModalShell onClose={onClose} width={903} height={745}>
       <ModalHeader title="CREATE TEAM" />
-      <form onSubmit={submit} style={{ width: 665, maxWidth: 'calc(100% - 96px)', margin: '58px auto 48px' }}>
-        <p style={{ margin: '0 0 14px', fontFamily: F_REGULAR, fontSize: 24 }}>Team profile:</p>
+      <form onSubmit={submit} style={{ width: 696, maxWidth: 'calc(100% - 96px)', margin: '58px auto 48px' }}>
+        <p style={{ margin: '0 0 14px', fontFamily: F_REGULAR, fontSize: 24 }}>Team&apos;s profile:</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
           <button
             type="button"
@@ -673,9 +723,20 @@ function CreateTeamModal({
               overflow: 'hidden',
               fontFamily: F_REGULAR,
               fontSize: 14,
+              fontStyle: 'oblique',
+              opacity: preview ? 1 : 0.7,
+              outline: 'none',
+              boxShadow: 'none',
             }}
           >
-            {preview ? <img src={preview} alt="Team logo preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'Upload Icon'}
+            {preview ? (
+              <img src={preview} alt="Team logo preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                <UploadIconPlaceholder />
+                Upload Icon
+              </span>
+            )}
           </button>
           <input
             ref={inputRef}
@@ -684,7 +745,7 @@ function CreateTeamModal({
             hidden
             onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
           />
-          <div style={{ flex: 1 }}>
+          <div style={{ width: 503 }}>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -692,15 +753,18 @@ function CreateTeamModal({
               style={{
                 width: '100%',
                 height: 59,
-                borderRadius: 12,
+                borderRadius: 18,
                 border: 0,
-                background: '#0f0f0f',
+                background: 'rgba(0,0,0,0.5)',
                 color: '#fff',
                 fontFamily: F_REGULAR,
+                fontStyle: 'oblique',
                 fontSize: 20,
                 padding: '0 24px',
                 boxSizing: 'border-box',
                 outline: 'none',
+                boxShadow: 'none',
+                WebkitTapHighlightColor: 'transparent',
               }}
             />
             <p style={{ margin: '7px 0 0', fontFamily: F_REGULAR, fontSize: 16, color: '#ff1654' }}>
@@ -721,8 +785,10 @@ function CreateTeamModal({
                 width: value === 4 ? 185 : 138,
                 height: 59,
                 borderColor: maxMembers === value ? '#ff1654' : 'transparent',
-                background: maxMembers === value ? '#8b0732' : '#0f0f0f',
+                background: maxMembers === value ? 'rgba(255,22,84,0.34)' : 'rgba(0,0,0,0.5)',
                 fontSize: 27,
+                borderRadius: 18,
+                color: '#fff',
               }}
             >
               {getSizeLabel(value)}
@@ -733,7 +799,20 @@ function CreateTeamModal({
         <button
           type="submit"
           disabled={createMutation.isPending}
-          style={{ ...buttonBase, width: 361, height: 69, margin: '0 auto', display: 'flex', fontSize: 32 }}
+          style={{
+            ...buttonBase,
+            width: 361,
+            height: 69,
+            margin: '0 auto',
+            display: 'flex',
+            borderRadius: 23,
+            borderColor: '#ff1654',
+            background: '#ff1654',
+            color: '#fff',
+            fontSize: 36,
+            fontFamily: "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial', sans-serif",
+            opacity: createMutation.isPending ? 0.7 : 1,
+          }}
         >
           {createMutation.isPending ? <Loader2 className="h-6 w-6 animate-spin" /> : 'CREATE TEAM'}
         </button>
@@ -903,6 +982,8 @@ function InvitePlayerModal({
             fontFamily: F_REGULAR,
             fontSize: 18,
             outline: 'none',
+            boxShadow: 'none',
+            WebkitTapHighlightColor: 'transparent',
           }}
         />
         <div style={{ marginTop: 18, display: 'grid', gap: 10 }}>
@@ -924,6 +1005,9 @@ function InvitePlayerModal({
                 padding: '0 14px',
                 cursor: 'pointer',
                 textAlign: 'left',
+                outline: 'none',
+                boxShadow: 'none',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
               <PlayerAvatar avatarUrl={player.avatar_url} username={player.username} size={44} />
@@ -1306,6 +1390,31 @@ export default function Teams() {
       return (result.teams ?? []).map(normalizeTeam);
     },
   });
+
+  useEffect(() => {
+    const realtime = supabase as unknown as TeamRealtimeClient;
+    if (!realtime.channel) return undefined;
+
+    const invalidateTeams = () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
+    };
+
+    const channel = realtime
+      .channel('teams-page-rankings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, invalidateTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, invalidateTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, invalidateTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'match_results' }, invalidateTeams)
+      .subscribe();
+
+    return () => {
+      if (realtime.removeChannel) {
+        realtime.removeChannel(channel);
+      } else {
+        channel.unsubscribe?.();
+      }
+    };
+  }, [queryClient]);
 
   const invitesQuery = useQuery({
     queryKey: user ? queryKeys.teams.invites(user.id) : ['teams', 'invites', 'guest'],

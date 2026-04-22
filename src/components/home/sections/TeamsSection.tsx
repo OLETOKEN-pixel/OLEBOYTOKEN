@@ -15,10 +15,37 @@ interface TeamDisplay {
   score: string;
 }
 
+interface TeamsPageRow {
+  name?: string | null;
+  logo_url?: string | null;
+  member_count?: number | null;
+  max_members?: number | null;
+}
+
+interface TeamsPageResult {
+  success?: boolean;
+  teams?: TeamsPageRow[];
+}
+
+type TeamRealtimeChannel = {
+  on: (
+    event: 'postgres_changes',
+    filter: { event: string; schema: string; table: string },
+    callback: () => void,
+  ) => TeamRealtimeChannel;
+  subscribe: () => TeamRealtimeChannel;
+  unsubscribe?: () => unknown;
+};
+
+type TeamRealtimeClient = {
+  channel?: (topic: string) => TeamRealtimeChannel;
+  removeChannel?: (channel: TeamRealtimeChannel) => unknown;
+};
+
 const PLACEHOLDERS: TeamDisplay[] = [
-  { rank: 1, name: '—', avatarUrl: null, score: '0/30' },
-  { rank: 2, name: '—', avatarUrl: null, score: '0/30' },
-  { rank: 3, name: '—', avatarUrl: null, score: '0/30' },
+  { rank: 1, name: '-', avatarUrl: null, score: '0/30' },
+  { rank: 2, name: '-', avatarUrl: null, score: '0/30' },
+  { rank: 3, name: '-', avatarUrl: null, score: '0/30' },
 ];
 
 export const TeamsSection = () => {
@@ -26,29 +53,57 @@ export const TeamsSection = () => {
   const [teams, setTeams] = useState<TeamDisplay[]>(PLACEHOLDERS);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchTeams = async () => {
       try {
-        const { data, error } = await supabase
-          .from('teams')
-          .select('id, name, avatar_url, member_count, max_members')
-          .order('member_count', { ascending: false })
-          .limit(3);
+        const { data, error } = await supabase.rpc('get_teams_page', {
+          p_search: '',
+          p_limit: 3,
+          p_offset: 0,
+        });
 
-        if (!error && data && data.length > 0) {
+        const result = data as TeamsPageResult | null;
+        if (!error && result?.success && result.teams && result.teams.length > 0 && mounted) {
           setTeams(
-            data.map((t: any, i: number) => ({
-              rank: i + 1,
-              name: t.name || `Team ${i + 1}`,
-              avatarUrl: t.avatar_url || null,
-              score: `${t.member_count ?? 0}/${t.max_members ?? 30}`,
-            }))
+            result.teams.slice(0, 3).map((team, index) => ({
+              rank: index + 1,
+              name: team.name || `Team ${index + 1}`,
+              avatarUrl: team.logo_url || null,
+              score: `${team.member_count ?? 0}/${team.max_members ?? 30}`,
+            })),
           );
         }
       } catch {
-        // silently keep placeholders
+        // Keep placeholders if the public team ranking cannot load.
       }
     };
+
     fetchTeams();
+
+    const realtime = supabase as unknown as TeamRealtimeClient;
+    if (!realtime.channel) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const channel = realtime
+      .channel('home-teams-rankings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, fetchTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, fetchTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'match_results' }, fetchTeams)
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      if (realtime.removeChannel) {
+        realtime.removeChannel(channel);
+      } else {
+        channel.unsubscribe?.();
+      }
+    };
   }, []);
 
   const TeamAvatar = ({ url, alt }: { url: string | null; alt: string }) =>
@@ -67,8 +122,6 @@ export const TeamsSection = () => {
   return (
     <div id="s-teams" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
       <div className="mt-[143px] w-[1573.42px] h-[746.11px] ml-[226px] relative">
-
-        {/* Nav arrows */}
         <div className="absolute w-[146px] h-[63px] top-[683px] left-[661px] flex gap-[19.9px] z-10">
           <button className="cursor-pointer bg-transparent border-none p-0 w-[63px] h-[63px] flex items-center justify-center" onClick={() => { const el = document.getElementById('s-highlights'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' }); }}>
             <img className="w-[63.11px] h-[63.11px] pointer-events-none" alt="Previous" src={imgBwArrow} />
@@ -78,7 +131,6 @@ export const TeamsSection = () => {
           </button>
         </div>
 
-        {/* Right side — star + CTA */}
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
           <img
             className="absolute top-[102px] left-[47px] w-[760px] h-[388px] rotate-[-15.44deg]"
@@ -103,7 +155,6 @@ export const TeamsSection = () => {
           </p>
         </div>
 
-        {/* Top 3 teams list */}
         <div className="absolute top-[257px] left-[53px] w-[531px] flex flex-col gap-[11px]">
           {teams.map((team) => (
             <div
@@ -135,7 +186,6 @@ export const TeamsSection = () => {
           ))}
         </div>
 
-        {/* Section title */}
         <img className="left-0 w-[682px] absolute top-0 h-[207px]" alt="" src={imgSpaccatoTitle} />
         <div className="absolute top-[65px] left-[79px] w-[797px] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-white text-8xl tracking-[0] leading-[normal] whitespace-nowrap">
           TEAMS

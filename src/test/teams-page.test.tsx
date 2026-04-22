@@ -249,6 +249,17 @@ describe('Teams page', () => {
       if (name === 'respond_to_invite') return { data: { success: true }, error: null };
       if (name === 'remove_team_member') return { data: { success: true }, error: null };
       if (name === 'delete_team') return { data: { success: true }, error: null };
+      if (name === 'search_users_for_invite') {
+        return {
+          data: [{
+            user_id: 'user-target',
+            username: 'Marv',
+            epic_username: 'Marv17',
+            avatar_url: 'https://cdn.discordapp.com/avatars/user-target/avatar.png',
+          }],
+          error: null,
+        };
+      }
       return { data: { success: true }, error: null };
     });
   });
@@ -272,8 +283,12 @@ describe('Teams page', () => {
     renderTeams();
 
     fireEvent.click(await screen.findByRole('button', { name: /^CREATE$/i }));
+    expect(document.querySelector('img[src="/figma-assets/teams/upload-arrow-stroke.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/teams/upload-vector.svg"]')).not.toBeNull();
+    expect(screen.getByPlaceholderText("Insert your team's name")).toHaveStyle({ outline: 'none', boxShadow: 'none' });
     fireEvent.change(screen.getByPlaceholderText("Insert your team's name"), { target: { value: 'New Squad' } });
     fireEvent.click(screen.getByRole('button', { name: 'Trio' }));
+    expect(screen.getByRole('button', { name: 'CREATE TEAM' })).toHaveStyle({ background: '#ff1654', color: '#fff' });
     fireEvent.click(screen.getByRole('button', { name: 'CREATE TEAM' }));
 
     await waitFor(() => {
@@ -327,6 +342,37 @@ describe('Teams page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Mary' }));
 
     expect(await screen.findByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-mary');
+  });
+
+  it('shows real avatars in invite search and removes legacy yellow focus rings', async () => {
+    rpcMock.mockImplementation(async (name: string) => {
+      if (name === 'get_teams_page') return { data: teamsPayload, error: null };
+      if (name === 'get_team_detail') return { data: managedDetailPayload, error: null };
+      if (name === 'search_users_for_invite') {
+        return {
+          data: [{
+            user_id: 'user-target',
+            username: 'Marv',
+            epic_username: 'Marv17',
+            avatar_url: 'https://cdn.discordapp.com/avatars/user-target/avatar.png',
+          }],
+          error: null,
+        };
+      }
+      return { data: { success: true }, error: null };
+    });
+
+    renderTeams();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'MY TEAM' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'INVITE PLAYER' }));
+    const searchInput = await screen.findByPlaceholderText('Search username or Epic');
+    expect(searchInput).toHaveStyle({ outline: 'none', boxShadow: 'none' });
+    fireEvent.change(searchInput, { target: { value: 'Marv' } });
+
+    const avatar = await screen.findByAltText('Marv');
+    expect(avatar).toHaveAttribute('src', 'https://cdn.discordapp.com/avatars/user-target/avatar.png');
+    expect(screen.getByText('Marv17')).toBeInTheDocument();
   });
 
   it('lets the owner delete a team from my team', async () => {

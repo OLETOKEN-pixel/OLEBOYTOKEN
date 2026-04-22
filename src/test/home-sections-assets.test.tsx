@@ -1,22 +1,24 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FooterSection } from '@/components/home/sections/FooterSection';
 import { ShopSection } from '@/components/home/sections/ShopSection';
 import { TeamsSection } from '@/components/home/sections/TeamsSection';
 
-const { limitMock, orderMock, selectMock, fromMock } = vi.hoisted(() => {
+const { limitMock, orderMock, selectMock, fromMock, rpcMock } = vi.hoisted(() => {
   const limitMock = vi.fn();
   const orderMock = vi.fn(() => ({ limit: limitMock }));
   const selectMock = vi.fn(() => ({ order: orderMock }));
   const fromMock = vi.fn(() => ({ select: selectMock }));
+  const rpcMock = vi.fn();
 
-  return { limitMock, orderMock, selectMock, fromMock };
+  return { limitMock, orderMock, selectMock, fromMock, rpcMock };
 });
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: fromMock,
+    rpc: rpcMock,
   },
 }));
 
@@ -32,9 +34,10 @@ describe('logged home section assets', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     limitMock.mockResolvedValue({ data: [], error: null });
+    rpcMock.mockResolvedValue({ data: { success: true, teams: [] }, error: null });
   });
 
-  it('uses stable local decorative assets in TeamsSection', () => {
+  it('uses stable local decorative assets in TeamsSection', async () => {
     const { container } = renderWithRouter(<TeamsSection />);
     const srcs = getImageSources(container);
 
@@ -45,6 +48,13 @@ describe('logged home section assets', () => {
     expect(srcs).toContain('/figma-assets/figma-bw-arrow.svg');
     expect(srcs).toContain('/figma-assets/figma-fw-arrow.svg');
     expect(srcs.some((src) => src.includes('https://www.figma.com/api/mcp/asset/'))).toBe(false);
+    await waitFor(() => {
+      expect(rpcMock).toHaveBeenCalledWith('get_teams_page', {
+        p_search: '',
+        p_limit: 3,
+        p_offset: 0,
+      });
+    });
   });
 
   it('keeps ShopSection showreel assets local and removes expiring Figma asset URLs', () => {
@@ -57,11 +67,9 @@ describe('logged home section assets', () => {
     expect(srcs).toContain('/figma-assets/figma-arrow-stroke.svg');
     expect(srcs).toContain('/figma-assets/figma-bw-arrow.svg');
     expect(srcs).toContain('/figma-assets/figma-fw-arrow.svg');
-    expect(srcs).toContain('/showreel/shop-item-1.png');
-    expect(srcs).toContain('/showreel/shop-item-2.png');
-    expect(srcs).toContain('/showreel/shop-item-3.png');
+    expect(srcs).toContain('/shop/tappetino.png');
+    expect(srcs).toContain('/shop/mouse.webp');
     expect(srcs).toContain('/showreel/vip-icon.svg');
-    expect(srcs).toContain('/showreel/coin-icon.svg');
     expect(srcs.some((src) => src.includes('https://www.figma.com/api/mcp/asset/'))).toBe(false);
   });
 
