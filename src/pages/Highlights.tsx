@@ -357,6 +357,9 @@ export default function Highlights() {
       return sortHighlights(a, b);
     }).slice(0, 4);
   }, [filteredHighlights, voteCounts]);
+  const playerVideoVoteState = playerVideo ? getVoteState(playerVideo.id) : 'NOT_VOTED';
+  const playerVideoVotedThis = playerVideoVoteState === 'VOTED_THIS';
+  const playerVideoVotes = playerVideo ? getTotalVotes(playerVideo, voteCounts) : 0;
 
   const handleVote = async (highlightId: string) => {
     const state = getVoteState(highlightId);
@@ -516,6 +519,10 @@ export default function Highlights() {
         <DialogContent className="max-w-[1040px] border-[#ff1654]/70 bg-[#0f0404] p-0 text-white sm:rounded-[8px]">
           {playerVideo ? (
             <div className="p-5">
+              <DialogTitle className="sr-only">{playerVideo.title}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Watch the highlight video, vote for it, or open it on YouTube.
+              </DialogDescription>
               <div className="aspect-video w-full overflow-hidden rounded-[8px] bg-black">
                 <iframe
                   title={playerVideo.title}
@@ -530,16 +537,36 @@ export default function Highlights() {
                   <p className="truncate text-[24px] leading-none" style={{ fontFamily: F_BOLD }}>{playerVideo.title}</p>
                   <p className="mt-1 text-[14px] text-white/50" style={{ fontFamily: F_REGULAR }}>{playerVideo.authorName}</p>
                 </div>
-                <a
-                  href={playerVideo.youtubeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-[42px] shrink-0 items-center gap-2 rounded-[8px] border border-[#ff1654] px-4 text-[14px] text-white"
-                  style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  OPEN ON YOUTUBE
-                </a>
+                <div className="flex shrink-0 items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void handleVote(playerVideo.id)}
+                    disabled={isVoting}
+                    aria-label={`${playerVideoVotedThis ? 'Remove vote from' : 'Vote for'} ${playerVideo.title}`}
+                    className={`inline-flex h-[42px] min-w-[118px] items-center justify-center gap-2 rounded-[8px] border px-4 text-[16px] text-white disabled:opacity-65 ${
+                      playerVideoVotedThis ? 'border-[#ff1654] bg-[#ff1654]/45' : 'border-[#ff1654] bg-[#282828]'
+                    }`}
+                    style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
+                  >
+                    <img
+                      src={playerVideoVotedThis ? '/highlights/like-hot.svg' : '/highlights/like-muted.svg'}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-[17px] w-[19px]"
+                    />
+                    <span>{formatVoteCount(playerVideoVotes)}</span>
+                  </button>
+                  <a
+                    href={playerVideo.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-[42px] shrink-0 items-center gap-2 rounded-[8px] border border-[#ff1654] px-4 text-[14px] text-white"
+                    style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    OPEN ON YOUTUBE
+                  </a>
+                </div>
               </div>
             </div>
           ) : null}
@@ -1584,8 +1611,9 @@ function ExactRankBadge({
   return (
     <>
       <div
+        data-testid={`highlight-rank-badge-${rank}`}
         aria-hidden="true"
-        className="absolute flex h-[179.799px] w-[179.799px] items-center justify-center"
+        className="absolute z-[4] flex h-[179.799px] w-[179.799px] items-center justify-center"
         style={{ left: layout.starLeft, top: layout.starTop }}
       >
         <div style={{ transform: 'rotate(9.9deg)', flex: 'none' }}>
@@ -1608,8 +1636,9 @@ function ExactRankBadge({
         </div>
       </div>
       <p
+        data-testid={`highlight-rank-label-${rank}`}
         aria-hidden="true"
-        className="absolute m-0 -translate-x-full whitespace-nowrap text-right text-[0px] leading-[0] text-white"
+        className="absolute z-[5] m-0 -translate-x-full whitespace-nowrap text-right text-[0px] leading-[0] text-white"
         style={{ left: layout.textLeft, top: layout.textTop, fontFamily: F_HEAD, letterSpacing: 0 }}
       >
         <span

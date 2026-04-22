@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Highlights from '@/pages/Highlights';
@@ -148,6 +148,19 @@ describe('Highlights page', () => {
     expect(switchVoteMock).toHaveBeenCalledWith('highlight-1');
   });
 
+  it('lets users vote from the video overlay next to the YouTube link', async () => {
+    renderHighlights();
+
+    const playButtons = await screen.findAllByRole('button', { name: /play/i });
+    fireEvent.click(playButtons[0]);
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('link', { name: /open on youtube/i })).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: /vote for/i }));
+
+    expect(castVoteMock).toHaveBeenCalled();
+  });
+
   it('links top month and top week to their highlight pages', async () => {
     renderHighlights();
 
@@ -160,6 +173,8 @@ describe('Highlights page', () => {
 
     expect((await screen.findAllByText(/Winner of the week/i)).length).toBeGreaterThan(0);
     expect(screen.getByText('THIS WEEK NOMINEES')).toBeInTheDocument();
+    expect(screen.getByTestId('highlight-rank-badge-1')).toHaveClass('z-[4]');
+    expect(screen.getByTestId('highlight-rank-label-1')).toHaveClass('z-[5]');
     expect(screen.getByRole('link', { name: /best of the month/i })).toHaveAttribute('href', '/highlights/month');
   });
 
