@@ -168,7 +168,7 @@ function getTitleOutlineSpec(label: string) {
   if (label.includes('MY TEAM')) {
     return {
       src: `${TEAMS_ASSETS}/title-outline-my-team.svg`,
-      width: 1303.876,
+      width: 1032,
       height: 22.979,
       top: 163.81,
     };
@@ -177,7 +177,7 @@ function getTitleOutlineSpec(label: string) {
   if (label.includes('INVITES')) {
     return {
       src: `${TEAMS_ASSETS}/title-outline-invites.svg`,
-      width: 1168.034,
+      width: 956,
       height: 22.504,
       top: 164.28,
     };
@@ -185,7 +185,7 @@ function getTitleOutlineSpec(label: string) {
 
   return {
     src: `${TEAMS_ASSETS}/title-outline-teams.svg`,
-    width: 528.667,
+    width: 426,
     height: 20.269,
     top: 166.52,
   };
