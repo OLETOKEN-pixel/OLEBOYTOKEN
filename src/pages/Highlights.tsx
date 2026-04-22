@@ -538,10 +538,10 @@ export default function Highlights() {
                   <button
                     type="button"
                     onClick={() => void handleVote(playerVideo.id)}
-                    disabled={isVoting}
                     aria-label={`${playerVideoVotedThis ? 'Remove vote from' : 'Vote for'} ${playerVideo.title}`}
-                    className={`inline-flex h-[42px] min-w-[118px] items-center justify-center gap-2 rounded-[8px] border px-4 text-[16px] text-white disabled:opacity-65 ${
-                      playerVideoVotedThis ? 'border-[#ff1654] bg-[#ff1654]/45' : 'border-[#ff1654] bg-[#282828]'
+                    aria-pressed={playerVideoVotedThis}
+                    className={`inline-flex h-[42px] min-w-[118px] items-center justify-center gap-2 rounded-[8px] border px-4 text-[16px] text-white transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-90 ${
+                      playerVideoVotedThis ? 'border-[#ff1654] bg-[#ff1654]' : 'border-[#ff1654] bg-[#282828]'
                     }`}
                     style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
                   >
@@ -1497,7 +1497,6 @@ function ExactRankingCard({
   onVote: () => void;
 }) {
   const votedThis = voteState === 'VOTED_THIS';
-  const isHot = Boolean(layout.hotByDefault || votedThis);
   const title = getRankingDisplayTitle(highlight);
 
   return (
@@ -1563,17 +1562,18 @@ function ExactRankingCard({
       <button
         type="button"
         onClick={onVote}
-        disabled={isVoting}
         aria-label={`${votedThis ? 'Remove vote from' : 'Vote for'} ${highlight.title}`}
-        className="absolute h-[39px] w-[118.219px] rounded-[60.938px] bg-[#282828] disabled:opacity-65"
+        aria-pressed={votedThis}
+        className="absolute h-[39px] w-[118.219px] rounded-[60.938px] transition-transform duration-150 ease-out active:scale-90 hover:scale-[1.03]"
         style={{
           left: layout.likeLeft,
           top: layout.likeTop,
-          border: isHot ? '0 solid transparent' : '1px solid #ff1654',
+          backgroundColor: votedThis ? '#ff1654' : '#282828',
+          border: votedThis ? '0 solid transparent' : '1px solid #ff1654',
         }}
       />
       <img
-        src={rankingAsset(mode, isHot ? 'like-hot.svg' : 'like-muted.svg')}
+        src={rankingAsset(mode, votedThis ? 'like-hot.svg' : 'like-muted.svg')}
         alt=""
         aria-hidden="true"
         className="pointer-events-none absolute h-[19.449px] w-[21.938px]"
@@ -1739,10 +1739,10 @@ function HighlightCardView({
         <button
           type="button"
           onClick={onVote}
-          disabled={isVoting}
           aria-label={`${votedThis ? 'Remove vote from' : 'Vote for'} ${highlight.title}`}
-          className={`mt-2 flex shrink-0 items-center justify-center gap-2 rounded-full border text-white disabled:opacity-65 ${isLarge ? 'h-[39px] w-[118px] text-[19.5px]' : 'h-[32px] w-[97px] text-[16px]'} ${
-            votedThis ? 'border-[#ff1654] bg-[#ff1654]/50' : 'border-[#ff1654] bg-[#282828]'
+          aria-pressed={votedThis}
+          className={`mt-2 flex shrink-0 items-center justify-center gap-2 rounded-full border text-white transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-90 ${isLarge ? 'h-[39px] w-[118px] text-[19.5px]' : 'h-[32px] w-[97px] text-[16px]'} ${
+            votedThis ? 'border-[#ff1654] bg-[#ff1654]' : 'border-[#ff1654] bg-[#282828]'
           }`}
           style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
         >
