@@ -1048,6 +1048,7 @@ function ExactRankingTitle({
   textTop: number;
 }) {
   const monthOffset = mode === 'month' ? -10 : 0;
+  const titleTextLift = 14;
 
   return (
     <>
@@ -1055,7 +1056,7 @@ function ExactRankingTitle({
         className="absolute z-[2] m-0 whitespace-nowrap text-[80px] leading-normal text-white"
         style={{
           left: 'calc(12% + 5.6px)',
-          top: textTop + monthOffset,
+          top: textTop + monthOffset - titleTextLift,
           fontFamily: F_HEAD,
           letterSpacing: 0,
         }}
