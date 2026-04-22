@@ -1144,6 +1144,55 @@ function TeamViewModal({
   );
 }
 
+function InviteActionButton({
+  label,
+  icon,
+  variant,
+  onClick,
+}: {
+  label: string;
+  icon: 'accept' | 'decline';
+  variant: 'accept' | 'decline';
+  onClick: () => void;
+}) {
+  const isAccept = variant === 'accept';
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      style={{
+        width: 47,
+        height: 47,
+        borderRadius: 9,
+        border: '1px solid #ff1654',
+        background: isAccept ? '#ff1654' : 'rgba(255,22,84,0.2)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0,
+        cursor: 'pointer',
+        outline: 'none',
+        boxShadow: 'none',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      <img
+        src={`${TEAMS_ASSETS}/invite-${icon}.svg`}
+        alt=""
+        aria-hidden="true"
+        style={{
+          width: icon === 'accept' ? 31 : 35,
+          height: icon === 'accept' ? 24 : 35,
+          display: 'block',
+          pointerEvents: 'none',
+        }}
+      />
+    </button>
+  );
+}
+
 function InvitesPanel({
   tab,
   onTab,
@@ -1202,8 +1251,18 @@ function InvitesPanel({
               <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 13 }}>
                 {tab === 'received' && row.status === 'pending' ? (
                   <>
-                    <button type="button" aria-label={`Decline ${primary}`} onClick={() => onRespond(row, 'decline')} style={{ width: 47, height: 47, borderRadius: 8, border: 0, background: '#8b0732', color: '#fff', fontFamily: F_BOLD, fontSize: 26, cursor: 'pointer' }}>x</button>
-                    <button type="button" aria-label={`Accept ${primary}`} onClick={() => onRespond(row, 'accept')} style={{ width: 47, height: 47, borderRadius: 8, border: 0, background: '#ff1654', color: '#fff', fontFamily: F_BOLD, fontSize: 16, cursor: 'pointer' }}>OK</button>
+                    <InviteActionButton
+                      label={`Decline ${primary}`}
+                      icon="decline"
+                      variant="decline"
+                      onClick={() => onRespond(row, 'decline')}
+                    />
+                    <InviteActionButton
+                      label={`Accept ${primary}`}
+                      icon="accept"
+                      variant="accept"
+                      onClick={() => onRespond(row, 'accept')}
+                    />
                   </>
                 ) : (
                   <span style={{ ...buttonBase, width: 176, height: 47, fontSize: 20, opacity: row.status === 'rejected' ? 0.55 : 1 }}>{getStatusLabel(row.status)}</span>

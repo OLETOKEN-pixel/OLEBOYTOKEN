@@ -317,6 +317,9 @@ describe('Teams page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'INVITES' }));
     expect(document.querySelector('img[src="/figma-assets/teams/title-outline-invites.svg"]')).not.toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'RECEIVED' }));
+    expect(document.querySelector('img[src="/figma-assets/teams/invite-decline.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/teams/invite-accept.svg"]')).not.toBeNull();
+    expect(screen.queryByText('OK')).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole('button', { name: 'Accept Mary' }));
 
     await waitFor(() => {
