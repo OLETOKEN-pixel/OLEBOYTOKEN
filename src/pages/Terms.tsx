@@ -1,50 +1,21 @@
 import { Link } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { FileText, Shield, Gamepad2 } from 'lucide-react';
+import { LegalPageShell } from '@/components/legal/LegalPageShell';
 
 export default function Terms() {
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto py-6 lg:py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
-              <FileText className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-display font-bold uppercase">Terms of Service</h1>
-              <p className="text-sm text-muted-foreground">Last updated: 24/01/2026</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/rules">
-                <Gamepad2 className="w-4 h-4 mr-1" />
-                Rules
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/privacy">
-                <Shield className="w-4 h-4 mr-1" />
-                Privacy
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Content Card */}
-        <div className="bg-[#121212] border border-[#1f2937] rounded-[16px] p-6 lg:p-8">
-          <div className="prose prose-invert max-w-none prose-headings:text-[#FFC805] prose-headings:font-bold prose-headings:font-display prose-h2:text-2xl prose-h2:lg:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:pb-3 prose-h2:border-b prose-h2:border-[#FFC805]/30 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4 prose-li:text-muted-foreground prose-p:text-muted-foreground">
-
+    <LegalPageShell
+      title="TERMS OF SERVICE"
+      active="terms"
+      lastUpdated="24/01/2026"
+      description="Terms and conditions for using OleBoy Token."
+    >
             <h2>1. Who We Are</h2>
             <p>
               OleBoy Token ("we", "OleBoy Token", "Platform") is a service operated by Marco Palumbo, based in Verona, Italy.
             </p>
             <p>
               Website: oleboytoken.com<br />
-              Contact email: <a href="mailto:oleboytoken@yahoo.com" className="text-primary hover:underline">oleboytoken@yahoo.com</a>
+              Contact email: <a href="mailto:oleboytoken@yahoo.com">oleboytoken@yahoo.com</a>
             </p>
 
             <h2>2. Acceptance of These Terms</h2>
@@ -164,7 +135,7 @@ export default function Terms() {
 
             <h2>16. Privacy</h2>
             <p>
-              Personal data is handled as described in our <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>. By using the Platform, you also agree to the Privacy Policy.
+              Personal data is handled as described in our <Link to="/privacy">Privacy Policy</Link>. By using the Platform, you also agree to the Privacy Policy.
             </p>
 
             <h2>17. Changes to These Terms</h2>
@@ -179,12 +150,9 @@ export default function Terms() {
 
             <h2>19. Contact</h2>
             <p>
-              If you have questions about these Terms, contact <a href="mailto:oleboytoken@yahoo.com" className="text-primary hover:underline">oleboytoken@yahoo.com</a>
+              If you have questions about these Terms, contact <a href="mailto:oleboytoken@yahoo.com">oleboytoken@yahoo.com</a>
             </p>
 
-          </div>
-        </div>
-      </div>
-    </MainLayout>
+    </LegalPageShell>
   );
 }

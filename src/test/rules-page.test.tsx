@@ -4,8 +4,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import Rules from '@/pages/Rules';
 
-vi.mock('@/components/layout/MainLayout', () => ({
-  MainLayout: ({ children }: { children: ReactNode }) => <div data-testid="main-layout">{children}</div>,
+vi.mock('@/components/layout/PublicLayout', () => ({
+  PublicLayout: ({ children }: { children: ReactNode }) => <div data-testid="public-layout">{children}</div>,
+}));
+
+vi.mock('@/components/home/sections/FooterSection', () => ({
+  FooterSection: () => <footer data-testid="figma-footer" />,
 }));
 
 describe('Rules page', () => {
@@ -24,5 +28,8 @@ describe('Rules page', () => {
     expect(screen.getByText('Zone Wars')).toBeInTheDocument();
     expect(screen.getAllByText('General Rules')).toHaveLength(1);
     expect(screen.getByText(/maximum of 10 minutes from the match starting/i)).toBeInTheDocument();
+    expect(screen.getByTestId('public-layout')).toBeInTheDocument();
+    expect(screen.queryByTestId('main-layout')).not.toBeInTheDocument();
+    expect(screen.getByTestId('figma-footer')).toBeInTheDocument();
   });
 });

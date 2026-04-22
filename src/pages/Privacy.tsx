@@ -1,43 +1,14 @@
 import { Link } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Shield, FileText, Gamepad2 } from 'lucide-react';
+import { LegalPageShell } from '@/components/legal/LegalPageShell';
 
 export default function Privacy() {
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto py-6 lg:py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-success/30 to-success/10 flex items-center justify-center border border-success/20">
-              <Shield className="w-6 h-6 text-success" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-display font-bold uppercase">Privacy Policy</h1>
-              <p className="text-sm text-muted-foreground">Last updated: 24/01/2026</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/rules">
-                <Gamepad2 className="w-4 h-4 mr-1" />
-                Rules
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/terms">
-                <FileText className="w-4 h-4 mr-1" />
-                Terms
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Content Card */}
-        <div className="bg-[#121212] border border-[#1f2937] rounded-[16px] p-6 lg:p-8">
-          <div className="prose prose-invert max-w-none prose-headings:text-[#FFC805] prose-headings:font-bold prose-headings:font-display prose-h2:text-2xl prose-h2:lg:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:pb-3 prose-h2:border-b prose-h2:border-[#FFC805]/30 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4 prose-li:text-muted-foreground prose-p:text-muted-foreground">
-
+    <LegalPageShell
+      title="PRIVACY POLICY"
+      active="privacy"
+      lastUpdated="24/01/2026"
+      description="How OleBoy Token collects, uses and protects personal data."
+    >
             <p className="text-muted-foreground">
               This Privacy Policy explains how OleBoy Token collects, uses, shares, and protects your personal data when you use our website and services. By using oleboytoken.com (the "Platform"), you acknowledge that you have read and understood this Privacy Policy. If you do not agree, please stop using the Platform.
             </p>
@@ -48,7 +19,7 @@ export default function Privacy() {
             </p>
             <p>
               Website: oleboytoken.com<br />
-              Contact email: <a href="mailto:oleboytoken@yahoo.com" className="text-success hover:underline">oleboytoken@yahoo.com</a>
+              Contact email: <a href="mailto:oleboytoken@yahoo.com">oleboytoken@yahoo.com</a>
             </p>
 
             <h2>2. Scope</h2>
@@ -156,7 +127,7 @@ export default function Privacy() {
               <li><strong>Withdraw consent:</strong> when processing is based on consent.</li>
             </ul>
             <p>
-              To exercise rights, contact: <a href="mailto:oleboytoken@yahoo.com" className="text-success hover:underline">oleboytoken@yahoo.com</a>
+              To exercise rights, contact: <a href="mailto:oleboytoken@yahoo.com">oleboytoken@yahoo.com</a>
             </p>
 
             <h2>11. Security</h2>
@@ -182,13 +153,10 @@ export default function Privacy() {
             <h2>14. Contact</h2>
             <p>
               For questions, requests, or complaints related to privacy:<br />
-              <a href="mailto:oleboytoken@yahoo.com" className="text-success hover:underline">oleboytoken@yahoo.com</a><br />
+              <a href="mailto:oleboytoken@yahoo.com">oleboytoken@yahoo.com</a><br />
               Data Controller: Marco Palumbo (Verona, Italy)
             </p>
 
-          </div>
-        </div>
-      </div>
-    </MainLayout>
+    </LegalPageShell>
   );
 }
