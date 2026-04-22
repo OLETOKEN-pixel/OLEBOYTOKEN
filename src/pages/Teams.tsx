@@ -1406,12 +1406,6 @@ export default function Teams() {
           aria-hidden="true"
           style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: 146, objectFit: 'cover', pointerEvents: 'none' }}
         />
-        <img
-          src="/figma-assets/figma-neon.png"
-          alt=""
-          aria-hidden="true"
-          style={{ position: 'absolute', left: 0, top: 827, width: '100%', height: 146, objectFit: 'cover', transform: 'scaleY(-1)', pointerEvents: 'none' }}
-        />
         <div style={mainShell}>
           <SectionTitle label={title} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 53 }}>
