@@ -233,7 +233,6 @@ export default function Highlights() {
     getVoteState,
     castVote,
     removeVote,
-    switchVote,
   } = useHighlightVotes();
 
   const profileAvatar = getDiscordAvatarUrl(profile);
@@ -364,9 +363,7 @@ export default function Highlights() {
   const handleVote = async (highlightId: string) => {
     const state = getVoteState(highlightId);
     if (state === 'VOTED_THIS') {
-      await removeVote();
-    } else if (state === 'VOTED_OTHER') {
-      await switchVote(highlightId);
+      await removeVote(highlightId);
     } else {
       await castVote(highlightId);
     }
@@ -574,11 +571,11 @@ export default function Highlights() {
       </Dialog>
 
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent className="max-w-[904px] border-[#ff1654] bg-[#282828] p-0 text-white sm:rounded-[8px]">
-          <div className="px-[52px] pb-8 pt-7">
-            <DialogHeader>
+        <DialogContent className="h-[800px] max-h-[calc(100vh-32px)] w-[903px] max-w-[calc(100vw-32px)] gap-0 overflow-y-auto border-[1.462px] border-[#ff1654] bg-[#282828] p-0 text-white sm:rounded-[18px]">
+          <div className="flex min-h-full flex-col items-center px-[58px] pb-[42px] pt-[42px]">
+            <DialogHeader className="space-y-0 text-center">
               <DialogTitle
-                className="text-center text-[60px] leading-none text-white"
+                className="text-center text-[64px] leading-none text-white"
                 style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
               >
                 UPLOAD VIDEO
@@ -588,24 +585,24 @@ export default function Highlights() {
               </DialogDescription>
             </DialogHeader>
 
-            <label className="mt-8 block text-[22px] text-white" style={{ fontFamily: F_BOLD, letterSpacing: 0 }}>
+            <label className="mt-[50px] block w-[785px] max-w-full text-[24px] text-white" style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}>
               YouTube URL:
               <input
                 value={youtubeUrl}
                 onChange={(event) => setYoutubeUrl(event.target.value)}
                 placeholder="https://youtu.be/..."
-                className="mt-2 h-[64px] w-full rounded-[10px] border border-[#ff1654] bg-[#141414] px-5 text-[24px] text-white outline-none placeholder:text-white/45"
-                style={{ fontFamily: F_REGULAR, letterSpacing: 0, boxShadow: '0 0 0 1px rgba(216,255,22,0.7)' }}
+                className="mt-2 h-[59px] w-full rounded-[18px] border-0 bg-black/50 px-5 text-[20px] text-white outline-none ring-0 placeholder:text-white/45 focus:border-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                style={{ fontFamily: F_REGULAR, letterSpacing: 0, boxShadow: 'none' }}
               />
             </label>
 
-            <div className="mt-7 min-h-[242px]">
+            <div className="mt-[29px] flex min-h-[340px] w-full items-center justify-center">
               {previewStatus === 'loading' ? (
-                <div className="grid h-[220px] place-items-center">
+                <div className="grid h-[340px] place-items-center">
                   <Loader2 className="h-8 w-8 animate-spin text-[#ff1654]" />
                 </div>
               ) : uploadPreview ? (
-                <div className="mx-auto w-[420px] max-w-full">
+                <div className="mx-auto w-[453.702px] max-w-full">
                   <HighlightPreview
                     preview={uploadPreview}
                     title={truncateHighlightTitle(uploadPreview.title)}
@@ -613,7 +610,7 @@ export default function Highlights() {
                   />
                 </div>
               ) : (
-                <div className="grid h-[220px] place-items-center border-y border-white/30 text-center">
+                <div className="grid h-[255.207px] w-[453.702px] max-w-full place-items-center border-y border-white/30 text-center">
                   <p className="text-[18px] text-white/45" style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}>
                     {previewStatus === 'invalid' ? 'Paste a valid YouTube link.' : 'Paste a YouTube link to create the preview.'}
                   </p>
@@ -621,13 +618,13 @@ export default function Highlights() {
               )}
             </div>
 
-            <div className="mx-auto mt-4 h-px w-[590px] max-w-full bg-white/80" />
+            <div className="mx-auto mt-[20px] h-px w-[589px] max-w-full bg-white/80" />
 
             <button
               type="button"
               onClick={() => void handlePublish()}
               disabled={!uploadPreview || publishing}
-              className="mx-auto mt-4 flex h-[68px] w-[360px] max-w-full items-center justify-center rounded-[12px] bg-[#ff1654] text-[40px] text-white disabled:cursor-not-allowed disabled:opacity-45"
+              className="mx-auto mt-[15px] flex h-[69px] w-[361px] max-w-full items-center justify-center rounded-[23px] bg-[#ff1654] text-[36px] text-white disabled:cursor-not-allowed disabled:opacity-45"
               style={{ fontFamily: F_HEAD, letterSpacing: 0, boxShadow: 'inset 0 4px 4px rgba(255,255,255,0.18), inset 0 -4px 4px rgba(0,0,0,0.25)' }}
             >
               {publishing ? <Loader2 className="h-8 w-8 animate-spin" /> : 'PUBLISH'}
@@ -677,7 +674,7 @@ function ToolbarButton({
   const content = (
     <>
       {icon}
-      <span className="whitespace-nowrap">{label}</span>
+      <span className={`whitespace-nowrap ${label === 'UPLOAD' ? '-translate-y-[2px]' : ''}`}>{label}</span>
     </>
   );
 
@@ -1259,7 +1256,7 @@ function ExactRankingToolbar({
         />
         <span
           className="absolute -translate-x-1/2 whitespace-nowrap text-[24px] leading-normal text-white"
-          style={{ left: 103, top: 9, fontFamily: F_BOLD, letterSpacing: 0 }}
+          style={{ left: 103, top: 7, fontFamily: F_BOLD, letterSpacing: 0 }}
         >
           UPLOAD
         </span>
@@ -1800,13 +1797,13 @@ function HighlightPreview({
 }) {
   return (
     <div>
-      <div className="relative h-[170px] overflow-hidden rounded-[11px] bg-[#181818]">
+      <div data-testid="highlight-upload-preview-media" className="relative h-[255.207px] w-[453.702px] max-w-full overflow-hidden rounded-[11px] bg-[#181818]">
         <img src={preview.thumbnailUrl} alt="" className="h-full w-full object-cover" />
       </div>
-      <div className="mt-3 grid grid-cols-[48px_minmax(0,1fr)_97px] gap-3">
-        <AvatarCircle src={preview.authorAvatarUrl} label={preview.authorName} size={48} fallback={profileInitial} />
+      <div className="mt-[10px] grid grid-cols-[56px_minmax(0,1fr)_104px] gap-[18px]">
+        <AvatarCircle src={preview.authorAvatarUrl} label={preview.authorName} size={56} fallback={profileInitial} />
         <div className="min-w-0">
-          <p className="truncate text-[24px] leading-[24px] text-white" style={{ fontFamily: F_BOLD, letterSpacing: 0 }}>
+          <p className="line-clamp-2 min-h-[32px] text-[24px] leading-[26px] text-white" style={{ fontFamily: F_BOLD, letterSpacing: 0 }}>
             {title}
           </p>
           <p className="mt-1 truncate text-[14px] text-white/50" style={{ fontFamily: F_REGULAR, letterSpacing: 0 }}>
@@ -1814,10 +1811,10 @@ function HighlightPreview({
           </p>
         </div>
         <div
-          className="mt-2 flex h-[32px] w-[97px] shrink-0 items-center justify-center gap-2 rounded-full border border-[#ff1654] bg-[#282828] text-[16px] text-white"
+          className="mt-[15px] flex h-[32.387px] w-[103.927px] shrink-0 items-center justify-center gap-2 rounded-[60.938px] bg-[#282828] text-[19.5px] text-white"
           style={{ fontFamily: F_BOLD, letterSpacing: 0 }}
         >
-          <img src="/highlights/like-muted.svg" alt="" aria-hidden="true" className="h-4 w-[18px]" />
+          <img src="/highlights/like-muted.svg" alt="" aria-hidden="true" className="h-[16.152px] w-[19.287px]" />
           <span>0</span>
         </div>
       </div>

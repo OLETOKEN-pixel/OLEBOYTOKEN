@@ -9,42 +9,19 @@ interface VoteCounts {
 
 export type VoteState = 'NOT_VOTED' | 'VOTED_THIS' | 'VOTED_OTHER';
 
-/**
- * Format a Date as YYYY-MM-DD in LOCAL timezone (not UTC).
- * This is critical: toISOString() would shift the date in non-UTC timezones.
- */
-function formatLocalDate(d: Date): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * Get the Monday of the current ISO week (same logic as PostgreSQL date_trunc('week', now())).
- */
-function getCurrentWeekMonday(): string {
-  const now = new Date();
-  const day = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  const diff = day === 0 ? -6 : 1 - day; // days to subtract to reach Monday
-  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
-  return formatLocalDate(monday);
-}
-
 export function useHighlightVotes() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [userVotedHighlightId, setUserVotedHighlightId] = useState<string | null>(null);
+  const [userVotedIds, setUserVotedIds] = useState<Set<string>>(new Set());
   const [voteCounts, setVoteCounts] = useState<VoteCounts>({});
   const [isVoting, setIsVoting] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Lock to prevent concurrent vote operations
-  const lockRef = useRef(false);
-  // Cooldown flag: when true, realtime events won't trigger refetch
+  // Per-highlight lock — prevents rapid double-clicks on the SAME button,
+  // but different highlights can be toggled in parallel.
+  const inflightRef = useRef<Set<string>>(new Set());
+  // Cooldown flag: suppress realtime refetches right after our own write
   const cooldownRef = useRef(false);
-
-  const currentWeekStart = getCurrentWeekMonday();
 
   const fetchVotes = useCallback(async () => {
     if (cooldownRef.current) return;
@@ -52,29 +29,28 @@ export function useHighlightVotes() {
     try {
       const { data: allVotes, error } = await supabase
         .from('highlight_votes')
-        .select('highlight_id, user_id')
-        .eq('week_start', currentWeekStart);
+        .select('highlight_id, user_id');
 
       if (error) throw error;
 
       const counts: VoteCounts = {};
-      let userVote: string | null = null;
+      const myVotes = new Set<string>();
 
       allVotes?.forEach((vote) => {
         counts[vote.highlight_id] = (counts[vote.highlight_id] || 0) + 1;
         if (user && vote.user_id === user.id) {
-          userVote = vote.highlight_id;
+          myVotes.add(vote.highlight_id);
         }
       });
 
       setVoteCounts(counts);
-      setUserVotedHighlightId(userVote);
+      setUserVotedIds(myVotes);
     } catch (error) {
       console.error('Error fetching votes:', error);
     } finally {
       setLoading(false);
     }
-  }, [currentWeekStart, user]);
+  }, [user]);
 
   useEffect(() => {
     fetchVotes();
@@ -98,44 +74,35 @@ export function useHighlightVotes() {
   }, [fetchVotes]);
 
   const getVoteState = useCallback((highlightId: string): VoteState => {
-    if (!user || !userVotedHighlightId) return 'NOT_VOTED';
-    if (userVotedHighlightId === highlightId) return 'VOTED_THIS';
-    return 'VOTED_OTHER';
-  }, [user, userVotedHighlightId]);
+    if (!user) return 'NOT_VOTED';
+    return userVotedIds.has(highlightId) ? 'VOTED_THIS' : 'NOT_VOTED';
+  }, [user, userVotedIds]);
 
-  const callVoteRpc = useCallback(async (
-    highlightId: string,
-    expectedAction: 'voted' | 'unvoted' | 'switched',
-  ) => {
-    if (lockRef.current) return;
-    lockRef.current = true;
+  const toggleVote = useCallback(async (highlightId: string) => {
+    if (!user) {
+      toast({ title: 'Login required', description: 'Please login to vote', variant: 'destructive' });
+      return;
+    }
+    if (inflightRef.current.has(highlightId)) return;
+    inflightRef.current.add(highlightId);
     cooldownRef.current = true;
     setIsVoting(true);
 
-    const prevVotedId = userVotedHighlightId;
+    const wasVoted = userVotedIds.has(highlightId);
+    const prevVotedIds = new Set(userVotedIds);
     const prevCounts = { ...voteCounts };
 
     // Optimistic update
-    if (expectedAction === 'voted') {
-      setUserVotedHighlightId(highlightId);
-      setVoteCounts(prev => ({
-        ...prev,
-        [highlightId]: (prev[highlightId] || 0) + 1,
-      }));
-    } else if (expectedAction === 'unvoted') {
-      setUserVotedHighlightId(null);
-      setVoteCounts(prev => ({
-        ...prev,
-        [highlightId]: Math.max(0, (prev[highlightId] || 0) - 1),
-      }));
-    } else if (expectedAction === 'switched') {
-      setUserVotedHighlightId(highlightId);
-      setVoteCounts(prev => ({
-        ...prev,
-        ...(prevVotedId ? { [prevVotedId]: Math.max(0, (prev[prevVotedId] || 0) - 1) } : {}),
-        [highlightId]: (prev[highlightId] || 0) + 1,
-      }));
-    }
+    setUserVotedIds((prev) => {
+      const next = new Set(prev);
+      if (wasVoted) next.delete(highlightId);
+      else next.add(highlightId);
+      return next;
+    });
+    setVoteCounts((prev) => ({
+      ...prev,
+      [highlightId]: Math.max(0, (prev[highlightId] || 0) + (wasVoted ? -1 : 1)),
+    }));
 
     try {
       const { data, error } = await supabase.rpc('vote_highlight', {
@@ -149,15 +116,16 @@ export function useHighlightVotes() {
         throw new Error(result.error || 'Vote failed');
       }
 
-      // If server returned a different action, refetch to get ground truth
+      const expectedAction = wasVoted ? 'unvoted' : 'voted';
       if (result.action !== expectedAction) {
-        console.warn(`Vote mismatch: expected=${expectedAction}, got=${result.action}`);
+        // Server state diverged — refetch ground truth
         cooldownRef.current = false;
         await fetchVotes();
       }
     } catch (error: any) {
       console.error('Vote error:', error);
-      setUserVotedHighlightId(prevVotedId);
+      // Rollback optimistic
+      setUserVotedIds(prevVotedIds);
       setVoteCounts(prevCounts);
       toast({
         title: 'Error',
@@ -168,30 +136,26 @@ export function useHighlightVotes() {
       setIsVoting(false);
       setTimeout(() => {
         cooldownRef.current = false;
-        lockRef.current = false;
+        inflightRef.current.delete(highlightId);
         fetchVotes();
-      }, 1500);
+      }, 1000);
     }
-  }, [userVotedHighlightId, voteCounts, fetchVotes, toast]);
+  }, [user, userVotedIds, voteCounts, fetchVotes, toast]);
 
+  // Backwards-compatible API: castVote / removeVote now just route to toggle.
+  // switchVote is kept as an alias for castVote (no more switch semantics).
   const castVote = useCallback(async (highlightId: string) => {
-    if (!user) {
-      toast({ title: 'Login required', description: 'Please login to vote', variant: 'destructive' });
-      return;
-    }
-    if (lockRef.current) return;
-    await callVoteRpc(highlightId, 'voted');
-  }, [user, callVoteRpc, toast]);
+    await toggleVote(highlightId);
+  }, [toggleVote]);
 
-  const removeVote = useCallback(async () => {
-    if (!user || !userVotedHighlightId || lockRef.current) return;
-    await callVoteRpc(userVotedHighlightId, 'unvoted');
-  }, [user, userVotedHighlightId, callVoteRpc]);
+  const removeVote = useCallback(async (highlightId?: string) => {
+    if (!highlightId) return;
+    await toggleVote(highlightId);
+  }, [toggleVote]);
 
-  const switchVote = useCallback(async (newHighlightId: string) => {
-    if (!user || !userVotedHighlightId || lockRef.current) return;
-    await callVoteRpc(newHighlightId, 'switched');
-  }, [user, userVotedHighlightId, callVoteRpc]);
+  const switchVote = useCallback(async (highlightId: string) => {
+    await toggleVote(highlightId);
+  }, [toggleVote]);
 
   const topVoted = Object.entries(voteCounts).reduce(
     (top, [id, count]) => (count > (top.count || 0) ? { id, count } : top),
@@ -199,16 +163,16 @@ export function useHighlightVotes() {
   );
 
   return {
-    userVotedHighlightId,
+    userVotedIds,
     voteCounts,
     isVoting,
     loading,
     getVoteState,
+    toggleVote,
     castVote,
     removeVote,
     switchVote,
     topVotedId: topVoted.id,
     topVotedCount: topVoted.count,
-    currentWeekStart,
   };
 }

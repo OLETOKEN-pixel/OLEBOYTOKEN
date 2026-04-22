@@ -116,7 +116,9 @@ describe('Highlights page', () => {
       target: { value: 'https://youtu.be/HxRTrHyWB0Y' },
     });
 
+    expect(screen.getByPlaceholderText('https://youtu.be/...')).toHaveStyle({ boxShadow: 'none' });
     expect(await screen.findByText('A very very long YouTube tit...')).toBeInTheDocument();
+    expect(screen.getByTestId('highlight-upload-preview-media')).toHaveClass('h-[255.207px]', 'w-[453.702px]');
 
     fireEvent.click(screen.getByRole('button', { name: /publish/i }));
 
@@ -139,13 +141,16 @@ describe('Highlights page', () => {
     expect(removeVoteMock).toHaveBeenCalled();
   });
 
-  it('switches vote to another highlight', async () => {
-    getVoteStateMock.mockReturnValue('VOTED_OTHER');
+  it('casts a vote on another highlight without removing the existing one', async () => {
+    // Multi-vote model: clicking a not-yet-voted highlight always casts,
+    // regardless of whether the user has voted other highlights already.
+    getVoteStateMock.mockReturnValue('NOT_VOTED');
     renderHighlights();
 
     const voteButtons = await screen.findAllByRole('button', { name: /vote for/i });
     fireEvent.click(voteButtons[0]);
-    expect(switchVoteMock).toHaveBeenCalledWith('highlight-1');
+    expect(castVoteMock).toHaveBeenCalledWith('highlight-1');
+    expect(switchVoteMock).not.toHaveBeenCalled();
   });
 
   it('lets users vote from the video overlay next to the YouTube link', async () => {
