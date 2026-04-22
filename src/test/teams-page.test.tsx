@@ -257,6 +257,7 @@ describe('Teams page', () => {
     expect(screen.getByText('REQUEST JOIN')).toBeInTheDocument();
     expect(screen.getByText('VIEW TEAM')).toBeInTheDocument();
     expect(screen.queryByText('ACCEPTED')).not.toBeInTheDocument();
+    expect(document.querySelector('img[src="/figma-assets/teams/title-outline-teams.svg"]')).not.toBeNull();
     expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'Search a team');
     expect(screen.getByRole('button', { name: /refresh/i })).toBeInTheDocument();
     expect(screen.getByTestId('teams-footer')).toBeInTheDocument();
@@ -294,6 +295,7 @@ describe('Teams page', () => {
     renderTeams();
 
     fireEvent.click(await screen.findByRole('button', { name: 'INVITES' }));
+    expect(document.querySelector('img[src="/figma-assets/teams/title-outline-invites.svg"]')).not.toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'RECEIVED' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Accept Mary' }));
 
@@ -316,6 +318,7 @@ describe('Teams page', () => {
     renderTeams();
 
     fireEvent.click(await screen.findByRole('button', { name: 'MY TEAM' }));
+    expect(document.querySelector('img[src="/figma-assets/teams/title-outline-my-team.svg"]')).not.toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'Mary' }));
 
     expect(await screen.findByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-mary');

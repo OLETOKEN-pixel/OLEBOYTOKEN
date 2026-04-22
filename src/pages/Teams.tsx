@@ -164,6 +164,33 @@ function getTeamRowActionLabel(team: TeamPageRow) {
   return 'REQUEST JOIN';
 }
 
+function getTitleOutlineSpec(label: string) {
+  if (label.includes('MY TEAM')) {
+    return {
+      src: `${TEAMS_ASSETS}/title-outline-my-team.svg`,
+      width: 1303.876,
+      height: 22.979,
+      top: 163.81,
+    };
+  }
+
+  if (label.includes('INVITES')) {
+    return {
+      src: `${TEAMS_ASSETS}/title-outline-invites.svg`,
+      width: 1168.034,
+      height: 22.504,
+      top: 164.28,
+    };
+  }
+
+  return {
+    src: `${TEAMS_ASSETS}/title-outline-teams.svg`,
+    width: 528.667,
+    height: 20.269,
+    top: 166.52,
+  };
+}
+
 function TeamLogo({ url, name, size = 68 }: { url?: string | null; name: string; size?: number }) {
   const style: CSSProperties = {
     width: `${size}px`,
@@ -230,7 +257,7 @@ function PlayerAvatar({
 }
 
 function SectionTitle({ label }: { label: string }) {
-  const underlineWidth = label.includes('-') ? 1120 : 529;
+  const outline = getTitleOutlineSpec(label);
 
   return (
     <div style={{ position: 'relative', height: 187, marginLeft: '-71px', marginBottom: '52px' }}>
@@ -260,16 +287,34 @@ function SectionTitle({ label }: { label: string }) {
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: 59,
-          top: 170,
-          width: underlineWidth,
-          height: 8,
-          background: '#ff1654',
-          clipPath: 'polygon(0 46%, 100% 0, 100% 100%, 0 100%)',
-          transform: 'rotate(-0.25deg)',
-          transformOrigin: 'left center',
+          left: 59.76,
+          top: outline.top,
+          width: outline.width,
+          height: outline.height,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'visible',
+          pointerEvents: 'none',
         }}
-      />
+      >
+        <div
+          style={{
+            width: 18.421,
+            height: outline.width,
+            position: 'relative',
+            flex: '0 0 auto',
+            transform: 'rotate(89.8deg) scaleY(-1)',
+          }}
+        >
+          <img
+            src={outline.src}
+            alt=""
+            aria-hidden="true"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
