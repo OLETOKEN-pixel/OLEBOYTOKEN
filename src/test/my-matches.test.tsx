@@ -139,6 +139,50 @@ describe('MyMatches page', () => {
             },
           ],
         }),
+        matchFactory({
+          id: 'participant-loss',
+          creator_id: 'user-3',
+          status: 'completed',
+          mode: 'Zone Wars',
+          participants: [
+            {
+              id: 'participant-user-loss',
+              match_id: 'participant-loss',
+              user_id: 'user-1',
+              team_id: null,
+              team_side: 'A',
+              ready: true,
+              ready_at: null,
+              result_choice: 'LOSS',
+              result_at: null,
+              status: 'finished',
+              joined_at: new Date().toISOString(),
+              profile: {
+                username: 'Tester',
+                discord_avatar_url: 'https://cdn.discordapp.com/avatars/tester/discord-tester.png',
+                epic_username: 'TesterEpic',
+              },
+            },
+            {
+              id: 'participant-winner',
+              match_id: 'participant-loss',
+              user_id: 'user-3',
+              team_id: null,
+              team_side: 'B',
+              ready: true,
+              ready_at: null,
+              result_choice: 'WIN',
+              result_at: null,
+              status: 'finished',
+              joined_at: new Date().toISOString(),
+              profile: {
+                username: 'Opponent',
+                discord_avatar_url: 'https://cdn.discordapp.com/avatars/opponent/discord-opponent.png',
+                epic_username: 'OpponentEpic',
+              },
+            },
+          ],
+        }),
         matchFactory({ id: 'expired-match', creator_id: 'user-1', status: 'expired', mode: 'Zone Wars' }),
         matchFactory({ id: 'canceled-match', creator_id: 'user-1', status: 'canceled', mode: 'Box Fight' }),
       ],
@@ -157,7 +201,8 @@ describe('MyMatches page', () => {
 
     expect(screen.getByRole('heading', { name: 'MY MATCHES' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'ACTIVE' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'COMPLETED' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'WIN' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'LOSE' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'ALL' })).toBeInTheDocument();
     expect(screen.getByText('1V1 BOX FIGHT')).toBeInTheDocument();
     expect(screen.queryByText('2V2 REALISTIC')).not.toBeInTheDocument();
@@ -176,17 +221,30 @@ describe('MyMatches page', () => {
     });
   });
 
-  it('filters completed tokens including expired and canceled matches', () => {
+  it('filters winning tokens by the current user result', () => {
     renderMyMatches();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'COMPLETED' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'WIN' }));
 
     const cards = screen.getAllByTestId('my-match-token-card');
 
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(1);
     expect(screen.getByText('2V2 REALISTIC')).toBeInTheDocument();
+    expect(screen.getAllByText('WIN')).toHaveLength(2);
+    expect(screen.queryByText('1V1 ZONE WARS')).not.toBeInTheDocument();
+  });
+
+  it('filters losing tokens by the current user result', () => {
+    renderMyMatches();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'LOSE' }));
+
+    const cards = screen.getAllByTestId('my-match-token-card');
+
+    expect(cards).toHaveLength(1);
     expect(screen.getByText('1V1 ZONE WARS')).toBeInTheDocument();
-    expect(screen.getAllByText('1V1 BOX FIGHT')).toHaveLength(1);
+    expect(screen.getAllByText('LOSS')).toHaveLength(1);
+    expect(screen.queryByText('2V2 REALISTIC')).not.toBeInTheDocument();
   });
 
   it('shows all user-related tokens and links View token to the match detail page', () => {

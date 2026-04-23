@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useMyMatches } from '@/hooks/useMatches';
 import type { Match } from '@/types';
 
-type MyMatchesTab = 'active' | 'completed' | 'all';
+type MyMatchesTab = 'active' | 'win' | 'lose' | 'all';
 
 const FONT_EXPANDED =
   "'Base_Neue_Trial:Expanded', 'Base Neue Trial-Expanded', 'Base Neue Trial', sans-serif";
@@ -28,28 +28,60 @@ const ACTIVE_STATUSES = new Set([
   'started',
 ]);
 
-const COMPLETED_STATUSES = new Set([
-  'completed',
-  'finished',
-  'admin_resolved',
-  'expired',
-  'canceled',
-]);
-
-const TABS: Array<{ value: MyMatchesTab; label: string; width: number }> = [
+const TABS: Array<{ value: MyMatchesTab; label: string; width: number; desktopOffset?: number }> = [
   { value: 'active', label: 'ACTIVE', width: 222 },
-  { value: 'completed', label: 'COMPLETED', width: 222 },
-  { value: 'all', label: 'ALL', width: 147 },
+  { value: 'win', label: 'WIN', width: 147 },
+  { value: 'lose', label: 'LOSE', width: 147 },
+  { value: 'all', label: 'ALL', width: 147, desktopOffset: 76 },
 ];
 
-function filterMatchesByTab(matches: Match[], tab: MyMatchesTab) {
+function getMatchResult(match: Match) {
+  return Array.isArray(match.result) ? match.result[0] : match.result;
+}
+
+function getMyParticipant(match: Match, userId: string) {
+  return (match.participants ?? []).find((participant) => participant.user_id === userId) ?? null;
+}
+
+function isUserWinner(match: Match, userId: string) {
+  const result = getMatchResult(match);
+  const myParticipant = getMyParticipant(match, userId);
+
+  if (!result) return false;
+  if (result.winner_user_id === userId) return true;
+
+  if (!result.winner_team_id) return false;
+  if (myParticipant?.team_id && myParticipant.team_id === result.winner_team_id) return true;
+  if (myParticipant?.team_side === 'A' && match.team_a_id === result.winner_team_id) return true;
+  if (myParticipant?.team_side === 'B' && match.team_b_id === result.winner_team_id) return true;
+
+  return false;
+}
+
+function getUserOutcome(match: Match, userId: string): 'WIN' | 'LOSS' | null {
+  const myParticipant = getMyParticipant(match, userId);
+  if (myParticipant?.result_choice === 'WIN' || myParticipant?.result_choice === 'LOSS') {
+    return myParticipant.result_choice;
+  }
+
+  const result = getMatchResult(match);
+  const status = match.status || 'open';
+  const hasFinalResult = Boolean(result && ['completed', 'finished', 'admin_resolved'].includes(status));
+
+  if (!hasFinalResult) return null;
+
+  return isUserWinner(match, userId) ? 'WIN' : 'LOSS';
+}
+
+function filterMatchesByTab(matches: Match[], tab: MyMatchesTab, userId: string) {
   if (tab === 'all') return matches;
 
   return matches.filter((match) => {
     const status = match.status || 'open';
-    return tab === 'active'
-      ? ACTIVE_STATUSES.has(status)
-      : COMPLETED_STATUSES.has(status);
+    if (tab === 'active') return ACTIVE_STATUSES.has(status);
+
+    const outcome = getUserOutcome(match, userId);
+    return tab === 'win' ? outcome === 'WIN' : outcome === 'LOSS';
   });
 }
 
@@ -74,8 +106,8 @@ export default function MyMatches() {
   }, []);
 
   const filteredMatches = useMemo(
-    () => filterMatchesByTab(matches as Match[], activeTab),
-    [activeTab, matches],
+    () => filterMatchesByTab(matches as Match[], activeTab, user?.id ?? ''),
+    [activeTab, matches, user?.id],
   );
 
   if (loading || !user) {
@@ -108,6 +140,7 @@ export default function MyMatches() {
             isPending={isPending}
             matches={filteredMatches}
             now={now}
+            currentUserId={user.id}
             onTabChange={setActiveTab}
           />
         ) : (
@@ -117,6 +150,7 @@ export default function MyMatches() {
             isPending={isPending}
             matches={filteredMatches}
             now={now}
+            currentUserId={user.id}
             onTabChange={setActiveTab}
           />
         )}
@@ -131,6 +165,7 @@ interface MyMatchesViewProps {
   isPending: boolean;
   matches: Match[];
   now: number;
+  currentUserId: string;
   onTabChange: (tab: MyMatchesTab) => void;
 }
 
@@ -140,6 +175,7 @@ function MyMatchesDesktop({
   isPending,
   matches,
   now,
+  currentUserId,
   onTabChange,
 }: MyMatchesViewProps) {
   return (
@@ -180,7 +216,7 @@ function MyMatchesDesktop({
         className="mt-[47px] grid"
         style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '100px', rowGap: '40px' }}
       >
-        <MyMatchesContent error={error} isPending={isPending} matches={matches} now={now} />
+        <MyMatchesContent error={error} isPending={isPending} matches={matches} now={now} currentUserId={currentUserId} />
       </div>
     </div>
   );
@@ -192,6 +228,7 @@ function MyMatchesMobile({
   isPending,
   matches,
   now,
+  currentUserId,
   onTabChange,
 }: MyMatchesViewProps) {
   return (
@@ -220,7 +257,7 @@ function MyMatchesMobile({
       />
 
       <div className="mt-7 grid w-full justify-items-center gap-6">
-        <MyMatchesContent error={error} isPending={isPending} matches={matches} now={now} />
+        <MyMatchesContent error={error} isPending={isPending} matches={matches} now={now} currentUserId={currentUserId} />
       </div>
     </div>
   );
@@ -241,6 +278,7 @@ function MyMatchesTabs({
     <div className={className} role="tablist" aria-label="My matches filters">
       {TABS.map((tab) => {
         const isActive = tab.value === activeTab;
+        const desktopMarginLeft = !mobile && tab.desktopOffset ? `${tab.desktopOffset}px` : undefined;
         return (
           <button
             key={tab.value}
@@ -249,6 +287,7 @@ function MyMatchesTabs({
             aria-selected={isActive}
             className="flex h-[47px] items-center justify-center overflow-hidden rounded-[8px] border border-white/50 uppercase text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.12)] transition hover:bg-[rgba(72,72,72,0.92)]"
             style={{
+              marginLeft: desktopMarginLeft,
               width: mobile ? '100%' : `${tab.width}px`,
               background: isActive ? 'rgba(255, 22, 84, 0.42)' : 'rgba(61,61,61,0.82)',
               fontFamily: FONT_EXPANDED,
@@ -270,11 +309,13 @@ function MyMatchesContent({
   isPending,
   matches,
   now,
+  currentUserId,
 }: {
   error: unknown;
   isPending: boolean;
   matches: Match[];
   now: number;
+  currentUserId: string;
 }) {
   if (isPending) {
     return (
@@ -294,13 +335,13 @@ function MyMatchesContent({
   }
 
   if (matches.length === 0) {
-    return <MyMatchesEmptyState title="NO TOKENS HERE" copy="Your active, completed and expired matches will land here as soon as they belong to you." />;
+    return <MyMatchesEmptyState title="NO TOKENS HERE" copy="Your active, win, loss and expired matches will land here as soon as they belong to you." />;
   }
 
   return (
     <>
       {matches.map((match) => (
-        <MyMatchTokenCard key={match.id} match={match} now={now} />
+        <MyMatchTokenCard key={match.id} match={match} now={now} currentUserId={currentUserId} />
       ))}
     </>
   );

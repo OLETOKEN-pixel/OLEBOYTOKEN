@@ -11,6 +11,7 @@ import type { Match, MatchParticipant, ProfileSummary } from '@/types';
 interface MyMatchTokenCardProps {
   match: Match;
   now: number;
+  currentUserId?: string;
   className?: string;
 }
 
@@ -63,17 +64,84 @@ function getCardPlayers(match: Match) {
 
   return {
     creator,
+    creatorUserId: creatorParticipant?.user_id ?? match.creator_id,
     opponent,
+    opponentUserId: opponentParticipant?.user_id ?? null,
   };
 }
 
-export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProps) {
-  const { creator, opponent } = getCardPlayers(match);
+function getMatchResult(match: Match) {
+  return Array.isArray(match.result) ? match.result[0] : match.result;
+}
+
+function getMyParticipant(match: Match, currentUserId?: string) {
+  if (!currentUserId) return null;
+  return (match.participants ?? []).find((participant) => participant.user_id === currentUserId) ?? null;
+}
+
+function isCurrentUserWinner(match: Match, currentUserId?: string) {
+  if (!currentUserId) return false;
+
+  const result = getMatchResult(match);
+  const myParticipant = getMyParticipant(match, currentUserId);
+
+  if (!result) return false;
+  if (result.winner_user_id === currentUserId) return true;
+
+  if (!result.winner_team_id) return false;
+  if (myParticipant?.team_id && myParticipant.team_id === result.winner_team_id) return true;
+  if (myParticipant?.team_side === 'A' && match.team_a_id === result.winner_team_id) return true;
+  if (myParticipant?.team_side === 'B' && match.team_b_id === result.winner_team_id) return true;
+
+  return false;
+}
+
+function getCurrentUserOutcome(match: Match, currentUserId?: string): 'WIN' | 'LOSS' | null {
+  const myParticipant = getMyParticipant(match, currentUserId);
+  if (myParticipant?.result_choice === 'WIN' || myParticipant?.result_choice === 'LOSS') {
+    return myParticipant.result_choice;
+  }
+
+  const result = getMatchResult(match);
+  const status = match.status || 'open';
+  const hasFinalResult = Boolean(result && ['completed', 'finished', 'admin_resolved'].includes(status));
+
+  if (!hasFinalResult) return null;
+
+  return isCurrentUserWinner(match, currentUserId) ? 'WIN' : 'LOSS';
+}
+
+function getStatusBadge(match: Match): { label: string; color: string } | null {
+  switch (match.status) {
+    case 'open':
+      return { label: 'OPEN', color: '#1f0' };
+    case 'ready_check':
+    case 'full':
+      return { label: 'READY', color: '#ffffff' };
+    case 'in_progress':
+    case 'started':
+      return { label: 'LIVE', color: '#1f0' };
+    case 'result_pending':
+      return { label: 'PENDING', color: '#ffffff' };
+    case 'disputed':
+      return { label: 'DISPUTED', color: '#ff1654' };
+    case 'canceled':
+      return { label: 'CANCELED', color: 'red' };
+    case 'expired':
+      return { label: 'EXPIRED', color: '#ffffff' };
+    default:
+      return null;
+  }
+}
+
+export function MyMatchTokenCard({ match, now, currentUserId, className }: MyMatchTokenCardProps) {
+  const { creator, creatorUserId, opponent, opponentUserId } = getCardPlayers(match);
   const creatorAvatarUrl = getDiscordAvatarUrl(creator);
   const opponentAvatarUrl = getDiscordAvatarUrl(opponent);
-  const timeLeft = match.status === 'open'
-    ? formatOpenTimeLeft(match.expires_at, now)
-    : String(match.status ?? 'match').replace(/_/g, ' ').toUpperCase();
+  const userOutcome = getCurrentUserOutcome(match, currentUserId);
+  const statusBadge = getStatusBadge(match);
+  const userOutcomeSide = currentUserId && opponentUserId === currentUserId && creatorUserId !== currentUserId ? 'right' : 'left';
+  const title = formatMyMatchTitle(match);
 
   return (
     <article
@@ -86,9 +154,9 @@ export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProp
         width: '100%',
         maxWidth: '300px',
         overflow: 'hidden',
-        borderRadius: '8px',
+        borderRadius: '12px',
         border: '1px solid #ff1654',
-        background: '#272727',
+        background: '#282828',
         boxShadow: '0 4px 4px rgba(0,0,0,0.25)',
         flexShrink: 0,
       }}
@@ -105,13 +173,13 @@ export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProp
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             fontFamily: FONT_WIDE_BLACK,
-            fontSize: '24px',
+            fontSize: title.length > 13 ? '27px' : '32px',
             lineHeight: 1,
             color: '#ffffff',
             textAlign: 'center',
           }}
         >
-          {formatMyMatchTitle(match)}
+          {title}
         </h2>
         <img
           src="/figma-assets/matches-card-divider.svg"
@@ -329,25 +397,49 @@ export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProp
         )}
       </div>
 
-      <span
-        aria-label="Match status"
-        style={{
-          position: 'absolute',
-          left: '38px',
-          top: '246px',
-          maxWidth: '224px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          fontFamily: FONT_REGULAR,
-          fontSize: '14px',
-          lineHeight: 1,
-          color: 'rgba(255,255,255,0.62)',
-          textTransform: 'uppercase',
-        }}
-      >
-        {timeLeft}
-      </span>
+      {userOutcome && (
+        <span
+          aria-label="User result"
+          style={{
+            position: 'absolute',
+            left: userOutcomeSide === 'left' ? '38px' : '174px',
+            top: userOutcome === 'WIN' ? '251px' : '252px',
+            width: '88px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: FONT_WIDE_BLACK,
+            fontSize: '15px',
+            lineHeight: 1,
+            color: userOutcome === 'WIN' ? '#1f0' : 'red',
+            textAlign: userOutcomeSide === 'left' ? 'left' : 'right',
+          }}
+        >
+          {userOutcome}
+        </span>
+      )}
+
+      {statusBadge && (
+        <span
+          aria-label="Match status"
+          style={{
+            position: 'absolute',
+            left: '90px',
+            top: ['canceled', 'expired', 'disputed'].includes(match.status ?? '') ? '260px' : '252px',
+            width: '120px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: FONT_WIDE_BLACK,
+            fontSize: '15px',
+            lineHeight: 1,
+            color: statusBadge.color,
+            textAlign: 'center',
+          }}
+        >
+          {statusBadge.label}
+        </span>
+      )}
 
       <Link
         to={`/matches/${match.id}`}
@@ -373,19 +465,4 @@ export function MyMatchTokenCard({ match, now, className }: MyMatchTokenCardProp
       </Link>
     </article>
   );
-}
-
-function formatOpenTimeLeft(expiresAt: string, now: number): string {
-  const expiresAtMs = new Date(expiresAt).getTime();
-  const diff = expiresAtMs - now;
-
-  if (!Number.isFinite(expiresAtMs) || diff <= 0) {
-    return 'EXPIRES 00:00';
-  }
-
-  const totalSeconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `EXPIRES ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
