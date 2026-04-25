@@ -34,7 +34,7 @@ const DESKTOP_TAB_LAYOUT: Record<
   ChallengeTab,
   { center: number; width: number; fontSize: number }
 > = {
-  overview: { center: 902, width: 150, fontSize: 32 },
+  overview: { center: 902, width: 166, fontSize: 32 },
   daily: { center: 1181, width: 105, fontSize: 32 },
   weekly: { center: 1505, width: 130, fontSize: 32 },
 };
@@ -89,7 +89,7 @@ function DesktopChallengesTitle() {
         style={{
           position: 'absolute',
           left: '236px',
-          top: '233px',
+          top: '226px',
           margin: 0,
           fontFamily: FONT_HEAD,
           fontSize: '80px',
@@ -384,8 +384,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: 0,
-          top: 0,
+          left: '-8px',
+          top: '-14px',
           width: '73.999px',
           height: '73.999px',
           transform: 'rotate(9.9deg)',
@@ -399,8 +399,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '34px',
-          top: '27px',
+          left: '26px',
+          top: '13px',
           width: '10.123px',
           height: '8.567px',
           transform: 'rotate(17.19deg)',
@@ -414,8 +414,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '29px',
-          top: '32.3px',
+          left: '21px',
+          top: '18px',
           width: '14.988px',
           height: '15.507px',
           transform: 'rotate(17.19deg)',
@@ -429,8 +429,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '34px',
-          top: '36px',
+          left: '26px',
+          top: '22px',
           width: '5.004px',
           height: '5.004px',
           transform: 'rotate(17.19deg)',
