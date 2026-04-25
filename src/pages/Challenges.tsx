@@ -119,20 +119,30 @@ function DesktopChallengesTitle() {
           style={{
             width: '18.421px',
             height: '933.91px',
-            transform: 'scaleY(-1) rotate(89.8deg)',
+            transform: 'rotate(89.8deg) scaleY(-1)',
             transformOrigin: 'center',
+            position: 'relative',
           }}
         >
-          <img
-            src={`${CHALLENGE_ASSETS}/title-underline-raw.svg`}
-            alt=""
+          <div
             style={{
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              objectFit: 'fill',
+              position: 'absolute',
+              left: '6.7%',
+              right: '6.7%',
+              top: 0,
+              bottom: '25%',
             }}
-          />
+          >
+            <img
+              src={`${CHALLENGE_ASSETS}/title-outline.svg`}
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'block',
+              }}
+            />
+          </div>
         </div>
       </div>
     </>
