@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useChallenges } from '@/hooks/useChallenges';
 import { getLevel, getXpInLevel, getXpToNext, getLevelXpRequired } from '@/lib/xp';
 import { ACTIVE_HOME_ASSETS } from './activeHomeAssets';
@@ -15,6 +16,7 @@ interface ChallengeDisplay {
 
 export const ChallengesSection = () => {
   const { challenges, userXp, claimChallenge } = useChallenges();
+  const navigate = useNavigate();
 
   // Auto-claim any completed-but-unclaimed challenges
   useEffect(() => {
@@ -76,12 +78,17 @@ export const ChallengesSection = () => {
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
           <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.challenges.star} />
 
-          <div className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
+          <button
+            type="button"
+            aria-label="Open challenges page"
+            onClick={() => navigate('/challenges')}
+            className="absolute top-[406px] left-[294px] flex h-[65px] w-[278px] cursor-pointer border border-solid border-[#ff1654] bg-[#ff16543b] rounded-[50px] p-0 shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040] transition-opacity hover:opacity-95"
+          >
             <div className="mt-3.5 w-[212px] ml-[34px] flex gap-[11px]">
               <div className="w-[167px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">LEVEL UP</div>
               <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
-          </div>
+          </button>
 
           <div className="absolute top-[217px] left-12 w-[651px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
             <span>Complete the tasks.</span>

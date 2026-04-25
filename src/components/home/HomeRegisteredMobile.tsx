@@ -788,6 +788,7 @@ function ChallengeRow({ challenge }: { challenge: ChallengeDisplay }) {
 
 function ChallengesMobile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [challengeRows, setChallengeRows] = useState<ChallengeDisplay[]>([]);
   const [userXp, setUserXp] = useState(0);
 
@@ -950,7 +951,7 @@ function ChallengesMobile() {
           </div>
         </div>
       </Panel>
-      <MobileCta ariaLabel="Level up">LEVEL UP</MobileCta>
+      <MobileCta onClick={() => navigate('/challenges')} ariaLabel="Open challenges page">LEVEL UP</MobileCta>
     </MobileSection>
   );
 }
