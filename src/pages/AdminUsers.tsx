@@ -39,31 +39,39 @@ export default function AdminUsers() {
   return (
     <AdminShell
       title="Users"
-      description="Manage roles, bans, balances, and open a full user profile without leaving the admin suite."
+      description="Moderation workspace for roles, bans, balances, and direct access to each player profile."
       actions={
         <>
-          <div className="hidden min-w-[300px] lg:block">
+          <div className="w-full max-w-[360px]">
             <GlobalSearchBar />
           </div>
-          <Button variant="outline" onClick={() => refetch()} className="border-white/14 bg-white/5 text-white hover:bg-white/10">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
         </>
       }
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Total users" value={String(users.length)} icon={Users} />
-        <AdminStatCard label="Admins" value={String(adminCount)} icon={ShieldCheck} accent="#72f1b8" />
-        <AdminStatCard label="Banned" value={String(bannedCount)} icon={ShieldAlert} accent="#ff8a65" />
-      </div>
+      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid min-h-0 gap-4 xl:grid-rows-[repeat(3,minmax(0,1fr))]">
+          <AdminStatCard label="Total users" value={String(users.length)} icon={Users} />
+          <AdminStatCard label="Admins" value={String(adminCount)} icon={ShieldCheck} accent="#72f1b8" />
+          <AdminStatCard label="Banned" value={String(bannedCount)} icon={ShieldAlert} accent="#ff8a65" />
+        </div>
 
-      <AdminPanel
-        title="User directory"
-        description="Filter, export, moderate, and jump into a specific account."
-      >
-        <UsersTable users={users} loading={isLoading} onUserUpdated={() => void refetch()} />
-      </AdminPanel>
+        <AdminPanel
+          title="User directory"
+          description="Filter, export, moderate, and open a user profile without leaving the full-screen workspace."
+          className="h-full"
+          contentClassName="h-full"
+        >
+          <UsersTable users={users} loading={isLoading} onUserUpdated={() => void refetch()} fullHeight />
+        </AdminPanel>
+      </div>
     </AdminShell>
   );
 }

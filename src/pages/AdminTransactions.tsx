@@ -38,26 +38,34 @@ export default function AdminTransactions() {
   return (
     <AdminShell
       title="Transactions"
-      description="Monitor ledger activity, export records, and deep-link back into the underlying match history."
+      description="Read-only ledger view for exports, finance checks, and jumps back to the linked match flow."
       actions={
-        <Button variant="outline" onClick={() => refetch()} className="border-white/14 bg-white/5 text-white hover:bg-white/10">
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+        >
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
       }
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Transactions" value={String(transactions.length)} icon={ScrollText} />
-        <AdminStatCard label="Completed" value={String(completedCount)} icon={Activity} accent="#72f1b8" />
-        <AdminStatCard label="Ledger volume" value={`${volume.toFixed(2)} C`} icon={Coins} accent="#ffd166" />
-      </div>
+      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid min-h-0 gap-4 xl:grid-rows-[repeat(3,minmax(0,1fr))]">
+          <AdminStatCard label="Transactions" value={String(transactions.length)} icon={ScrollText} />
+          <AdminStatCard label="Completed" value={String(completedCount)} icon={Activity} accent="#72f1b8" />
+          <AdminStatCard label="Ledger volume" value={`${volume.toFixed(2)} C`} icon={Coins} accent="#ffd166" />
+        </div>
 
-      <AdminPanel
-        title="Transaction ledger"
-        description="Read-only finance view with filters, export, and match jump links."
-      >
-        <TransactionsTable transactions={transactions} loading={isLoading} />
-      </AdminPanel>
+        <AdminPanel
+          title="Transaction ledger"
+          description="Filters, export, and match jump links stay visible while the ledger scrolls internally."
+          className="h-full"
+          contentClassName="h-full"
+        >
+          <TransactionsTable transactions={transactions} loading={isLoading} fullHeight />
+        </AdminPanel>
+      </div>
     </AdminShell>
   );
 }

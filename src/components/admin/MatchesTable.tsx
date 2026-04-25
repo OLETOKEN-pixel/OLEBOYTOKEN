@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 interface MatchesTableProps {
   matches: Match[];
   loading: boolean;
+  fullHeight?: boolean;
 }
 
 type SortField = 'created_at' | 'status' | 'entry_fee' | 'region' | 'mode';
@@ -34,7 +35,7 @@ const STATUS_BADGE_VARIANT: Record<string, 'live' | 'open' | 'completed' | 'vip'
   disputed: 'completed',
 };
 
-export function MatchesTable({ matches, loading }: MatchesTableProps) {
+export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTableProps) {
   const navigate = useNavigate();
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -168,7 +169,7 @@ export function MatchesTable({ matches, loading }: MatchesTableProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn('flex min-h-0 flex-col gap-4', fullHeight && 'h-full')}>
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((status) => (
           <Button
@@ -195,17 +196,17 @@ export function MatchesTable({ matches, loading }: MatchesTableProps) {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap items-center gap-3">
         <Input
           placeholder="Cerca per ID o host..."
           value={searchQuery}
           onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-          className="w-64 bg-white/[0.03] border-white/[0.08] focus:border-primary/50"
+          className="h-11 w-full max-w-[320px] border-white/[0.08] bg-white/[0.03] focus:border-primary/50"
         />
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="border-white/[0.08] hover:bg-white/[0.05]">
+            <Button variant="outline" className="h-11 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06]">
               <Filter className="w-4 h-4 mr-2" />
               Filtri Avanzati
             </Button>
@@ -276,7 +277,7 @@ export function MatchesTable({ matches, loading }: MatchesTableProps) {
 
         <div className="ml-auto flex gap-2">
           <Select value={pageSize.toString()} onValueChange={(v) => { setPageSize(parseInt(v)); setCurrentPage(1); }}>
-            <SelectTrigger className="w-20 bg-white/[0.03] border-white/[0.08]">
+            <SelectTrigger className="h-11 w-24 border-white/[0.08] bg-white/[0.03]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -286,21 +287,21 @@ export function MatchesTable({ matches, loading }: MatchesTableProps) {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" size="sm" onClick={exportCSV} className="border-white/[0.08] hover:bg-white/[0.05]">
+          <Button variant="outline" className="h-11 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06]" onClick={exportCSV}>
             <Download className="w-4 h-4 mr-2" />
             CSV
           </Button>
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
+      <p className="shrink-0 text-sm text-muted-foreground">
         {filteredMatches.length} match trovati
       </p>
 
-      <div className="rounded-xl border border-white/[0.06] overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-auto rounded-[20px] border border-white/[0.08] bg-black/12">
         <Table>
-          <TableHeader>
-            <TableRow className="glass-header border-b border-white/[0.06] hover:bg-transparent">
+          <TableHeader className="sticky top-0 z-10 bg-[#17090d]">
+            <TableRow className="border-b border-white/[0.06] bg-[#17090d] hover:bg-[#17090d]">
               <TableHead className="w-[100px] text-muted-foreground font-semibold">ID</TableHead>
               <TableHead 
                 className="cursor-pointer hover:text-foreground text-muted-foreground font-semibold"

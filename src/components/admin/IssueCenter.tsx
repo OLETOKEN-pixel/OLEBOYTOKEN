@@ -1,22 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, Clock, XCircle, Users, RefreshCw, ExternalLink, Wrench } from 'lucide-react';
+import { AlertTriangle, Clock, ExternalLink, RefreshCw, Users, Wrench, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PremiumBadge } from '@/components/ui/premium-badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Match } from '@/types';
-import { FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/motion';
-import { AnimatedCounter } from '@/components/ui/animated-counter';
-import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface LegacyCleanupResult {
   success: boolean;
@@ -25,7 +15,6 @@ interface LegacyCleanupResult {
   total_matches_processed?: number;
   total_refunded?: number;
   processed_match_ids?: string[];
-  auto_refund_result?: { processed?: number; refunded_total?: number };
   orphan_fix_result?: { fixed_wallets?: number; fixed_total?: number };
   error?: string;
 }
@@ -65,15 +54,11 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
     setCleaningUp(true);
     try {
       const { data, error } = await supabase.rpc('admin_cleanup_legacy_stuck_matches', {
-        p_cutoff_minutes: 35
+        p_cutoff_minutes: 35,
       });
-      
+
       if (error) {
-        toast({ 
-          title: 'Errore', 
-          description: error.message, 
-          variant: 'destructive' 
-        });
+        toast({ title: 'Errore', description: error.message, variant: 'destructive' });
         return;
       }
 
@@ -82,18 +67,18 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
       setShowCleanupDialog(true);
 
       if (result.success) {
-        toast({ 
-          title: 'Pulizia completata', 
-          description: `${result.total_matches_processed || 0} match processati, ${result.total_refunded || 0} Coins rimborsati` 
+        toast({
+          title: 'Pulizia completata',
+          description: `${result.total_matches_processed || 0} match processati, ${result.total_refunded || 0} Coins rimborsati`,
         });
-        fetchStats();
+        void fetchStats();
         onRefresh();
       }
-    } catch (e) {
-      toast({ 
-        title: 'Errore', 
-        description: 'Errore durante la pulizia', 
-        variant: 'destructive' 
+    } catch {
+      toast({
+        title: 'Errore',
+        description: 'Errore durante la pulizia',
+        variant: 'destructive',
       });
     } finally {
       setCleaningUp(false);
@@ -101,237 +86,205 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
   };
 
   useEffect(() => {
-    fetchStats();
+    void fetchStats();
   }, [matches]);
 
-  const disputedMatches = matches.filter(m => m.status === 'disputed');
-  const expiredMatches = matches.filter(m => m.status === 'expired');
-  const stuckReadyMatches = matches.filter(m => 
-    m.status === 'ready_check' && 
-    new Date(m.created_at).getTime() < Date.now() - 10 * 60 * 1000
+  const disputedMatches = matches.filter((match) => match.status === 'disputed');
+  const expiredMatches = matches.filter((match) => match.status === 'expired');
+  const stuckReadyMatches = matches.filter(
+    (match) => match.status === 'ready_check' && new Date(match.created_at).getTime() < Date.now() - 10 * 60 * 1000,
   );
-
-  const inconsistentMatches = matches.filter(m => {
-    if (!m.participants || m.status !== 'finished') return false;
-    const teamAChoice = m.participants.find(p => p.team_side === 'A')?.result_choice;
-    const teamBChoice = m.participants.find(p => p.team_side === 'B')?.result_choice;
+  const inconsistentMatches = matches.filter((match) => {
+    if (!match.participants || match.status !== 'finished') return false;
+    const teamAChoice = match.participants.find((participant) => participant.team_side === 'A')?.result_choice;
+    const teamBChoice = match.participants.find((participant) => participant.team_side === 'B')?.result_choice;
     return teamAChoice && teamBChoice && teamAChoice === teamBChoice;
   });
 
   const issueCategories = [
     {
       key: 'disputed',
-      label: 'Dispute',
+      label: 'Disputes',
       icon: AlertTriangle,
-      color: 'text-destructive',
-      bg: 'bg-destructive/10',
-      borderColor: 'border-destructive/20',
       count: stats?.disputed ?? disputedMatches.length,
       items: disputedMatches,
+      accent: '#ff8a65',
     },
     {
       key: 'expired_with_locks',
-      label: 'Expired con Fondi',
+      label: 'Expired with funds',
       icon: Clock,
-      color: 'text-warning',
-      bg: 'bg-warning/10',
-      borderColor: 'border-warning/20',
       count: stats?.expired_with_locks ?? 0,
       items: expiredMatches,
+      accent: '#ffd166',
     },
     {
       key: 'stuck_ready',
-      label: 'Ready Check Bloccati',
+      label: 'Stuck ready check',
       icon: Users,
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10',
-      borderColor: 'border-orange-500/20',
       count: stats?.stuck_ready_check ?? stuckReadyMatches.length,
       items: stuckReadyMatches,
+      accent: '#72d2ff',
     },
     {
       key: 'inconsistent',
-      label: 'Risultati Incoerenti',
+      label: 'Inconsistent results',
       icon: XCircle,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
-      borderColor: 'border-purple-500/20',
       count: stats?.inconsistent_results ?? inconsistentMatches.length,
       items: inconsistentMatches,
+      accent: '#c98dff',
     },
   ];
 
-  const handleRefresh = () => {
-    fetchStats();
-    onRefresh();
-    toast({ title: 'Aggiornato', description: 'Dati issue aggiornati' });
-  };
-
   return (
-    <div className="space-y-4">
-      <FadeIn>
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-display text-lg font-bold bg-gradient-to-r from-destructive to-orange-400 bg-clip-text text-transparent">Centro Issues</h3>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleLegacyCleanup} 
-              disabled={cleaningUp}
-              className="border-warning/30 text-warning hover:bg-warning/10 hover:border-warning/50"
-            >
-              <Wrench className={cn("w-4 h-4 mr-2", cleaningUp && 'animate-spin')} />
-              {cleaningUp ? 'Pulizia...' : 'Ripara Match Legacy'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="border-white/[0.1] hover:bg-white/[0.05]">
-              <RefreshCw className={cn("w-4 h-4 mr-2", loading && 'animate-spin')} />
-              Aggiorna
-            </Button>
-          </div>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-white/42">Issue center</p>
+          <h3 className="mt-1 text-xl font-semibold text-white">Automated match diagnostics</h3>
         </div>
-      </FadeIn>
 
-      <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {issueCategories.map((cat) => (
-          <StaggerItem key={cat.key}>
-            <div className={cn(
-              "glass-card rounded-xl p-4 cursor-pointer hover:scale-[1.02] transition-transform",
-              cat.bg,
-              cat.borderColor
-            )}>
-              <div className="flex items-center gap-3">
-                <cat.icon className={cn("w-6 h-6", cat.color)} />
-                <div>
-                  <p className="text-2xl font-bold"><AnimatedCounter value={cat.count} /></p>
-                  <p className="text-xs text-muted-foreground">{cat.label}</p>
-                </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLegacyCleanup}
+            disabled={cleaningUp}
+            className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+          >
+            <Wrench className="mr-2 h-4 w-4" />
+            {cleaningUp ? 'Cleaning...' : 'Repair legacy'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void fetchStats();
+              onRefresh();
+            }}
+            disabled={loading}
+            className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {issueCategories.map((category) => (
+          <div key={category.key} className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+                <category.icon className="h-4 w-4" style={{ color: category.accent }} />
               </div>
+              <p className="text-3xl font-semibold leading-none text-white">{category.count}</p>
             </div>
-          </StaggerItem>
-        ))}
-      </StaggerContainer>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {issueCategories.map((cat) => (
-          cat.count > 0 && (
-            <FadeIn key={cat.key}>
-              <div className="glass-panel rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 p-4 pb-3 border-b border-white/[0.05]">
-                  <cat.icon className={cn("w-4 h-4", cat.color)} />
-                  <span className="font-display text-sm font-bold">{cat.label}</span>
-                  <PremiumBadge variant="open" className="ml-auto">{cat.count}</PremiumBadge>
-                </div>
-                <div className="p-3">
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                    {cat.items.slice(0, 5).map((match) => (
-                      <div
-                        key={match.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] border border-white/[0.04] hover:bg-white/[0.06] transition-colors"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {match.team_size}v{match.team_size} {match.mode}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {match.region} • {match.entry_fee} Coins
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/admin/matches/${match.id}`)}
-                          className="hover:bg-white/[0.05]"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    {cat.items.length > 5 && (
-                      <p className="text-xs text-muted-foreground text-center py-2">
-                        +{cat.items.length - 5} altri
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          )
+            <p className="mt-4 text-sm font-medium text-white">{category.label}</p>
+          </div>
         ))}
       </div>
 
-      {stats?.total === 0 && (
-        <FadeIn>
-          <div className="glass-panel rounded-xl p-8 text-center glow-success">
-            <div className="w-12 h-12 rounded-full bg-[hsl(var(--success))]/20 flex items-center justify-center mx-auto mb-3">
-              <AlertTriangle className="w-6 h-6 text-[hsl(var(--success))]" />
+      <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-2">
+        {issueCategories
+          .filter((category) => category.count > 0)
+          .map((category) => (
+            <div key={category.key} className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/10 bg-black/18">
+              <div className="flex shrink-0 items-center gap-3 border-b border-white/8 px-4 py-4">
+                <category.icon className="h-4 w-4" style={{ color: category.accent }} />
+                <span className="text-sm font-semibold text-white">{category.label}</span>
+                <PremiumBadge variant="open" className="ml-auto">
+                  {category.count}
+                </PremiumBadge>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                <div className="space-y-3">
+                  {category.items.slice(0, 6).map((match) => (
+                    <div
+                      key={match.id}
+                      className="flex items-center justify-between gap-3 rounded-[18px] border border-white/10 bg-[#13070a] p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white">
+                          {match.team_size}v{match.team_size} {match.mode}
+                        </p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/42">
+                          {match.region} • {match.entry_fee} Coins
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/admin/matches/${match.id}`)}
+                        className="border border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+
+                  {category.items.length > 6 ? (
+                    <p className="text-center text-xs uppercase tracking-[0.18em] text-white/40">
+                      +{category.items.length - 6} more
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </div>
-            <p className="font-display font-bold text-[hsl(var(--success))]">Nessun problema rilevato!</p>
-            <p className="text-sm text-muted-foreground">Tutti i match sono in ordine.</p>
+          ))}
+
+        {(stats?.total ?? 0) === 0 ? (
+          <div className="grid place-items-center rounded-[24px] border border-dashed border-white/12 bg-black/10 px-4 py-10 text-center xl:col-span-2">
+            <div>
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#72f1b8]/12">
+                <AlertTriangle className="h-5 w-5 text-[#72f1b8]" />
+              </div>
+              <p className="mt-4 text-lg font-semibold text-white">No active issues</p>
+              <p className="mt-2 text-sm text-white/52">All monitored match states are currently clean.</p>
+            </div>
           </div>
-        </FadeIn>
-      )}
+        ) : null}
+      </div>
 
       <Dialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
-        <DialogContent className="glass-overlay rounded-xl border-white/[0.08] max-w-md">
+        <DialogContent className="border-white/14 bg-[#120b0f] text-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display">
-              <Wrench className="w-5 h-5 text-warning" />
-              Risultato Pulizia Legacy
-            </DialogTitle>
-            <DialogDescription>
-              Riepilogo delle operazioni eseguite
-            </DialogDescription>
+            <DialogTitle>Legacy cleanup result</DialogTitle>
+            <DialogDescription>Summary of the maintenance operation.</DialogDescription>
           </DialogHeader>
-          
-          {cleanupResult && (
+
+          {cleanupResult ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="glass-card rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold"><AnimatedCounter value={cleanupResult.non_terminal_processed || 0} /></p>
-                  <p className="text-xs text-muted-foreground">Match Non-Terminali</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Non-terminal</p>
+                  <p className="mt-3 text-3xl font-semibold text-white">{cleanupResult.non_terminal_processed || 0}</p>
                 </div>
-                <div className="glass-card rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold"><AnimatedCounter value={cleanupResult.terminal_stuck_processed || 0} /></p>
-                  <p className="text-xs text-muted-foreground">Match Bloccati</p>
-                </div>
-                <div className="glass-card rounded-lg p-3 text-center col-span-2 glow-cyan">
-                  <p className="text-2xl font-bold text-primary">
-                    <AnimatedCounter value={cleanupResult.total_refunded || 0} suffix=" Coins" />
-                  </p>
-                  <p className="text-xs text-muted-foreground">Totale Rimborsato</p>
+                <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Stuck terminal</p>
+                  <p className="mt-3 text-3xl font-semibold text-white">{cleanupResult.terminal_stuck_processed || 0}</p>
                 </div>
               </div>
 
-              {cleanupResult.orphan_fix_result && cleanupResult.orphan_fix_result.fixed_wallets! > 0 && (
-                <div className="glass-card rounded-lg p-3 border-warning/20">
-                  <p className="text-sm font-medium text-warning">
-                    Wallet riparati: {cleanupResult.orphan_fix_result.fixed_wallets}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    +{(cleanupResult.orphan_fix_result.fixed_total || 0).toFixed(2)} Coins sbloccati
-                  </p>
-                </div>
-              )}
+              <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Refunded total</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{cleanupResult.total_refunded || 0} Coins</p>
+              </div>
 
-              {cleanupResult.processed_match_ids && cleanupResult.processed_match_ids.length > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  <p className="font-medium mb-1">Match processati (primi 10):</p>
-                  <div className="font-mono bg-white/[0.03] rounded-lg p-2 max-h-20 overflow-y-auto border border-white/[0.04]">
-                    {cleanupResult.processed_match_ids.map(id => (
-                      <div key={id}>{id.slice(0, 8)}...</div>
+              {cleanupResult.processed_match_ids?.length ? (
+                <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Processed matches</p>
+                  <div className="mt-3 max-h-[140px] space-y-2 overflow-y-auto font-mono text-xs text-white/58">
+                    {cleanupResult.processed_match_ids.map((matchId) => (
+                      <div key={matchId}>{matchId}</div>
                     ))}
                   </div>
                 </div>
-              )}
-
-              <Button 
-                className="w-full btn-premium" 
-                onClick={() => setShowCleanupDialog(false)}
-              >
-                Chiudi
-              </Button>
+              ) : null}
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

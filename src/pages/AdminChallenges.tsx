@@ -54,6 +54,96 @@ function describeReward(challenge: ChallengeRow) {
   return pieces.join(' • ') || 'No reward';
 }
 
+function ChallengeColumn({
+  type,
+  rows,
+  isLoading,
+  togglingId,
+  onEdit,
+  onToggle,
+}: {
+  type: 'daily' | 'weekly';
+  rows: ChallengeRow[];
+  isLoading: boolean;
+  togglingId: string | null;
+  onEdit: (challenge: ChallengeRow) => void;
+  onToggle: (challenge: ChallengeRow) => void;
+}) {
+  return (
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/10 bg-black/18">
+      <div className="shrink-0 border-b border-white/8 px-4 py-4">
+        <h3 className="text-lg font-semibold text-white">
+          {type === 'daily' ? 'Daily challenges' : 'Weekly challenges'}
+        </h3>
+        <p className="mt-1 text-sm leading-6 text-white/52">
+          Ordered by `sort_order` and reflected live on public surfaces.
+        </p>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        {rows.length === 0 && !isLoading ? (
+          <AdminEmptyState
+            title={`No ${type} challenges`}
+            description="Create one from the dialog and it will immediately appear in the live catalog."
+          />
+        ) : (
+          <div className="space-y-3">
+            {rows.map((challenge) => (
+              <div key={challenge.id} className="rounded-[22px] border border-white/10 bg-[#13070a] p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="text-base font-semibold text-white">{challenge.title}</h4>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
+                    {challenge.metric_type}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
+                    order {challenge.sort_order}
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs uppercase tracking-[0.2em] ${
+                      challenge.is_active ? 'bg-[#72f1b8]/16 text-[#72f1b8]' : 'bg-white/8 text-white/46'
+                    }`}
+                  >
+                    {challenge.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                <p className="mt-3 text-sm leading-6 text-white/56">{challenge.description}</p>
+
+                <div className="mt-4 grid gap-2 text-sm text-white/64 sm:grid-cols-2">
+                  <div>
+                    Target: <span className="font-semibold text-white">{challenge.target_value}</span>
+                  </div>
+                  <div>
+                    Reward: <span className="font-semibold text-white">{describeReward(challenge)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => onEdit(challenge)}
+                    className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => onToggle(challenge)}
+                    disabled={togglingId === challenge.id}
+                    className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                  >
+                    {challenge.is_active ? 'Deactivate' : 'Activate'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminChallenges() {
   const { isAdmin } = useAdminStatus();
   const { toast } = useToast();
@@ -185,88 +275,69 @@ export default function AdminChallenges() {
   return (
     <AdminShell
       title="Challenges"
-      description="Create and tune daily or weekly tasks, reorder them, and push changes live to the site instantly."
+      description="Live daily and weekly task management with ordering, activation, and reward tuning in one place."
       actions={
         <>
-          <Button variant="outline" onClick={() => refetch()} className="border-white/14 bg-white/5 text-white hover:bg-white/10">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button onClick={openCreateDialog} className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
+          <Button onClick={openCreateDialog} className="h-11 bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
             <Plus className="mr-2 h-4 w-4" />
             New challenge
           </Button>
         </>
       }
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Active" value={String(activeCount)} icon={Trophy} />
-        <AdminStatCard label="Daily" value={String(dailyCount)} icon={CalendarClock} accent="#72d2ff" />
-        <AdminStatCard label="Weekly" value={String(weeklyCount)} icon={Target} accent="#72f1b8" />
-      </div>
+      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="grid min-h-0 gap-4 xl:grid-rows-[repeat(3,minmax(0,120px))_minmax(0,1fr)]">
+          <AdminStatCard label="Active" value={String(activeCount)} icon={Trophy} />
+          <AdminStatCard label="Daily" value={String(dailyCount)} icon={CalendarClock} accent="#72d2ff" />
+          <AdminStatCard label="Weekly" value={String(weeklyCount)} icon={Target} accent="#72f1b8" />
 
-      {(['daily', 'weekly'] as const).map((type) => (
-        <AdminPanel
-          key={type}
-          title={type === 'daily' ? 'Daily challenges' : 'Weekly challenges'}
-          description={`Ordered by sort_order and instantly reflected on the public challenges surfaces.`}
-        >
-          {groupedChallenges[type].length === 0 && !isLoading ? (
-            <AdminEmptyState
-              title={`No ${type} challenges`}
-              description="Create one from the dialog above and it will immediately appear in the live catalog."
-            />
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {groupedChallenges[type].map((challenge) => (
-                <div key={challenge.id} className="rounded-[24px] border border-white/10 bg-black/18 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-semibold text-white">{challenge.title}</h3>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
-                      {challenge.metric_type}
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
-                      order {challenge.sort_order}
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs uppercase tracking-[0.2em] ${
-                        challenge.is_active ? 'bg-[#72f1b8]/16 text-[#72f1b8]' : 'bg-white/8 text-white/46'
-                      }`}
-                    >
-                      {challenge.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-sm text-white/56">{challenge.description}</p>
-
-                  <div className="mt-4 grid gap-2 text-sm text-white/64 sm:grid-cols-2">
-                    <div>Target: <span className="font-semibold text-white">{challenge.target_value}</span></div>
-                    <div>Reward: <span className="font-semibold text-white">{describeReward(challenge)}</span></div>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => openEditDialog(challenge)}
-                      className="border-white/12 bg-white/5 text-white hover:bg-white/10"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleToggleActive(challenge)}
-                      disabled={togglingId === challenge.id}
-                      className="border-white/12 bg-white/5 text-white hover:bg-white/10"
-                    >
-                      {challenge.is_active ? 'Deactivate' : 'Activate'}
-                    </Button>
-                  </div>
-                </div>
-              ))}
+          <AdminPanel
+            title="Publishing rules"
+            description="Keep the list tight, ordered, and readable. Changes here reflect immediately on public challenge surfaces."
+            className="min-h-0"
+            contentClassName="min-h-0 overflow-y-auto pr-1"
+          >
+            <div className="space-y-3 text-sm leading-6 text-white/58">
+              <p>Use `sort_order` to match the exact display order required by the live `/challenges` views.</p>
+              <p>Deactivate instead of deleting so historical progress remains intact for players.</p>
             </div>
-          )}
+          </AdminPanel>
+        </div>
+
+        <AdminPanel
+          title="Challenge catalog"
+          description="Daily and weekly lists stay visible side by side while each list scrolls internally."
+          className="h-full"
+          contentClassName="h-full"
+        >
+          <div className="grid h-full min-h-0 gap-4 xl:grid-cols-2">
+            <ChallengeColumn
+              type="daily"
+              rows={groupedChallenges.daily}
+              isLoading={isLoading}
+              togglingId={togglingId}
+              onEdit={openEditDialog}
+              onToggle={handleToggleActive}
+            />
+            <ChallengeColumn
+              type="weekly"
+              rows={groupedChallenges.weekly}
+              isLoading={isLoading}
+              togglingId={togglingId}
+              onEdit={openEditDialog}
+              onToggle={handleToggleActive}
+            />
+          </div>
         </AdminPanel>
-      ))}
+      </div>
 
       <Dialog
         open={dialogOpen}
@@ -381,7 +452,9 @@ export default function AdminChallenges() {
               <div className="flex items-center justify-between rounded-[20px] border border-white/10 bg-white/5 px-4 py-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-white/46">Active</p>
-                  <p className="mt-1 text-sm text-white/70">When active, the challenge is visible and trackable on site.</p>
+                  <p className="mt-1 text-sm text-white/70">
+                    When active, the challenge is visible and trackable on site.
+                  </p>
                 </div>
                 <Switch
                   checked={form.isActive}

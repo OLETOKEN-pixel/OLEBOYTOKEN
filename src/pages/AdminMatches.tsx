@@ -40,31 +40,39 @@ export default function AdminMatches() {
   return (
     <AdminShell
       title="Matches"
-      description="Inspect the live arena queue, investigate disputes, and jump into each match detail page."
+      description="Operational workspace for live queue monitoring, disputes, proofs, and match deep-dives."
       actions={
         <>
-          <div className="hidden min-w-[300px] lg:block">
+          <div className="w-full max-w-[360px]">
             <GlobalSearchBar />
           </div>
-          <Button variant="outline" onClick={() => refetch()} className="border-white/14 bg-white/5 text-white hover:bg-white/10">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
         </>
       }
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Matches loaded" value={String(matches.length)} icon={Swords} />
-        <AdminStatCard label="Disputed" value={String(disputedCount)} icon={AlertTriangle} accent="#ff8a65" />
-        <AdminStatCard label="Ready check" value={String(readyCheckCount + liveCount)} icon={TimerReset} accent="#72d2ff" />
-      </div>
+      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid min-h-0 gap-4 xl:grid-rows-[repeat(3,minmax(0,1fr))]">
+          <AdminStatCard label="Matches loaded" value={String(matches.length)} icon={Swords} />
+          <AdminStatCard label="Disputed" value={String(disputedCount)} icon={AlertTriangle} accent="#ff8a65" />
+          <AdminStatCard label="Ready / live" value={String(readyCheckCount + liveCount)} icon={TimerReset} accent="#72d2ff" />
+        </div>
 
-      <AdminPanel
-        title="Match control"
-        description="Use the operational filters below, then open a match to review proofs, chat, and admin actions."
-      >
-        <MatchesTable matches={matches} loading={isLoading} />
-      </AdminPanel>
+        <AdminPanel
+          title="Match control"
+          description="Search, filter, export, and jump into the dedicated full-screen match detail view."
+          className="h-full"
+          contentClassName="h-full"
+        >
+          <MatchesTable matches={matches} loading={isLoading} fullHeight />
+        </AdminPanel>
+      </div>
     </AdminShell>
   );
 }

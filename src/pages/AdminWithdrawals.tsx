@@ -154,154 +154,172 @@ export default function AdminWithdrawals() {
   return (
     <AdminShell
       title="Withdrawals"
-      description="Review payout requests, approve or reject them with notes, and monitor the platform wallet in one place."
+      description="Approve, reject, and audit payout requests while keeping the platform wallet visible in the same workspace."
       actions={
         <>
-          <Button variant="outline" onClick={() => refetch()} className="border-white/14 bg-white/5 text-white hover:bg-white/10">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button onClick={() => setPlatformDialogOpen(true)} className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
+          <Button onClick={() => setPlatformDialogOpen(true)} className="h-11 bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
             <Wallet className="mr-2 h-4 w-4" />
             Withdraw platform
           </Button>
         </>
       }
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Pending requests" value={String(pendingWithdrawals.length)} icon={CreditCard} />
-        <AdminStatCard label="Platform balance" value={`${platformBalance.toFixed(2)} EUR`} icon={Wallet} accent="#ffd166" />
-        <AdminStatCard label="Recent platform fees" value={String(earnings.length)} icon={Banknote} accent="#72f1b8" />
-      </div>
+      <div className="grid h-full min-h-0 grid-rows-[auto,minmax(0,1fr)] gap-4">
+        <div className="grid gap-4 md:grid-cols-3">
+          <AdminStatCard label="Pending requests" value={String(pendingWithdrawals.length)} icon={CreditCard} />
+          <AdminStatCard label="Platform balance" value={`${platformBalance.toFixed(2)} EUR`} icon={Wallet} accent="#ffd166" />
+          <AdminStatCard label="Recent platform fees" value={String(earnings.length)} icon={Banknote} accent="#72f1b8" />
+        </div>
 
-      <AdminPanel
-        title="Pending withdrawals"
-        description="These requests can be approved or rejected immediately from the admin suite."
-      >
-        {pendingWithdrawals.length === 0 ? (
-          <AdminEmptyState
-            title="No pending withdrawals"
-            description="As soon as a new request is submitted, it will appear here for manual review."
-          />
-        ) : (
-          <div className="overflow-x-auto rounded-[22px] border border-white/8">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/8 hover:bg-transparent">
-                  <TableHead>User</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Destination</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendingWithdrawals.map((withdrawal) => (
-                  <TableRow key={withdrawal.id} className="border-white/6">
-                    <TableCell>
-                      <div className="font-medium text-white">{withdrawal.profiles?.username || 'Unknown user'}</div>
-                      <div className="text-xs text-white/48">{withdrawal.user_id}</div>
-                    </TableCell>
-                    <TableCell className="uppercase text-white/64">{withdrawal.payment_method}</TableCell>
-                    <TableCell className="font-semibold text-white">{withdrawal.amount.toFixed(2)} {withdrawal.currency}</TableCell>
-                    <TableCell className="max-w-[260px] text-sm text-white/58">{withdrawal.payment_details}</TableCell>
-                    <TableCell className="text-sm text-white/48">
-                      {new Date(withdrawal.created_at).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openProcessModal(withdrawal, 'reject')}
-                          className="border-white/12 bg-white/5 text-white hover:bg-white/10"
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => openProcessModal(withdrawal, 'approve')}
-                          className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90"
-                        >
-                          Approve
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </AdminPanel>
-
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <AdminPanel
-          title="Processed history"
-          description="Latest completed or rejected requests for quick auditing."
-        >
-          <div className="overflow-x-auto rounded-[22px] border border-white/8">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/8 hover:bg-transparent">
-                  <TableHead>User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Processed</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {completedWithdrawals.length === 0 ? (
-                  <TableRow className="border-white/6">
-                    <TableCell colSpan={4} className="py-10 text-center text-white/52">
-                      No processed withdrawals yet.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  completedWithdrawals.map((withdrawal) => (
-                    <TableRow key={withdrawal.id} className="border-white/6">
-                      <TableCell className="text-white">{withdrawal.profiles?.username || withdrawal.user_id}</TableCell>
-                      <TableCell className="uppercase text-white/58">{withdrawal.status}</TableCell>
-                      <TableCell className="text-white">{withdrawal.amount.toFixed(2)} {withdrawal.currency}</TableCell>
-                      <TableCell className="text-sm text-white/48">
-                        {withdrawal.processed_at ? new Date(withdrawal.processed_at).toLocaleString() : 'Not processed'}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </AdminPanel>
-
-        <AdminPanel
-          title="Recent platform earnings"
-          description="Latest entries credited to the platform wallet."
-        >
-          <div className="space-y-3">
-            {earnings.length === 0 ? (
+        <div className="grid min-h-0 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+          <AdminPanel
+            title="Pending withdrawals"
+            description="Primary action queue. Review destination details and process requests without leaving this screen."
+            className="min-h-0"
+            contentClassName="min-h-0 h-full"
+          >
+            {pendingWithdrawals.length === 0 ? (
               <AdminEmptyState
-                title="No platform earnings yet"
-                description="When the platform books a fee, it will show up here."
+                title="No pending withdrawals"
+                description="As soon as a new request is submitted, it will appear here for manual review."
               />
             ) : (
-              earnings.map((earning: any) => (
-                <div key={earning.id} className="rounded-[20px] border border-white/8 bg-black/20 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{Number(earning.amount || 0).toFixed(2)} EUR</p>
-                      <p className="mt-1 text-xs text-white/50">{earning.match_id || 'Platform entry'}</p>
-                    </div>
-                    <div className="text-right text-xs text-white/46">
-                      {new Date(earning.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              ))
+              <div className="min-h-0 h-full overflow-auto rounded-[20px] border border-white/8 bg-black/12">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-[#17090d]">
+                    <TableRow className="border-white/8 bg-[#17090d] hover:bg-[#17090d]">
+                      <TableHead>User</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Destination</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingWithdrawals.map((withdrawal) => (
+                      <TableRow key={withdrawal.id} className="border-white/6">
+                        <TableCell>
+                          <div className="font-medium text-white">{withdrawal.profiles?.username || 'Unknown user'}</div>
+                          <div className="text-xs text-white/48">{withdrawal.user_id}</div>
+                        </TableCell>
+                        <TableCell className="uppercase text-white/64">{withdrawal.payment_method}</TableCell>
+                        <TableCell className="font-semibold text-white">
+                          {withdrawal.amount.toFixed(2)} {withdrawal.currency}
+                        </TableCell>
+                        <TableCell className="max-w-[280px] text-sm text-white/58">{withdrawal.payment_details}</TableCell>
+                        <TableCell className="text-sm text-white/48">
+                          {new Date(withdrawal.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openProcessModal(withdrawal, 'reject')}
+                              className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => openProcessModal(withdrawal, 'approve')}
+                              className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90"
+                            >
+                              Approve
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
+          </AdminPanel>
+
+          <div className="grid min-h-0 gap-4 xl:grid-rows-[1fr_1fr]">
+            <AdminPanel
+              title="Processed history"
+              description="Latest completed or rejected requests for quick auditing."
+              className="min-h-0"
+              contentClassName="min-h-0 h-full"
+            >
+              <div className="min-h-0 h-full overflow-auto rounded-[20px] border border-white/8 bg-black/12">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-[#17090d]">
+                    <TableRow className="border-white/8 bg-[#17090d] hover:bg-[#17090d]">
+                      <TableHead>User</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Processed</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {completedWithdrawals.length === 0 ? (
+                      <TableRow className="border-white/6">
+                        <TableCell colSpan={4} className="py-10 text-center text-white/52">
+                          No processed withdrawals yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      completedWithdrawals.map((withdrawal) => (
+                        <TableRow key={withdrawal.id} className="border-white/6">
+                          <TableCell className="text-white">{withdrawal.profiles?.username || withdrawal.user_id}</TableCell>
+                          <TableCell className="uppercase text-white/58">{withdrawal.status}</TableCell>
+                          <TableCell className="text-white">
+                            {withdrawal.amount.toFixed(2)} {withdrawal.currency}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/48">
+                            {withdrawal.processed_at ? new Date(withdrawal.processed_at).toLocaleString() : 'Not processed'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </AdminPanel>
+
+            <AdminPanel
+              title="Recent platform earnings"
+              description="Latest fee entries credited to the platform wallet."
+              className="min-h-0"
+              contentClassName="min-h-0 overflow-y-auto pr-1"
+            >
+              <div className="space-y-3">
+                {earnings.length === 0 ? (
+                  <AdminEmptyState
+                    title="No platform earnings yet"
+                    description="When the platform books a fee, it will show up here."
+                  />
+                ) : (
+                  earnings.map((earning: any) => (
+                    <div key={earning.id} className="rounded-[20px] border border-white/8 bg-black/20 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{Number(earning.amount || 0).toFixed(2)} EUR</p>
+                          <p className="mt-1 text-xs text-white/50">{earning.match_id || 'Platform entry'}</p>
+                        </div>
+                        <div className="text-right text-xs text-white/46">
+                          {new Date(earning.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </AdminPanel>
           </div>
-        </AdminPanel>
+        </div>
       </div>
 
       <Dialog
