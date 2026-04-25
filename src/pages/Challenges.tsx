@@ -384,8 +384,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '-22px',
-          top: '-30px',
+          left: 0,
+          top: 0,
           width: '73.999px',
           height: '73.999px',
           transform: 'rotate(9.9deg)',
@@ -399,8 +399,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '12px',
-          top: '-3px',
+          left: '34px',
+          top: '27px',
           width: '10.123px',
           height: '8.567px',
           transform: 'rotate(17.19deg)',
@@ -414,8 +414,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '7px',
-          top: '2px',
+          left: '29px',
+          top: '32.3px',
           width: '14.988px',
           height: '15.507px',
           transform: 'rotate(17.19deg)',
@@ -429,8 +429,8 @@ function DesktopRewardCard({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '12px',
-          top: '6px',
+          left: '34px',
+          top: '36px',
           width: '5.004px',
           height: '5.004px',
           transform: 'rotate(17.19deg)',
