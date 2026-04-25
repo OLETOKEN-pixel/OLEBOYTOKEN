@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -44,6 +46,10 @@ const mocks = vi.hoisted(() => {
       ],
       error: null,
     },
+    shop_level_rewards: {
+      data: [],
+      error: null,
+    },
     user_challenge_progress: {
       data: [
         { challenge_id: 'challenge-1', progress_value: 1, is_completed: false },
@@ -79,6 +85,14 @@ const mocks = vi.hoisted(() => {
     return chain;
   });
 
+  const channelMock = vi.fn(() => {
+    const channel: any = {};
+    channel.on = vi.fn(() => channel);
+    channel.subscribe = vi.fn(() => ({ id: 'shop-level-rewards-channel' }));
+    return channel;
+  });
+
+  const removeChannelMock = vi.fn();
   const signOut = vi.fn();
   const authValue = {
     user: { id: 'user-1' },
@@ -98,6 +112,8 @@ const mocks = vi.hoisted(() => {
 
   return {
     fromMock,
+    channelMock,
+    removeChannelMock,
     signOut,
     authValue,
   };
@@ -107,6 +123,8 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: mocks.fromMock,
     rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
+    channel: mocks.channelMock,
+    removeChannel: mocks.removeChannelMock,
   },
 }));
 
@@ -123,6 +141,23 @@ function setViewportWidth(width: number) {
   window.dispatchEvent(new Event('resize'));
 }
 
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
+
+function renderWithProviders(ui: ReactNode) {
+  return render(ui, { wrapper: createWrapper() });
+}
+
 function LocationProbe() {
   const location = useLocation();
   const scrollTo = (location.state as { scrollTo?: string } | null)?.scrollTo ?? '';
@@ -133,6 +168,8 @@ function LocationProbe() {
 describe('HomeRegistered mobile logged-in landing', () => {
   afterEach(() => {
     mocks.fromMock.mockClear();
+    mocks.channelMock.mockClear();
+    mocks.removeChannelMock.mockClear();
     mocks.signOut.mockClear();
     setViewportWidth(1024);
   });
@@ -140,7 +177,7 @@ describe('HomeRegistered mobile logged-in landing', () => {
   it('renders the dedicated mobile logged-in home below the mobile breakpoint', async () => {
     setViewportWidth(390);
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MemoryRouter>
         <HomeRegistered displayName="Tester" />
       </MemoryRouter>,
@@ -165,11 +202,12 @@ describe('HomeRegistered mobile logged-in landing', () => {
   it('keeps mobile logged-home assets controlled and removes desktop decorative chrome', async () => {
     setViewportWidth(375);
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MemoryRouter>
         <HomeRegistered displayName="Tester" />
       </MemoryRouter>,
     );
+
     await waitFor(() => {
       expect(screen.getByText('Redline')).toBeInTheDocument();
       expect(screen.getByText('Win one match')).toBeInTheDocument();
@@ -181,7 +219,9 @@ describe('HomeRegistered mobile logged-in landing', () => {
 
     expect(srcs).toContain('/figma-assets/figma-neon.png');
     expect(srcs).toContain('/showreel/highlight-video-1.png');
-    expect(srcs).toContain('/showreel/shop-item-1.png');
+    expect(srcs).toContain('/shop/tappetino.png');
+    expect(srcs).toContain('/shop/mouse.webp');
+    expect(srcs).toContain('/showreel/vip-icon.svg');
     expect(srcs).not.toContain('/active-home/zaps.png');
     expect(srcs).not.toContain('/active-home/star-shape.svg');
     expect(srcs).not.toContain('/active-home/star-shape-1.svg');
@@ -197,7 +237,7 @@ describe('HomeRegistered mobile logged-in landing', () => {
   it('keeps CTA routes wired from the mobile logged-in sections', async () => {
     setViewportWidth(390);
 
-    render(
+    renderWithProviders(
       <MemoryRouter initialEntries={['/']}>
         <HomeRegistered displayName="Tester" />
         <LocationProbe />
@@ -210,6 +250,7 @@ describe('HomeRegistered mobile logged-in landing', () => {
       expect(screen.getByText('140')).toBeInTheDocument();
       expect(screen.getByText('Alpha')).toBeInTheDocument();
     });
+
     fireEvent.click(screen.getByRole('button', { name: 'Open matches page' }));
 
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/matches|');
@@ -218,7 +259,7 @@ describe('HomeRegistered mobile logged-in landing', () => {
   it('routes the mobile level up CTA to the standalone challenges page', async () => {
     setViewportWidth(390);
 
-    render(
+    renderWithProviders(
       <MemoryRouter initialEntries={['/']}>
         <HomeRegistered displayName="Tester" />
         <LocationProbe />
@@ -240,11 +281,12 @@ describe('HomeRegistered mobile logged-in landing', () => {
   it('marks mobile logged-home roots as horizontally clipped', async () => {
     setViewportWidth(320);
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MemoryRouter>
         <HomeRegistered displayName="Tester" />
       </MemoryRouter>,
     );
+
     await waitFor(() => {
       expect(screen.getByText('Redline')).toBeInTheDocument();
       expect(screen.getByText('Win one match')).toBeInTheDocument();
@@ -264,6 +306,8 @@ describe('HomeRegistered mobile logged-in landing', () => {
 
 describe('NavbarFigmaLoggedIn mobile navigation', () => {
   afterEach(() => {
+    mocks.channelMock.mockClear();
+    mocks.removeChannelMock.mockClear();
     mocks.signOut.mockClear();
     setViewportWidth(1024);
   });
@@ -271,7 +315,7 @@ describe('NavbarFigmaLoggedIn mobile navigation', () => {
   it('renders the compact logged-in navbar with wallet, profile trigger and section menu', () => {
     setViewportWidth(390);
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MemoryRouter>
         <NavbarFigmaLoggedIn />
       </MemoryRouter>,
@@ -287,7 +331,7 @@ describe('NavbarFigmaLoggedIn mobile navigation', () => {
   it('opens the mobile section menu and routes standalone pages back to home section ids', () => {
     setViewportWidth(390);
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MemoryRouter initialEntries={['/matches']}>
         <NavbarFigmaLoggedIn />
         <LocationProbe />

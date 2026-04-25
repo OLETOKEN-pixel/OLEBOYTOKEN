@@ -1,5 +1,5 @@
 import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
-import { LEVEL_REWARDS } from '@/lib/levelRewards';
+import { useShopLevelRewards } from '@/hooks/useShopLevelRewards';
 
 const imgStarShape = '/figma-assets/figma-star-shape.svg';
 const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
@@ -12,12 +12,6 @@ type ShopItem =
   | { type: 'vip';   image: string; price: string; label: string; sublabel: string };
 
 const shopItems: ShopItem[] = [
-  ...LEVEL_REWARDS.map((reward) => ({
-    type: 'level' as const,
-    image: reward.image,
-    name: reward.name,
-    levelRequired: reward.levelRequired,
-  })),
   { type: 'vip',   image: '/showreel/vip-icon.svg', price: '€9,99', label: 'VIP', sublabel: '1 MONTH' },
 ];
 
@@ -26,6 +20,14 @@ const CARD_GAP = 60;
 
 export const ShopSection = () => {
   const { openWalletPurchase } = useWalletPurchase();
+  const { rewards } = useShopLevelRewards();
+  const levelRewardItems: ShopItem[] = rewards.map((reward) => ({
+    type: 'level',
+    image: reward.image,
+    name: reward.name,
+    levelRequired: reward.levelRequired,
+  }));
+  const carouselItems = [...levelRewardItems, ...shopItems];
 
   return (
     <div id="s-shop" className="z-[1] w-[1920px] h-[955px] flex bg-[#0f0404]">
@@ -74,7 +76,7 @@ export const ShopSection = () => {
             className="flex h-[272px] w-max animate-marquee group-hover:[animation-play-state:paused]"
             style={{ animationDuration: '12s', willChange: 'transform' }}
           >
-            {[...shopItems, ...shopItems].map((item, index) => (
+            {[...carouselItems, ...carouselItems].map((item, index) => (
               <div
                 key={index}
                 className="flex-shrink-0 relative bg-[#3a0000] rounded-[17px] overflow-hidden"

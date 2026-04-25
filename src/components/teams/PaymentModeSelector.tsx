@@ -1,5 +1,6 @@
 import { AlertCircle, User, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 import type { PaymentMode, TeamMemberWithBalance } from '@/types';
 
@@ -30,8 +31,12 @@ function InsufficientMemberList({ members }: { members: TeamMemberWithBalance[] 
           className="inline-flex h-[26px] max-w-[150px] items-center gap-[7px] rounded-full border border-red-400/30 bg-red-500/10 px-[7px] text-[12px] text-red-100"
           style={{ fontFamily: FONT_REGULAR }}
         >
-          <Avatar className="h-[18px] w-[18px] bg-[#3b3b3b]" data-avatar-url={member.avatar_url ?? ''}>
-            <AvatarImage src={member.avatar_url ?? undefined} alt={`${member.username} avatar`} className="object-cover" />
+          <Avatar className="h-[18px] w-[18px] bg-[#3b3b3b]" data-avatar-url={getDiscordAvatarUrl(member) ?? ''}>
+            <AvatarImage
+              src={getDiscordAvatarUrl(member) ?? undefined}
+              alt={`${member.username} avatar`}
+              className="object-cover"
+            />
             <AvatarFallback className="bg-[#3b3b3b] text-[10px] text-white">
               {member.username?.charAt(0).toUpperCase() || '?'}
             </AvatarFallback>

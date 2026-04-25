@@ -537,6 +537,21 @@ export function NavbarFigmaLoggedIn() {
                 </div>
               </DropdownMenuItem>
 
+              {navbarProfile?.role === 'admin' ? (
+                <DropdownMenuItem
+                  className="group rounded-[18px] border border-transparent bg-white/[0.03] px-3 py-0 text-white outline-none transition hover:border-[#ff1654]/30 hover:bg-[#ff1654]/10 focus:border-[#ff1654]/30 focus:bg-[#ff1654]/10"
+                  onSelect={() => openProfilePage('/admin')}
+                >
+                  <div className="flex w-full items-center justify-between gap-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white">Admin Suite</p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/42">Operations, payouts and live content</p>
+                    </div>
+                    <span className="text-xl leading-none text-white/22 transition group-hover:text-[#ff8ead] group-focus:text-[#ff8ead]">&rsaquo;</span>
+                  </div>
+                </DropdownMenuItem>
+              ) : null}
+
               <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
 
               <DropdownMenuItem
@@ -744,6 +759,9 @@ function NavbarFigmaLoggedInMobile({
             <MobileProfileItem label="Game Settings" detail="Epic Games and match setup" onSelect={() => onProfilePage('/profile?tab=game')} />
             <MobileProfileItem label="Payments & Bank" detail="Wallet, Stripe and withdrawals" onSelect={() => onProfilePage('/wallet')} />
             <MobileProfileItem label="Connections" detail="Discord and linked services" onSelect={() => onProfilePage('/profile?tab=connections')} />
+            {profile?.role === 'admin' ? (
+              <MobileProfileItem label="Admin Suite" detail="Operations, payouts and live content" onSelect={() => onProfilePage('/admin')} />
+            ) : null}
             <DropdownMenuSeparator className="my-2 bg-white/[0.08]" />
 
             <DropdownMenuItem

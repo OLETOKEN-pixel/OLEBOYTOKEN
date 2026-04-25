@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useShopLevelRewards } from '@/hooks/useShopLevelRewards';
 import { getNextLevelReward } from '@/lib/levelRewards';
 import { getLevel, getLevelXpRequired, getXpInLevel, getXpToNext } from '@/lib/xp';
 
@@ -72,6 +73,7 @@ export function useChallenges() {
   const queryClient = useQueryClient();
   const location = useLocation();
   const isOnChallengesPage = location.pathname === '/challenges';
+  const { rewards: levelRewards } = useShopLevelRewards();
 
   const {
     data: challenges = [],
@@ -232,7 +234,7 @@ export function useChallenges() {
   const xpInLevel = getXpInLevel(userXp);
   const xpRequired = getLevelXpRequired(level);
   const xpToNext = getXpToNext(userXp);
-  const nextReward = getNextLevelReward(level);
+  const nextReward = getNextLevelReward(level, levelRewards);
 
   const claimChallenge = useCallback(
     (challengeId: string, periodKey: string) => {

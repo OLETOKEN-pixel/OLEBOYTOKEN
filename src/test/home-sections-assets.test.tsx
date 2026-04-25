@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -5,20 +7,48 @@ import { FooterSection } from '@/components/home/sections/FooterSection';
 import { ShopSection } from '@/components/home/sections/ShopSection';
 import { TeamsSection } from '@/components/home/sections/TeamsSection';
 
-const { limitMock, orderMock, selectMock, fromMock, rpcMock } = vi.hoisted(() => {
-  const limitMock = vi.fn();
-  const orderMock = vi.fn(() => ({ limit: limitMock }));
-  const selectMock = vi.fn(() => ({ order: orderMock }));
-  const fromMock = vi.fn(() => ({ select: selectMock }));
-  const rpcMock = vi.fn();
+function buildThenableQuery(result: { data: unknown; error: unknown }) {
+  const chain: any = {};
+  const returnChain = () => chain;
 
-  return { limitMock, orderMock, selectMock, fromMock, rpcMock };
+  chain.select = vi.fn(returnChain);
+  chain.eq = vi.fn(returnChain);
+  chain.order = vi.fn(returnChain);
+  chain.limit = vi.fn(returnChain);
+  chain.single = vi.fn(() => Promise.resolve(result));
+  chain.maybeSingle = vi.fn(() => Promise.resolve(result));
+  chain.then = (resolve: any, reject: any) => Promise.resolve(result).then(resolve, reject);
+
+  return chain;
+}
+
+const { fromMock, rpcMock, channelMock, removeChannelMock } = vi.hoisted(() => {
+  const fromMock = vi.fn((table: string) => {
+    const result =
+      table === 'shop_level_rewards'
+        ? { data: [], error: null }
+        : { data: [], error: null };
+
+    return buildThenableQuery(result);
+  });
+  const rpcMock = vi.fn();
+  const channelMock = vi.fn(() => {
+    const channel: any = {};
+    channel.on = vi.fn(() => channel);
+    channel.subscribe = vi.fn(() => ({ id: 'shop-level-rewards-channel' }));
+    return channel;
+  });
+  const removeChannelMock = vi.fn();
+
+  return { fromMock, rpcMock, channelMock, removeChannelMock };
 });
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: fromMock,
     rpc: rpcMock,
+    channel: channelMock,
+    removeChannel: removeChannelMock,
   },
 }));
 
@@ -27,13 +57,28 @@ const getImageSources = (container: HTMLElement) =>
     .map((img) => img.getAttribute('src'))
     .filter((src): src is string => Boolean(src));
 
-const renderWithRouter = (ui: React.ReactElement) =>
-  render(<MemoryRouter>{ui}</MemoryRouter>);
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>{children}</MemoryRouter>
+      </QueryClientProvider>
+    );
+  };
+}
+
+const renderWithRouter = (ui: React.ReactElement) => render(ui, { wrapper: createWrapper() });
 
 describe('logged home section assets', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    limitMock.mockResolvedValue({ data: [], error: null });
     rpcMock.mockResolvedValue({ data: { success: true, teams: [] }, error: null });
   });
 
@@ -57,8 +102,14 @@ describe('logged home section assets', () => {
     });
   });
 
-  it('keeps ShopSection showreel assets local and removes expiring Figma asset URLs', () => {
+  it('keeps ShopSection showreel assets local and removes expiring Figma asset URLs', async () => {
     const { container } = renderWithRouter(<ShopSection />);
+
+    await waitFor(() => {
+      expect(container.querySelector('img[src="/shop/tappetino.png"]')).not.toBeNull();
+      expect(container.querySelector('img[src="/shop/mouse.webp"]')).not.toBeNull();
+    });
+
     const srcs = getImageSources(container);
 
     expect(srcs).toContain('/figma-assets/shop-spaccato-title.svg');

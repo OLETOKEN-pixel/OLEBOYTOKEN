@@ -9,6 +9,7 @@ import type { Match } from '@/types';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
 import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
+import { useShopLevelRewards } from '@/hooks/useShopLevelRewards';
 
 interface HomeRegisteredMobileProps {
   displayName: string;
@@ -100,9 +101,6 @@ const videoItems = [
 ];
 
 const shopItems: ShopItem[] = [
-  { type: 'cosmetic', image: '/showreel/shop-item-1.png', price: '500' },
-  { type: 'cosmetic', image: '/showreel/shop-item-2.png', price: '300' },
-  { type: 'cosmetic', image: '/showreel/shop-item-3.png', price: '999' },
   { type: 'vip', image: '/showreel/vip-icon.svg', price: 'EUR 9.99', label: 'VIP', sublabel: '1 MONTH' },
 ];
 
@@ -1065,10 +1063,11 @@ function TeamsMobile() {
 }
 
 function ShopPrice({ price }: { price: string }) {
+  const showCoinIcon = /^\d/.test(price);
   return (
     <div style={{ position: 'absolute', left: '10px', right: '10px', bottom: '10px', display: 'flex', alignItems: 'center', gap: '7px' }}>
-      {!price.startsWith('EUR') ? <img src="/showreel/coin-icon.svg" alt="" aria-hidden style={{ width: '19px', height: '19px', flexShrink: 0 }} /> : null}
-      <span style={{ fontFamily: "'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif", fontWeight: 700, fontSize: price.startsWith('EUR') ? '20px' : '25px', lineHeight: '29px', color: '#ffffff', whiteSpace: 'nowrap' }}>
+      {showCoinIcon ? <img src="/showreel/coin-icon.svg" alt="" aria-hidden style={{ width: '19px', height: '19px', flexShrink: 0 }} /> : null}
+      <span style={{ fontFamily: "'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif", fontWeight: 700, fontSize: price.startsWith('EUR') ? '20px' : price.startsWith('LVL') ? '18px' : '25px', lineHeight: '29px', color: '#ffffff', whiteSpace: 'nowrap' }}>
         {price}
       </span>
     </div>
@@ -1078,6 +1077,15 @@ function ShopPrice({ price }: { price: string }) {
 function ShopMobile() {
   const navigate = useNavigate();
   const { openWalletPurchase } = useWalletPurchase();
+  const { rewards } = useShopLevelRewards();
+  const mobileShopItems: ShopItem[] = [
+    ...rewards.map((reward) => ({
+      type: 'cosmetic' as const,
+      image: reward.image,
+      price: `LVL ${reward.levelRequired}`,
+    })),
+    ...shopItems,
+  ];
 
   return (
     <MobileSection
@@ -1094,7 +1102,7 @@ function ShopMobile() {
       }
     >
       <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' }}>
-        {shopItems.map((item) => (
+        {mobileShopItems.map((item) => (
           <Panel key={`${item.image}-${item.price}`}>
             <div style={{ position: 'relative', width: '158px', height: '194px', background: '#3a0000' }}>
               {item.type === 'cosmetic' ? (

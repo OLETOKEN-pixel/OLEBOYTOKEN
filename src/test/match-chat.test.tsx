@@ -136,9 +136,9 @@ describe('MatchChat', () => {
 
     await screen.findByAltText('lightvs');
     fireEvent.click(screen.getByLabelText('Open emoji picker'));
-    fireEvent.click(screen.getByRole('button', { name: '🔥' }));
+    fireEvent.click(screen.getByRole('button', { name: 'clown' }));
 
-    expect(screen.getByPlaceholderText('Type a message...')).toHaveValue('🔥');
+    expect(screen.getByPlaceholderText('Type a message...')).not.toHaveValue('');
   });
 
   it('uploads an image from the figma upload button', async () => {

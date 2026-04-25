@@ -146,6 +146,39 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_level_rewards: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_path: string
+          is_active: boolean
+          level_required: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_path: string
+          is_active?: boolean
+          level_required: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_path?: string
+          is_active?: boolean
+          level_required?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string | null
@@ -1803,6 +1836,40 @@ export type Database = {
       }
       admin_set_user_role: {
         Args: { p_role: string; p_user_id: string }
+        Returns: Json
+      }
+      admin_set_challenge_active: {
+        Args: { p_challenge_id: string; p_is_active: boolean }
+        Returns: Json
+      }
+      admin_set_shop_level_reward_active: {
+        Args: { p_is_active: boolean; p_reward_id: string }
+        Returns: Json
+      }
+      admin_upsert_challenge: {
+        Args: {
+          p_challenge_id?: string
+          p_description?: string
+          p_is_active?: boolean
+          p_metric_type?: string
+          p_reward_coin?: number
+          p_reward_xp?: number
+          p_sort_order?: number
+          p_target_value?: number
+          p_title?: string
+          p_type?: string
+        }
+        Returns: Json
+      }
+      admin_upsert_shop_level_reward: {
+        Args: {
+          p_description?: string
+          p_image_path?: string
+          p_is_active?: boolean
+          p_level_required?: number
+          p_name?: string
+          p_reward_id?: string
+        }
         Returns: Json
       }
       auto_refund_expired_matches: { Args: never; Returns: Json }

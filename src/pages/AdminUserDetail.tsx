@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Wallet, Swords, DollarSign, AlertTriangle, Ban, CheckCircle, Plus, Minus, Loader2, Shield, ShieldCheck } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { AdminEmptyState, AdminShell } from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/custom-badge';
 import { PremiumBadge } from '@/components/ui/premium-badge';
@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingPage } from '@/components/common/LoadingSpinner';
@@ -26,7 +26,7 @@ import { motion } from 'framer-motion';
 export default function AdminUserDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { isAdmin } = useAdminStatus();
   const { toast } = useToast();
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -34,7 +34,6 @@ export default function AdminUserDetail() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   const [adjustAmount, setAdjustAmount] = useState('');
@@ -44,25 +43,6 @@ export default function AdminUserDetail() {
 
   const [userRole, setUserRole] = useState<'admin' | 'user'>('user');
   const [changingRole, setChangingRole] = useState(false);
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-      const { data, error } = await supabase.rpc('is_admin');
-      if (error || !data) {
-        setIsAdmin(false);
-        navigate('/');
-      } else {
-        setIsAdmin(true);
-      }
-    };
-    if (!authLoading) {
-      checkAdmin();
-    }
-  }, [user, authLoading, navigate]);
 
   const fetchUserData = async () => {
     if (!id) return;
@@ -125,7 +105,7 @@ export default function AdminUserDetail() {
   };
 
   useEffect(() => {
-    if (isAdmin === true && id) {
+    if (isAdmin && id) {
       fetchUserData();
     }
   }, [isAdmin, id]);
@@ -243,39 +223,36 @@ export default function AdminUserDetail() {
     ['finished', 'completed', 'admin_resolved', 'expired', 'canceled'].includes(m.status)
   );
 
-  if (authLoading || isAdmin === null) return <MainLayout><LoadingPage /></MainLayout>;
-  if (isAdmin !== true) return null;
-
   if (notFound) {
     return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <div className="w-20 h-20 rounded-2xl glass-panel flex items-center justify-center">
-            <AlertTriangle className="w-10 h-10 text-destructive" />
-          </div>
-          <h1 className="text-2xl font-display font-bold">Utente non trovato</h1>
-          <p className="text-muted-foreground">L'ID specificato non corrisponde a nessun utente.</p>
-          <Button onClick={() => navigate('/admin')} variant="outline" className="border-white/[0.1]">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Torna all'Admin
-          </Button>
-        </div>
-      </MainLayout>
+      <AdminShell title="User not found" description="The requested profile is not available anymore or the URL is invalid.">
+        <AdminEmptyState
+          title="User not found"
+          description="The requested user ID does not match any profile in the current platform data."
+        />
+      </AdminShell>
     );
   }
 
   if (loading || !profile) {
-    return <MainLayout><LoadingPage /></MainLayout>;
+    return (
+      <AdminShell title="User detail" description="Loading the full user profile, balances, and match history.">
+        <LoadingPage />
+      </AdminShell>
+    );
   }
 
   return (
-    <MainLayout>
+    <AdminShell
+      title={profile.username}
+      description="Moderate the account, inspect balances, and review the player's full match and transaction history."
+    >
       <div className="space-y-6">
         <FadeIn>
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/admin')} className="self-start hover:bg-white/[0.05]">
+            <Button variant="ghost" onClick={() => navigate('/admin/users')} className="self-start hover:bg-white/[0.05]">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Admin
+              Users
             </Button>
             <div className="flex items-center gap-4 flex-1">
               <Avatar className="w-16 h-16 ring-2 ring-primary/20">
@@ -526,7 +503,7 @@ export default function AdminUserDetail() {
           </Tabs>
         </FadeIn>
       </div>
-    </MainLayout>
+    </AdminShell>
   );
 }
 

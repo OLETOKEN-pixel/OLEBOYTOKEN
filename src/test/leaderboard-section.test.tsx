@@ -2,14 +2,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LeaderboardSection } from '@/components/home/sections/LeaderboardSection';
 
-const { fromMock, limitMock } = vi.hoisted(() => ({
-  fromMock: vi.fn(),
-  limitMock: vi.fn(),
+const { rpcMock } = vi.hoisted(() => ({
+  rpcMock: vi.fn(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: fromMock,
+    rpc: rpcMock,
   },
 }));
 
@@ -19,25 +18,13 @@ vi.mock('@/components/player/PlayerStatsModal', () => ({
   ),
 }));
 
-function mockLeaderboardQuery() {
-  fromMock.mockReturnValue({
-    select: vi.fn().mockReturnValue({
-      order: vi.fn().mockReturnValue({
-        limit: limitMock,
-      }),
-    }),
-  });
-}
-
 describe('LeaderboardSection', () => {
   beforeEach(() => {
-    fromMock.mockReset();
-    limitMock.mockReset();
-    mockLeaderboardQuery();
+    rpcMock.mockReset();
   });
 
   it('opens the player profile tab from a leaderboard avatar', async () => {
-    limitMock.mockResolvedValue({
+    rpcMock.mockResolvedValue({
       error: null,
       data: [
         {
@@ -46,7 +33,7 @@ describe('LeaderboardSection', () => {
           discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-1/avatar.png',
           wins: 10,
           total_matches: 10,
-          weekly_earned: 2.4,
+          total_earnings: 2.4,
         },
         {
           user_id: 'user-top-2',
@@ -54,7 +41,7 @@ describe('LeaderboardSection', () => {
           discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-2/avatar.png',
           wins: 8,
           total_matches: 10,
-          weekly_earned: 1.5,
+          total_earnings: 1.5,
         },
         {
           user_id: 'user-top-3',
@@ -62,7 +49,7 @@ describe('LeaderboardSection', () => {
           discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-3/avatar.png',
           wins: 6,
           total_matches: 10,
-          weekly_earned: 1,
+          total_earnings: 1,
         },
       ],
     });
@@ -72,10 +59,11 @@ describe('LeaderboardSection', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Open owener1 profile' }));
 
     expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-1 RANK 1');
+    expect(rpcMock).toHaveBeenCalledWith('get_leaderboard', { p_limit: 3, p_offset: 0 });
   });
 
   it('opens the player profile tab from the second place avatar too', async () => {
-    limitMock.mockResolvedValue({
+    rpcMock.mockResolvedValue({
       error: null,
       data: [
         {
@@ -84,7 +72,7 @@ describe('LeaderboardSection', () => {
           discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-1/avatar.png',
           wins: 10,
           total_matches: 10,
-          weekly_earned: 2.4,
+          total_earnings: 2.4,
         },
         {
           user_id: 'user-top-2',
@@ -92,7 +80,7 @@ describe('LeaderboardSection', () => {
           discord_avatar_url: 'https://cdn.discordapp.com/avatars/user-top-2/avatar.png',
           wins: 8,
           total_matches: 10,
-          weekly_earned: 1.5,
+          total_earnings: 1.5,
         },
       ],
     });

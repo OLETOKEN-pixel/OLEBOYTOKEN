@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, MapPin, Monitor, Swords, Users, DollarSign, AlertTriangle, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { AdminEmptyState, AdminShell } from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/custom-badge';
 import { PremiumBadge } from '@/components/ui/premium-badge';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { MatchChat } from '@/components/matches/MatchChat';
 import { ProofSection } from '@/components/matches/ProofSection';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingPage } from '@/components/common/LoadingSpinner';
@@ -52,13 +53,13 @@ const STATUS_BADGE_VARIANT: Record<string, 'live' | 'open' | 'completed' | 'vip'
 export default function AdminMatchDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
+  const { isAdmin } = useAdminStatus();
   const { toast } = useToast();
 
   const [match, setMatch] = useState<Match | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [resolving, setResolving] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
   const [notFound, setNotFound] = useState(false);
@@ -66,25 +67,6 @@ export default function AdminMatchDetail() {
   const [forceExpireOpen, setForceExpireOpen] = useState(false);
   const [forceExpireReason, setForceExpireReason] = useState('');
   const [forceExpiring, setForceExpiring] = useState(false);
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-      const { data, error } = await supabase.rpc('is_admin');
-      if (error || !data) {
-        setIsAdmin(false);
-        navigate('/');
-      } else {
-        setIsAdmin(true);
-      }
-    };
-    if (!authLoading) {
-      checkAdmin();
-    }
-  }, [user, authLoading, navigate]);
 
   const fetchMatch = async () => {
     if (!id) return;
@@ -125,7 +107,7 @@ export default function AdminMatchDetail() {
   };
 
   useEffect(() => {
-    if (isAdmin === true && id) {
+    if (isAdmin && id) {
       fetchMatch();
     }
   }, [isAdmin, id]);
@@ -211,29 +193,23 @@ export default function AdminMatchDetail() {
   const teamAParticipants = match?.participants?.filter(p => p.team_side === 'A') || [];
   const teamBParticipants = match?.participants?.filter(p => p.team_side === 'B') || [];
 
-  if (authLoading || isAdmin === null) return <MainLayout><LoadingPage /></MainLayout>;
-  if (isAdmin !== true) return null;
-
   if (notFound) {
     return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <div className="w-20 h-20 rounded-2xl glass-panel flex items-center justify-center">
-            <AlertTriangle className="w-10 h-10 text-destructive" />
-          </div>
-          <h1 className="text-2xl font-display font-bold">Match non trovato</h1>
-          <p className="text-muted-foreground">L'ID specificato non corrisponde a nessun match.</p>
-          <Button onClick={() => navigate('/admin')} variant="outline" className="border-white/[0.1]">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Torna all'Admin
-          </Button>
-        </div>
-      </MainLayout>
+      <AdminShell title="Match not found" description="The requested match is no longer available or the URL is invalid.">
+        <AdminEmptyState
+          title="Match not found"
+          description="The requested match ID does not exist in the current match dataset."
+        />
+      </AdminShell>
     );
   }
 
   if (loading || !match) {
-    return <MainLayout><LoadingPage /></MainLayout>;
+    return (
+      <AdminShell title="Match detail" description="Loading proofs, participants, chat, and finance data for this match.">
+        <LoadingPage />
+      </AdminShell>
+    );
   }
 
   const canForceExpire =
@@ -241,13 +217,16 @@ export default function AdminMatchDetail() {
     match.status !== 'in_progress';
 
   return (
-    <MainLayout>
+    <AdminShell
+      title="Match Detail"
+      description="Inspect the full match lifecycle, proofs, transactions, and admin-only resolution controls."
+    >
       <div className="space-y-6">
         <FadeIn>
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/admin')} className="self-start hover:bg-white/[0.05]">
+            <Button variant="ghost" onClick={() => navigate('/admin/matches')} className="self-start hover:bg-white/[0.05]">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Admin
+              Matches
             </Button>
             <div className="flex-1">
               <h1 className="font-display text-2xl font-bold bg-gradient-to-r from-[hsl(186,100%,50%)] via-[hsl(263,90%,66%)] to-[hsl(186,100%,50%)] bg-clip-text text-transparent">
@@ -586,7 +565,7 @@ export default function AdminMatchDetail() {
           </div>
         </FadeIn>
       </div>
-    </MainLayout>
+    </AdminShell>
   );
 }
 

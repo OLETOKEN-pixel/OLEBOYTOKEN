@@ -20,8 +20,14 @@ import TwitterCallback from "./pages/TwitterCallback";
 import TwitchCallback from "./pages/TwitchCallback";
 import DiscordCallback from "./pages/DiscordCallback";
 import Admin from "./pages/Admin";
+import AdminChallenges from "./pages/AdminChallenges";
 import AdminMatchDetail from "./pages/AdminMatchDetail";
+import AdminMatches from "./pages/AdminMatches";
+import AdminShop from "./pages/AdminShop";
+import AdminTransactions from "./pages/AdminTransactions";
 import AdminUserDetail from "./pages/AdminUserDetail";
+import AdminUsers from "./pages/AdminUsers";
+import AdminWithdrawals from "./pages/AdminWithdrawals";
 import Rules from "./pages/Rules";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -133,7 +139,13 @@ function App() {
                   <Route path="/auth/twitch/callback" element={<TwitchCallback />} />
                   <Route path="/auth/discord/callback" element={<DiscordCallback />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/matches/:id" element={<AdminMatchDetail />} />
+                  <Route path="/admin/matches" element={<AdminMatches />} />
+                  <Route path="/admin/transactions" element={<AdminTransactions />} />
+                  <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
+                  <Route path="/admin/shop" element={<AdminShop />} />
+                  <Route path="/admin/challenges" element={<AdminChallenges />} />
                   <Route path="/admin/users/:id" element={<AdminUserDetail />} />
                   <Route path="/rules" element={<Rules />} />
                   <Route path="/terms" element={<Terms />} />
