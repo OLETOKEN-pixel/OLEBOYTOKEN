@@ -49,6 +49,7 @@ const PROFILE_AVATAR_FALLBACK = 'linear-gradient(135deg, rgba(255,255,255,0.11),
 /* Standalone routes that should still mark a nav item as active */
 const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   matches: '/matches',
+  challenges: '/challenges',
   hls: '/highlights',
   teams: '/teams',
 };
@@ -130,6 +131,11 @@ export function NavbarFigmaLoggedIn() {
     activeRouteItem === item || activeSection === NAV_SECTIONS[item];
 
   const handleNavItemClick = (item: NavItem) => {
+    if (item === 'challenges') {
+      navigate('/challenges');
+      return;
+    }
+
     if (item === 'teams') {
       navigate('/teams');
       return;

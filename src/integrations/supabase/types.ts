@@ -110,6 +110,7 @@ export type Database = {
           metric_type: string
           reward_coin: number
           reward_xp: number
+          sort_order: number
           target_value: number
           title: string
           type: string
@@ -123,6 +124,7 @@ export type Database = {
           metric_type: string
           reward_coin?: number
           reward_xp?: number
+          sort_order?: number
           target_value?: number
           title: string
           type: string
@@ -136,6 +138,7 @@ export type Database = {
           metric_type?: string
           reward_coin?: number
           reward_xp?: number
+          sort_order?: number
           target_value?: number
           title?: string
           type?: string

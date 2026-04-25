@@ -1,9 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { getNextLevelReward } from '@/lib/levelRewards';
+import { getLevel, getLevelXpRequired, getXpInLevel, getXpToNext } from '@/lib/xp';
 
 export interface Challenge {
   id: string;
@@ -18,6 +20,29 @@ export interface Challenge {
   is_completed: boolean;
   is_claimed: boolean;
   period_key: string;
+  sortOrder: number;
+}
+
+interface RawChallenge {
+  id: string;
+  title: string;
+  description: string;
+  type: 'daily' | 'weekly';
+  metric_type: string;
+  target_value: number;
+  reward_xp: number;
+  reward_coin: number;
+  progress_value: number;
+  is_completed: boolean;
+  is_claimed: boolean;
+  period_key: string;
+  sort_order?: number | null;
+}
+
+export interface ChallengeOverviewStats {
+  newCount: number;
+  startedCount: number;
+  completedCount: number;
 }
 
 export interface ClaimResult {
@@ -29,13 +54,25 @@ export interface ClaimResult {
   error?: string;
 }
 
+function mapChallenge(raw: RawChallenge): Challenge {
+  return {
+    ...raw,
+    sortOrder: raw.sort_order ?? 0,
+  };
+}
+
+function compareChallenges(a: Challenge, b: Challenge) {
+  if (a.type !== b.type) return a.type === 'daily' ? -1 : 1;
+  if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+  return a.title.localeCompare(b.title);
+}
+
 export function useChallenges() {
   const { user, refreshWallet } = useAuth();
   const queryClient = useQueryClient();
   const location = useLocation();
   const isOnChallengesPage = location.pathname === '/challenges';
 
-  // Fetch challenges with progress
   const {
     data: challenges = [],
     isLoading,
@@ -44,75 +81,72 @@ export function useChallenges() {
     queryKey: ['challenges', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
+
       const { data, error } = await supabase.rpc('get_user_challenges');
-      
+
       if (error) {
         console.error('Error fetching challenges:', error);
         return [];
       }
-      
-      return (data as unknown as Challenge[]) || [];
+
+      return ((data as unknown as RawChallenge[]) || [])
+        .map(mapChallenge)
+        .sort(compareChallenges);
     },
     enabled: !!user,
-    staleTime: 10000, // 10 seconds
+    staleTime: 10_000,
   });
 
-  // Fetch user XP
   const { data: userXp = 0 } = useQuery({
     queryKey: ['user-xp', user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      
+
       const { data, error } = await supabase.rpc('get_user_xp');
-      
+
       if (error) {
         console.error('Error fetching XP:', error);
         return 0;
       }
-      
+
       return (data as number) || 0;
     },
     enabled: !!user,
   });
 
-  // Claim mutation
   const claimMutation = useMutation({
     mutationFn: async ({ challengeId, periodKey }: { challengeId: string; periodKey: string }) => {
       const { data, error } = await supabase.rpc('claim_challenge_reward', {
         p_challenge_id: challengeId,
         p_period_key: periodKey,
       });
-      
+
       if (error) throw error;
       return data as unknown as ClaimResult;
     },
-    onSuccess: (result, { challengeId }) => {
-      if (result.success) {
-        // Invalidate queries
-        queryClient.invalidateQueries({ queryKey: ['challenges'] });
-        queryClient.invalidateQueries({ queryKey: ['user-xp'] });
-        
-        // Refresh wallet for coin rewards
-        if (result.coin && result.coin > 0) {
-          refreshWallet();
-        }
-        
-        // Show success toast
-        if (!result.already_claimed) {
-          const rewardParts: string[] = [];
-          if (result.xp && result.xp > 0) rewardParts.push(`+${result.xp} XP`);
-          if (result.coin && result.coin > 0) rewardParts.push(`+${result.coin} Coin`);
-          
-          if (result.coin_capped) {
-            toast.success('Challenge claimed! Weekly coin limit reached.', {
-              description: rewardParts.join(' • '),
-            });
-          } else {
-            toast.success('Challenge claimed!', {
-              description: rewardParts.join(' • '),
-            });
-          }
+    onSuccess: (result) => {
+      if (!result.success) return;
+
+      queryClient.invalidateQueries({ queryKey: ['challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['user-xp'] });
+
+      if (result.coin && result.coin > 0) {
+        refreshWallet();
+      }
+
+      if (!result.already_claimed) {
+        const rewardParts: string[] = [];
+        if (result.xp && result.xp > 0) rewardParts.push(`+${result.xp} XP`);
+        if (result.coin && result.coin > 0) rewardParts.push(`+${result.coin} Coin`);
+
+        if (result.coin_capped) {
+          toast.success('Challenge claimed! Weekly coin limit reached.', {
+            description: rewardParts.join(' | '),
+          });
+        } else {
+          toast.success('Challenge claimed!', {
+            description: rewardParts.join(' | '),
+          });
         }
       }
     },
@@ -122,7 +156,6 @@ export function useChallenges() {
     },
   });
 
-  // Realtime subscription for progress updates
   useEffect(() => {
     if (!user) return;
 
@@ -157,22 +190,49 @@ export function useChallenges() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [queryClient, user]);
 
-  // Polling fallback ONLY on /challenges page
   useEffect(() => {
     if (!user || !isOnChallengesPage) return;
 
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['challenges', user.id] });
-    }, 25000); // 25 seconds
+    }, 25_000);
 
-    return () => clearInterval(interval);
-  }, [user, isOnChallengesPage, queryClient]);
+    return () => window.clearInterval(interval);
+  }, [isOnChallengesPage, queryClient, user]);
 
-  // Helper functions
-  const dailyChallenges = challenges.filter((c) => c.type === 'daily');
-  const weeklyChallenges = challenges.filter((c) => c.type === 'weekly');
+  const dailyChallenges = useMemo(
+    () => challenges.filter((challenge) => challenge.type === 'daily'),
+    [challenges]
+  );
+  const weeklyChallenges = useMemo(
+    () => challenges.filter((challenge) => challenge.type === 'weekly'),
+    [challenges]
+  );
+
+  const overviewStats = useMemo<ChallengeOverviewStats>(() => {
+    let newCount = 0;
+    let startedCount = 0;
+    let completedCount = 0;
+
+    challenges.forEach((challenge) => {
+      const completed = challenge.is_completed || challenge.is_claimed;
+      const started = challenge.progress_value > 0 && challenge.progress_value < challenge.target_value;
+
+      if (completed) completedCount += 1;
+      else if (started) startedCount += 1;
+      else newCount += 1;
+    });
+
+    return { newCount, startedCount, completedCount };
+  }, [challenges]);
+
+  const level = getLevel(userXp);
+  const xpInLevel = getXpInLevel(userXp);
+  const xpRequired = getLevelXpRequired(level);
+  const xpToNext = getXpToNext(userXp);
+  const nextReward = getNextLevelReward(level);
 
   const claimChallenge = useCallback(
     (challengeId: string, periodKey: string) => {
@@ -181,22 +241,18 @@ export function useChallenges() {
     [claimMutation]
   );
 
-  // Calculate reset times
   const getResetTimes = useCallback(() => {
-    const now = new Date();
-    const utcNow = new Date(now.toISOString());
-    
-    // Daily reset: next midnight UTC
+    const utcNow = new Date(new Date().toISOString());
+
     const dailyReset = new Date(utcNow);
     dailyReset.setUTCHours(24, 0, 0, 0);
-    
-    // Weekly reset: next Monday 00:00 UTC
+
     const weeklyReset = new Date(utcNow);
     const dayOfWeek = weeklyReset.getUTCDay();
     const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
     weeklyReset.setUTCDate(weeklyReset.getUTCDate() + daysUntilMonday);
     weeklyReset.setUTCHours(0, 0, 0, 0);
-    
+
     return {
       dailyReset,
       weeklyReset,
@@ -209,7 +265,14 @@ export function useChallenges() {
     challenges,
     dailyChallenges,
     weeklyChallenges,
+    overviewStats,
+    nextReward,
+    allRewardsUnlocked: nextReward === null,
     userXp,
+    level,
+    xpInLevel,
+    xpRequired,
+    xpToNext,
     isLoading,
     claimChallenge,
     isClaiming: claimMutation.isPending,

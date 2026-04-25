@@ -1,4 +1,5 @@
 import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
+import { LEVEL_REWARDS } from '@/lib/levelRewards';
 
 const imgStarShape = '/figma-assets/figma-star-shape.svg';
 const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
@@ -11,8 +12,12 @@ type ShopItem =
   | { type: 'vip';   image: string; price: string; label: string; sublabel: string };
 
 const shopItems: ShopItem[] = [
-  { type: 'level', image: '/shop/tappetino.png', name: 'TAPPETINO', levelRequired: 15 },
-  { type: 'level', image: '/shop/mouse.webp',    name: 'MOUSE',     levelRequired: 30 },
+  ...LEVEL_REWARDS.map((reward) => ({
+    type: 'level' as const,
+    image: reward.image,
+    name: reward.name,
+    levelRequired: reward.levelRequired,
+  })),
   { type: 'vip',   image: '/showreel/vip-icon.svg', price: '€9,99', label: 'VIP', sublabel: '1 MONTH' },
 ];
 

@@ -1,8 +1,10 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
+import { getLevel, getLevelXpRequired, getXpInLevel, getXpToNext } from '@/lib/xp';
 import type { Match } from '@/types';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
@@ -39,6 +41,20 @@ interface ChallengeDisplay {
   progress: number;
   completed: boolean;
 }
+
+interface HomeChallengeRpcRow {
+  id: string;
+  title: string;
+  reward_xp: number;
+  reward_coin: number;
+  target_value: number;
+  progress_value: number;
+  is_completed: boolean;
+  is_claimed: boolean;
+}
+
+type ChallengeRow = Database['public']['Tables']['challenges']['Row'];
+type ChallengeProgressRow = Database['public']['Tables']['user_challenge_progress']['Row'];
 
 interface TeamDisplay {
   rank: number;
@@ -772,67 +788,97 @@ function ChallengeRow({ challenge }: { challenge: ChallengeDisplay }) {
 
 function ChallengesMobile() {
   const { user } = useAuth();
-  const [challenges, setChallenges] = useState<ChallengeDisplay[]>([]);
+  const [challengeRows, setChallengeRows] = useState<ChallengeDisplay[]>([]);
   const [userXp, setUserXp] = useState(0);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
-      const { data: challengeRows } = await supabase
-        .from('challenges')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at')
-        .limit(5);
+      const { data: rpcChallenges, error: rpcChallengesError } = await supabase.rpc('get_user_challenges');
+      const { data: rpcXp, error: rpcXpError } = await supabase.rpc('get_user_xp');
+      const rpcChallengeRows: HomeChallengeRpcRow[] = Array.isArray(rpcChallenges)
+        ? (rpcChallenges as HomeChallengeRpcRow[])
+        : [];
 
-      if (!challengeRows || challengeRows.length === 0) {
-        const { data: xpRow } = await supabase
-          .from('user_xp')
-          .select('total_xp')
-          .eq('user_id', user.id)
-          .single();
+      if (!rpcChallengesError && rpcChallengeRows.length > 0) {
+        setChallengeRows(
+          rpcChallengeRows.slice(0, 5).map((challenge) => ({
+            id: challenge.id,
+            title: challenge.title,
+            reward:
+              challenge.reward_xp > 0
+                ? `+${challenge.reward_xp}XP`
+                : Number(challenge.reward_coin) > 0
+                  ? `+${Number(challenge.reward_coin)}OBC`
+                  : '',
+            progress:
+              challenge.target_value > 0
+                ? Math.min(
+                    100,
+                    Math.round((challenge.progress_value / challenge.target_value) * 100),
+                  )
+                : 0,
+            completed: Boolean(challenge.is_completed || challenge.is_claimed),
+          })),
+        );
+      } else {
+        const { data: challengeRowsData } = await supabase
+          .from('challenges')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at')
+          .limit(5);
 
-        if (xpRow) setUserXp(xpRow.total_xp);
-        return;
+        if (challengeRowsData && challengeRowsData.length > 0) {
+          const now = new Date();
+          const dailyKey = now.toISOString().split('T')[0];
+          const monday = new Date(now);
+          monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+          const weeklyKey = monday.toISOString().split('T')[0];
+
+          const { data: progressRows } = await supabase
+            .from('user_challenge_progress')
+            .select('*')
+            .eq('user_id', user.id)
+            .in('challenge_id', challengeRowsData.map((challenge) => challenge.id))
+            .in('period_key', [dailyKey, weeklyKey]);
+
+          const progressMap = new Map<string, ChallengeProgressRow>();
+          (progressRows || []).forEach((progress) =>
+            progressMap.set(progress.challenge_id, progress),
+          );
+
+          setChallengeRows(
+            challengeRowsData.map((challenge: ChallengeRow) => {
+              const progress = progressMap.get(challenge.id);
+              return {
+                id: challenge.id,
+                title: challenge.title,
+                reward:
+                  challenge.reward_xp > 0
+                    ? `+${challenge.reward_xp}XP`
+                    : Number(challenge.reward_coin) > 0
+                      ? `+${Number(challenge.reward_coin)}OBC`
+                      : '',
+                progress:
+                  challenge.target_value > 0 && progress
+                    ? Math.min(
+                        100,
+                        Math.round((progress.progress_value / challenge.target_value) * 100),
+                      )
+                    : 0,
+                completed: Boolean(progress?.is_completed),
+              };
+            }),
+          );
+        }
       }
 
-      const now = new Date();
-      const dailyKey = now.toISOString().split('T')[0];
-      const mon = new Date(now);
-      mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-      const weeklyKey = mon.toISOString().split('T')[0];
-
-      const { data: progressRows } = await supabase
-        .from('user_challenge_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('challenge_id', challengeRows.map((c: any) => c.id))
-        .in('period_key', [dailyKey, weeklyKey]);
-
-      const progressMap = new Map<string, any>();
-      (progressRows || []).forEach((p: any) => progressMap.set(p.challenge_id, p));
-
-      setChallenges(
-        challengeRows.map((c: any) => {
-          const p = progressMap.get(c.id);
-          const pct = p ? Math.min(100, Math.round((p.progress_value / c.target_value) * 100)) : 0;
-          const rewardText =
-            c.reward_xp > 0
-              ? `+${c.reward_xp}XP`
-              : Number(c.reward_coin) > 0
-                ? `+${c.reward_coin}OBC`
-                : '';
-
-          return {
-            id: c.id,
-            title: c.title,
-            reward: rewardText,
-            progress: pct,
-            completed: p?.is_completed ?? false,
-          };
-        }),
-      );
+      if (!rpcXpError && typeof rpcXp === 'number' && rpcXp > 0) {
+        setUserXp(rpcXp);
+        return;
+      }
 
       const { data: xpRow } = await supabase
         .from('user_xp')
@@ -846,10 +892,10 @@ function ChallengesMobile() {
     fetchData();
   }, [user]);
 
-  const level = Math.floor(userXp / 100);
-  const xpInLevel = userXp % 100;
-  const xpToNext = xpInLevel === 0 ? 100 : 100 - xpInLevel;
-  const ringProgress = `${xpInLevel}%`;
+  const level = getLevel(userXp);
+  const xpInLevel = getXpInLevel(userXp);
+  const xpToNext = getXpToNext(userXp);
+  const ringProgress = `${Math.round((xpInLevel / getLevelXpRequired(level)) * 100)}%`;
 
   return (
     <MobileSection
@@ -894,8 +940,8 @@ function ChallengesMobile() {
           </div>
 
           <div style={{ display: 'grid', gap: '9px' }}>
-            {challenges.length > 0 ? (
-              challenges.slice(0, 5).map((challenge) => <ChallengeRow key={challenge.id} challenge={challenge} />)
+            {challengeRows.length > 0 ? (
+              challengeRows.map((challenge) => <ChallengeRow key={challenge.id} challenge={challenge} />)
             ) : (
               <p style={{ margin: 0, fontFamily: F, fontWeight: 400, fontSize: '16px', lineHeight: '20px', color: 'rgba(255,255,255,0.72)', textAlign: 'left' }}>
                 No active challenges yet.

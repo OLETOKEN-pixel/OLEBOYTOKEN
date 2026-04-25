@@ -77,6 +77,17 @@ describe('NavbarFigmaLoggedIn', () => {
     expect(screen.queryByRole('button', { name: 'matches' })).not.toBeInTheDocument();
   });
 
+  it('keeps challenges active on the standalone challenges route', () => {
+    render(
+      <MemoryRouter initialEntries={['/challenges']}>
+        <NavbarFigmaLoggedIn />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'CHALLENGES' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'challenges' })).not.toBeInTheDocument();
+  });
+
   it('routes standalone pages back to the requested logged-home section', () => {
     render(
       <MemoryRouter initialEntries={['/matches']}>
@@ -114,6 +125,19 @@ describe('NavbarFigmaLoggedIn', () => {
     fireEvent.click(screen.getByRole('button', { name: 'teams' }));
 
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/teams|');
+  });
+
+  it('routes challenges clicks to the standalone challenges page', () => {
+    render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <NavbarFigmaLoggedIn />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'challenges' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/challenges|');
   });
 
   it('routes the desktop profile dropdown to My Matches', async () => {
