@@ -181,6 +181,10 @@ function DesktopChallengeTabs({
               background: 'transparent',
               color: active ? '#ffffff' : 'rgba(255,255,255,0.5)',
               cursor: 'pointer',
+              outline: 'none',
+              boxShadow: 'none',
+              appearance: 'none',
+              WebkitTapHighlightColor: 'transparent',
               fontFamily: active ? FONT_BOLD : FONT_REGULAR,
               fontSize: `${layout.fontSize}px`,
               lineHeight: 'normal',
@@ -449,16 +453,15 @@ function DesktopRewardCard({
       <p
         style={{
           position: 'absolute',
-          left: '130px',
-          top: '58px',
-          transform: 'translateX(-50%)',
+          left: '52px',
+          top: '52px',
           margin: 0,
           fontFamily: FONT_REGULAR,
           fontSize: '0px',
           lineHeight: 0,
           color: '#ffffff',
           whiteSpace: 'nowrap',
-          textAlign: 'center',
+          textAlign: 'left',
         }}
       >
         <span style={{ fontSize: '16px', lineHeight: 'normal' }}>LVL. </span>
@@ -467,18 +470,30 @@ function DesktopRewardCard({
         </span>
       </p>
 
-      <img
-        src={reward.image}
-        alt={reward.name}
+      <div
         style={{
           position: 'absolute',
-          right: '17px',
+          left: '221px',
           top: '49px',
-          width: '55px',
-          height: '55px',
-          objectFit: 'contain',
+          width: '55.055px',
+          height: '54.945px',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
-      />
+      >
+        <img
+          src={reward.image}
+          alt={reward.name}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -504,18 +519,42 @@ function DesktopOverviewItem({
         height: '255.909px',
       }}
     >
-      <img
-        src={asset}
-        alt=""
-        aria-hidden="true"
+      <div
         style={{
           position: 'absolute',
           inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
-      />
+      >
+        <div
+          style={{
+            position: 'relative',
+            width: '121.364px',
+            height: '237.281px',
+            transform: 'rotate(43.31deg)',
+            transformOrigin: 'center',
+          }}
+        >
+          <img
+            src={asset}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: '-0.6%',
+              right: '-0.79%',
+              top: '-0.21%',
+              bottom: '-0.12%',
+              width: '101.39%',
+              height: '100.33%',
+              maxWidth: 'none',
+              display: 'block',
+            }}
+          />
+        </div>
+      </div>
 
       <p
         style={{
