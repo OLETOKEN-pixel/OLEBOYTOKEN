@@ -82,15 +82,55 @@ function isNavItemActive(pathname: string, item: AdminNavItem) {
   return item.matchPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function AdminBackdrop() {
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-0 h-[180px]"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(255, 22, 84, 0.24) 0%, rgba(255, 22, 84, 0.12) 34%, rgba(255, 22, 84, 0) 100%)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-[-56px] h-[120px] blur-[52px]"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(255, 22, 84, 0.4) 0%, rgba(255, 22, 84, 0) 100%)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-0 h-[240px]"
+        style={{
+          background:
+            'linear-gradient(0deg, rgba(255, 22, 84, 0.26) 0%, rgba(255, 22, 84, 0.12) 26%, rgba(255, 22, 84, 0) 100%)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-[12%] bottom-[-88px] h-[170px] blur-[78px]"
+        style={{
+          background:
+            'radial-gradient(ellipse at center, rgba(255, 22, 84, 0.28) 0%, rgba(255, 22, 84, 0) 72%)',
+        }}
+      />
+    </>
+  );
+}
+
 export function AdminShell({ title, description, actions, children }: AdminShellProps) {
   const location = useLocation();
   const { user, isAdmin, isLoading } = useAdminStatus();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0f0404] text-white">
+      <div className="relative min-h-screen overflow-hidden bg-[#120405] text-white">
+        <AdminBackdrop />
         <NavbarFigmaLoggedIn />
-        <div className="mx-auto max-w-[1440px] px-4 pt-[170px] sm:px-6 lg:px-10">
+        <div className="relative z-10 mx-auto max-w-[1440px] px-4 pt-[170px] sm:px-6 lg:px-10">
           <LoadingPage />
         </div>
       </div>
@@ -106,17 +146,11 @@ export function AdminShell({ title, description, actions, children }: AdminShell
   }
 
   return (
-    <div
-      data-testid="admin-shell"
-      className="min-h-screen bg-[#0f0404] text-white"
-      style={{
-        backgroundImage:
-          'radial-gradient(circle at 50% -8%, rgba(255, 22, 84, 0.28), transparent 32%), radial-gradient(circle at 20% 100%, rgba(255, 22, 84, 0.18), transparent 26%), linear-gradient(180deg, #170506 0%, #0f0404 55%, #090202 100%)',
-      }}
-    >
+    <div data-testid="admin-shell" className="relative min-h-screen overflow-hidden bg-[#120405] text-white">
+      <AdminBackdrop />
       <NavbarFigmaLoggedIn />
 
-      <main className="mx-auto max-w-[1440px] px-4 pb-16 pt-[170px] sm:px-6 lg:px-10">
+      <main className="relative z-10 mx-auto max-w-[1440px] px-4 pb-16 pt-[170px] sm:px-6 lg:px-10">
         <div className="rounded-[36px] border border-[#ff1654]/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-[18px] sm:p-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-2">
@@ -162,7 +196,7 @@ export function AdminShell({ title, description, actions, children }: AdminShell
         <div className="mt-6 space-y-6">{children}</div>
       </main>
 
-      <footer className="border-t border-white/8 px-4 py-6 text-center text-xs uppercase tracking-[0.2em] text-white/42">
+      <footer className="relative z-10 border-t border-white/8 px-4 py-6 text-center text-xs uppercase tracking-[0.2em] text-white/42">
         OLEBOY TOKEN ADMIN
       </footer>
     </div>
