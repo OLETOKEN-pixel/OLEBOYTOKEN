@@ -338,6 +338,7 @@ function DesktopRewardCard({
             top: 0,
             width: '73.999px',
             height: '73.999px',
+            zIndex: 2,
             transform: 'rotate(9.9deg)',
             transformOrigin: 'center',
           }}
@@ -354,6 +355,7 @@ function DesktopRewardCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            zIndex: 1,
             color: '#ffffff',
             fontFamily: FONT_WIDE,
             fontSize: '20px',
@@ -388,6 +390,7 @@ function DesktopRewardCard({
           top: 0,
           width: '73.999px',
           height: '73.999px',
+          zIndex: 3,
           transform: 'rotate(9.9deg)',
           transformOrigin: 'center',
         }}
@@ -403,6 +406,7 @@ function DesktopRewardCard({
           top: '27px',
           width: '10.123px',
           height: '8.567px',
+          zIndex: 4,
           transform: 'rotate(17.19deg)',
           transformOrigin: 'center',
         }}
@@ -418,6 +422,7 @@ function DesktopRewardCard({
           top: '32.3px',
           width: '14.988px',
           height: '15.507px',
+          zIndex: 4,
           transform: 'rotate(17.19deg)',
           transformOrigin: 'center',
         }}
@@ -433,6 +438,7 @@ function DesktopRewardCard({
           top: '36px',
           width: '5.004px',
           height: '5.004px',
+          zIndex: 4,
           transform: 'rotate(17.19deg)',
           transformOrigin: 'center',
         }}
@@ -445,6 +451,7 @@ function DesktopRewardCard({
           top: '37px',
           width: '250px',
           height: '80px',
+          zIndex: 1,
           border: '1px solid #ff1654',
           borderRadius: '12px',
         }}
@@ -456,6 +463,7 @@ function DesktopRewardCard({
           left: '52px',
           top: '52px',
           margin: 0,
+          zIndex: 2,
           fontFamily: FONT_REGULAR,
           fontSize: '0px',
           lineHeight: 0,
@@ -477,6 +485,7 @@ function DesktopRewardCard({
           top: '49px',
           width: '55.055px',
           height: '54.945px',
+          zIndex: 2,
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
