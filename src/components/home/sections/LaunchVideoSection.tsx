@@ -23,8 +23,11 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
       className="z-[5] flex h-[955px] w-[1920px] flex-col bg-[#0f0404]"
       style={{ backgroundImage: `url(${ACTIVE_HOME_ASSETS.launch.background})`, backgroundSize: '100% 100%' }}
     >
-      <div className="ml-[191px] w-[876px] h-[99px] relative mt-[174px]">
-        <p className="absolute top-[5px] left-8 [font-family:'Base_Neue_Trial-Bold',Helvetica] font-normal text-white text-[50px] text-center tracking-[0] leading-[normal]">
+      <div
+        className="ml-[191px] mt-[174px] relative"
+        style={{ paddingTop: '5px', paddingLeft: '32px', width: 'fit-content' }}
+      >
+        <p className="m-0 [font-family:'Base_Neue_Trial-Bold',Helvetica] font-normal text-white text-[50px] tracking-[0] leading-[normal] whitespace-nowrap">
           <span className="font-bold">Welcome</span>
           <span className="font-bold text-[64px]">, </span>
           <span className="[font-family:'Base_Neue_Trial-Black',Helvetica] font-black text-[64px]">
@@ -32,13 +35,16 @@ export const LaunchVideoSection = ({ displayName }: LaunchVideoSectionProps) => 
           </span>
         </p>
 
-        <img
-          className="absolute top-[85px] left-[29px] w-[634px] h-3"
-          alt=""
-          src={ACTIVE_HOME_ASSETS.launch.underline}
-        />
+        <svg
+          viewBox="0 0 634 12"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+          style={{ display: 'block', width: '100%', height: '12px', marginTop: '3px' }}
+        >
+          <path d="M0 8.088L633.505 11.747L633.464 0L0 8.088Z" fill="#FF1654" />
+        </svg>
 
-        <div className="absolute top-0 left-0 w-[45px] h-[67px]">
+        <div className="absolute top-0 left-0 w-[45px] h-[67px] pointer-events-none">
           <img className="absolute top-[33px] left-1.5 w-[18px] h-[26px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.largeBottom} />
           <img className="absolute top-[21px] left-[29px] w-3 h-[7px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.smallRight} />
           <img className="absolute top-[19px] left-[27px] w-1 h-[5px]" alt="" src={ACTIVE_HOME_ASSETS.launch.triangles.wireTop} />

@@ -391,7 +391,6 @@ function LaunchMobile({ displayName }: { displayName: string }) {
           style={{
             width: '100%',
             height: '4px',
-            maxWidth: '330px',
             margin: '14px auto 0',
             background: 'linear-gradient(90deg, rgba(255,22,84,0), #ff1654 12%, #ff1654 88%, rgba(255,22,84,0))',
           }}
