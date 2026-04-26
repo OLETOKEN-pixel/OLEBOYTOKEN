@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType, CSSProperties, ReactNode } from 'react';
 import {
   AlertTriangle,
   CreditCard,
@@ -368,28 +368,53 @@ export function AdminStatCard({
   value,
   icon: Icon,
   accent = '#ff1654',
+  href,
+  hint,
 }: {
   label: string;
   value: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string; style?: CSSProperties }>;
   accent?: string;
+  href?: string;
+  hint?: string;
 }) {
-  return (
-    <div className="flex h-full min-h-[116px] flex-col justify-between rounded-[24px] border border-[#302025] bg-[#13090b] p-5">
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.24em] text-[#7a6b70]">{label}</p>
           <p className="mt-4 text-4xl font-semibold leading-none text-white">{value}</p>
         </div>
 
-        <div
-          className="grid h-12 w-12 place-items-center rounded-[18px] border border-[#302025] bg-[#1c1c1c]"
-        >
+        <div className="grid h-12 w-12 place-items-center rounded-[18px] border border-[#302025] bg-[#1c1c1c] transition group-hover:border-[#ff1654]/40">
           <Icon className="h-5 w-5" style={{ color: accent }} />
         </div>
       </div>
-    </div>
+      {hint ? (
+        <p className="mt-4 text-[11px] uppercase tracking-[0.22em] text-[#6f6266]">{hint}</p>
+      ) : null}
+    </>
   );
+
+  const baseClass =
+    'flex h-full min-h-[116px] flex-col justify-between rounded-[24px] border border-[#302025] bg-[#13090b] p-5';
+
+  if (href) {
+    return (
+      <Link
+        to={href}
+        aria-label={`${label}: ${value}`}
+        className={cn(
+          baseClass,
+          'group cursor-pointer transition hover:border-[#ff1654]/55 hover:bg-[#19090c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff1654]/60',
+        )}
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return <div className={baseClass}>{body}</div>;
 }
 
 export function AdminEmptyState({

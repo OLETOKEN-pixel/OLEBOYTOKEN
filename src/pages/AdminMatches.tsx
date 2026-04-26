@@ -1,5 +1,6 @@
 import { AlertTriangle, RefreshCw, Swords, TimerReset } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { ADMIN_OUTLINE_BUTTON_CLASS, AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
 import { GlobalSearchBar } from '@/components/admin/GlobalSearchBar';
 import { MatchesTable } from '@/components/admin/MatchesTable';
@@ -10,6 +11,8 @@ import type { Match } from '@/types';
 
 export default function AdminMatches() {
   const { isAdmin } = useAdminStatus();
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') ?? undefined;
   const {
     data: matches = [],
     isLoading,
@@ -70,7 +73,7 @@ export default function AdminMatches() {
           className="h-full"
           contentClassName="h-full"
         >
-          <MatchesTable matches={matches} loading={isLoading} fullHeight />
+          <MatchesTable matches={matches} loading={isLoading} fullHeight initialStatusFilter={initialStatus} />
         </AdminPanel>
       </div>
     </AdminShell>

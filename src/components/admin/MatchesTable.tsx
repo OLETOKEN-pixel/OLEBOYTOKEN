@@ -23,6 +23,7 @@ interface MatchesTableProps {
   matches: Match[];
   loading: boolean;
   fullHeight?: boolean;
+  initialStatusFilter?: string;
 }
 
 type SortField = 'created_at' | 'status' | 'entry_fee' | 'region' | 'mode';
@@ -40,10 +41,15 @@ const STATUS_BADGE_VARIANT: Record<string, 'live' | 'open' | 'completed' | 'vip'
   disputed: 'completed',
 };
 
-export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTableProps) {
+export function MatchesTable({ matches, loading, fullHeight = false, initialStatusFilter }: MatchesTableProps) {
   const navigate = useNavigate();
-  
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    if (initialStatusFilter && (STATUS_FILTERS as readonly string[]).includes(initialStatusFilter)) {
+      return initialStatusFilter;
+    }
+    return 'all';
+  });
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [modeFilter, setModeFilter] = useState<string>('all');
