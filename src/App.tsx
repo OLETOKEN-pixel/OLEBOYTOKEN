@@ -30,6 +30,8 @@ import MyMatches from "./pages/MyMatches";
 import Profile from "./pages/Profile";
 import Wallet from "./pages/Wallet";
 import Highlights from "./pages/Highlights";
+import Tournaments from "./pages/Tournaments";
+import TournamentDetail from "./pages/TournamentDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +122,8 @@ function App() {
                 <Route path="/matches/create" element={<Matches />} />
                 <Route path="/matches/:id" element={<MatchDetail />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/tournaments" element={<Tournaments />} />
+                <Route path="/tournaments/:id" element={<TournamentDetail />} />
                 <Route path="/highlights" element={<Highlights />} />
                 <Route path="/highlights/week" element={<Highlights />} />
                 <Route path="/highlights/month" element={<Highlights />} />

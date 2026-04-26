@@ -283,6 +283,108 @@ export interface LeaderboardEntry {
   total_earnings: number;
 }
 
+// =====================================================================
+// TOURNAMENTS
+// =====================================================================
+
+export type TournamentStatus =
+  | 'registering'
+  | 'ready_up'
+  | 'running'
+  | 'completed'
+  | 'cancelled';
+
+export interface Tournament {
+  id: string;
+  name: string;
+  creator_id: string;
+  mode: GameMode;
+  team_size: number;
+  first_to: number;
+  region: Region;
+  platform: Platform;
+  max_participants: number;
+  entry_fee: number;
+  prize_pool_seed: number;
+  prize_pool_total: number;
+  duration_seconds: number;
+  rules: string | null;
+  creator_is_admin: boolean;
+  status: TournamentStatus;
+  ready_up_deadline: string | null;
+  started_at: string | null;
+  ends_at: string | null;
+  finalized_at: string | null;
+  created_at: string;
+  updated_at: string;
+  creator?: ProfileSummary;
+  participants?: TournamentParticipant[];
+  prize_positions?: TournamentPrizePosition[];
+  participant_count?: number;
+}
+
+export interface TournamentParticipant {
+  id: string;
+  tournament_id: string;
+  user_id: string | null;
+  team_id: string | null;
+  payer_user_id: string;
+  paid_amount: number;
+  joined_at: string;
+  ready: boolean;
+  ready_at: string | null;
+  matches_played: number;
+  wins: number;
+  losses: number;
+  points: number;
+  current_match_id: string | null;
+  eliminated: boolean;
+  user?: ProfileSummary;
+  team?: Team;
+}
+
+export interface TournamentPrizePosition {
+  id: string;
+  tournament_id: string;
+  position: number;
+  amount: number;
+}
+
+export interface TournamentPayout {
+  id: string;
+  tournament_id: string;
+  participant_id: string;
+  position: number;
+  amount: number;
+  paid_at: string;
+}
+
+export const TOURNAMENT_DURATION_PRESETS: Array<{ value: number; label: string }> = [
+  { value: 1800, label: '30 min' },
+  { value: 3600, label: '1 hour' },
+  { value: 7200, label: '2 hours' },
+  { value: 14400, label: '4 hours' },
+];
+
+export const TOURNAMENT_CAPACITY_PRESETS = [4, 8, 16, 32, 64, 128] as const;
+
+export const TOURNAMENT_PRIZE_PRESETS: Array<{
+  label: string;
+  splits: number[]; // percentages summing to 100
+}> = [
+  { label: 'Winner takes all', splits: [100] },
+  { label: 'Top 3 (50/30/20)', splits: [50, 30, 20] },
+  { label: 'Top 5 (40/25/15/12/8)', splits: [40, 25, 15, 12, 8] },
+];
+
+export const TOURNAMENT_STATUS_LABELS: Record<TournamentStatus, string> = {
+  registering: 'REGISTERING',
+  ready_up: 'READY UP',
+  running: 'LIVE',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+};
+
 // Coin package for shop
 export interface CoinPackage {
   id: string;
