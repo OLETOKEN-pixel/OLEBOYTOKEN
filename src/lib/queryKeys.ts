@@ -13,6 +13,11 @@ export const queryKeys = {
     my: (userId: string) => [...queryKeys.teams.all, 'my', userId] as const,
     detail: (id: string) => [...queryKeys.teams.all, 'detail', id] as const,
   },
+  tournaments: {
+    all: ['tournaments'] as const,
+    list: (filter?: string) => [...queryKeys.tournaments.all, 'list', filter] as const,
+    detail: (id: string) => [...queryKeys.tournaments.all, 'detail', id] as const,
+  },
   wallet: (userId: string) => ['wallet', userId] as const,
   profile: (userId: string) => ['profile', userId] as const,
   playerProfile: (userId: string) => ['player-profile', userId] as const,

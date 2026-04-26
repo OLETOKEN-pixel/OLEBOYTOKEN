@@ -41,6 +41,8 @@ import Teams from "./pages/Teams";
 import Challenges from "./pages/Challenges";
 import BuyCoins from "./pages/BuyCoins";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Tournaments from "./pages/Tournaments";
+import TournamentDetail from "./pages/TournamentDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -152,6 +154,8 @@ function App() {
                   <Route path="/matches/create" element={<Matches />} />
                   <Route path="/matches/:id" element={<MatchDetail />} />
                   <Route path="/matches" element={<Matches />} />
+                  <Route path="/tournaments" element={<Tournaments />} />
+                  <Route path="/tournaments/:id" element={<TournamentDetail />} />
                   <Route path="/highlights" element={<Highlights />} />
                   <Route path="/highlights/week" element={<Highlights />} />
                   <Route path="/highlights/month" element={<Highlights />} />
