@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Clock, ExternalLink, RefreshCw, Users, Wrench, XCircle } from 'lucide-react';
+import {
+  ADMIN_DIALOG_CLASS,
+  ADMIN_INSET_PANEL_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { PremiumBadge } from '@/components/ui/premium-badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,7 +155,7 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
             size="sm"
             onClick={handleLegacyCleanup}
             disabled={cleaningUp}
-            className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+            className={ADMIN_OUTLINE_BUTTON_CLASS}
           >
             <Wrench className="mr-2 h-4 w-4" />
             {cleaningUp ? 'Cleaning...' : 'Repair legacy'}
@@ -163,7 +168,7 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
               onRefresh();
             }}
             disabled={loading}
-            className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+            className={ADMIN_OUTLINE_BUTTON_CLASS}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -173,9 +178,9 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {issueCategories.map((category) => (
-          <div key={category.key} className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+          <div key={category.key} className={ADMIN_INSET_PANEL_CLASS + ' p-4'}>
             <div className="flex items-center justify-between gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+              <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-[#302025] bg-[#151012]">
                 <category.icon className="h-4 w-4" style={{ color: category.accent }} />
               </div>
               <p className="text-3xl font-semibold leading-none text-white">{category.count}</p>
@@ -189,8 +194,8 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
         {issueCategories
           .filter((category) => category.count > 0)
           .map((category) => (
-            <div key={category.key} className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/10 bg-black/18">
-              <div className="flex shrink-0 items-center gap-3 border-b border-white/8 px-4 py-4">
+            <div key={category.key} className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-[#302025] bg-[#171012]">
+              <div className="flex shrink-0 items-center gap-3 border-b border-[#2b1a1f] px-4 py-4">
                 <category.icon className="h-4 w-4" style={{ color: category.accent }} />
                 <span className="text-sm font-semibold text-white">{category.label}</span>
                 <PremiumBadge variant="open" className="ml-auto">
@@ -203,7 +208,7 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
                   {category.items.slice(0, 6).map((match) => (
                     <div
                       key={match.id}
-                      className="flex items-center justify-between gap-3 rounded-[18px] border border-white/10 bg-[#13070a] p-3"
+                      className="flex items-center justify-between gap-3 rounded-[18px] border border-[#302025] bg-[#1c1c1c] p-3"
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-white">
@@ -218,7 +223,7 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => navigate(`/admin/matches/${match.id}`)}
-                        className="border border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+                        className="border border-[#39242b] bg-[#171012] text-white hover:bg-[#26161b]"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -236,7 +241,7 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
           ))}
 
         {(stats?.total ?? 0) === 0 ? (
-          <div className="grid place-items-center rounded-[24px] border border-dashed border-white/12 bg-black/10 px-4 py-10 text-center xl:col-span-2">
+          <div className="grid place-items-center rounded-[24px] border border-dashed border-[#352127] bg-[#13090b] px-4 py-10 text-center xl:col-span-2">
             <div>
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#72f1b8]/12">
                 <AlertTriangle className="h-5 w-5 text-[#72f1b8]" />
@@ -249,7 +254,7 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
       </div>
 
       <Dialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
-        <DialogContent className="border-white/14 bg-[#120b0f] text-white">
+        <DialogContent className={ADMIN_DIALOG_CLASS}>
           <DialogHeader>
             <DialogTitle>Legacy cleanup result</DialogTitle>
             <DialogDescription>Summary of the maintenance operation.</DialogDescription>
@@ -258,23 +263,23 @@ export function IssueCenter({ matches, onRefresh }: IssueCenterProps) {
           {cleanupResult ? (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                <div className="rounded-[18px] border border-[#302025] bg-[#1c1c1c] p-4">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Non-terminal</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{cleanupResult.non_terminal_processed || 0}</p>
                 </div>
-                <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                <div className="rounded-[18px] border border-[#302025] bg-[#1c1c1c] p-4">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Stuck terminal</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{cleanupResult.terminal_stuck_processed || 0}</p>
                 </div>
               </div>
 
-              <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+              <div className="rounded-[18px] border border-[#302025] bg-[#1c1c1c] p-4">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Refunded total</p>
                 <p className="mt-3 text-3xl font-semibold text-white">{cleanupResult.total_refunded || 0} Coins</p>
               </div>
 
               {cleanupResult.processed_match_ids?.length ? (
-                <div className="rounded-[18px] border border-white/10 bg-black/18 p-4">
+                <div className="rounded-[18px] border border-[#302025] bg-[#1c1c1c] p-4">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Processed matches</p>
                   <div className="mt-3 max-h-[140px] space-y-2 overflow-y-auto font-mono text-xs text-white/58">
                     {cleanupResult.processed_match_ids.map((matchId) => (

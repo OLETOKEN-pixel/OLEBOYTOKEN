@@ -14,7 +14,14 @@ import {
   User,
   Wallet,
 } from 'lucide-react';
-import { AdminEmptyState, AdminPanel, AdminShell } from '@/components/admin/AdminShell';
+import {
+  ADMIN_FIELD_CLASS,
+  ADMIN_INSET_PANEL_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  AdminEmptyState,
+  AdminPanel,
+  AdminShell,
+} from '@/components/admin/AdminShell';
 import { LoadingPage } from '@/components/common/LoadingSpinner';
 import { CoinDisplay } from '@/components/common/CoinDisplay';
 import { Button } from '@/components/ui/button';
@@ -51,10 +58,10 @@ function MatchRow({ match, onOpen }: { match: Match; onOpen: (id: string) => voi
     <button
       type="button"
       onClick={() => onOpen(match.id)}
-      className="flex w-full items-center justify-between gap-4 rounded-[20px] border border-white/10 bg-black/18 px-4 py-4 text-left transition hover:border-[#ff1654]/22 hover:bg-white/[0.04]"
+      className="flex w-full items-center justify-between gap-4 rounded-[20px] border border-[#302025] bg-[#1c1c1c] px-4 py-4 text-left transition hover:border-[#ff1654]/22 hover:bg-[#26161b]"
     >
       <div className="flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+        <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-[#302025] bg-[#151012]">
           <Swords className="h-4 w-4 text-[#ff8ead]" />
         </div>
         <div>
@@ -296,13 +303,13 @@ export default function AdminUserDetail() {
           <Button
             variant="ghost"
             onClick={() => navigate('/admin/users')}
-            className="mb-4 self-start border border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]"
+            className={`mb-4 self-start ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Users
           </Button>
 
-          <div className="rounded-[24px] border border-white/10 bg-black/18 p-5">
+          <div className={`${ADMIN_INSET_PANEL_CLASS} p-5`}>
             <div className="flex items-start gap-4">
               <Avatar className="h-16 w-16 ring-1 ring-white/10">
                 <AvatarImage src={getDiscordAvatarUrl(profile) ?? undefined} />
@@ -331,7 +338,7 @@ export default function AdminUserDetail() {
               { label: 'Registered', value: formatDate(profile.created_at) },
               { label: 'User ID', value: profile.user_id },
             ].map((item) => (
-              <div key={item.label} className="rounded-[20px] border border-white/10 bg-black/18 px-4 py-3">
+              <div key={item.label} className="rounded-[20px] border border-[#302025] bg-[#1c1c1c] px-4 py-3">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">{item.label}</p>
                 <p className="mt-2 break-all text-sm font-medium text-white">{item.value}</p>
               </div>
@@ -377,9 +384,9 @@ export default function AdminUserDetail() {
             contentClassName="min-h-0 overflow-y-auto pr-1"
           >
             <div className="space-y-5">
-              <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+              <div className="rounded-[22px] border border-[#302025] bg-[#1c1c1c] p-4">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+                  <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-[#302025] bg-[#151012]">
                     <DollarSign className="h-4 w-4 text-[#ff8ead]" />
                   </div>
                   <div>
@@ -396,13 +403,13 @@ export default function AdminUserDetail() {
                     placeholder="Amount"
                     value={adjustAmount}
                     onChange={(event) => setAdjustAmount(event.target.value)}
-                    className="border-white/12 bg-white/5 text-white"
+                    className={ADMIN_FIELD_CLASS}
                   />
                   <Textarea
                     placeholder="Reason"
                     value={adjustReason}
                     onChange={(event) => setAdjustReason(event.target.value)}
-                    className="min-h-[110px] border-white/12 bg-white/5 text-white"
+                    className={`min-h-[110px] ${ADMIN_FIELD_CLASS}`}
                   />
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -417,7 +424,7 @@ export default function AdminUserDetail() {
                       onClick={() => handleAdjustBalance(false)}
                       disabled={adjusting}
                       variant="outline"
-                      className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                      className={ADMIN_OUTLINE_BUTTON_CLASS}
                     >
                       {adjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Minus className="mr-2 h-4 w-4" />}
                       Remove coins
@@ -426,9 +433,9 @@ export default function AdminUserDetail() {
                 </div>
               </div>
 
-              <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+              <div className="rounded-[22px] border border-[#302025] bg-[#1c1c1c] p-4">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+                  <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-[#302025] bg-[#151012]">
                     <Shield className="h-4 w-4 text-[#72d2ff]" />
                   </div>
                   <div>
@@ -446,7 +453,7 @@ export default function AdminUserDetail() {
                     disabled={changingRole}
                     variant="outline"
                     className={cn(
-                      'border-white/12 bg-white/5 text-white hover:bg-white/10',
+                      ADMIN_OUTLINE_BUTTON_CLASS,
                       userRole !== 'admin' && 'border-[#ff1654]/40 bg-[#ff1654]/12',
                     )}
                   >
@@ -463,9 +470,9 @@ export default function AdminUserDetail() {
               </div>
 
               {userRole !== 'admin' ? (
-                <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                <div className="rounded-[22px] border border-[#302025] bg-[#1c1c1c] p-4">
                   <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+                    <div className="grid h-10 w-10 place-items-center rounded-[16px] border border-[#302025] bg-[#151012]">
                       <User className="h-4 w-4 text-[#ff8a65]" />
                     </div>
                     <div>
@@ -503,7 +510,7 @@ export default function AdminUserDetail() {
           contentClassName="h-full"
         >
           <Tabs defaultValue="active" className="flex h-full min-h-0 flex-col">
-            <TabsList className="grid w-full shrink-0 grid-cols-3 rounded-[18px] bg-white/[0.04] p-1">
+            <TabsList className="grid w-full shrink-0 grid-cols-3 rounded-[18px] border border-[#302025] bg-[#171012] p-1">
               <TabsTrigger value="active">Active ({activeMatches.length})</TabsTrigger>
               <TabsTrigger value="history">History ({completedMatches.length})</TabsTrigger>
               <TabsTrigger value="transactions">Transactions ({transactions.length})</TabsTrigger>
@@ -555,7 +562,7 @@ export default function AdminUserDetail() {
                     {transactions.map((transaction) => (
                       <div
                         key={transaction.id}
-                        className="flex items-center justify-between gap-4 rounded-[20px] border border-white/10 bg-black/18 px-4 py-4"
+                        className="flex items-center justify-between gap-4 rounded-[20px] border border-[#302025] bg-[#1c1c1c] px-4 py-4"
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">

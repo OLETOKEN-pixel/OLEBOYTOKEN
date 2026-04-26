@@ -1,6 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, ChevronUp, ChevronDown, Filter, Download, AlertTriangle, ExternalLink } from 'lucide-react';
+import {
+  ADMIN_FIELD_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  ADMIN_TABLE_SHELL_CLASS,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PremiumBadge } from '@/components/ui/premium-badge';
@@ -182,8 +187,8 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
             }}
             className={cn(
               statusFilter === status
-                ? 'bg-primary/20 text-primary border-primary/30'
-                : 'border-white/[0.08] hover:bg-white/[0.05] hover:border-white/[0.15]'
+                ? 'border-[#ff1654] bg-[#221014] text-white'
+                : 'border-[#39242b] bg-[#1c1c1c] text-[#b6adb0] hover:border-[#ff1654]/40 hover:bg-[#26161b] hover:text-white'
             )}
           >
             {status === 'all' ? 'Tutti' : status.replace('_', ' ').toUpperCase()}
@@ -201,22 +206,22 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
           placeholder="Cerca per ID o host..."
           value={searchQuery}
           onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-          className="h-11 w-full max-w-[320px] border-white/[0.08] bg-white/[0.03] focus:border-primary/50"
+          className={cn('h-11 w-full max-w-[320px]', ADMIN_FIELD_CLASS)}
         />
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="h-11 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06]">
+            <Button variant="outline" className={cn('h-11', ADMIN_OUTLINE_BUTTON_CLASS)}>
               <Filter className="w-4 h-4 mr-2" />
               Filtri Avanzati
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 glass-overlay border-white/[0.08]" align="start">
+          <PopoverContent className="w-80 border-[#39242b] bg-[#13090b] text-white" align="start">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Region</Label>
                 <Select value={regionFilter} onValueChange={(v) => { setRegionFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={ADMIN_FIELD_CLASS}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tutte le regioni</SelectItem>
                     {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
@@ -227,7 +232,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Platform</Label>
                 <Select value={platformFilter} onValueChange={(v) => { setPlatformFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={ADMIN_FIELD_CLASS}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tutte le piattaforme</SelectItem>
                     {PLATFORMS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
@@ -238,7 +243,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Mode</Label>
                 <Select value={modeFilter} onValueChange={(v) => { setModeFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={ADMIN_FIELD_CLASS}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tutte le modalità</SelectItem>
                     {GAME_MODES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
@@ -249,7 +254,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Team Size</Label>
                 <Select value={sizeFilter} onValueChange={(v) => { setSizeFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={ADMIN_FIELD_CLASS}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tutte le size</SelectItem>
                     <SelectItem value="1">1v1</SelectItem>
@@ -277,7 +282,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
 
         <div className="ml-auto flex gap-2">
           <Select value={pageSize.toString()} onValueChange={(v) => { setPageSize(parseInt(v)); setCurrentPage(1); }}>
-            <SelectTrigger className="h-11 w-24 border-white/[0.08] bg-white/[0.03]">
+            <SelectTrigger className={cn('h-11 w-24', ADMIN_FIELD_CLASS)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -287,7 +292,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
             </SelectContent>
           </Select>
 
-          <Button variant="outline" className="h-11 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06]" onClick={exportCSV}>
+          <Button variant="outline" className={cn('h-11', ADMIN_OUTLINE_BUTTON_CLASS)} onClick={exportCSV}>
             <Download className="w-4 h-4 mr-2" />
             CSV
           </Button>
@@ -298,10 +303,10 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
         {filteredMatches.length} match trovati
       </p>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-[20px] border border-white/[0.08] bg-black/12">
+      <div className={ADMIN_TABLE_SHELL_CLASS}>
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-[#17090d]">
-            <TableRow className="border-b border-white/[0.06] bg-[#17090d] hover:bg-[#17090d]">
+          <TableHeader className="sticky top-0 z-10 bg-[#171012]">
+            <TableRow className="border-b border-[#2b1a1f] bg-[#171012] hover:bg-[#171012]">
               <TableHead className="w-[100px] text-muted-foreground font-semibold">ID</TableHead>
               <TableHead 
                 className="cursor-pointer hover:text-foreground text-muted-foreground font-semibold"
@@ -355,7 +360,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
               paginatedMatches.map((match) => (
                 <TableRow 
                   key={match.id} 
-                  className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer transition-colors"
+                  className="cursor-pointer border-b border-[#24161b] transition-colors hover:bg-[#1c1c1c]"
                   onClick={() => navigate(`/admin/matches/${match.id}`)}
                 >
                   <TableCell className="font-mono text-xs text-muted-foreground">
@@ -378,7 +383,7 @@ export function MatchesTable({ matches, loading, fullHeight = false }: MatchesTa
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="hover:bg-white/[0.05]"
+                      className="hover:bg-[#26161b]"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/admin/matches/${match.id}`);

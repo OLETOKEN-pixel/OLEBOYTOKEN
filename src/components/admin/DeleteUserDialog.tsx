@@ -8,6 +8,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  ADMIN_DIALOG_CLASS,
+  ADMIN_FIELD_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -73,7 +78,7 @@ export function DeleteUserDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="glass-overlay rounded-xl border-white/[0.08]">
+      <AlertDialogContent className={ADMIN_DIALOG_CLASS}>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-destructive font-display">
             <div className="w-10 h-10 rounded-lg bg-destructive/15 flex items-center justify-center">
@@ -101,13 +106,13 @@ export function DeleteUserDialog({
         </AlertDialogHeader>
 
         <div className="space-y-2 py-2">
-          <Label htmlFor="confirm" className="text-sm text-muted-foreground">Type DELETE to confirm</Label>
+          <Label htmlFor="confirm" className="text-sm text-[#8f8488]">Type DELETE to confirm</Label>
           <Input
             id="confirm"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder="DELETE"
-            className={`bg-white/[0.03] border-white/[0.08] focus:border-primary/50 ${confirmText && !canDelete ? 'border-destructive' : ''}`}
+            className={`${ADMIN_FIELD_CLASS} ${confirmText && !canDelete ? 'border-destructive' : ''}`}
           />
         </div>
 
@@ -115,7 +120,7 @@ export function DeleteUserDialog({
           <Button 
             variant="outline" 
             onClick={() => { onOpenChange(false); setConfirmText(''); }}
-            className="border-white/[0.1] hover:bg-white/[0.05]"
+            className={ADMIN_OUTLINE_BUTTON_CLASS}
           >
             Cancel
           </Button>

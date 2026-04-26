@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react';
 import { ImagePlus, Package, Plus, RefreshCw, Sparkles } from 'lucide-react';
-import { AdminEmptyState, AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
+import {
+  ADMIN_DIALOG_CLASS,
+  ADMIN_FIELD_CLASS,
+  ADMIN_INSET_PANEL_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  AdminEmptyState,
+  AdminPanel,
+  AdminShell,
+  AdminStatCard,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -188,7 +197,7 @@ export default function AdminShop() {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -240,7 +249,7 @@ export default function AdminShop() {
               {rewards.map((reward) => (
                 <div
                   key={reward.id}
-                  className="flex flex-col gap-4 rounded-[24px] border border-white/10 bg-black/18 p-4 2xl:flex-row 2xl:items-center"
+                  className="flex flex-col gap-4 rounded-[24px] border border-[#302025] bg-[#1c1c1c] p-4 2xl:flex-row 2xl:items-center"
                 >
                   <div className="flex h-[150px] w-full items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-[#1a0808] 2xl:w-[200px]">
                     <img src={reward.image} alt={reward.name} className="h-full w-full object-contain p-4" />
@@ -249,7 +258,7 @@ export default function AdminShop() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-xl font-semibold text-white">{reward.name}</h3>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
+                      <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
                         LVL {reward.levelRequired}
                       </span>
                       <span
@@ -269,7 +278,7 @@ export default function AdminShop() {
                       <Button
                         variant="outline"
                         onClick={() => openEditDialog(reward)}
-                        className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                        className={ADMIN_OUTLINE_BUTTON_CLASS}
                       >
                         Edit
                       </Button>
@@ -277,7 +286,7 @@ export default function AdminShop() {
                         variant="outline"
                         onClick={() => handleToggleActive(reward)}
                         disabled={togglingId === reward.id}
-                        className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                        className={ADMIN_OUTLINE_BUTTON_CLASS}
                       >
                         {reward.isActive !== false ? 'Deactivate' : 'Activate'}
                       </Button>
@@ -299,7 +308,7 @@ export default function AdminShop() {
           }
         }}
       >
-        <DialogContent className="border-white/14 bg-[#120b0f] text-white sm:max-w-[640px]">
+        <DialogContent className={`${ADMIN_DIALOG_CLASS} sm:max-w-[640px]`}>
           <DialogHeader>
             <DialogTitle>{form.id ? 'Edit reward' : 'Create reward'}</DialogTitle>
           </DialogHeader>
@@ -311,7 +320,7 @@ export default function AdminShop() {
                 <Input
                   value={form.name}
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                   placeholder="MOUSE"
                 />
               </div>
@@ -323,7 +332,7 @@ export default function AdminShop() {
                   min="1"
                   value={form.levelRequired}
                   onChange={(event) => setForm((current) => ({ ...current, levelRequired: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                   placeholder="30"
                 />
               </div>
@@ -334,7 +343,7 @@ export default function AdminShop() {
               <Textarea
                 value={form.description}
                 onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                className="min-h-[110px] border-white/12 bg-white/5 text-white"
+                className={`min-h-[110px] ${ADMIN_FIELD_CLASS}`}
                 placeholder="Official reward description"
               />
             </div>
@@ -353,14 +362,14 @@ export default function AdminShop() {
                       imagePreview: file ? URL.createObjectURL(file) : current.imagePreview,
                     }));
                   }}
-                  className="border-white/12 bg-white/5 text-white file:text-white"
+                  className={`${ADMIN_FIELD_CLASS} file:text-white`}
                 />
                 <p className="text-xs text-white/42">
                   Upload a new asset or leave it untouched to keep the current image.
                 </p>
               </div>
 
-              <div className="flex items-center justify-between rounded-[20px] border border-white/10 bg-white/5 px-4 py-3">
+              <div className={`${ADMIN_INSET_PANEL_CLASS} flex items-center justify-between px-4 py-3`}>
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-white/46">Active</p>
                   <p className="mt-1 text-sm text-white/70">Instantly visible on site</p>
@@ -383,7 +392,7 @@ export default function AdminShop() {
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}
-              className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+              className={ADMIN_OUTLINE_BUTTON_CLASS}
             >
               Cancel
             </Button>

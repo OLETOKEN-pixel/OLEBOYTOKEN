@@ -29,7 +29,7 @@ type AdminNavItem = {
   icon: ComponentType<{ className?: string }>;
 };
 
-const ADMIN_NAV_ITEMS: AdminNavItem[] = [
+export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   {
     href: '/admin',
     label: 'Dashboard',
@@ -74,7 +74,7 @@ const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   },
 ];
 
-function isNavItemActive(pathname: string, item: AdminNavItem) {
+export function isNavItemActive(pathname: string, item: AdminNavItem) {
   if (item.href === '/admin') {
     return pathname === '/admin';
   }
@@ -105,67 +105,114 @@ function AdminBackdrop() {
   );
 }
 
+type AdminRailCardProps = {
+  pathname: string;
+  compact?: boolean;
+};
+
+function AdminRailCard({ pathname, compact = false }: AdminRailCardProps) {
+  return (
+    <div className="flex min-h-0 w-full flex-col rounded-[30px] border border-[#352127] bg-[#13090b] p-4">
+      <div className="shrink-0 border-b border-[#2b1a1f] px-2 pb-4">
+        {!compact ? (
+          <>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#ff8ead]">
+              Admin Suite
+            </p>
+            <p className="mt-2 font-['Base_Neue_Trial:Expanded_Black_Oblique','Base_Neue_Trial','sans-serif'] text-[32px] italic leading-none text-white">
+              CONTROL
+            </p>
+            <p className="mt-2 text-xs leading-5 text-[#9c9c9c]">
+              Full-screen workspace for moderation, finance, shop rewards, and challenges.
+            </p>
+          </>
+        ) : (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#ff8ead]">
+              Admin
+            </p>
+            <p className="mt-2 font-['Base_Neue_Trial:Expanded_Black_Oblique','Base_Neue_Trial','sans-serif'] text-[28px] italic leading-none text-white">
+              CONTROL
+            </p>
+          </div>
+        )}
+      </div>
+
+      <nav
+        aria-label="Admin navigation"
+        className="mt-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1"
+        data-testid="admin-section-nav"
+      >
+        {ADMIN_NAV_ITEMS.map((item) => {
+          const active = isNavItemActive(pathname, item);
+
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              aria-current={active ? 'page' : undefined}
+              data-active={active ? 'true' : 'false'}
+              className={cn(
+                'group flex items-center gap-3 rounded-[22px] border px-4 py-4 text-sm font-semibold transition',
+                active
+                  ? 'border-[#ff1654] bg-[#221014] text-white'
+                  : 'border-[#2c1b20] bg-[#171012] text-[#b7afb2] hover:border-[#ff1654]/40 hover:bg-[#1d1215] hover:text-white',
+              )}
+            >
+              <div
+                className={cn(
+                  'grid h-11 w-11 shrink-0 place-items-center rounded-[16px] border transition',
+                  active
+                    ? 'border-[#ff1654]/50 bg-[#ff1654]/12 text-[#ff8ead]'
+                    : 'border-[#302126] bg-[#1c1c1c] text-[#8e8588] group-hover:text-white/80',
+                )}
+              >
+                <item.icon className="h-[18px] w-[18px]" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[16px] leading-none">{item.label}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.26em] text-[#7a6b70]">
+                  {item.href === '/admin' ? 'Overview' : 'Workspace'}
+                </p>
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
 function AdminRail({ pathname }: { pathname: string }) {
   return (
     <aside className="hidden min-h-0 lg:flex">
-      <div className="flex min-h-0 w-full flex-col rounded-[32px] border border-white/10 bg-[#15080b]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-[18px]">
-        <div className="shrink-0 border-b border-white/8 px-2 pb-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#ff8ead]">
-            Admin Suite
-          </p>
-          <p className="mt-2 font-['Base_Neue_Trial:Expanded_Black_Oblique','Base_Neue_Trial','sans-serif'] text-[32px] italic leading-none text-white">
-            CONTROL
-          </p>
-          <p className="mt-2 text-xs leading-5 text-white/48">
-            Full-screen workspace for moderation, finance, shop rewards, and challenges.
-          </p>
-        </div>
+      <AdminRailCard pathname={pathname} />
+    </aside>
+  );
+}
 
-        <nav
-          aria-label="Admin navigation"
-          className="mt-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1"
-          data-testid="admin-section-nav"
-        >
-          {ADMIN_NAV_ITEMS.map((item) => {
-            const active = isNavItemActive(pathname, item);
-
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                aria-current={active ? 'page' : undefined}
-                data-active={active ? 'true' : 'false'}
-                className={cn(
-                  'group flex items-center gap-3 rounded-[22px] border px-4 py-4 text-sm font-semibold transition',
-                  active
-                    ? 'border-[#ff1654] bg-[#ff1654]/14 text-white shadow-[0_0_26px_rgba(255,22,84,0.16)]'
-                    : 'border-white/8 bg-white/[0.03] text-white/62 hover:border-[#ff1654]/26 hover:bg-white/[0.06] hover:text-white',
-                )}
-              >
-                <div
-                  className={cn(
-                    'grid h-10 w-10 shrink-0 place-items-center rounded-[16px] border transition',
-                    active
-                      ? 'border-[#ff1654]/40 bg-[#ff1654]/18 text-[#ff8ead]'
-                      : 'border-white/8 bg-black/20 text-white/44 group-hover:text-white/72',
-                  )}
-                >
-                  <item.icon className="h-[18px] w-[18px]" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-[15px] leading-none">{item.label}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.26em] text-white/34">
-                    {item.href === '/admin' ? 'Overview' : 'Workspace'}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
+export function AdminFloatingRail({ pathname }: { pathname: string }) {
+  return (
+    <aside className="hidden lg:block">
+      <div className="w-[240px]">
+        <AdminRailCard pathname={pathname} compact />
       </div>
     </aside>
   );
 }
+
+export const ADMIN_OUTLINE_BUTTON_CLASS =
+  'border-[#39242b] bg-[#1c1c1c] text-white hover:bg-[#26161b] hover:border-[#4a2c34]';
+
+export const ADMIN_FIELD_CLASS =
+  'border-[#39242b] bg-[#1c1c1c] text-white placeholder:text-[#77686d] focus-visible:border-[#ff1654] focus-visible:ring-0';
+
+export const ADMIN_DIALOG_CLASS =
+  'border-[#4a2a32] bg-[#12090b] text-white shadow-[0_28px_80px_rgba(0,0,0,0.55)]';
+
+export const ADMIN_INSET_PANEL_CLASS = 'rounded-[22px] border border-[#302025] bg-[#1c1c1c]';
+
+export const ADMIN_TABLE_SHELL_CLASS = 'min-h-0 flex-1 overflow-auto rounded-[22px] border border-[#302025] bg-[#171012]';
 
 function AdminMobileNav({ pathname }: { pathname: string }) {
   return (
@@ -186,8 +233,8 @@ function AdminMobileNav({ pathname }: { pathname: string }) {
             className={cn(
               'flex min-w-fit items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition',
               active
-                ? 'border-[#ff1654] bg-[#ff1654]/14 text-white'
-                : 'border-white/10 bg-white/[0.04] text-white/64',
+                ? 'border-[#ff1654] bg-[#221014] text-white'
+                : 'border-[#302025] bg-[#1a1113] text-[#aca3a6]',
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -205,11 +252,11 @@ export function AdminShell({ title, description, actions, children }: AdminShell
 
   if (isLoading) {
     return (
-      <div className="relative h-screen overflow-hidden bg-[#120405] text-white">
+      <div className="relative h-screen overflow-hidden bg-[#0f0404] text-white">
         <AdminBackdrop />
         <NavbarFigmaLoggedIn />
         <div className="relative z-10 mx-auto flex h-full max-w-[1680px] flex-col px-4 pb-5 pt-[170px] sm:px-6 lg:px-8">
-          <div className="grid min-h-0 flex-1 place-items-center rounded-[32px] border border-white/10 bg-[#15080b]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-[18px]">
+          <div className="grid min-h-0 flex-1 place-items-center rounded-[30px] border border-[#302025] bg-[#13090b] p-6">
             <LoadingPage />
           </div>
         </div>
@@ -226,7 +273,7 @@ export function AdminShell({ title, description, actions, children }: AdminShell
   }
 
   return (
-    <div data-testid="admin-shell" className="relative h-screen overflow-hidden bg-[#120405] text-white">
+    <div data-testid="admin-shell" className="relative h-screen overflow-hidden bg-[#0f0404] text-white">
       <AdminBackdrop />
       <NavbarFigmaLoggedIn />
 
@@ -237,16 +284,19 @@ export function AdminShell({ title, description, actions, children }: AdminShell
           <div className="flex min-h-0 flex-col gap-4">
             <AdminMobileNav pathname={location.pathname} />
 
-            <header className="shrink-0 rounded-[32px] border border-[#ff1654]/18 bg-[#1a090d]/92 px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-[18px]">
+            <header className="shrink-0 border-b border-[#352127] px-1 pb-4">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#ff8ead]">
                     Admin Suite
                   </p>
-                  <h1 className="mt-2 font-['Base_Neue_Trial:Expanded_Black_Oblique','Base_Neue_Trial','sans-serif'] text-[42px] italic leading-none text-white sm:text-[54px]">
-                    {title}
-                  </h1>
-                  <p className="mt-3 max-w-[780px] text-sm leading-6 text-white/64 sm:text-base">
+                  <div className="mt-2 flex items-end gap-4">
+                    <h1 className="font-['Base_Neue_Trial:Expanded_Black_Oblique','Base_Neue_Trial','sans-serif'] text-[34px] italic leading-none text-white sm:text-[46px]">
+                      {title}
+                    </h1>
+                    <span className="mb-1 hidden h-[3px] w-24 bg-[#ff1654] sm:block" />
+                  </div>
+                  <p className="mt-3 max-w-[780px] text-sm leading-6 text-[#9c9c9c] sm:text-base">
                     {description}
                   </p>
                 </div>
@@ -289,20 +339,20 @@ export function AdminPanel({
   return (
     <section
       className={cn(
-        'flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[#16080c]/94 shadow-[0_20px_60px_rgba(0,0,0,0.24)] backdrop-blur-[18px]',
+        'flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-[#302025] bg-[#13090b]',
         className,
       )}
     >
       {showHeader ? (
         <div
           className={cn(
-            'flex shrink-0 flex-col gap-3 border-b border-white/8 px-5 py-4 lg:flex-row lg:items-start lg:justify-between',
+            'flex shrink-0 flex-col gap-3 border-b border-[#2b1a1f] px-5 py-4 lg:flex-row lg:items-start lg:justify-between',
             headerClassName,
           )}
         >
           <div className="min-w-0">
             {title ? <h2 className="text-lg font-semibold text-white">{title}</h2> : null}
-            {description ? <p className="mt-1 text-sm leading-6 text-white/54">{description}</p> : null}
+            {description ? <p className="mt-1 text-sm leading-6 text-[#9c9c9c]">{description}</p> : null}
           </div>
           {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
         </div>
@@ -325,16 +375,15 @@ export function AdminStatCard({
   accent?: string;
 }) {
   return (
-    <div className="flex h-full min-h-[116px] flex-col justify-between rounded-[24px] border border-white/10 bg-[#13070a]/92 p-5">
+    <div className="flex h-full min-h-[116px] flex-col justify-between rounded-[24px] border border-[#302025] bg-[#13090b] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-white/44">{label}</p>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#7a6b70]">{label}</p>
           <p className="mt-4 text-4xl font-semibold leading-none text-white">{value}</p>
         </div>
 
         <div
-          className="grid h-12 w-12 place-items-center rounded-[18px] border border-white/10"
-          style={{ backgroundColor: `${accent}16` }}
+          className="grid h-12 w-12 place-items-center rounded-[18px] border border-[#302025] bg-[#1c1c1c]"
         >
           <Icon className="h-5 w-5" style={{ color: accent }} />
         </div>
@@ -351,13 +400,13 @@ export function AdminEmptyState({
   description: string;
 }) {
   return (
-    <div className="grid h-full min-h-[220px] place-items-center rounded-[24px] border border-dashed border-white/14 bg-black/10 px-5 py-10 text-center">
+    <div className="grid h-full min-h-[220px] place-items-center rounded-[24px] border border-dashed border-[#352127] bg-[#13090b] px-5 py-10 text-center">
       <div>
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#ff1654]/12">
           <AlertTriangle className="h-5 w-5 text-[#ff8ead]" />
         </div>
         <p className="mt-4 text-base font-semibold text-white">{title}</p>
-        <p className="mx-auto mt-2 max-w-[460px] text-sm leading-6 text-white/54">{description}</p>
+        <p className="mx-auto mt-2 max-w-[460px] text-sm leading-6 text-[#9c9c9c]">{description}</p>
       </div>
     </div>
   );

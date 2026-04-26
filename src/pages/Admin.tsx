@@ -11,7 +11,14 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { AdminEmptyState, AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
+import {
+  ADMIN_INSET_PANEL_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  AdminEmptyState,
+  AdminPanel,
+  AdminShell,
+  AdminStatCard,
+} from '@/components/admin/AdminShell';
 import { GlobalSearchBar } from '@/components/admin/GlobalSearchBar';
 import { IssueCenter } from '@/components/admin/IssueCenter';
 import { Button } from '@/components/ui/button';
@@ -133,7 +140,7 @@ export default function Admin() {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -168,10 +175,10 @@ export default function Admin() {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="group flex items-center justify-between rounded-[22px] border border-white/10 bg-black/18 px-4 py-4 transition hover:border-[#ff1654]/28 hover:bg-white/[0.04]"
+                    className="group flex items-center justify-between rounded-[22px] border border-[#302025] bg-[#1c1c1c] px-4 py-4 transition hover:border-[#ff1654]/28 hover:bg-[#26161b]"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="grid h-11 w-11 place-items-center rounded-[16px] border border-white/10 bg-white/[0.04]">
+                      <div className="grid h-11 w-11 place-items-center rounded-[16px] border border-[#302025] bg-[#151012]">
                         <link.icon className="h-5 w-5 text-[#ff8ead]" />
                       </div>
                       <div>
@@ -200,7 +207,7 @@ export default function Admin() {
                 ) : (
                   <div className="space-y-3">
                     {withdrawals.slice(0, 6).map((withdrawal) => (
-                      <div key={withdrawal.id} className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                      <div key={withdrawal.id} className={`${ADMIN_INSET_PANEL_CLASS} p-4`}>
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-white">{withdrawal.profiles?.username || withdrawal.user_id}</p>
@@ -221,7 +228,7 @@ export default function Admin() {
                     <Button
                       asChild
                       variant="outline"
-                      className="w-full border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+                      className={`w-full ${ADMIN_OUTLINE_BUTTON_CLASS}`}
                     >
                       <Link to="/admin/withdrawals">Open withdrawals</Link>
                     </Button>
@@ -236,7 +243,7 @@ export default function Admin() {
                 contentClassName="min-h-0 overflow-y-auto pr-1"
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                  <div className={`${ADMIN_INSET_PANEL_CLASS} p-4`}>
                     <p className="text-xs uppercase tracking-[0.2em] text-white/44">Active shop rewards</p>
                     <p className="mt-3 text-3xl font-semibold text-white">{activeRewards.length}</p>
                     <p className="mt-2 text-sm leading-6 text-white/50">
@@ -244,7 +251,7 @@ export default function Admin() {
                     </p>
                   </div>
 
-                  <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                  <div className={`${ADMIN_INSET_PANEL_CLASS} p-4`}>
                     <p className="text-xs uppercase tracking-[0.2em] text-white/44">Active challenges</p>
                     <p className="mt-3 text-3xl font-semibold text-white">{activeChallenges.length}</p>
                     <p className="mt-2 text-sm leading-6 text-white/50">
@@ -264,7 +271,7 @@ export default function Admin() {
                     contentLogs.map((log) => (
                       <div
                         key={log.id}
-                        className="flex items-center justify-between gap-4 rounded-[20px] border border-white/10 bg-black/18 px-4 py-3"
+                        className="flex items-center justify-between gap-4 rounded-[20px] border border-[#302025] bg-[#1c1c1c] px-4 py-3"
                       >
                         <div>
                           <p className="text-sm font-semibold text-white">{describeContentLog(log)}</p>

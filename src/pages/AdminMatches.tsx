@@ -1,6 +1,6 @@
 import { AlertTriangle, RefreshCw, Swords, TimerReset } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
+import { ADMIN_OUTLINE_BUTTON_CLASS, AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
 import { GlobalSearchBar } from '@/components/admin/GlobalSearchBar';
 import { MatchesTable } from '@/components/admin/MatchesTable';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ export default function AdminMatches() {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh

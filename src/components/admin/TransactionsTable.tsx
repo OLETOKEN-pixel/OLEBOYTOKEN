@@ -1,6 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronUp, ChevronDown, Download, ExternalLink } from 'lucide-react';
+import {
+  ADMIN_FIELD_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  ADMIN_TABLE_SHELL_CLASS,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PremiumBadge } from '@/components/ui/premium-badge';
@@ -140,8 +145,8 @@ export function TransactionsTable({ transactions, loading, fullHeight = false }:
             }}
             className={cn(
               typeFilter === type
-                ? 'bg-primary/20 text-primary border-primary/30'
-                : 'border-white/[0.08] hover:bg-white/[0.05] hover:border-white/[0.15]'
+                ? 'border-[#ff1654] bg-[#221014] text-white'
+                : 'border-[#39242b] bg-[#1c1c1c] text-[#b6adb0] hover:border-[#ff1654]/40 hover:bg-[#26161b] hover:text-white'
             )}
           >
             {type === 'all' ? 'Tutti' : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -159,12 +164,12 @@ export function TransactionsTable({ transactions, loading, fullHeight = false }:
           placeholder="Cerca per ID, match ID, descrizione..."
           value={searchQuery}
           onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-          className="h-11 w-full max-w-[340px] border-white/[0.08] bg-white/[0.03] focus:border-primary/50"
+          className={cn('h-11 w-full max-w-[340px]', ADMIN_FIELD_CLASS)}
         />
 
         <div className="ml-auto flex gap-2">
           <Select value={pageSize.toString()} onValueChange={(v) => { setPageSize(parseInt(v)); setCurrentPage(1); }}>
-            <SelectTrigger className="h-11 w-24 border-white/[0.08] bg-white/[0.03]">
+            <SelectTrigger className={cn('h-11 w-24', ADMIN_FIELD_CLASS)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -174,7 +179,7 @@ export function TransactionsTable({ transactions, loading, fullHeight = false }:
             </SelectContent>
           </Select>
 
-          <Button variant="outline" className="h-11 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06]" onClick={exportCSV}>
+          <Button variant="outline" className={cn('h-11', ADMIN_OUTLINE_BUTTON_CLASS)} onClick={exportCSV}>
             <Download className="w-4 h-4 mr-2" />
             CSV
           </Button>
@@ -185,10 +190,10 @@ export function TransactionsTable({ transactions, loading, fullHeight = false }:
         {filteredTransactions.length} transazioni trovate
       </p>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-[20px] border border-white/[0.08] bg-black/12">
+      <div className={ADMIN_TABLE_SHELL_CLASS}>
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-[#17090d]">
-            <TableRow className="border-b border-white/[0.06] bg-[#17090d] hover:bg-[#17090d]">
+          <TableHeader className="sticky top-0 z-10 bg-[#171012]">
+            <TableRow className="border-b border-[#2b1a1f] bg-[#171012] hover:bg-[#171012]">
               <TableHead className="w-[100px] text-muted-foreground font-semibold">ID</TableHead>
               <TableHead 
                 className="cursor-pointer hover:text-foreground text-muted-foreground font-semibold"
@@ -229,7 +234,7 @@ export function TransactionsTable({ transactions, loading, fullHeight = false }:
               </TableRow>
             ) : (
               paginatedTransactions.map((tx) => (
-                <TableRow key={tx.id} className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+                <TableRow key={tx.id} className="border-b border-[#24161b] transition-colors hover:bg-[#1c1c1c]">
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {tx.id.slice(0, 8)}...
                   </TableCell>
@@ -264,7 +269,7 @@ export function TransactionsTable({ transactions, loading, fullHeight = false }:
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        className="hover:bg-white/[0.05]"
+                        className="hover:bg-[#26161b]"
                         onClick={() => navigate(`/admin/matches/${tx.match_id}`)}
                       >
                         <ExternalLink className="w-4 h-4" />

@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react';
 import { CalendarClock, Plus, RefreshCw, Target, Trophy } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { AdminEmptyState, AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
+import {
+  ADMIN_DIALOG_CLASS,
+  ADMIN_FIELD_CLASS,
+  ADMIN_INSET_PANEL_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  AdminEmptyState,
+  AdminPanel,
+  AdminShell,
+  AdminStatCard,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -70,8 +79,8 @@ function ChallengeColumn({
   onToggle: (challenge: ChallengeRow) => void;
 }) {
   return (
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/10 bg-black/18">
-      <div className="shrink-0 border-b border-white/8 px-4 py-4">
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-[#302025] bg-[#171012]">
+      <div className="shrink-0 border-b border-[#2b1a1f] px-4 py-4">
         <h3 className="text-lg font-semibold text-white">
           {type === 'daily' ? 'Daily challenges' : 'Weekly challenges'}
         </h3>
@@ -89,13 +98,13 @@ function ChallengeColumn({
         ) : (
           <div className="space-y-3">
             {rows.map((challenge) => (
-              <div key={challenge.id} className="rounded-[22px] border border-white/10 bg-[#13070a] p-4">
+              <div key={challenge.id} className="rounded-[22px] border border-[#302025] bg-[#1c1c1c] p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="text-base font-semibold text-white">{challenge.title}</h4>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
+                  <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
                     {challenge.metric_type}
                   </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-white/56">
+                  <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
                     order {challenge.sort_order}
                   </span>
                   <span
@@ -122,7 +131,7 @@ function ChallengeColumn({
                   <Button
                     variant="outline"
                     onClick={() => onEdit(challenge)}
-                    className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                    className={ADMIN_OUTLINE_BUTTON_CLASS}
                   >
                     Edit
                   </Button>
@@ -130,7 +139,7 @@ function ChallengeColumn({
                     variant="outline"
                     onClick={() => onToggle(challenge)}
                     disabled={togglingId === challenge.id}
-                    className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                    className={ADMIN_OUTLINE_BUTTON_CLASS}
                   >
                     {challenge.is_active ? 'Deactivate' : 'Activate'}
                   </Button>
@@ -281,7 +290,7 @@ export default function AdminChallenges() {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -348,7 +357,7 @@ export default function AdminChallenges() {
           }
         }}
       >
-        <DialogContent className="border-white/14 bg-[#120b0f] text-white sm:max-w-[720px]">
+        <DialogContent className={`${ADMIN_DIALOG_CLASS} sm:max-w-[720px]`}>
           <DialogHeader>
             <DialogTitle>{form.id ? 'Edit challenge' : 'Create challenge'}</DialogTitle>
           </DialogHeader>
@@ -360,7 +369,7 @@ export default function AdminChallenges() {
                 <Input
                   value={form.title}
                   onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                 />
               </div>
 
@@ -369,7 +378,7 @@ export default function AdminChallenges() {
                 <select
                   value={form.type}
                   onChange={(event) => setForm((current) => ({ ...current, type: event.target.value as 'daily' | 'weekly' }))}
-                  className="h-10 w-full rounded-md border border-white/12 bg-white/5 px-3 text-sm text-white"
+                  className="h-10 w-full rounded-md border border-[#39242b] bg-[#1c1c1c] px-3 text-sm text-white"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -382,7 +391,7 @@ export default function AdminChallenges() {
               <Textarea
                 value={form.description}
                 onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                className="min-h-[110px] border-white/12 bg-white/5 text-white"
+                className={`min-h-[110px] ${ADMIN_FIELD_CLASS}`}
               />
             </div>
 
@@ -392,7 +401,7 @@ export default function AdminChallenges() {
                 <select
                   value={form.metricType}
                   onChange={(event) => setForm((current) => ({ ...current, metricType: event.target.value }))}
-                  className="h-10 w-full rounded-md border border-white/12 bg-white/5 px-3 text-sm text-white"
+                  className="h-10 w-full rounded-md border border-[#39242b] bg-[#1c1c1c] px-3 text-sm text-white"
                 >
                   {METRIC_OPTIONS.map((metric) => (
                     <option key={metric.value} value={metric.value}>
@@ -409,7 +418,7 @@ export default function AdminChallenges() {
                   min="1"
                   value={form.targetValue}
                   onChange={(event) => setForm((current) => ({ ...current, targetValue: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                 />
               </div>
 
@@ -420,7 +429,7 @@ export default function AdminChallenges() {
                   min="0"
                   value={form.rewardXp}
                   onChange={(event) => setForm((current) => ({ ...current, rewardXp: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                 />
               </div>
 
@@ -432,7 +441,7 @@ export default function AdminChallenges() {
                   step="0.01"
                   value={form.rewardCoin}
                   onChange={(event) => setForm((current) => ({ ...current, rewardCoin: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                 />
               </div>
             </div>
@@ -445,11 +454,11 @@ export default function AdminChallenges() {
                   min="0"
                   value={form.sortOrder}
                   onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))}
-                  className="border-white/12 bg-white/5 text-white"
+                  className={ADMIN_FIELD_CLASS}
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-[20px] border border-white/10 bg-white/5 px-4 py-3">
+              <div className={`${ADMIN_INSET_PANEL_CLASS} flex items-center justify-between px-4 py-3`}>
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-white/46">Active</p>
                   <p className="mt-1 text-sm text-white/70">
@@ -468,7 +477,7 @@ export default function AdminChallenges() {
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}
-              className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+              className={ADMIN_OUTLINE_BUTTON_CLASS}
             >
               Cancel
             </Button>

@@ -69,9 +69,9 @@ function EpicIcon() {
 }
 
 // ─── View state ──────────────────────────────────────────────────────────────
-type ViewState = 'WAIT' | 'READY_UP' | 'WIN_LOSS' | 'TERMINAL';
+export type ViewState = 'WAIT' | 'READY_UP' | 'WIN_LOSS' | 'TERMINAL';
 
-function getViewState(status: string): ViewState {
+export function getViewState(status: string): ViewState {
   if (['open', 'joined'].includes(status)) return 'WAIT';
   if (['ready_check', 'full'].includes(status)) return 'READY_UP';
   if (['in_progress', 'result_pending', 'started'].includes(status)) return 'WIN_LOSS';
@@ -881,6 +881,7 @@ function ReadyChatPanel({
   status,
   currentUserId,
   isParticipant,
+  isAdmin = false,
   teamMap,
   profileMap,
 }: {
@@ -888,10 +889,11 @@ function ReadyChatPanel({
   status: string;
   currentUserId?: string;
   isParticipant: boolean;
+  isAdmin?: boolean;
   teamMap: Record<string, 'A' | 'B'>;
   profileMap: Record<string, ProfileSummary>;
 }) {
-  if (!currentUserId || !isParticipant) return null;
+  if (!currentUserId || (!isParticipant && !isAdmin)) return null;
 
   return (
     <section
@@ -936,7 +938,7 @@ function ReadyChatPanel({
           matchId={matchId}
           matchStatus={status}
           currentUserId={currentUserId}
-          isAdmin={false}
+          isAdmin={isAdmin}
           isParticipant={isParticipant}
           hideHeader
           teamMap={teamMap}
@@ -949,33 +951,7 @@ function ReadyChatPanel({
   );
 }
 
-function ReadyLobbyScreen({
-  match,
-  status,
-  viewState,
-  currentUserId,
-  currentTeamSide,
-  isParticipant,
-  isCreator,
-  amReady,
-  hasSubmittedResult,
-  teamSize,
-  teamA,
-  teamB,
-  teamMap,
-  profileMap,
-  readyCount,
-  readyTotal,
-  readyPending,
-  cancelPending,
-  submitPending,
-  onReady,
-  onCancel,
-  onSubmitResult,
-  isWinner,
-  prize = 0,
-  entryFee = 0,
-}: {
+export interface ReadyLobbyScreenProps {
   match: Match;
   status: string;
   viewState: ViewState;
@@ -1001,7 +977,43 @@ function ReadyLobbyScreen({
   isWinner?: boolean;
   prize?: number;
   entryFee?: number;
-}) {
+  viewerIsAdmin?: boolean;
+  showUserActions?: boolean;
+  chatIsAdmin?: boolean;
+  hideChat?: boolean;
+}
+
+export function ReadyLobbyScreen({
+  match,
+  status,
+  viewState,
+  currentUserId,
+  currentTeamSide,
+  isParticipant,
+  isCreator,
+  amReady,
+  hasSubmittedResult,
+  teamSize,
+  teamA,
+  teamB,
+  teamMap,
+  profileMap,
+  readyCount,
+  readyTotal,
+  readyPending,
+  cancelPending,
+  submitPending,
+  onReady,
+  onCancel,
+  onSubmitResult,
+  isWinner,
+  prize = 0,
+  entryFee = 0,
+  viewerIsAdmin = false,
+  showUserActions = true,
+  chatIsAdmin = false,
+  hideChat = false,
+}: ReadyLobbyScreenProps) {
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const { toast } = useToast();
@@ -1013,7 +1025,7 @@ function ReadyLobbyScreen({
   const isReadyCheck = viewState === 'READY_UP';
   const isPlaying = viewState === 'WIN_LOSS';
   const isTerminal = viewState === 'TERMINAL';
-  const shouldMaskParticipants = isWaitingForAcceptance || isReadyCheck;
+  const shouldMaskParticipants = !viewerIsAdmin && (isWaitingForAcceptance || isReadyCheck);
   const actionLabel = isWaitingForAcceptance ? 'CANCEL' : `READY (${readyCount}/${readyTotal})`;
   const actionDisabled = isWaitingForAcceptance
     ? !isCreator || cancelPending
@@ -1141,7 +1153,7 @@ function ReadyLobbyScreen({
           </button>
         )}
 
-        {(isWaitingForAcceptance || isReadyCheck) && (
+        {showUserActions && (isWaitingForAcceptance || isReadyCheck) && (
           <button
             type="button"
             onClick={handlePrimaryAction}
@@ -1159,7 +1171,7 @@ function ReadyLobbyScreen({
           </button>
         )}
 
-        {isPlaying && !hasSubmittedResult && (
+        {showUserActions && isPlaying && !hasSubmittedResult && (
           <>
             <button
               type="button"
@@ -1194,7 +1206,7 @@ function ReadyLobbyScreen({
           </>
         )}
 
-        {isPlaying && hasSubmittedResult && (
+        {showUserActions && isPlaying && hasSubmittedResult && (
           <div
             style={{
               ...actionButtonBase,
@@ -1293,14 +1305,17 @@ function ReadyLobbyScreen({
           ))}
         </div>
 
-        <ReadyChatPanel
-          matchId={match.id}
-          status={status}
-          currentUserId={currentUserId}
-          isParticipant={isParticipant}
-          teamMap={teamMap}
-          profileMap={profileMap}
-        />
+        {!hideChat ? (
+          <ReadyChatPanel
+            matchId={match.id}
+            status={status}
+            currentUserId={currentUserId}
+            isParticipant={isParticipant}
+            isAdmin={chatIsAdmin}
+            teamMap={teamMap}
+            profileMap={profileMap}
+          />
+        ) : null}
       </div>
 
       <PlayerStatsModal

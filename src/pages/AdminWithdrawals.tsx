@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Banknote, CheckCircle2, CreditCard, RefreshCw, Wallet } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { AdminEmptyState, AdminPanel, AdminShell, AdminStatCard } from '@/components/admin/AdminShell';
+import {
+  ADMIN_DIALOG_CLASS,
+  ADMIN_FIELD_CLASS,
+  ADMIN_OUTLINE_BUTTON_CLASS,
+  AdminEmptyState,
+  AdminPanel,
+  AdminShell,
+  AdminStatCard,
+} from '@/components/admin/AdminShell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -160,7 +168,7 @@ export default function AdminWithdrawals() {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-11 border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -225,7 +233,7 @@ export default function AdminWithdrawals() {
                               size="sm"
                               variant="outline"
                               onClick={() => openProcessModal(withdrawal, 'reject')}
-                              className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+                              className={ADMIN_OUTLINE_BUTTON_CLASS}
                             >
                               Reject
                             </Button>
@@ -330,7 +338,7 @@ export default function AdminWithdrawals() {
           }
         }}
       >
-        <DialogContent className="border-white/14 bg-[#120b0f] text-white">
+        <DialogContent className={ADMIN_DIALOG_CLASS}>
           <DialogHeader>
             <DialogTitle>
               {processModal.action === 'approve' ? 'Approve withdrawal' : 'Reject withdrawal'}
@@ -338,7 +346,7 @@ export default function AdminWithdrawals() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/72">
+            <div className="rounded-2xl border border-[#302025] bg-[#1c1c1c] p-4 text-sm text-white/72">
               <p className="font-semibold text-white">
                 {processModal.withdrawal?.profiles?.username || processModal.withdrawal?.user_id}
               </p>
@@ -351,7 +359,7 @@ export default function AdminWithdrawals() {
               value={adminNotes}
               onChange={(event) => setAdminNotes(event.target.value)}
               placeholder="Optional admin notes"
-              className="min-h-[120px] border-white/12 bg-white/5 text-white"
+              className={`min-h-[120px] ${ADMIN_FIELD_CLASS}`}
             />
           </div>
 
@@ -359,7 +367,7 @@ export default function AdminWithdrawals() {
             <Button
               variant="outline"
               onClick={() => setProcessModal({ withdrawal: null, action: null })}
-              className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+              className={ADMIN_OUTLINE_BUTTON_CLASS}
             >
               Cancel
             </Button>
@@ -387,13 +395,13 @@ export default function AdminWithdrawals() {
       </Dialog>
 
       <Dialog open={platformDialogOpen} onOpenChange={setPlatformDialogOpen}>
-        <DialogContent className="border-white/14 bg-[#120b0f] text-white">
+        <DialogContent className={ADMIN_DIALOG_CLASS}>
           <DialogHeader>
             <DialogTitle>Withdraw platform earnings</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/68">
+            <div className="rounded-2xl border border-[#302025] bg-[#1c1c1c] p-4 text-sm text-white/68">
               Available balance: <span className="font-semibold text-white">{platformBalance.toFixed(2)} EUR</span>
             </div>
 
@@ -404,14 +412,14 @@ export default function AdminWithdrawals() {
               value={platformWithdrawAmount}
               onChange={(event) => setPlatformWithdrawAmount(event.target.value)}
               placeholder="Amount"
-              className="border-white/12 bg-white/5 text-white"
+              className={ADMIN_FIELD_CLASS}
             />
 
             <Textarea
               value={platformPaymentNotes}
               onChange={(event) => setPlatformPaymentNotes(event.target.value)}
               placeholder="Payment notes"
-              className="min-h-[110px] border-white/12 bg-white/5 text-white"
+              className={`min-h-[110px] ${ADMIN_FIELD_CLASS}`}
             />
           </div>
 
@@ -419,7 +427,7 @@ export default function AdminWithdrawals() {
             <Button
               variant="outline"
               onClick={() => setPlatformDialogOpen(false)}
-              className="border-white/12 bg-white/5 text-white hover:bg-white/10"
+              className={ADMIN_OUTLINE_BUTTON_CLASS}
             >
               Cancel
             </Button>
