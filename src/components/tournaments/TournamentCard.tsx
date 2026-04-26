@@ -1,20 +1,34 @@
 import { Link } from 'react-router-dom';
-import { Coins, Loader2, Users } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { isParticipating, useRegisterTournament } from '@/hooks/useTournaments';
 import { cn } from '@/lib/utils';
 import type { Tournament } from '@/types';
 
-const FONT_WIDE_BLACK = "'Base Neue Trial', sans-serif";
-const FONT_EXPANDED_BOLD = "'Base Neue Trial', sans-serif";
-const FONT_REGULAR = "'Base Neue Trial', sans-serif";
+const FONT_HEAD =
+  "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', 'Base Neue', sans-serif";
+const FONT_BOLD =
+  "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', 'Base Neue', sans-serif";
+const FONT_REGULAR =
+  "'Base_Neue_Trial:Regular', 'Base Neue Trial', 'Base Neue', sans-serif";
 
 interface TournamentCardProps {
   tournament: Tournament;
 }
 
-function formatDuration(seconds: number) {
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const day = d.getDate();
+  const hours = d.getHours().toString().padStart(2, '0');
+  const mins = d.getMinutes().toString().padStart(2, '0');
+  const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+  const h12 = d.getHours() % 12 || 12;
+  return `${month} ${day}\n${h12}:${mins}${ampm}`;
+}
+
+function formatDurationShort(seconds: number): string {
   const m = Math.round(seconds / 60);
   if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
@@ -22,29 +36,31 @@ function formatDuration(seconds: number) {
   return rest === 0 ? `${h}h` : `${h}h ${rest}m`;
 }
 
-function formatStarts(t: Tournament): string {
-  if (t.status === 'running') return 'LIVE NOW';
-  if (t.status === 'completed') return 'ENDED';
-  if (t.status === 'cancelled') return 'CANCELLED';
-  if (t.status === 'ready_up') return 'READY UP';
-  return 'OPEN';
+function statusLabel(status: Tournament['status']): string {
+  switch (status) {
+    case 'registering': return 'OPEN';
+    case 'ready_up':   return 'READY UP';
+    case 'running':    return 'LIVE NOW';
+    case 'completed':  return 'ENDED';
+    case 'cancelled':  return 'CANCELLED';
+  }
 }
 
-export function TournamentCard({ tournament }: TournamentCardProps) {
+export function TournamentCard({ tournament: t }: TournamentCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const registerMutation = useRegisterTournament();
 
-  const participantCount = tournament.participants?.length ?? tournament.participant_count ?? 0;
-  const alreadyJoined = isParticipating(tournament, user?.id ?? null);
+  const participantCount = t.participants?.length ?? t.participant_count ?? 0;
+  const alreadyJoined = isParticipating(t, user?.id ?? null);
   const canRegister =
-    !!user && tournament.status === 'registering' && !alreadyJoined && tournament.team_size === 1;
+    !!user && t.status === 'registering' && !alreadyJoined && t.team_size === 1;
 
   async function handleRegister(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await registerMutation.mutateAsync({ tournament_id: tournament.id });
+      await registerMutation.mutateAsync({ tournament_id: t.id });
       toast({ title: 'Registered!' });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
@@ -52,103 +68,153 @@ export function TournamentCard({ tournament }: TournamentCardProps) {
     }
   }
 
-  const title = `${tournament.team_size}V${tournament.team_size} ${tournament.mode.toUpperCase()}`;
+  const title = `${t.team_size}V${t.team_size} ${t.mode.toUpperCase()}`;
+  const isFree = t.entry_fee === 0;
 
   return (
     <Link
-      to={`/tournaments/${tournament.id}`}
-      className="block w-[300px] rounded-xl border border-[#ff1654]/70 bg-[#282828] p-5 transition-transform hover:scale-[1.02] hover:border-[#ff1654]"
+      to={`/tournaments/${t.id}`}
+      className="group block w-[200px] flex-shrink-0 overflow-hidden rounded-xl border border-[#3a1420] bg-[#170a0d] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff1654]/70 hover:shadow-[0_4px_24px_rgba(255,22,84,0.18)]"
     >
-      <div className="mb-3 border-b border-white/15 pb-3">
+      {/* Card header */}
+      <div className="border-b border-[#3a1420] px-4 pt-4 pb-3">
         <h3
-          className="text-center text-[22px] leading-tight text-white"
-          style={{ fontFamily: FONT_WIDE_BLACK }}
+          className="text-center text-[15px] leading-tight text-white"
+          style={{ fontFamily: FONT_HEAD, fontStyle: 'italic' }}
         >
           {title}
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-y-3">
-        <Field label="Status">
-          <span
-            className="text-[16px]"
-            style={{ fontFamily: FONT_EXPANDED_BOLD, color: tournament.status === 'running' ? '#ff1654' : '#fff' }}
-          >
-            {formatStarts(tournament)}
-          </span>
-        </Field>
-        <Field label="Duration">
-          <span className="text-[16px] text-white" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-            {formatDuration(tournament.duration_seconds)}
-          </span>
-        </Field>
-
-        <Field label="Entry fee">
-          <div className="flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded-full bg-[#ff1654]" />
-            <span className="text-[18px] text-white" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-              {tournament.entry_fee === 0 ? 'Free' : tournament.entry_fee.toFixed(2)}
-            </span>
+      {/* Card body */}
+      <div className="px-4 py-3 space-y-3">
+        {/* Date + Opens In row */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.1em] text-white/45" style={{ fontFamily: FONT_REGULAR }}>
+              Date
+            </p>
+            <p
+              className="mt-0.5 whitespace-pre-line text-[12px] leading-tight text-white"
+              style={{ fontFamily: FONT_BOLD }}
+            >
+              {formatDate(t.created_at)}
+            </p>
           </div>
-        </Field>
-        <Field label="Prize pool">
-          <div className="flex items-center gap-1">
-            <Coins className="h-4 w-4 text-[#ff1654]" />
-            <span className="text-[18px] text-white" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-              {tournament.prize_pool_total.toFixed(2)}
-            </span>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.1em] text-white/45" style={{ fontFamily: FONT_REGULAR }}>
+              Opens In
+            </p>
+            <p
+              className="mt-0.5 text-[12px] leading-tight text-white"
+              style={{ fontFamily: FONT_BOLD }}
+            >
+              {formatDurationShort(t.duration_seconds)}
+            </p>
           </div>
-        </Field>
+        </div>
 
-        <div className="col-span-2">
-          <Field label="Players registered">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-[#ff1654]" />
-              <span className="text-[18px] text-white" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-                {participantCount}/{tournament.max_participants}
+        {/* Divider */}
+        <div className="h-px bg-[#3a1420]" />
+
+        {/* Entry fee + Prize pool row */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.1em] text-white/45" style={{ fontFamily: FONT_REGULAR }}>
+              Entry fee
+            </p>
+            <div className="mt-0.5 flex items-center gap-1">
+              {/* Red dot */}
+              <span className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[#ff1654]" />
+              <span className="text-[12px] text-white" style={{ fontFamily: FONT_BOLD }}>
+                {isFree ? 'Free' : `${t.entry_fee.toFixed(2)}`}
+              </span>
+              {/* Arrow icon */}
+              <span className="text-[10px] text-white/50">→</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.1em] text-white/45" style={{ fontFamily: FONT_REGULAR }}>
+              Prize pool
+            </p>
+            <div className="mt-0.5 flex items-center gap-1">
+              {/* Prize icon - small trophy dot */}
+              <img
+                src="/figma-assets/matches-prize-icon.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-3 w-3 flex-shrink-0"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <span className="text-[12px] font-bold text-white" style={{ fontFamily: FONT_BOLD }}>
+                {t.prize_pool_total.toFixed(2)}
               </span>
             </div>
-          </Field>
+          </div>
+        </div>
+
+        {/* Players registered */}
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.1em] text-white/45" style={{ fontFamily: FONT_REGULAR }}>
+            Players register
+          </p>
+          <div className="mt-0.5 flex items-center gap-1">
+            <span className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[#ff1654]" />
+            <span className="text-[12px] text-white" style={{ fontFamily: FONT_BOLD }}>
+              {participantCount}/{t.max_participants}
+            </span>
+          </div>
+        </div>
+
+        {/* Status badge */}
+        <div>
+          <span
+            className={cn(
+              'inline-block rounded-full px-2 py-0.5 text-[10px] uppercase',
+              t.status === 'running'
+                ? 'bg-[#ff1654]/20 text-[#ff1654]'
+                : t.status === 'completed' || t.status === 'cancelled'
+                  ? 'bg-white/10 text-white/50'
+                  : 'bg-emerald-500/15 text-emerald-400'
+            )}
+            style={{ fontFamily: FONT_BOLD }}
+          >
+            {statusLabel(t.status)}
+          </span>
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={canRegister ? handleRegister : undefined}
-        disabled={!canRegister || registerMutation.isPending}
-        className={cn(
-          'mt-4 flex h-11 w-full items-center justify-center rounded-lg text-[15px] uppercase transition-colors',
-          canRegister
-            ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/90'
-            : alreadyJoined
-              ? 'cursor-default bg-emerald-600/30 text-emerald-300'
-              : 'cursor-default bg-white/10 text-white/50'
-        )}
-        style={{ fontFamily: FONT_EXPANDED_BOLD }}
-      >
-        {registerMutation.isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : alreadyJoined ? (
-          'JOINED'
-        ) : tournament.team_size > 1 ? (
-          'VIEW'
-        ) : tournament.status === 'registering' ? (
-          'Register'
-        ) : (
-          'VIEW'
-        )}
-      </button>
+      {/* Register / action button */}
+      <div className="px-4 pb-4">
+        <button
+          type="button"
+          onClick={canRegister ? handleRegister : undefined}
+          disabled={!canRegister || registerMutation.isPending}
+          className={cn(
+            'flex h-9 w-full items-center justify-center rounded-lg text-[13px] uppercase transition-all',
+            canRegister
+              ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/85'
+              : alreadyJoined
+                ? 'cursor-default bg-emerald-600/25 text-emerald-400'
+                : 'cursor-default bg-white/8 text-white/40'
+          )}
+          style={{ fontFamily: FONT_BOLD }}
+        >
+          {registerMutation.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : alreadyJoined ? (
+            'JOINED'
+          ) : t.team_size > 1 ? (
+            'VIEW'
+          ) : t.status === 'registering' ? (
+            'Register'
+          ) : (
+            'VIEW'
+          )}
+        </button>
+      </div>
     </Link>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-[13px] text-white/60" style={{ fontFamily: FONT_REGULAR }}>
-        {label}
-      </p>
-      <div className="mt-0.5">{children}</div>
-    </div>
   );
 }

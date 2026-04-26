@@ -30,7 +30,7 @@ const VARIANT_STYLES = {
     value: 'text-[21px]',
     largeValue: 'text-[30px]',
     platform: 'text-[23px]',
-    action: 'mt-5 h-[50px] rounded-[15px] text-[20px]',
+    action: 'mt-5 h-[50px] rounded-[8px] text-[20px]',
     triangles: 'h-[22px] w-[15px]',
     dot: 'h-[17px] w-[17px]',
     prizeIcon: 'h-[18px] w-[21px]',

@@ -115,7 +115,9 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     () => prizeRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0),
     [prizeRows]
   );
-  const sumValid = Math.abs(prizeRowsSum - seedNum) < 0.01;
+  // Match the SQL ROUND(v_sum,2) = ROUND(p_prize_pool,2) check exactly
+  const sumValid =
+    parseFloat(prizeRowsSum.toFixed(2)) === parseFloat(seedNum.toFixed(2));
 
   const insufficientBalance = !isAdmin && seedNum > balance;
   const canSubmit =
@@ -165,18 +167,28 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
         region,
         platform,
         rules: rules.trim() || undefined,
+        // Send amounts as numbers rounded to 2dp so SQL ROUND() matches
         prize_positions: prizeRows.map((r) => ({
           position: r.position,
-          amount: parseFloat(r.amount) || 0,
+          amount: parseFloat((parseFloat(r.amount) || 0).toFixed(2)),
         })),
       });
-      toast({ title: 'Tournament created' });
+      toast({ title: '🏆 Tournament created!' });
       onCreated?.(tournamentId);
       onClose();
       navigate(`/tournaments/${tournamentId}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create tournament';
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : 'Failed to create tournament';
+      toast({
+        title: 'Failed to create tournament',
+        description: message,
+        variant: 'destructive',
+      });
     }
   }
 
