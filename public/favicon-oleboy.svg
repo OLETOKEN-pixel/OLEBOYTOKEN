@@ -1,5 +1,10 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="4" y="4" width="56" height="56" rx="16" fill="#0F0404"/>
-<path d="M19.5216 29.5249L49.9944 40.8838L50.0806 63.7554L32.4733 55.916L30.9081 47.2781L30.9786 66L-2.95036e-05 29.6813L17.9144 40.994L19.5885 47.3212L19.5216 29.5249Z" fill="white" transform="translate(7.5 3.5) scale(0.68)"/>
-<path d="M19.5681 41.7028L49.9545 30.1138L49.8682 7.24217L32.3141 15.2164L30.814 23.8656L30.7435 5.96046e-07L0.0463162 41.8587L17.8745 30.2346L19.5021 23.9087L19.5681 41.7028Z" fill="white" transform="translate(7.5 3.5) scale(0.68)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .bolt { fill: #0F0404; }
+    @media (prefers-color-scheme: dark) {
+      .bolt { fill: #FFFFFF; }
+    }
+  </style>
+  <path class="bolt" d="M19.5216 29.5249L49.9944 40.8838L50.0806 63.7554L32.4733 55.916L30.9081 47.2781L30.9786 66L-2.95036e-05 29.6813L17.9144 40.994L19.5885 47.3212L19.5216 29.5249Z" transform="translate(9.5 2.3) scale(0.9)"/>
+  <path class="bolt" d="M19.5681 41.7028L49.9545 30.1138L49.8682 7.24217L32.3141 15.2164L30.814 23.8656L30.7435 5.96046e-07L0.0463162 41.8587L17.8745 30.2346L19.5021 23.9087L19.5681 41.7028Z" transform="translate(9.5 2.3) scale(0.9)"/>
 </svg>
