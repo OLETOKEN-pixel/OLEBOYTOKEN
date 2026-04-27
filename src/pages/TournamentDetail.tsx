@@ -41,6 +41,20 @@ function formatRemaining(endsAt: string | null): string {
   return `${s}s`;
 }
 
+function formatStartDate(iso: string | null): string {
+  if (!iso) return 'TBD';
+  const d = new Date(iso);
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  if (isToday) return `Today, ${time}`;
+  const month = d.toLocaleString([], { month: 'short' });
+  return `${month} ${d.getDate()}, ${time}`;
+}
+
 function tournamentCode(id: string): string {
   return id.replace(/-/g, '').slice(0, 12).toUpperCase().match(/.{1,4}/g)!.join('-');
 }
@@ -252,6 +266,10 @@ function TournamentDetailContent({
             <Chip>
               <span className="text-white/70">Region:</span>{' '}
               <strong className="text-white">{t.region}</strong>
+            </Chip>
+            <Chip>
+              <span className="text-white/70">Starts:</span>{' '}
+              <strong className="text-white">{formatStartDate(t.scheduled_start_at)}</strong>
             </Chip>
             <Chip>
               <span className="text-white/70">Duration:</span>{' '}

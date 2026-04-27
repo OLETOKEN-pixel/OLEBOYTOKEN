@@ -36,6 +36,19 @@ function formatDurationShort(seconds: number): string {
   return rest === 0 ? `${h}h` : `${h}h ${rest}m`;
 }
 
+function formatOpensIn(iso: string | null): string {
+  if (!iso) return '—';
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return 'NOW';
+  const totalMin = Math.floor(ms / 60000);
+  const days = Math.floor(totalMin / 1440);
+  if (days > 0) return `${days}d ${Math.floor((totalMin % 1440) / 60)}h`;
+  const hours = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
 function statusLabel(status: Tournament['status']): string {
   switch (status) {
     case 'registering': return 'OPEN';
@@ -98,18 +111,20 @@ export function TournamentCard({ tournament: t }: TournamentCardProps) {
               className="mt-0.5 whitespace-pre-line text-[12px] leading-tight text-white"
               style={{ fontFamily: FONT_BOLD }}
             >
-              {formatDate(t.created_at)}
+              {t.scheduled_start_at ? formatDate(t.scheduled_start_at) : 'TBD'}
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-[0.1em] text-white/45" style={{ fontFamily: FONT_REGULAR }}>
-              Opens In
+              {t.scheduled_start_at ? 'Opens In' : 'Duration'}
             </p>
             <p
               className="mt-0.5 text-[12px] leading-tight text-white"
               style={{ fontFamily: FONT_BOLD }}
             >
-              {formatDurationShort(t.duration_seconds)}
+              {t.scheduled_start_at
+                ? formatOpensIn(t.scheduled_start_at)
+                : formatDurationShort(t.duration_seconds)}
             </p>
           </div>
         </div>

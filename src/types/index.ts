@@ -312,6 +312,7 @@ export interface Tournament {
   rules: string | null;
   creator_is_admin: boolean;
   status: TournamentStatus;
+  scheduled_start_at: string | null;
   ready_up_deadline: string | null;
   started_at: string | null;
   ends_at: string | null;

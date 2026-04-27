@@ -119,6 +119,7 @@ export interface CreateTournamentParams {
   entry_fee: number;
   prize_pool: number;
   duration_seconds: number;
+  scheduled_start_at?: string | null;
   first_to?: number;
   region?: string;
   platform?: string;
@@ -139,6 +140,7 @@ export function useCreateTournament() {
         p_entry_fee: params.entry_fee,
         p_prize_pool: params.prize_pool,
         p_duration_seconds: params.duration_seconds,
+        p_scheduled_start_at: params.scheduled_start_at ?? null,
         p_first_to: params.first_to ?? 3,
         p_region: params.region ?? 'EU',
         p_platform: params.platform ?? 'All',

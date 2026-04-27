@@ -67,6 +67,8 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
   const [entryFee, setEntryFee] = useState<string>('0');
   const [prizePool, setPrizePool] = useState<string>('20');
   const [durationSeconds, setDurationSeconds] = useState<number>(3600);
+  const [startDate, setStartDate] = useState<string>('');
+  const [startTime, setStartTime] = useState<string>('');
   const [rules, setRules] = useState<string>('');
   const [prizeRows, setPrizeRows] = useState<PrizeRow[]>(() =>
     defaultPrizeRows(20, TOURNAMENT_PRIZE_PRESETS[1].splits)
@@ -86,6 +88,18 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
       setEntryFee('0');
       setPrizePool('20');
       setDurationSeconds(3600);
+      // Default start: tomorrow at the current time, rounded to next hour
+      {
+        const t = new Date();
+        t.setDate(t.getDate() + 1);
+        t.setMinutes(0, 0, 0);
+        const yyyy = t.getFullYear();
+        const mm = String(t.getMonth() + 1).padStart(2, '0');
+        const dd = String(t.getDate()).padStart(2, '0');
+        const hh = String(t.getHours()).padStart(2, '0');
+        setStartDate(`${yyyy}-${mm}-${dd}`);
+        setStartTime(`${hh}:00`);
+      }
       setRules('');
       setPrizeRows(defaultPrizeRows(20, TOURNAMENT_PRIZE_PRESETS[1].splits));
       setActivePresetIdx(1);
@@ -120,11 +134,23 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     parseFloat(prizeRowsSum.toFixed(2)) === parseFloat(seedNum.toFixed(2));
 
   const insufficientBalance = !isAdmin && seedNum > balance;
+
+  // Combine date + time into ISO. Empty inputs => null (creator must start manually).
+  const scheduledStartIso = useMemo<string | null>(() => {
+    if (!startDate || !startTime) return null;
+    const dt = new Date(`${startDate}T${startTime}`);
+    return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
+  }, [startDate, startTime]);
+
+  const startInPast =
+    scheduledStartIso !== null && new Date(scheduledStartIso).getTime() < Date.now() - 60_000;
+
   const canSubmit =
     name.trim().length >= 3 &&
     seedNum >= 0 &&
     sumValid &&
     !insufficientBalance &&
+    !startInPast &&
     !createMutation.isPending;
 
   function applyPreset(idx: number) {
@@ -163,6 +189,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
         entry_fee: entryNum,
         prize_pool: seedNum,
         duration_seconds: durationSeconds,
+        scheduled_start_at: scheduledStartIso,
         first_to: firstTo,
         region,
         platform,
@@ -319,17 +346,45 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
           </Section>
         </div>
 
-        {/* Duration */}
-        <Section label="DURATION">
-          <SegButtons
-            value={String(durationSeconds)}
-            options={TOURNAMENT_DURATION_PRESETS.map((d) => ({
-              value: String(d.value),
-              label: d.label.toUpperCase(),
-            }))}
-            onChange={(v) => setDurationSeconds(Number(v))}
-          />
-        </Section>
+        {/* Start date + duration */}
+        <div className="grid grid-cols-2 gap-4">
+          <Section label="START DATE">
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-11 w-1/2 rounded-lg border border-white/15 bg-[#1a0a0a] px-3 text-[15px] text-white outline-none focus:border-[#ff1654]"
+              />
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="h-11 w-1/2 rounded-lg border border-white/15 bg-[#1a0a0a] px-3 text-[15px] text-white outline-none focus:border-[#ff1654]"
+              />
+            </div>
+            {startInPast && (
+              <p className="mt-1 flex items-center gap-1 text-[12px] text-red-400">
+                <AlertCircle className="h-3 w-3" /> Start date must be in the future
+              </p>
+            )}
+            {!startInPast && scheduledStartIso && (
+              <p className="mt-1 text-[11px] text-white/40">
+                Registration auto-opens to ready-up at this time.
+              </p>
+            )}
+          </Section>
+          <Section label="DURATION">
+            <SegButtons
+              value={String(durationSeconds)}
+              options={TOURNAMENT_DURATION_PRESETS.map((d) => ({
+                value: String(d.value),
+                label: d.label.toUpperCase(),
+              }))}
+              onChange={(v) => setDurationSeconds(Number(v))}
+            />
+          </Section>
+        </div>
 
         {/* Entry fee + prize pool */}
         <div className="grid grid-cols-2 gap-4">
