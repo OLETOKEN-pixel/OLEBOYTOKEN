@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, ShieldCheck, Trophy } from 'lucide-react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { FooterSection } from '@/components/home/sections/FooterSection';
+import { TournamentDetailHeader } from '@/components/tournaments/TournamentDetailHeader';
+import {
+  TournamentTeamsTable,
+  type TournamentTeamRow,
+} from '@/components/tournaments/TournamentTeamsTable';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -13,20 +19,16 @@ import {
   useStartTournament,
   useTournament,
 } from '@/hooks/useTournaments';
-import { cn } from '@/lib/utils';
-import type { Tournament, TournamentParticipant } from '@/types';
+import type { Tournament } from '@/types';
 
-const FONT_BLACK_OBLIQUE = "'Base Neue Trial', sans-serif";
-const FONT_EXPANDED_BOLD = "'Base Neue Trial', sans-serif";
-const FONT_EXPANDED = "'Base Neue Trial', sans-serif";
-
-function formatDuration(seconds: number) {
-  const m = Math.round(seconds / 60);
-  if (m < 60) return `${m}min`;
-  const h = Math.floor(m / 60);
-  const rest = m % 60;
-  return rest === 0 ? `${h}h` : `${h}h ${rest}m`;
-}
+const FONT_EXPANDED =
+  "'Base_Neue_Trial:Expanded', 'Base Neue Trial-Expanded', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BOLD =
+  "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BLACK =
+  "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial-ExpandedBlack Oblique', 'Base Neue Trial', sans-serif";
+const FONT_WIDE_BLACK =
+  "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial-WideBlack', 'Base Neue Trial', sans-serif";
 
 function formatRemaining(endsAt: string | null): string {
   if (!endsAt) return '—';
@@ -56,7 +58,8 @@ function formatStartDate(iso: string | null): string {
 }
 
 function tournamentCode(id: string): string {
-  return id.replace(/-/g, '').slice(0, 12).toUpperCase().match(/.{1,4}/g)!.join('-');
+  const compact = id.replace(/-/g, '').slice(0, 12).toUpperCase();
+  return compact.match(/.{1,4}/g)!.join(' - ');
 }
 
 export default function TournamentDetail() {
@@ -71,7 +74,6 @@ export default function TournamentDetail() {
   const readyMutation = useSetTournamentReady();
   const cancelMutation = useCancelTournament();
 
-  // Tick every second to update countdown
   const [, setTick] = useState(0);
   useEffect(() => {
     const i = setInterval(() => setTick((t) => t + 1), 1000);
@@ -81,7 +83,7 @@ export default function TournamentDetail() {
   if (isLoading) {
     return (
       <PublicLayout>
-        <div className="flex min-h-screen items-center justify-center text-white/60">
+        <div className="flex min-h-screen items-center justify-center text-white/60" style={{ background: '#0f0404' }}>
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
       </PublicLayout>
@@ -91,7 +93,7 @@ export default function TournamentDetail() {
   if (!tournament || !id) {
     return (
       <PublicLayout>
-        <div className="flex min-h-screen items-center justify-center pt-32">
+        <div className="flex min-h-screen items-center justify-center pt-32" style={{ background: '#0f0404' }}>
           <p className="text-white/60">Tournament not found.</p>
         </div>
       </PublicLayout>
@@ -172,6 +174,7 @@ function TournamentDetailContent({
   onCancel,
   busy,
 }: ContentProps) {
+  const navigate = useNavigate();
   const participants = useMemo(() => t.participants ?? [], [t.participants]);
   const participantCount = participants.length;
   const fillPct = Math.min(100, (participantCount / t.max_participants) * 100);
@@ -188,6 +191,8 @@ function TournamentDetailContent({
     (isCreator || isAdmin) && t.status === 'registering' && participantCount >= 2;
   const canCancel =
     (isCreator || isAdmin) && (t.status === 'registering' || t.status === 'ready_up');
+  const canRegister =
+    !!currentUserId && t.status === 'registering' && !alreadyJoined && t.team_size === 1;
 
   const ranked = useMemo(
     () =>
@@ -205,12 +210,28 @@ function TournamentDetailContent({
   const isTeamTournament = t.team_size > 1;
   const rosterLabel = isTeamTournament ? `TEAMS (${participantCount})` : `PLAYERS (${participantCount})`;
 
+  const teamRows: TournamentTeamRow[] = ranked.map((p) => ({
+    id: p.id,
+    name: isTeamTournament ? p.team?.name ?? '—' : p.user?.username ?? '—',
+    size: isTeamTournament ? `${t.team_size}/${t.team_size}` : `${p.wins}/${p.losses || 0}`,
+    winRate:
+      p.matches_played > 0 ? ((p.wins / p.matches_played) * 100).toFixed(2) + '%' : '0.00%',
+    variant:
+      p.user_id === currentUserId || p.payer_user_id === currentUserId ? 'view' : 'join',
+  }));
+
   return (
     <PublicLayout>
-      <div className="relative min-h-screen pb-24 pt-32" style={{ background: '#0f0404' }}>
-        {/* Ready-Up Banner */}
+      <section className="relative min-h-screen overflow-x-hidden bg-[#0f0404] text-white">
+        <img
+          className="pointer-events-none absolute left-1/2 top-0 h-[146px] w-screen -translate-x-1/2 object-cover"
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          aria-hidden="true"
+        />
+
         {t.status === 'ready_up' && alreadyJoined && !myParticipation?.ready && (
-          <div className="sticky top-24 z-50 mx-auto mb-6 w-full max-w-[1000px] rounded-xl border-2 border-[#ff1654] bg-[#ff1654]/15 px-6 py-4 backdrop-blur">
+          <div className="sticky top-24 z-50 mx-auto mb-6 mt-32 w-full max-w-[1000px] rounded-xl border-2 border-[#ff1654] bg-[#ff1654]/15 px-6 py-4 backdrop-blur">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-[14px] uppercase tracking-[0.15em] text-[#ff1654]" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
@@ -234,110 +255,105 @@ function TournamentDetailContent({
           </div>
         )}
 
-        <div className="mx-auto max-w-[1532px] px-8">
-          {/* Top header */}
-          <div className="mb-6">
-            <h1
-              className="text-[53px] leading-none text-white"
-              style={{ fontFamily: FONT_BLACK_OBLIQUE, fontStyle: 'italic', fontWeight: 900 }}
-            >
-              {headerTitle}
-            </h1>
-          </div>
+        <div
+          className="relative mx-auto flex flex-col"
+          style={{ width: 'min(1700px, calc(100% - 60px))', paddingTop: '180px', paddingBottom: '60px' }}
+        >
+          <div className="flex w-full items-start justify-between gap-[40px]">
+            <TournamentDetailHeader
+              title={headerTitle}
+              entry={Number(t.entry_fee) === 0 ? 'free' : Number(t.entry_fee).toFixed(2)}
+              prize={Number(t.prize_pool_total).toFixed(2)}
+              firstTo={String(t.first_to)}
+              platform={t.platform === 'All' ? 'ANY' : String(t.platform).toUpperCase()}
+              matchId={tournamentCode(t.id)}
+              matchTime={formatStartDate(t.scheduled_start_at)}
+              registrationProgress={{
+                current: participantCount,
+                total: t.max_participants,
+                percent: fillPct,
+              }}
+              registerLabel={
+                t.status !== 'registering'
+                  ? tournamentStatusLabel(t.status)
+                  : alreadyJoined
+                  ? 'Joined'
+                  : busy
+                  ? 'Working…'
+                  : 'Register'
+              }
+              registerDisabled={!canRegister || busy}
+              onRegister={() => onRegister()}
+            />
 
-          {/* Stat chips */}
-          <div className="mb-4 flex flex-wrap gap-3">
-            <Chip>
-              <span className="text-white/70">Entry:</span>{' '}
-              <strong className="text-white">{t.entry_fee === 0 ? 'free' : t.entry_fee.toFixed(2)}</strong>
-            </Chip>
-            <Chip>
-              <span className="text-white/70">Prize:</span>{' '}
-              <strong className="text-white">{t.prize_pool_total.toFixed(2)}</strong>
-            </Chip>
-            <Chip>
-              <span className="text-white/70">First to:</span>{' '}
-              <strong className="text-white">{t.first_to}</strong>
-            </Chip>
-            <Chip>
-              <span className="text-white/70">Platform:</span>{' '}
-              <strong className="text-white">{t.platform === 'All' ? 'ANY' : t.platform.toUpperCase()}</strong>
-            </Chip>
-            <Chip>
-              <span className="text-white/70">Region:</span>{' '}
-              <strong className="text-white">{t.region}</strong>
-            </Chip>
-            <Chip>
-              <span className="text-white/70">Starts:</span>{' '}
-              <strong className="text-white">{formatStartDate(t.scheduled_start_at)}</strong>
-            </Chip>
-            <Chip>
-              <span className="text-white/70">Duration:</span>{' '}
-              <strong className="text-white">{formatDuration(t.duration_seconds)}</strong>
-            </Chip>
-          </div>
-
-          <div className="mb-6 flex flex-wrap items-center gap-3">
-            <Chip variant="muted">
-              <span className="font-mono">{tournamentCode(t.id)}</span>
-            </Chip>
-            <Chip variant="muted">{tournamentStatusLabel(t.status)}</Chip>
-            {t.status === 'running' && t.ends_at && (
-              <Chip>
-                <span className="text-white/70">Ends in:</span>{' '}
-                <strong className="text-[#ff1654]">{formatRemaining(t.ends_at)}</strong>
-              </Chip>
-            )}
-            {t.creator_is_admin && (
-              <Chip variant="emerald">
-                <ShieldCheck className="mr-1 inline h-3 w-3" /> ADMIN-FUNDED
-              </Chip>
-            )}
-          </div>
-
-          {/* Action row + registration progress */}
-          <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <h2
-                className="mb-2 text-[36px] leading-none text-white"
-                style={{ fontFamily: FONT_BLACK_OBLIQUE, fontStyle: 'italic', fontWeight: 900 }}
+            <div className="relative flex flex-col items-end" style={{ width: '600px' }}>
+              <button
+                type="button"
+                className="flex h-[47px] w-[211px] items-center justify-center gap-[10px] rounded-[16px] border border-solid border-white/50 bg-[rgba(40,40,40,0.8)] text-white transition hover:brightness-110"
+                style={{ fontFamily: FONT_EXPANDED_BOLD, fontSize: '24px' }}
+                onClick={() => navigate('/rules')}
               >
-                REGISTRATION PROGRESS
-              </h2>
-              <div className="mb-2 flex items-center justify-between text-[14px]">
-                <span className="text-white/70" style={{ fontFamily: FONT_EXPANDED }}>
-                  {Math.round(fillPct)}% FILLED
-                </span>
-                <span className="text-white" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-                  {participantCount}/{t.max_participants} {isTeamTournament ? 'Teams' : 'Players'}
-                </span>
-              </div>
-              <div className="h-[14px] w-full overflow-hidden rounded-md bg-[#1a0a0a]">
-                <div
-                  className="h-full rounded-md transition-[width] duration-500"
-                  style={{
-                    width: `${fillPct}%`,
-                    background: 'linear-gradient(90deg, #77fe5c 0%, #ff1654 100%)',
-                  }}
+                <img
+                  className="h-[16px] w-[16px]"
+                  src="/figma-assets/tournaments/info-circle.svg"
+                  alt=""
+                  aria-hidden="true"
                 />
-              </div>
-            </div>
+                <span>RULES</span>
+              </button>
 
-            <div className="flex flex-col items-stretch gap-3 lg:items-end">
-              {t.status === 'registering' && !alreadyJoined && currentUserId && !isTeamTournament && (
-                <button
-                  type="button"
-                  onClick={() => onRegister()}
-                  disabled={busy}
-                  className="rounded-full border border-[#ff1654] bg-[#ff1654]/25 px-10 py-4 text-[18px] uppercase text-white transition-colors hover:bg-[#ff1654]/40 disabled:opacity-50"
+              <div className="relative mt-[60px] flex h-[400px] w-[600px] items-center justify-center">
+                <img
+                  className="absolute inset-0 h-full w-full object-contain"
+                  src="/figma-assets/tournaments/star-shape.svg"
+                  alt=""
+                  aria-hidden="true"
+                  style={{ transform: 'rotate(-15.44deg)' }}
+                />
+                <p
+                  className="relative z-10 whitespace-nowrap text-center text-[40px] leading-tight text-white"
                   style={{ fontFamily: FONT_EXPANDED_BOLD }}
                 >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'REGISTER'}
-                </button>
+                  Winner of the week
+                  <br />
+                  earns EXTRA coins!*
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="relative mt-[20px] flex h-[65px] w-[292px] items-center justify-center gap-[20px] rounded-[50px] border border-solid border-[#ff1654] bg-[rgba(255,22,84,0.23)] text-white shadow-[inset_0px_-4px_4px_rgba(0,0,0,0.25),inset_0px_4px_4px_rgba(255,255,255,0.14)] transition hover:brightness-110"
+                onClick={() => navigate('/teams')}
+              >
+                <span style={{ fontFamily: FONT_WIDE_BLACK, fontSize: '32px', lineHeight: 1 }}>
+                  {isTeamTournament ? 'TEAMS' : 'PLAYER'}
+                </span>
+                <img
+                  className="h-[27px] w-[19px]"
+                  src="/figma-assets/tournaments/detail-arrow.svg"
+                  alt=""
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </div>
+
+          {(t.creator_is_admin || t.prize_positions?.length || canStart || canCancel) && (
+            <div className="mt-[40px] flex flex-wrap items-center gap-3">
+              {t.creator_is_admin && (
+                <span
+                  className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-1 text-[13px] text-emerald-300"
+                  style={{ fontFamily: FONT_EXPANDED }}
+                >
+                  <ShieldCheck className="mr-1 inline h-3 w-3" /> ADMIN-FUNDED
+                </span>
               )}
-              {alreadyJoined && t.status === 'registering' && (
-                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-6 py-3 text-center text-[14px] uppercase text-emerald-300">
-                  ✓ You're registered
+              {t.status === 'running' && t.ends_at && (
+                <span
+                  className="inline-flex items-center rounded-full border border-[#ff1654] bg-[#ff1654]/15 px-4 py-1 text-[13px] text-white"
+                  style={{ fontFamily: FONT_EXPANDED }}
+                >
+                  Ends in:&nbsp;<strong className="text-[#ff1654]">{formatRemaining(t.ends_at)}</strong>
                 </span>
               )}
               {canStart && (
@@ -345,7 +361,7 @@ function TournamentDetailContent({
                   type="button"
                   onClick={onStart}
                   disabled={busy}
-                  className="rounded-full border border-white/30 bg-white/10 px-8 py-3 text-[14px] uppercase text-white transition-colors hover:bg-white/20 disabled:opacity-50"
+                  className="rounded-full border border-white/30 bg-white/10 px-6 py-2 text-[13px] uppercase text-white transition-colors hover:bg-white/20 disabled:opacity-50"
                   style={{ fontFamily: FONT_EXPANDED_BOLD }}
                 >
                   Start Now
@@ -362,11 +378,10 @@ function TournamentDetailContent({
                 </button>
               )}
             </div>
-          </div>
+          )}
 
-          {/* Prize positions */}
           {t.prize_positions && t.prize_positions.length > 0 && (
-            <div className="mb-12">
+            <div className="mt-[40px]">
               <h3
                 className="mb-3 flex items-center gap-2 text-[24px] text-white"
                 style={{ fontFamily: FONT_EXPANDED_BOLD }}
@@ -391,20 +406,53 @@ function TournamentDetailContent({
             </div>
           )}
 
-          {/* Roster section */}
-          <div className="mb-6 flex items-end justify-between">
-            <h2
-              className="text-[44px] leading-none text-white"
-              style={{ fontFamily: FONT_BLACK_OBLIQUE, fontStyle: 'italic', fontWeight: 900 }}
-            >
-              {rosterLabel}
-            </h2>
-            <div className="h-[3px] w-[260px] bg-[#ff1654]" />
+          <div className="mt-[150px] flex flex-col items-center">
+            <div className="relative h-[187px] w-[1060px] max-w-full">
+              <img
+                className="absolute left-0 top-0 h-[186px] w-[124px] object-contain"
+                src="/figma-assets/tournaments/triangles.svg"
+                alt=""
+                aria-hidden="true"
+              />
+              <h2
+                className="absolute left-[71px] top-[83px] whitespace-nowrap leading-none text-white"
+                style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '80px' }}
+              >
+                {rosterLabel}
+              </h2>
+              <img
+                className="absolute left-[59px] top-[168px] h-[18px] w-[616px] max-w-none object-fill"
+                src="/figma-assets/tournaments/outline.svg"
+                alt=""
+                aria-hidden="true"
+              />
+            </div>
+
+            <div className="mt-[40px] flex w-full justify-center overflow-x-auto">
+              {teamRows.length === 0 ? (
+                <div
+                  className="flex h-[200px] w-[1448px] items-center justify-center rounded-[14px] bg-[#282828] text-white/60"
+                  style={{ fontFamily: FONT_EXPANDED }}
+                >
+                  No participants yet.
+                </div>
+              ) : (
+                <TournamentTeamsTable
+                  teams={teamRows}
+                  onView={(rowId) => {
+                    const p = participants.find((pp) => pp.id === rowId);
+                    if (p?.user_id) navigate(`/profile/${p.user_id}`);
+                  }}
+                  onJoin={(rowId) => {
+                    const p = participants.find((pp) => pp.id === rowId);
+                    if (p?.team_id) navigate(`/teams/${p.team_id}`);
+                    else if (p?.user_id) navigate(`/profile/${p.user_id}`);
+                  }}
+                />
+              )}
+            </div>
           </div>
 
-          <RosterTable participants={ranked} isTeamTournament={isTeamTournament} />
-
-          {/* Rules */}
           {t.rules && (
             <div className="mt-12 rounded-xl border border-white/10 bg-[#1a0a0a] p-6">
               <h3
@@ -417,113 +465,10 @@ function TournamentDetailContent({
             </div>
           )}
         </div>
-      </div>
+
+        <FooterSection />
+      </section>
     </PublicLayout>
   );
 }
 
-function Chip({
-  children,
-  variant = 'default',
-}: {
-  children: React.ReactNode;
-  variant?: 'default' | 'muted' | 'emerald';
-}) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full border px-3 py-1 text-[13px]',
-        variant === 'default' && 'border-[#ff1654] bg-[#ff1654]/15 text-white',
-        variant === 'muted' && 'border-white/20 bg-[#282828] text-white/80',
-        variant === 'emerald' && 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-      )}
-      style={{ fontFamily: FONT_EXPANDED }}
-    >
-      {children}
-    </span>
-  );
-}
-
-function RosterTable({
-  participants,
-  isTeamTournament,
-}: {
-  participants: TournamentParticipant[];
-  isTeamTournament: boolean;
-}) {
-  if (participants.length === 0) {
-    return (
-      <div className="rounded-xl border border-white/10 bg-[#282828] p-12 text-center text-white/60">
-        No participants yet.
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-white/5 bg-[#282828]">
-      <div
-        className="grid border-b border-white/10 px-6 py-4 text-[16px] uppercase tracking-[0.1em] text-white/80"
-        style={{
-          fontFamily: FONT_EXPANDED_BOLD,
-          gridTemplateColumns: '60px 1fr 100px 100px 120px 140px',
-        }}
-      >
-        <div>#</div>
-        <div>Name</div>
-        <div className="text-center">W/L</div>
-        <div className="text-center">Points</div>
-        <div className="text-center">Win Rate</div>
-        <div className="text-right">Status</div>
-      </div>
-      {participants.map((p, idx) => {
-        const winRate =
-          p.matches_played > 0 ? ((p.wins / p.matches_played) * 100).toFixed(1) + '%' : '—';
-        const name = isTeamTournament
-          ? p.team?.name ?? '—'
-          : p.user?.username ?? '—';
-        const statusLabel = p.eliminated
-          ? 'OUT'
-          : p.current_match_id
-            ? 'IN MATCH'
-            : p.ready
-              ? 'IDLE'
-              : 'WAITING';
-        return (
-          <div
-            key={p.id}
-            className="grid items-center border-b border-white/5 px-6 py-4 text-[15px] text-white last:border-b-0"
-            style={{
-              fontFamily: FONT_EXPANDED,
-              gridTemplateColumns: '60px 1fr 100px 100px 120px 140px',
-            }}
-          >
-            <div className="text-white/40">{idx + 1}</div>
-            <div className="truncate" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-              {name}
-            </div>
-            <div className="text-center text-white/80">
-              {p.wins}/{p.losses}
-            </div>
-            <div className="text-center">
-              <strong className="text-[#ff1654]">{p.points}</strong>
-            </div>
-            <div className="text-center">{winRate}</div>
-            <div className="text-right text-[12px] uppercase">
-              <span
-                className={cn(
-                  'rounded-full px-2 py-0.5',
-                  p.eliminated && 'bg-red-500/20 text-red-300',
-                  !p.eliminated && p.current_match_id && 'bg-amber-500/20 text-amber-300',
-                  !p.eliminated && !p.current_match_id && p.ready && 'bg-emerald-500/20 text-emerald-300',
-                  !p.eliminated && !p.current_match_id && !p.ready && 'bg-white/10 text-white/60'
-                )}
-              >
-                {statusLabel}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}

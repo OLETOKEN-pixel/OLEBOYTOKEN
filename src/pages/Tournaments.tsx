@@ -6,134 +6,123 @@ import { useTournaments, type TournamentListFilter } from '@/hooks/useTournament
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-const FONT_HEAD =
-  "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', 'Base Neue', sans-serif";
-const FONT_BOLD =
-  "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', 'Base Neue', sans-serif";
-const FONT_REGULAR =
-  "'Base_Neue_Trial:Regular', 'Base Neue Trial', 'Base Neue', sans-serif";
+const FONT_EXPANDED =
+  "'Base_Neue_Trial:Expanded', 'Base Neue Trial-Expanded', 'Base Neue Trial', sans-serif";
+const FONT_EXPANDED_BLACK =
+  "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial-ExpandedBlack Oblique', 'Base Neue Trial', sans-serif";
 
 export default function Tournaments() {
   const { user } = useAuth();
-  const [filter, setFilter] = useState<TournamentListFilter>('live');
+  const [activeTab, setActiveTab] = useState<TournamentListFilter>('live');
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: tournaments, isLoading } = useTournaments(filter);
+  const { data: tournaments, isLoading } = useTournaments(activeTab);
 
   return (
     <PublicLayout>
-      <div
-        className="relative min-h-screen pb-32 pt-28"
-        style={{ background: '#0f0404' }}
-      >
-        <div className="mx-auto max-w-[1532px] px-8">
-          {/* ── Title section ── */}
-          <div className="relative mb-8 flex items-end gap-0">
-            {/* Triangle decoration — reuse the same SVG used by Matches page */}
+      <section className="relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_bottom,rgba(118,12,38,0.24),transparent_28%),linear-gradient(180deg,#160406_0%,#090203_100%)] text-white">
+        <img
+          className="pointer-events-none absolute left-1/2 top-0 h-[146px] w-screen -translate-x-1/2 object-cover"
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          aria-hidden="true"
+        />
+
+        <div
+          className="relative mx-auto flex flex-col box-border"
+          style={{
+            width: 'min(1532px, calc(100% - 100px))',
+            paddingTop: '180px',
+            paddingBottom: '160px',
+          }}
+        >
+          <div className="relative h-[187px] w-[1060px] max-w-full overflow-visible">
             <img
-              src="/figma-assets/matches-title-triangles.svg"
+              className="absolute left-0 top-0 h-[186px] w-[124px] object-contain"
+              src="/figma-assets/tournaments/triangles.svg"
               alt=""
               aria-hidden="true"
-              className="mr-3 mb-1 h-[72px] w-auto flex-shrink-0 select-none"
             />
-            <div>
-              <h1
-                className="text-[72px] leading-none text-white"
-                style={{
-                  fontFamily: FONT_HEAD,
-                  fontStyle: 'italic',
-                  fontWeight: 900,
-                  letterSpacing: '-0.01em',
-                }}
-              >
-                TOURNAMENTS
-              </h1>
-              {/* Red underline */}
-              <div className="mt-1 h-[4px] w-full bg-[#ff1654]" />
-            </div>
+            <h1
+              className="absolute left-[71px] top-[83px] whitespace-nowrap leading-none text-white"
+              style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '80px' }}
+            >
+              TOURNAMENTS
+            </h1>
+            <img
+              className="absolute left-[59px] top-[168px] h-[18px] w-[806px] max-w-none object-fill"
+              src="/figma-assets/tournaments/outline.svg"
+              alt=""
+              aria-hidden="true"
+            />
           </div>
 
-          {/* ── Filter tabs + Create button ── */}
-          <div className="mb-10 flex items-center gap-3">
-            <FilterTab
-              label="Live Tournaments"
-              active={filter === 'live'}
-              onClick={() => setFilter('live')}
-            />
-            <FilterTab
-              label="Past Tournaments"
-              active={filter === 'past'}
-              onClick={() => setFilter('past')}
-            />
-            <div className="flex-1" />
+          <div className="relative z-30 mt-[26px] h-[47px] w-full">
+            <button
+              type="button"
+              onClick={() => setActiveTab('live')}
+              className={cn(
+                'absolute left-[16px] top-0 flex h-[47px] w-[289px] items-center justify-center rounded-[16px] border border-white/50 bg-[#3d3d3d] text-white transition hover:brightness-110',
+                activeTab === 'live' && 'border-[#ff1654] bg-[rgba(255,22,84,0.2)]',
+              )}
+              style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', lineHeight: 1 }}
+              aria-pressed={activeTab === 'live'}
+            >
+              Live Tournaments
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('past')}
+              className={cn(
+                'absolute left-[325px] top-0 flex h-[47px] w-[293px] items-center justify-center rounded-[16px] border border-white/50 bg-[#3d3d3d] text-white transition hover:brightness-110',
+                activeTab === 'past' && 'border-[#ff1654] bg-[rgba(255,22,84,0.2)]',
+              )}
+              style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', lineHeight: 1 }}
+              aria-pressed={activeTab === 'past'}
+            >
+              Past Tournamets
+            </button>
+
             {user && (
               <button
-                id="create-tournament-btn"
                 type="button"
                 onClick={() => setCreateOpen(true)}
-                className="flex h-[42px] items-center gap-2 rounded-full bg-[#ff1654] px-6 text-[16px] uppercase text-white transition-all hover:bg-[#ff1654]/85 hover:shadow-[0_0_20px_rgba(255,22,84,0.4)]"
-                style={{ fontFamily: FONT_BOLD }}
+                className="absolute right-0 top-0 flex h-[47px] w-[222px] items-center justify-center gap-[18px] rounded-[16px] border border-white/50 bg-[#ff1654] text-white shadow-[inset_0px_4px_4px_rgba(255,255,255,0.16),inset_0px_-4px_4px_rgba(0,0,0,0.22)] transition hover:brightness-110"
               >
-                <span className="text-[20px] leading-none">+</span>
-                <span>CREATE</span>
+                <img
+                  className="h-[18px] w-[18px]"
+                  src="/figma-assets/tournaments/plus-icon.svg"
+                  alt=""
+                  aria-hidden="true"
+                />
+                <span style={{ fontFamily: FONT_EXPANDED, fontSize: '24px', lineHeight: 1 }}>CREATE</span>
               </button>
             )}
           </div>
 
-          {/* ── Tournament grid ── */}
-          {isLoading ? (
-            <div className="flex items-center gap-3 text-white/50">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-[#ff1654]" />
-              <span style={{ fontFamily: FONT_REGULAR }}>Loading tournaments…</span>
-            </div>
-          ) : !tournaments || tournaments.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-[#1a0a0a] p-12 text-center">
-              <p
-                className="text-[18px] text-white/50"
-                style={{ fontFamily: FONT_REGULAR }}
-              >
-                {filter === 'live'
+          <div
+            className="mt-[55px] grid"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, 300px)', columnGap: '40px', rowGap: '40px' }}
+          >
+            {isLoading ? (
+              <p className="col-span-full text-center text-white/60" style={{ fontFamily: FONT_EXPANDED, fontSize: '20px' }}>
+                Loading tournaments…
+              </p>
+            ) : !tournaments || tournaments.length === 0 ? (
+              <p className="col-span-full text-center text-white/60" style={{ fontFamily: FONT_EXPANDED, fontSize: '20px' }}>
+                {activeTab === 'live'
                   ? 'No live tournaments yet. Be the first to create one!'
                   : 'No past tournaments yet.'}
               </p>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-5">
-              {tournaments.map((t) => (
-                <TournamentCard key={t.id} tournament={t} />
-              ))}
-            </div>
-          )}
+            ) : (
+              tournaments.map((t) => <TournamentCard key={t.id} tournament={t} />)
+            )}
+          </div>
         </div>
-      </div>
 
-      <CreateTournamentOverlay open={createOpen} onClose={() => setCreateOpen(false)} />
+        <CreateTournamentOverlay open={createOpen} onClose={() => setCreateOpen(false)} />
+      </section>
     </PublicLayout>
-  );
-}
-
-function FilterTab({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'h-[38px] rounded-full border px-5 text-[15px] transition-all',
-        active
-          ? 'border-[#ff1654]/60 bg-[#ff1654]/15 text-white'
-          : 'border-white/25 bg-[#1e1010] text-white/60 hover:border-white/40 hover:text-white/80'
-      )}
-      style={{ fontFamily: FONT_BOLD }}
-    >
-      {label}
-    </button>
   );
 }

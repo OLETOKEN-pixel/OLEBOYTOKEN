@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 788.377 402.964" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="star shape" d="M321.078 146.867L402.355 1.03752L476.548 137.753L450.481 145.565L481.494 148.743L788.234 176.891L481.494 268.391L402.355 402.068L307.926 277.506L362.793 268.391L302.938 267.957L0.144005 176.891L321.078 146.867Z" fill="url(#paint0_linear_0_23)" stroke="url(#paint1_linear_0_23)"/>
+<defs>
+<linearGradient id="paint0_linear_0_23" x1="394.189" y1="1.03752" x2="394.189" y2="402.068" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0F0404"/>
+<stop offset="1" stop-color="#FF1654"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_23" x1="394.189" y1="1.03752" x2="394.189" y2="402.068" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FF1654"/>
+<stop offset="1" stop-color="#0F0404"/>
+</linearGradient>
+</defs>
+</svg>
