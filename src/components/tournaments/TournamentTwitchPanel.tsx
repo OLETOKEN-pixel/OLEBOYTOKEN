@@ -16,13 +16,12 @@ export function TournamentTwitchPanel({
   viewerHasTwitchLink,
 }: TournamentTwitchPanelProps) {
   const [activeTab, setActiveTab] = useState<TournamentTwitchTab>('live');
-  const { data, isLoading, error } = useTournamentStreamStatus(twitchUsername);
+  const { data, isLoading } = useTournamentStreamStatus(twitchUsername);
 
   const playerUrl = useMemo(() => buildTwitchPlayerUrl(twitchUsername), [twitchUsername]);
   const chatUrl = useMemo(() => buildTwitchChatUrl(twitchUsername), [twitchUsername]);
 
   const channelLabel = data?.displayName || twitchUsername;
-  const previewImageUrl = data?.thumbnailUrl || data?.offlineImageUrl || data?.profileImageUrl || null;
   const liveBadgeLabel = isLoading ? 'CHECKING' : data?.isLive ? 'LIVE' : 'OFFLINE';
   const liveBadgeClassName = isLoading
     ? 'bg-[rgba(255,255,255,0.14)] text-white'
@@ -68,57 +67,14 @@ export function TournamentTwitchPanel({
       </div>
 
       {activeTab === 'live' ? (
-        <div className="absolute inset-0">
-          {data?.isLive ? (
-            <iframe
-              title={`${channelLabel} Twitch live`}
-              src={playerUrl}
-              className="h-full w-full border-0"
-              allowFullScreen
-              loading="lazy"
-              data-testid="tournament-twitch-live-frame"
-            />
-          ) : (
-            <div className="relative h-full w-full overflow-hidden">
-              {previewImageUrl ? (
-                <img
-                  src={previewImageUrl}
-                  alt={`${channelLabel} Twitch preview`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-[radial-gradient(circle_at_top,rgba(255,22,84,0.28),transparent_38%),linear-gradient(180deg,#2b0c12_0%,#0f0404_100%)]" />
-              )}
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,4,5,0.1)_0%,rgba(9,4,5,0.72)_100%)]" />
-
-              <div className="absolute bottom-[18px] left-[18px] right-[18px] flex items-end justify-between gap-4">
-                <div>
-                  <p
-                    className="text-[22px] leading-none text-white"
-                    style={{ fontFamily: FONTS.expandedBold }}
-                  >
-                    {channelLabel}
-                  </p>
-                  <p
-                    className="mt-[8px] text-[13px] uppercase tracking-[0.1em] text-white/70"
-                    style={{ fontFamily: FONTS.expanded }}
-                  >
-                    {error ? 'Stream status unavailable' : 'Channel currently offline'}
-                  </p>
-                </div>
-                <a
-                  href={data?.channelUrl || `https://www.twitch.tv/${encodeURIComponent(twitchUsername)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-[38px] items-center rounded-[999px] border border-white/30 bg-black/40 px-[16px] text-[14px] text-white transition hover:border-[#ff1654] hover:bg-[#ff1654]/18"
-                  style={{ fontFamily: FONTS.expandedBold }}
-                >
-                  Open Twitch
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
+        <iframe
+          title={`${channelLabel} Twitch player`}
+          src={playerUrl}
+          className="absolute inset-0 h-full w-full border-0"
+          allowFullScreen
+          loading="lazy"
+          data-testid="tournament-twitch-live-frame"
+        />
       ) : viewerHasTwitchLink ? (
         <iframe
           title={`${channelLabel} Twitch chat`}

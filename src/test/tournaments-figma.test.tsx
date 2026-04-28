@@ -346,12 +346,12 @@ describe('Tournaments Figma rebuild', () => {
     expect(screen.getByTestId('tournament-twitch-panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'LIVE' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'CHAT' })).toBeInTheDocument();
-    expect(screen.getByTitle('HostChannel Twitch live')).toBeInTheDocument();
+    expect(screen.getByTitle('HostChannel Twitch player')).toBeInTheDocument();
     expect(screen.getByText('311 viewers')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /player/i })).toBeInTheDocument();
   });
 
-  it('shows the offline Twitch fallback without viewer count when the creator is offline', () => {
+  it('keeps the Twitch player mounted without viewer count when the creator is offline', () => {
     detailState.data = tournamentFixture({
       creator: {
         user_id: 'creator-1',
@@ -379,8 +379,30 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.getByText('OFFLINE')).toBeInTheDocument();
-    expect(screen.getByText('Channel currently offline')).toBeInTheDocument();
+    expect(screen.getByTestId('tournament-twitch-live-frame')).toBeInTheDocument();
     expect(screen.queryByText(/viewers/i)).toBeNull();
+  });
+
+  it('keeps the official Twitch player mounted even when stream status is unavailable', () => {
+    detailState.data = tournamentFixture({
+      creator: {
+        user_id: 'creator-1',
+        username: 'HostChannel',
+        avatar_url: null,
+        discord_avatar_url: null,
+        twitch_username: 'host_channel',
+      },
+    });
+    streamStatusState.value = {
+      data: null,
+      isLoading: false,
+      error: new Error('status unavailable'),
+    };
+
+    renderDetail();
+
+    expect(screen.getByText('OFFLINE')).toBeInTheDocument();
+    expect(screen.getByTestId('tournament-twitch-live-frame')).toBeInTheDocument();
   });
 
   it('renders the Twitch chat iframe for viewers who linked Twitch', () => {
