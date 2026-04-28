@@ -255,6 +255,7 @@ describe('Tournaments Figma rebuild', () => {
 
     expect(screen.getByTestId('tournament-detail-header')).toBeInTheDocument();
     expect(screen.getByText('1V1 BOXFIGHT')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy map code 2640-2394-7508' })).toBeInTheDocument();
     expect(within(screen.getByTestId('tournament-detail-header')).queryByText('1V1 BOXFIGHT')).toBeNull();
     expect(screen.getByText('Registrasion Progress')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /rules/i })).toBeInTheDocument();

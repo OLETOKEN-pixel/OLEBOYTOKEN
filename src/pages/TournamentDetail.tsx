@@ -29,6 +29,8 @@ import {
   useTournament,
 } from '@/hooks/useTournaments';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
+import { copyTextToClipboard } from '@/lib/copyToClipboard';
+import { getModeRules } from '@/lib/matchRules';
 import type { Tournament } from '@/types';
 
 function formatRemaining(endsAt: string | null): string {
@@ -56,11 +58,6 @@ function formatStartDate(iso: string | null): string {
   if (isToday) return `Today, ${time}`;
   const month = d.toLocaleString('en-US', { month: 'short' });
   return `${month} ${d.getDate()}, ${time}`;
-}
-
-function tournamentCode(id: string): string {
-  const compact = id.replace(/-/g, '').slice(0, 12).toUpperCase();
-  return compact.match(/.{1,4}/g)?.join(' - ') ?? compact;
 }
 
 export default function TournamentDetail() {
@@ -193,6 +190,7 @@ function TournamentDetailContent({
   onCancel,
 }: ContentProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const rosterRef = useRef<HTMLElement>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -207,6 +205,7 @@ function TournamentDetailContent({
   const isTeamTournament = t.team_size > 1;
   const headerTitle = `${t.team_size}V${t.team_size} ${t.mode.toUpperCase().replace(/\s+/g, '')}`;
   const rosterLabel = isTeamTournament ? `TEAMS (${participantCount})` : `PLAYERS (${participantCount})`;
+  const mapCode = getModeRules(t.mode).mapCode;
   const canRegister = !!currentUserId && t.status === 'registering' && !alreadyJoined;
   const canStart = (isCreator || isAdmin) && t.status === 'registering' && participantCount >= 2;
   const canCancel = (isCreator || isAdmin) && (t.status === 'registering' || t.status === 'ready_up');
@@ -214,6 +213,22 @@ function TournamentDetailContent({
     (p) => p.user_id === currentUserId || p.payer_user_id === currentUserId,
   );
   const needsReady = t.status === 'ready_up' && alreadyJoined && !myParticipation?.ready;
+  const handleCopyMapCode = async () => {
+    try {
+      const copied = await copyTextToClipboard(mapCode);
+      toast({
+        title: copied ? 'Map code copied' : 'Copy unavailable',
+        description: copied ? mapCode : 'Copy it manually from the tournament header.',
+        variant: copied ? undefined : 'destructive',
+      });
+    } catch (err) {
+      toast({
+        title: 'Copy failed',
+        description: err instanceof Error ? err.message : 'Unable to copy map code.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const ranked = useMemo(
     () =>
@@ -261,11 +276,12 @@ function TournamentDetailContent({
             prize={Number(t.prize_pool_total).toFixed(2)}
             firstTo={String(t.first_to)}
             platform={t.platform === 'All' ? 'ANY' : String(t.platform).toUpperCase()}
-            matchId={tournamentCode(t.id)}
+            mapCode={mapCode}
             matchTime={formatStartDate(t.scheduled_start_at)}
+            onCopyMapCode={handleCopyMapCode}
           />
 
-          <div className="absolute left-0 top-[421px]">
+          <div className="absolute left-0 top-[317px]">
             <TournamentDetailHeader
               registrationProgress={{
                 current: participantCount,
@@ -286,7 +302,7 @@ function TournamentDetailContent({
             />
           </div>
 
-          <div className="absolute right-0 top-[380px] flex w-[560px] flex-col items-center">
+          <div className="absolute right-0 top-[276px] flex w-[560px] flex-col items-center">
             <div className="flex w-full items-center justify-end gap-[10px]">
               <TournamentActionButton
                 label="RULES"
@@ -309,7 +325,7 @@ function TournamentDetailContent({
             <PrizePodium tournament={t} />
           </div>
 
-          <div className="absolute left-1/2 top-[790px] -translate-x-1/2">
+          <div className="absolute left-1/2 top-[815px] -translate-x-1/2">
             <button
               type="button"
               className="flex h-[65px] w-[292px] items-center justify-center gap-[20px] rounded-[50px] border border-[#ff1654] bg-[rgba(255,22,84,0.23)] text-[32px] leading-none text-white shadow-[inset_0px_-4px_4px_rgba(0,0,0,0.25),inset_0px_4px_4px_rgba(255,255,255,0.14)] transition hover:brightness-110"
@@ -446,19 +462,21 @@ function TournamentHeroMeta({
   prize,
   firstTo,
   platform,
-  matchId,
+  mapCode,
   matchTime,
+  onCopyMapCode,
 }: {
   title: string;
   entry: string;
   prize: string;
   firstTo: string;
   platform: string;
-  matchId: string;
+  mapCode: string;
   matchTime: string;
+  onCopyMapCode: () => void;
 }) {
   return (
-    <div className="absolute left-0 top-[241px] h-[150px] w-[951px]">
+    <div className="absolute left-0 top-[137px] h-[150px] w-[951px]">
       <img
         className="absolute left-[33px] top-0 h-[89px] w-[59px]"
         src={TOURNAMENT_ASSETS.trianglesCard}
@@ -471,13 +489,16 @@ function TournamentHeroMeta({
       >
         {title}
       </h2>
-      <div
-        className="absolute left-[632px] top-[59px] flex h-[30px] w-[214px] items-center justify-center gap-[8px] rounded-[22px] border border-[#ff1654] bg-[rgba(255,22,84,0.2)] px-[10px] text-[16px] text-white"
+      <button
+        type="button"
+        aria-label={`Copy map code ${mapCode}`}
+        onClick={onCopyMapCode}
+        className="absolute left-[632px] top-[59px] flex h-[30px] w-[214px] cursor-copy items-center justify-center gap-[8px] rounded-[22px] border border-[#ff1654] bg-[rgba(255,22,84,0.2)] px-[10px] text-[16px] text-white transition hover:brightness-110"
         style={{ fontFamily: FONTS.expanded }}
       >
         <img className="h-[13px] w-[11px]" src={TOURNAMENT_ASSETS.detailCopyIcon} alt="" aria-hidden="true" />
-        <span className="truncate">{matchId}</span>
-      </div>
+        <span className="truncate">{mapCode}</span>
+      </button>
       <div
         className="absolute left-[853px] top-[59px] flex h-[30px] w-[183px] items-center justify-center rounded-[22px] border border-white/50 bg-[#282828] text-[16px] text-white/70"
         style={{ fontFamily: FONTS.expanded }}
@@ -558,13 +579,15 @@ function PrizeCard({
 }) {
   return (
     <div className={`absolute rounded-[16px] border border-[#ff1654] bg-[#282828] shadow-[0_4px_4px_rgba(0,0,0,0.25)] ${className}`}>
-      <img className={`absolute object-contain ${starClassName}`} src={star} alt="" aria-hidden="true" />
-      <p
-        className="absolute left-1/2 top-[96px] -translate-x-1/2 text-[44px] leading-none text-white"
-        style={{ fontFamily: FONTS.expandedBlack }}
-      >
-        #{position}
-      </p>
+      <div className={`absolute ${starClassName}`}>
+        <img className="h-full w-full object-contain" src={star} alt="" aria-hidden="true" />
+        <p
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[46%] text-[44px] leading-none text-white"
+          style={{ fontFamily: FONTS.expandedBlack }}
+        >
+          #{position}
+        </p>
+      </div>
       <p
         className="absolute left-1/2 top-[198px] -translate-x-1/2 text-center text-[22px] leading-[1.25] text-white"
         style={{ fontFamily: FONTS.expandedBold }}
