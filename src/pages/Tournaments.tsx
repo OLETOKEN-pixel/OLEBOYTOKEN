@@ -19,7 +19,7 @@ export default function Tournaments() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TournamentListFilter>('live');
   const [createOpen, setCreateOpen] = useState(false);
-  const { data: tournaments, isLoading } = useTournaments(activeTab);
+  const { data: tournaments, isLoading, error } = useTournaments(activeTab);
 
   return (
     <PublicLayout>
@@ -62,6 +62,8 @@ export default function Tournaments() {
         >
           {isLoading ? (
             <StatusMessage>Loading tournaments...</StatusMessage>
+          ) : error ? (
+            <StatusMessage>Unable to load tournaments.</StatusMessage>
           ) : !tournaments || tournaments.length === 0 ? (
             <StatusMessage>
               {activeTab === 'live' ? 'No live tournaments yet.' : 'No past tournaments yet.'}

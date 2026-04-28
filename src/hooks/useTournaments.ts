@@ -14,6 +14,12 @@ const TOURNAMENT_LIST_SELECT = `
   prize_positions:tournament_prize_positions(*)
 `;
 
+const TOURNAMENT_LIST_SELECT_LEGACY = `
+  *,
+  creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url),
+  prize_positions:tournament_prize_positions(*)
+`;
+
 const TOURNAMENT_DETAIL_SELECT = `
   *,
   creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, twitch_username),
@@ -25,7 +31,65 @@ const TOURNAMENT_DETAIL_SELECT = `
   )
 `;
 
+const TOURNAMENT_DETAIL_SELECT_LEGACY = `
+  *,
+  creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url),
+  prize_positions:tournament_prize_positions(*),
+  participants:tournament_participants(
+    *,
+    user:profiles_public!tournament_participants_user_id_fkey(user_id, username, avatar_url, discord_avatar_url),
+    team:teams(*)
+  )
+`;
+
 export type TournamentListFilter = 'live' | 'past' | 'all';
+
+type QueryErrorLike = {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+};
+
+function shouldRetryWithoutTwitchUsername(error: QueryErrorLike | null | undefined): boolean {
+  if (!error) return false;
+
+  const haystack = [error.code, error.message, error.details, error.hint]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return haystack.includes('twitch_username') && haystack.includes('profiles_public');
+}
+
+function warnLegacyTournamentCreatorFallback() {
+  console.warn(
+    '[tournaments] profiles_public.twitch_username is unavailable; falling back to legacy tournament creator select.',
+  );
+}
+
+async function runTournamentListQuery(filter: TournamentListFilter, select: string) {
+  let query = supabase
+    .from('tournaments')
+    .select(select)
+    .order('created_at', { ascending: false });
+
+  if (filter === 'live') {
+    query = query.in('status', ['registering', 'ready_up', 'running']);
+  } else if (filter === 'past') {
+    query = query.in('status', ['completed', 'cancelled']);
+  }
+
+  return await query;
+}
+
+async function runTournamentDetailQuery(id: string, select: string) {
+  return await supabase
+    .from('tournaments')
+    .select(select)
+    .eq('id', id)
+    .maybeSingle();
+}
 
 export function useTournaments(filter: TournamentListFilter = 'live') {
   const queryClient = useQueryClient();
@@ -33,18 +97,13 @@ export function useTournaments(filter: TournamentListFilter = 'live') {
   const query = useQuery({
     queryKey: queryKeys.tournaments.list(filter),
     queryFn: async () => {
-      let q = supabase
-        .from('tournaments')
-        .select(TOURNAMENT_LIST_SELECT)
-        .order('created_at', { ascending: false });
+      let { data, error } = await runTournamentListQuery(filter, TOURNAMENT_LIST_SELECT);
 
-      if (filter === 'live') {
-        q = q.in('status', ['registering', 'ready_up', 'running']);
-      } else if (filter === 'past') {
-        q = q.in('status', ['completed', 'cancelled']);
+      if (shouldRetryWithoutTwitchUsername(error)) {
+        warnLegacyTournamentCreatorFallback();
+        ({ data, error } = await runTournamentListQuery(filter, TOURNAMENT_LIST_SELECT_LEGACY));
       }
 
-      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as Tournament[];
     },
@@ -78,11 +137,13 @@ export function useTournament(id: string | undefined) {
     enabled: !!id,
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from('tournaments')
-        .select(TOURNAMENT_DETAIL_SELECT)
-        .eq('id', id)
-        .maybeSingle();
+      let { data, error } = await runTournamentDetailQuery(id, TOURNAMENT_DETAIL_SELECT);
+
+      if (shouldRetryWithoutTwitchUsername(error)) {
+        warnLegacyTournamentCreatorFallback();
+        ({ data, error } = await runTournamentDetailQuery(id, TOURNAMENT_DETAIL_SELECT_LEGACY));
+      }
+
       if (error) throw error;
       return data as unknown as Tournament | null;
     },

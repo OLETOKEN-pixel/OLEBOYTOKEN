@@ -76,7 +76,7 @@ function formatDuration(seconds: number): string {
 
 export default function TournamentDetail() {
   const { id } = useParams<{ id: string }>();
-  const { data: tournament, isLoading } = useTournament(id);
+  const { data: tournament, isLoading, error } = useTournament(id);
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -98,6 +98,18 @@ export default function TournamentDetail() {
         <TournamentPageShell contentClassName="flex min-h-screen items-center justify-center pt-[180px]">
           <p className="text-[24px] text-white/60" style={{ fontFamily: FONTS.expanded }}>
             Loading tournament...
+          </p>
+        </TournamentPageShell>
+      </PublicLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <PublicLayout>
+        <TournamentPageShell contentClassName="flex min-h-screen items-center justify-center pt-[180px]">
+          <p className="text-[24px] text-white/60" style={{ fontFamily: FONTS.expanded }}>
+            Unable to load tournament.
           </p>
         </TournamentPageShell>
       </PublicLayout>
