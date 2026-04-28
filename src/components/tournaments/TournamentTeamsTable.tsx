@@ -16,6 +16,8 @@ export interface TournamentTeamRow {
   avatarUrl?: string | null;
 }
 
+const GRID_COLUMNS = 'minmax(220px, 1.2fr) minmax(120px, 1fr) minmax(140px, 1fr) 200px';
+
 export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsTableProps) {
   return (
     <div
@@ -24,17 +26,16 @@ export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsT
       style={{ minHeight: 260 }}
     >
       <div
-        className="grid items-center px-[60px] pt-[40px] pb-[24px]"
-        style={{ gridTemplateColumns: '68px minmax(180px,1fr) 140px 200px 200px' }}
+        className="grid items-center gap-x-[20px] px-[40px] pt-[36px] pb-[24px]"
+        style={{ gridTemplateColumns: GRID_COLUMNS }}
       >
-        <span aria-hidden="true" />
         <HeaderCell>NAME</HeaderCell>
-        <HeaderCell center>SIZE</HeaderCell>
-        <HeaderCell center>WIN RATE</HeaderCell>
+        <HeaderCell>SIZE</HeaderCell>
+        <HeaderCell>WIN RATE</HeaderCell>
         <span aria-hidden="true" />
       </div>
 
-      <div className="mx-[60px] h-px bg-white/15" aria-hidden="true" />
+      <div className="mx-[40px] h-px bg-white/15" aria-hidden="true" />
 
       {teams.map((team, index) => {
         const buttonLabel = team.variant === 'view' ? 'VIEW' : 'JOIN UP';
@@ -42,30 +43,37 @@ export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsT
         return (
           <div key={team.id} className="relative">
             <div
-              className="grid items-center px-[60px] py-[20px]"
-              style={{ gridTemplateColumns: '68px minmax(180px,1fr) 140px 200px 200px' }}
+              className="grid items-center gap-x-[20px] px-[40px] py-[20px]"
+              style={{ gridTemplateColumns: GRID_COLUMNS }}
             >
-              {team.avatarUrl ? (
-                <img
-                  src={team.avatarUrl}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-[68px] w-[68px] rounded-full object-cover"
-                />
-              ) : (
-                <img
-                  src={TOURNAMENT_ASSETS.teamAvatar}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-[68px] w-[68px]"
-                />
-              )}
+              <div className="flex items-center justify-center gap-[18px]">
+                {team.avatarUrl ? (
+                  <img
+                    src={team.avatarUrl}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-[68px] w-[68px] shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={TOURNAMENT_ASSETS.teamAvatar}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-[68px] w-[68px] shrink-0"
+                  />
+                )}
+                <span
+                  className="truncate whitespace-nowrap text-[24px] leading-none text-white"
+                  style={{ fontFamily: FONTS.expandedBold }}
+                >
+                  {team.name}
+                </span>
+              </div>
 
-              <RowCell>{team.name}</RowCell>
-              <RowCell center>{team.size}</RowCell>
-              <RowCell center>{team.winRate}</RowCell>
+              <RowCell>{team.size}</RowCell>
+              <RowCell>{team.winRate}</RowCell>
 
-              <div className="flex justify-end">
+              <div className="flex justify-center">
                 <button
                   type="button"
                   onClick={() => (team.variant === 'view' ? onView?.(team.id) : onJoin?.(team.id))}
@@ -79,7 +87,7 @@ export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsT
             </div>
 
             {index < teams.length - 1 ? (
-              <div className="mx-[60px] h-px bg-white/15" aria-hidden="true" />
+              <div className="mx-[40px] h-px bg-white/15" aria-hidden="true" />
             ) : null}
           </div>
         );
@@ -88,10 +96,10 @@ export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsT
   );
 }
 
-function HeaderCell({ children, center = false }: { children: ReactNode; center?: boolean }) {
+function HeaderCell({ children }: { children: ReactNode }) {
   return (
     <span
-      className={`whitespace-nowrap text-[24px] leading-none text-white ${center ? 'text-center' : ''}`}
+      className="whitespace-nowrap text-center text-[24px] leading-none text-white"
       style={{ fontFamily: FONTS.bold }}
     >
       {children}
@@ -99,10 +107,10 @@ function HeaderCell({ children, center = false }: { children: ReactNode; center?
   );
 }
 
-function RowCell({ children, center = false }: { children: ReactNode; center?: boolean }) {
+function RowCell({ children }: { children: ReactNode }) {
   return (
     <span
-      className={`truncate whitespace-nowrap text-[24px] leading-none text-white ${center ? 'text-center' : ''}`}
+      className="truncate whitespace-nowrap text-center text-[24px] leading-none text-white"
       style={{ fontFamily: FONTS.expandedBold }}
     >
       {children}

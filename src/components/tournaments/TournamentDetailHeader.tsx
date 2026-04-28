@@ -25,19 +25,20 @@ export function TournamentDetailHeader({
       data-testid="tournament-detail-header"
     >
       <h3
-        className="absolute left-[40px] top-[50px] whitespace-nowrap text-[44px] leading-none"
+        className="absolute left-[40px] top-[40px] whitespace-nowrap text-[72px] leading-[1] text-white"
         style={{
-          fontFamily: FONTS.expandedBold,
+          fontFamily: FONTS.expandedBlack,
           textTransform: 'none',
           fontStyle: 'italic',
-          letterSpacing: '0.01em',
+          fontWeight: 900,
+          letterSpacing: '-0.02em',
         }}
       >
         Registrasion Progress
       </h3>
 
       <p
-        className="absolute right-[40px] top-[235px] whitespace-nowrap text-[16px]"
+        className="absolute right-[60px] top-[235px] whitespace-nowrap text-[16px] text-white"
         style={{ fontFamily: FONTS.expandedBlack }}
       >
         {registrationProgress.current}/{registrationProgress.total} Players
