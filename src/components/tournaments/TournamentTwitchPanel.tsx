@@ -18,7 +18,7 @@ export function TournamentTwitchPanel({
 
   return (
     <div
-      className="grid w-[871px] max-w-full grid-cols-1 gap-[16px] md:grid-cols-[496px_359px]"
+      className="grid w-[895px] max-w-full grid-cols-1 gap-[16px] md:grid-cols-[520px_359px]"
       data-testid="tournament-twitch-panel"
     >
       <section
@@ -28,7 +28,7 @@ export function TournamentTwitchPanel({
         <iframe
           title={`${channelLabel} Twitch player`}
           src={playerUrl}
-          className="block h-[226px] w-full border-0 bg-black md:h-[258px]"
+          className="block h-[236px] w-full border-0 bg-black md:h-[308px]"
           allowFullScreen
           loading="lazy"
           data-testid="tournament-twitch-live-frame"
@@ -42,7 +42,7 @@ export function TournamentTwitchPanel({
         <iframe
           title={`${channelLabel} Twitch chat`}
           src={chatUrl}
-          className="block h-[226px] w-full border-0 bg-[#0f0404] md:h-[258px]"
+          className="block h-[236px] w-full border-0 bg-[#0f0404] md:h-[308px]"
           loading="lazy"
           data-testid="tournament-twitch-chat-frame"
         />

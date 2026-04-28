@@ -344,7 +344,7 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.getByTestId('tournament-twitch-panel')).toBeInTheDocument();
-    expect(screen.getByTestId('tournament-detail-header')).toHaveClass('h-[558px]');
+    expect(screen.getByTestId('tournament-detail-header')).toHaveClass('h-[572px]');
     expect(screen.getByTestId('tournament-twitch-live-shell')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-chat-shell')).toBeInTheDocument();
     expect(screen.getByTitle('HostChannel Twitch player')).toBeInTheDocument();
