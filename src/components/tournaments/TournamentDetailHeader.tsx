@@ -47,7 +47,7 @@ export function TournamentDetailHeader({
       />
 
       <h2
-        className="absolute left-[80px] top-[55px] max-w-[350px] truncate whitespace-nowrap text-[53px] leading-none"
+        className="absolute left-[80px] top-[55px] max-w-[390px] whitespace-nowrap text-[53px] leading-none tracking-[-0.035em]"
         style={{ fontFamily: FONTS.expandedBlack }}
       >
         {title}
@@ -69,22 +69,10 @@ export function TournamentDetailHeader({
       </div>
 
       <div className="absolute left-[40px] top-[101px] flex items-center gap-[10px]">
-        <Chip>
-          <span>Entry: </span>
-          <strong>{entry}</strong>
-        </Chip>
-        <Chip>
-          <span>Prize: </span>
-          <strong>{prize}</strong>
-        </Chip>
-        <Chip>
-          <span>First to: </span>
-          <strong>{firstTo}</strong>
-        </Chip>
-        <Chip>
-          <span>Platform: </span>
-          <strong>{platform}</strong>
-        </Chip>
+        <Chip label="Entry" value={entry} />
+        <Chip label="Prize" value={prize} />
+        <Chip label="First to" value={firstTo} />
+        <Chip label="Platform" value={platform} />
       </div>
 
       <h3
@@ -124,13 +112,16 @@ export function TournamentDetailHeader({
     </article>
   );
 }
-function Chip({ children }: { children: ReactNode }) {
+function Chip({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div
       className="flex h-[30px] items-center justify-center whitespace-nowrap rounded-[22px] border border-[#ff1654] px-[14px] text-[16px] text-white"
       style={{ fontFamily: FONTS.expanded }}
     >
-      {children}
+      <span>{label}: </span>
+      <strong className="ml-[4px]" style={{ fontFamily: FONTS.expandedBold }}>
+        {value}
+      </strong>
     </div>
   );
 }

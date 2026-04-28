@@ -20,7 +20,7 @@ export function TournamentRulesOverlay({ open, tournament, onClose }: Tournament
       open={open}
       onClose={onClose}
       eyebrow="TOURNAMENT RULES"
-      title={`${tournament.team_size}V${tournament.team_size} ${tournament.mode.toUpperCase()}`}
+      title={`${tournament.team_size}V${tournament.team_size} ${tournament.mode.toUpperCase().replace(/\s+/g, '')}`}
       footer={
         <div className="flex justify-end">
           <FigmaPillButton pink className="w-[247px]" onClick={onClose}>

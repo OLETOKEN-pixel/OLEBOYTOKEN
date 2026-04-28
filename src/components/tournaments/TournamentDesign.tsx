@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 export const TOURNAMENT_ASSETS = {
   neon: '/figma-assets/tournaments/bottom-neon.png',
+  neonDetail: '/figma-assets/tournaments/detail-neon.png',
   triangles: '/figma-assets/tournaments/triangles.svg',
   trianglesCard: '/figma-assets/tournaments/triangles-card.svg',
   outline: '/figma-assets/tournaments/outline.svg',
@@ -49,12 +50,16 @@ export function TournamentPageShell({
   contentClassName,
   minHeight = 955,
   bottomNeonTop,
+  topNeonSrc = TOURNAMENT_ASSETS.neon,
+  bottomNeonSrc = TOURNAMENT_ASSETS.neon,
 }: {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
   minHeight?: number;
   bottomNeonTop?: number;
+  topNeonSrc?: string;
+  bottomNeonSrc?: string;
 }) {
   return (
     <section
@@ -63,11 +68,11 @@ export function TournamentPageShell({
     >
       <img
         className="pointer-events-none absolute left-1/2 top-0 z-0 h-[146px] w-screen -translate-x-1/2 object-cover"
-        src={TOURNAMENT_ASSETS.neon}
+        src={topNeonSrc}
         alt=""
         aria-hidden="true"
       />
-      {bottomNeonTop === undefined ? null : <TournamentBottomNeon top={bottomNeonTop} />}
+      {bottomNeonTop === undefined ? null : <TournamentBottomNeon top={bottomNeonTop} src={bottomNeonSrc} />}
       <div
         className={cn('relative z-10 mx-auto w-[min(1532px,calc(100%_-_48px))]', contentClassName)}
       >
@@ -80,9 +85,11 @@ export function TournamentPageShell({
 export function TournamentBottomNeon({
   className,
   top,
+  src = TOURNAMENT_ASSETS.neon,
 }: {
   className?: string;
   top?: number;
+  src?: string;
 }) {
   return (
     <img
@@ -91,7 +98,7 @@ export function TournamentBottomNeon({
         className,
       )}
       style={top === undefined ? { bottom: 0 } : { top }}
-      src={TOURNAMENT_ASSETS.neon}
+      src={src}
       alt=""
       aria-hidden="true"
     />

@@ -178,8 +178,15 @@ function renderDetail() {
   );
 }
 
+const scrollIntoViewMock = vi.fn();
+
 describe('Tournaments Figma rebuild', () => {
   beforeEach(() => {
+    scrollIntoViewMock.mockReset();
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      value: scrollIntoViewMock,
+      configurable: true,
+    });
     listState.data = [tournamentFixture()];
     listState.isLoading = false;
     detailState.data = tournamentFixture();
@@ -247,21 +254,28 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.getByTestId('tournament-detail-header')).toBeInTheDocument();
-    expect(screen.getByText('1V1 BOX FIGHT')).toBeInTheDocument();
+    expect(screen.getByText('1V1 BOXFIGHT')).toBeInTheDocument();
     expect(screen.getByText('Registrasion Progress')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /rules/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /leaderboard/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /prize/i })).toBeInTheDocument();
     expect(screen.getByTestId('tournament-prize-podium')).toBeInTheDocument();
     expect(document.querySelector('img[src="/figma-assets/tournaments/rank-star-1.svg"]')).not.toBeNull();
     expect(document.querySelector('img[src="/figma-assets/tournaments/rank-star-2.svg"]')).not.toBeNull();
     expect(document.querySelector('img[src="/figma-assets/tournaments/rank-star-3.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/tournaments/detail-neon.png"]')).not.toBeNull();
     expect(screen.getByTestId('tournament-teams-table')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-footer')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /player/i }));
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
   });
 
   it('opens the rules overlay from the Figma rules button', () => {
     renderDetail();
 
     fireEvent.click(screen.getByRole('button', { name: /rules/i }));
-    const dialog = screen.getByRole('dialog', { name: '1V1 BOX FIGHT' });
+    const dialog = screen.getByRole('dialog', { name: '1V1 BOXFIGHT' });
 
     expect(within(dialog).getByText('No banned weapons. Ready up on time.')).toBeInTheDocument();
   });

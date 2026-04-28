@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { FooterSection } from '@/components/home/sections/FooterSection';
@@ -13,7 +13,6 @@ import {
   FigmaPillButton,
   FONTS,
   TOURNAMENT_ASSETS,
-  TournamentBottomNeon,
   TournamentModalShell,
   TournamentPageShell,
   TournamentTitle,
@@ -194,8 +193,11 @@ function TournamentDetailContent({
   onCancel,
 }: ContentProps) {
   const navigate = useNavigate();
+  const rosterRef = useRef<HTMLElement>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [prizeOpen, setPrizeOpen] = useState(false);
   const [readyOpen, setReadyOpen] = useState(true);
   const participants = useMemo(() => t.participants ?? [], [t.participants]);
   const participantCount = participants.length;
@@ -203,7 +205,7 @@ function TournamentDetailContent({
   const alreadyJoined = isParticipating(t, currentUserId);
   const isCreator = t.creator_id === currentUserId;
   const isTeamTournament = t.team_size > 1;
-  const headerTitle = `${t.team_size}V${t.team_size} ${t.mode.toUpperCase()}`;
+  const headerTitle = `${t.team_size}V${t.team_size} ${t.mode.toUpperCase().replace(/\s+/g, '')}`;
   const rosterLabel = isTeamTournament ? `TEAMS (${participantCount})` : `PLAYERS (${participantCount})`;
   const canRegister = !!currentUserId && t.status === 'registering' && !alreadyJoined;
   const canStart = (isCreator || isAdmin) && t.status === 'registering' && participantCount >= 2;
@@ -244,8 +246,14 @@ function TournamentDetailContent({
 
   return (
     <PublicLayout>
-      <TournamentPageShell minHeight={1800} contentClassName="pb-20">
-        <div className="relative min-h-[1105px]">
+      <TournamentPageShell
+        minHeight={1800}
+        bottomNeonTop={809}
+        topNeonSrc={TOURNAMENT_ASSETS.neonDetail}
+        bottomNeonSrc={TOURNAMENT_ASSETS.neonDetail}
+        contentClassName="pb-20"
+      >
+        <div className="relative min-h-[955px]">
           <div className="absolute left-0 top-[241px]">
             <TournamentDetailHeader
               title={headerTitle}
@@ -275,34 +283,42 @@ function TournamentDetailContent({
           </div>
 
           <div className="absolute right-0 top-[380px] flex w-[560px] flex-col items-center">
-            <button
-              type="button"
-              className="flex h-[47px] w-[144px] items-center justify-center gap-[8px] rounded-[16px] border border-white/50 bg-[rgba(40,40,40,0.8)] text-[24px] text-white transition hover:brightness-110"
-              style={{ fontFamily: FONTS.expandedBold }}
-              onClick={() => setRulesOpen(true)}
-            >
-              <img className="h-[16px] w-[16px]" src={TOURNAMENT_ASSETS.infoCircle} alt="" aria-hidden="true" />
-              RULES
-            </button>
+            <div className="flex w-full items-center justify-end gap-[10px]">
+              <TournamentActionButton
+                label="RULES"
+                icon="info"
+                onClick={() => setRulesOpen(true)}
+              />
+              <TournamentActionButton
+                label="LEADERBOARD"
+                icon="leaderboard"
+                className="w-[188px]"
+                onClick={() => setLeaderboardOpen(true)}
+              />
+              <TournamentActionButton
+                label="PRIZE"
+                icon="prize"
+                className="w-[132px]"
+                onClick={() => setPrizeOpen(true)}
+              />
+            </div>
             <PrizePodium tournament={t} />
           </div>
 
-          <div className="absolute left-1/2 top-[1005px] -translate-x-1/2">
+          <div className="absolute left-1/2 top-[790px] -translate-x-1/2">
             <button
               type="button"
               className="flex h-[65px] w-[292px] items-center justify-center gap-[20px] rounded-[50px] border border-[#ff1654] bg-[rgba(255,22,84,0.23)] text-[32px] leading-none text-white shadow-[inset_0px_-4px_4px_rgba(0,0,0,0.25),inset_0px_4px_4px_rgba(255,255,255,0.14)] transition hover:brightness-110"
               style={{ fontFamily: FONTS.wideBlack }}
-              onClick={() => navigate(isTeamTournament ? '/teams' : '/profile')}
+              onClick={() => rosterRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             >
               {isTeamTournament ? 'TEAMS' : 'PLAYER'}
               <img className="h-[27px] w-[19px]" src={TOURNAMENT_ASSETS.detailArrow} alt="" aria-hidden="true" />
             </button>
           </div>
-
-          <TournamentBottomNeon top={959} />
         </div>
 
-        <section className="relative">
+        <section ref={rosterRef} id="tournament-roster" className="relative scroll-mt-[160px]">
           <TournamentTitle outlineWidth={616}>{rosterLabel}</TournamentTitle>
           <div className="mt-[40px] overflow-x-auto pb-2">
             {teamRows.length === 0 ? (
@@ -357,6 +373,13 @@ function TournamentDetailContent({
         }}
       />
       <TournamentRulesOverlay open={rulesOpen} tournament={t} onClose={() => setRulesOpen(false)} />
+      <TournamentLeaderboardOverlay
+        open={leaderboardOpen}
+        title={rosterLabel}
+        rows={teamRows}
+        onClose={() => setLeaderboardOpen(false)}
+      />
+      <TournamentPrizeOverlay open={prizeOpen} tournament={t} onClose={() => setPrizeOpen(false)} />
       <ReadyUpOverlay
         open={needsReady && readyOpen}
         tournament={t}
@@ -365,6 +388,37 @@ function TournamentDetailContent({
         onReady={onReady}
       />
     </PublicLayout>
+  );
+}
+
+function TournamentActionButton({
+  label,
+  icon,
+  className = 'w-[144px]',
+  onClick,
+}: {
+  label: string;
+  icon: 'info' | 'leaderboard' | 'prize';
+  className?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`flex h-[47px] items-center justify-center gap-[8px] rounded-[16px] border border-white/50 bg-[rgba(40,40,40,0.8)] text-[18px] text-white transition hover:border-[#ff1654] hover:brightness-110 ${className}`}
+      style={{ fontFamily: FONTS.expandedBold }}
+      onClick={onClick}
+    >
+      {icon === 'info' ? (
+        <img className="h-[16px] w-[16px]" src={TOURNAMENT_ASSETS.infoCircle} alt="" aria-hidden="true" />
+      ) : (
+        <span
+          className={`h-[16px] w-[16px] rounded-[4px] ${icon === 'leaderboard' ? 'bg-[rgba(119,254,92,0.79)]' : 'bg-[#ff1654]'}`}
+          aria-hidden="true"
+        />
+      )}
+      {label}
+    </button>
   );
 }
 
@@ -440,6 +494,120 @@ function PrizeCard({
   );
 }
 
+function TournamentLeaderboardOverlay({
+  open,
+  title,
+  rows,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  rows: TournamentTeamRow[];
+  onClose: () => void;
+}) {
+  return (
+    <TournamentModalShell
+      open={open}
+      onClose={onClose}
+      eyebrow="TOURNAMENT LEADERBOARD"
+      title={title}
+      footer={
+        <div className="flex justify-end">
+          <FigmaPillButton pink className="w-[247px]" onClick={onClose}>
+            Close
+          </FigmaPillButton>
+        </div>
+      }
+    >
+      <div className="rounded-[18px] border border-[#ff1654] bg-[#0f0404]/55 p-5">
+        {rows.length === 0 ? (
+          <p className="text-[24px] text-white/65" style={{ fontFamily: FONTS.expanded }}>
+            No players registered yet.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[620px] text-left text-white">
+              <thead className="text-[14px] uppercase text-white/55" style={{ fontFamily: FONTS.expandedBold }}>
+                <tr>
+                  <th className="px-4 py-3">Rank</th>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Size</th>
+                  <th className="px-4 py-3">Win Rate</th>
+                </tr>
+              </thead>
+              <tbody className="text-[20px]" style={{ fontFamily: FONTS.expandedBold }}>
+                {rows.map((row, index) => (
+                  <tr key={row.id} className="border-t border-white/10">
+                    <td className="px-4 py-4 text-[#ff1654]">#{index + 1}</td>
+                    <td className="px-4 py-4">{row.name}</td>
+                    <td className="px-4 py-4">{row.size}</td>
+                    <td className="px-4 py-4">{row.winRate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </TournamentModalShell>
+  );
+}
+
+function TournamentPrizeOverlay({
+  open,
+  tournament,
+  onClose,
+}: {
+  open: boolean;
+  tournament: Tournament;
+  onClose: () => void;
+}) {
+  const prizes = [...(tournament.prize_positions ?? [])].sort((a, b) => a.position - b.position);
+  const prizeCards: Array<{ position: number; amount: number }> =
+    prizes.length > 0
+      ? prizes.map(({ position, amount }) => ({ position, amount }))
+      : [
+          { position: 1, amount: tournament.prize_pool_total },
+          { position: 2, amount: 0 },
+          { position: 3, amount: 0 },
+        ];
+
+  return (
+    <TournamentModalShell
+      open={open}
+      onClose={onClose}
+      eyebrow="TOURNAMENT PRIZE"
+      title="PRIZE SPLIT"
+      footer={
+        <div className="flex justify-end">
+          <FigmaPillButton pink className="w-[247px]" onClick={onClose}>
+            Close
+          </FigmaPillButton>
+        </div>
+      }
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        {prizeCards.slice(0, 6).map((prize) => (
+          <div
+            key={prize.position}
+            className="rounded-[18px] border border-[#ff1654] bg-[#0f0404]/55 p-6 text-center"
+          >
+            <p className="text-[40px] leading-none text-[#ff1654]" style={{ fontFamily: FONTS.expandedBlack }}>
+              #{prize.position}
+            </p>
+            <p className="mt-5 text-[34px] leading-none text-white" style={{ fontFamily: FONTS.expandedBold }}>
+              {Number(prize.amount).toFixed(2)}
+            </p>
+            <p className="mt-2 text-[13px] uppercase tracking-[0.12em] text-white/50" style={{ fontFamily: FONTS.expanded }}>
+              coins
+            </p>
+          </div>
+        ))}
+      </div>
+    </TournamentModalShell>
+  );
+}
+
 function ReadyUpOverlay({
   open,
   tournament,
@@ -481,4 +649,3 @@ function ReadyUpOverlay({
     </TournamentModalShell>
   );
 }
-
