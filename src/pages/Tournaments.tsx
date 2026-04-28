@@ -23,7 +23,7 @@ export default function Tournaments() {
 
   return (
     <PublicLayout>
-      <TournamentPageShell minHeight={955} bottomNeonTop={809} contentClassName="pb-[170px] pt-[156px]">
+      <TournamentPageShell minHeight={955} contentClassName="pb-[170px] pt-[156px]">
         <TournamentTitle outlineWidth={806}>TOURNAMENTS</TournamentTitle>
 
         <div className="mt-[26px] flex min-h-[47px] flex-wrap items-center gap-[12px]">

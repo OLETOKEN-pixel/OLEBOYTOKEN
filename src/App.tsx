@@ -94,9 +94,8 @@ function ScrollToTopOnRouteChange() {
 function GlobalBottomNeon() {
   const { pathname } = useLocation();
   const isMatchDetail = /^\/matches\/(?!create(?:\/|$))[^/]+$/.test(pathname);
-  const isTournamentRoute = pathname === '/tournaments' || pathname.startsWith('/tournaments/');
 
-  if (isMatchDetail || isTournamentRoute) return null;
+  if (isMatchDetail) return null;
 
   return (
     <img

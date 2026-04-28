@@ -5,6 +5,7 @@ import { FooterSection } from '@/components/home/sections/FooterSection';
 import { TournamentDetailHeader } from '@/components/tournaments/TournamentDetailHeader';
 import { TournamentRegisterOverlay } from '@/components/tournaments/TournamentRegisterOverlay';
 import { TournamentRulesOverlay } from '@/components/tournaments/TournamentRulesOverlay';
+import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import {
   TournamentTeamsTable,
   type TournamentTeamRow,
@@ -54,10 +55,22 @@ function formatStartDate(iso: string | null): string {
     d.getFullYear() === today.getFullYear() &&
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate();
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const time = d
+    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    .replace(' ', '');
   if (isToday) return `Today, ${time}`;
   const month = d.toLocaleString('en-US', { month: 'short' });
   return `${month} ${d.getDate()}, ${time}`;
+}
+
+function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return '';
+  const totalMin = Math.round(seconds / 60);
+  if (totalMin < 60) return `${totalMin}min`;
+  const hours = Math.floor(totalMin / 60);
+  const rest = totalMin % 60;
+  if (rest === 0) return `${hours}h`;
+  return `${hours}h ${rest}m`;
 }
 
 export default function TournamentDetail() {
@@ -189,7 +202,6 @@ function TournamentDetailContent({
   onReady,
   onCancel,
 }: ContentProps) {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const rosterRef = useRef<HTMLElement>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -197,6 +209,7 @@ function TournamentDetailContent({
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [prizeOpen, setPrizeOpen] = useState(false);
   const [readyOpen, setReadyOpen] = useState(true);
+  const [statsUserId, setStatsUserId] = useState<string | null>(null);
   const participants = useMemo(() => t.participants ?? [], [t.participants]);
   const participantCount = participants.length;
   const fillPct = Math.min(100, (participantCount / t.max_participants) * 100);
@@ -249,7 +262,7 @@ function TournamentDetailContent({
       name: isTeamTournament
         ? participant.team?.name ?? 'Unknown Team'
         : participant.user?.username ?? 'Unknown Player',
-      size: isTeamTournament ? `${t.team_size}/${t.team_size}` : `${participant.wins}/${participant.losses || 0}`,
+      size: `${t.team_size}/${t.team_size}`,
       winRate:
         participant.matches_played > 0
           ? `${((participant.wins / participant.matches_played) * 100).toFixed(2)}%`
@@ -259,13 +272,17 @@ function TournamentDetailContent({
     };
   });
 
+  const openParticipantStats = (rowId: string) => {
+    const participant = participants.find((item) => item.id === rowId);
+    const userId = participant?.user_id ?? participant?.payer_user_id ?? null;
+    if (userId) setStatsUserId(userId);
+  };
+
   return (
     <PublicLayout>
       <TournamentPageShell
         minHeight={1800}
-        bottomNeonTop={809}
         topNeonSrc={TOURNAMENT_ASSETS.neonDetail}
-        bottomNeonSrc={TOURNAMENT_ASSETS.neonDetail}
         contentWidth="min(1748px, calc(100% - 48px))"
         contentClassName="pb-20"
       >
@@ -278,6 +295,7 @@ function TournamentDetailContent({
             platform={t.platform === 'All' ? 'ANY' : String(t.platform).toUpperCase()}
             mapCode={mapCode}
             matchTime={formatStartDate(t.scheduled_start_at)}
+            duration={formatDuration(t.duration_seconds)}
             onCopyMapCode={handleCopyMapCode}
           />
 
@@ -312,7 +330,7 @@ function TournamentDetailContent({
               <TournamentActionButton
                 label="LEADERBOARD"
                 icon="leaderboard"
-                className="w-[188px]"
+                className="w-[232px]"
                 onClick={() => setLeaderboardOpen(true)}
               />
               <TournamentActionButton
@@ -340,10 +358,13 @@ function TournamentDetailContent({
 
         <section ref={rosterRef} id="tournament-roster" className="relative scroll-mt-[160px]">
           <TournamentTitle outlineWidth={616}>{rosterLabel}</TournamentTitle>
-          <div className="mt-[40px] overflow-x-auto pb-2">
+          <div
+            className="mt-[40px] mx-auto"
+            style={{ width: 'min(1448px, calc(100vw - 96px))' }}
+          >
             {teamRows.length === 0 ? (
               <div
-                className="flex h-[260px] w-[1448px] items-center justify-center rounded-[14px] bg-[#282828] text-[24px] text-white/60"
+                className="flex h-[260px] w-full items-center justify-center rounded-[14px] bg-[#282828] text-[24px] text-white/60"
                 style={{ fontFamily: FONTS.expanded }}
               >
                 No participants yet.
@@ -351,11 +372,8 @@ function TournamentDetailContent({
             ) : (
               <TournamentTeamsTable
                 teams={teamRows}
-                onView={(rowId) => {
-                  const participant = participants.find((item) => item.id === rowId);
-                  if (participant?.team_id) navigate('/teams');
-                  else navigate('/profile');
-                }}
+                onView={openParticipantStats}
+                onJoin={openParticipantStats}
               />
             )}
           </div>
@@ -406,6 +424,13 @@ function TournamentDetailContent({
         busy={busy}
         onClose={() => setReadyOpen(false)}
         onReady={onReady}
+      />
+      <PlayerStatsModal
+        open={Boolean(statsUserId)}
+        userId={statsUserId ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setStatsUserId(null);
+        }}
       />
     </PublicLayout>
   );
@@ -464,6 +489,7 @@ function TournamentHeroMeta({
   platform,
   mapCode,
   matchTime,
+  duration,
   onCopyMapCode,
 }: {
   title: string;
@@ -473,8 +499,11 @@ function TournamentHeroMeta({
   platform: string;
   mapCode: string;
   matchTime: string;
+  duration: string;
   onCopyMapCode: () => void;
 }) {
+  const matchTimeLabel = duration ? `${matchTime} • ${duration}` : matchTime;
+
   return (
     <div className="absolute left-0 top-[137px] h-[150px] w-[951px]">
       <img
@@ -484,8 +513,8 @@ function TournamentHeroMeta({
         aria-hidden="true"
       />
       <h2
-        className="absolute left-[70px] top-[52px] whitespace-nowrap text-[53px] leading-none tracking-[-0.035em] text-white"
-        style={{ fontFamily: FONTS.expandedBlack }}
+        className="absolute left-[70px] top-[52px] whitespace-nowrap text-[53px] leading-none text-white"
+        style={{ fontFamily: FONTS.expandedBlack, letterSpacing: '0.02em' }}
       >
         {title}
       </h2>
@@ -500,10 +529,10 @@ function TournamentHeroMeta({
         <span className="truncate">{mapCode}</span>
       </button>
       <div
-        className="absolute left-[853px] top-[59px] flex h-[30px] w-[183px] items-center justify-center rounded-[22px] border border-white/50 bg-[#282828] text-[16px] text-white/70"
+        className="absolute left-[853px] top-[59px] flex h-[30px] w-[262px] items-center justify-center rounded-[22px] border border-white/50 bg-[#282828] px-[14px] text-[15px] text-white/80"
         style={{ fontFamily: FONTS.expanded }}
       >
-        <span className="truncate">{matchTime}</span>
+        <span className="truncate">{matchTimeLabel}</span>
       </div>
       <div className="absolute left-[70px] top-[105px] flex items-center gap-[10px]">
         <HeroChip label="Entry" value={entry} className="w-[137px]" />

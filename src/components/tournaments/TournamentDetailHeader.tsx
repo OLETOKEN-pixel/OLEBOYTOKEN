@@ -25,8 +25,13 @@ export function TournamentDetailHeader({
       data-testid="tournament-detail-header"
     >
       <h3
-        className="absolute left-[40px] top-[50px] whitespace-nowrap text-[53px] leading-none"
-        style={{ fontFamily: FONTS.expandedBlack }}
+        className="absolute left-[40px] top-[50px] whitespace-nowrap text-[44px] leading-none"
+        style={{
+          fontFamily: FONTS.expandedBold,
+          textTransform: 'none',
+          fontStyle: 'italic',
+          letterSpacing: '0.01em',
+        }}
       >
         Registrasion Progress
       </h3>
