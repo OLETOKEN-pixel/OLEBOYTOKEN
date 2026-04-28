@@ -16,7 +16,7 @@ export interface TournamentTeamRow {
   avatarUrl?: string | null;
 }
 
-const GRID_COLUMNS = 'minmax(220px, 1.2fr) minmax(120px, 1fr) minmax(140px, 1fr) 200px';
+const GRID_COLUMNS = '88px minmax(220px, 1.4fr) minmax(120px, 1fr) minmax(140px, 1fr) 200px';
 
 export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsTableProps) {
   return (
@@ -26,9 +26,10 @@ export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsT
       style={{ minHeight: 260 }}
     >
       <div
-        className="grid items-center gap-x-[20px] px-[40px] pt-[36px] pb-[24px]"
+        className="grid items-center px-[40px] pt-[36px] pb-[24px]"
         style={{ gridTemplateColumns: GRID_COLUMNS }}
       >
+        <span aria-hidden="true" />
         <HeaderCell>NAME</HeaderCell>
         <HeaderCell>SIZE</HeaderCell>
         <HeaderCell>WIN RATE</HeaderCell>
@@ -43,33 +44,26 @@ export function TournamentTeamsTable({ teams, onJoin, onView }: TournamentTeamsT
         return (
           <div key={team.id} className="relative">
             <div
-              className="grid items-center gap-x-[20px] px-[40px] py-[20px]"
+              className="grid items-center px-[40px] py-[20px]"
               style={{ gridTemplateColumns: GRID_COLUMNS }}
             >
-              <div className="flex items-center justify-center gap-[18px]">
-                {team.avatarUrl ? (
-                  <img
-                    src={team.avatarUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="h-[68px] w-[68px] shrink-0 rounded-full object-cover"
-                  />
-                ) : (
-                  <img
-                    src={TOURNAMENT_ASSETS.teamAvatar}
-                    alt=""
-                    aria-hidden="true"
-                    className="h-[68px] w-[68px] shrink-0"
-                  />
-                )}
-                <span
-                  className="truncate whitespace-nowrap text-[24px] leading-none text-white"
-                  style={{ fontFamily: FONTS.expandedBold }}
-                >
-                  {team.name}
-                </span>
-              </div>
+              {team.avatarUrl ? (
+                <img
+                  src={team.avatarUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-[68px] w-[68px] shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <img
+                  src={TOURNAMENT_ASSETS.teamAvatar}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-[68px] w-[68px] shrink-0"
+                />
+              )}
 
+              <RowCell>{team.name}</RowCell>
               <RowCell>{team.size}</RowCell>
               <RowCell>{team.winRate}</RowCell>
 
