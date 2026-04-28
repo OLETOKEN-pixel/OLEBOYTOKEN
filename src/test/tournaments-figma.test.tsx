@@ -316,7 +316,7 @@ describe('Tournaments Figma rebuild', () => {
     expect(screen.queryByTestId('tournament-twitch-chat-frame')).toBeNull();
   });
 
-  it('renders the Twitch live and chat panels together for creators with Twitch and shows live viewers', () => {
+  it('renders the Twitch live and chat panels together for creators with Twitch inside the first section', () => {
     detailState.data = tournamentFixture({
       creator: {
         user_id: 'creator-1',
@@ -344,12 +344,16 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.getByTestId('tournament-twitch-panel')).toBeInTheDocument();
-    expect(screen.getByTestId('tournament-detail-header')).toHaveClass('h-[720px]');
+    expect(screen.getByTestId('tournament-detail-header')).toHaveClass('h-[558px]');
+    expect(screen.getByTestId('tournament-twitch-live-shell')).toBeInTheDocument();
+    expect(screen.getByTestId('tournament-twitch-chat-shell')).toBeInTheDocument();
     expect(screen.getByTitle('HostChannel Twitch player')).toBeInTheDocument();
     expect(screen.getByTitle('HostChannel Twitch chat')).toBeInTheDocument();
-    expect(screen.getByText('311 viewers')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'LIVE' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'CHAT' })).toBeNull();
+    expect(screen.queryByText('OFFLINE')).toBeNull();
+    expect(screen.queryByText(/open twitch/i)).toBeNull();
+    expect(screen.queryByText(/twitch chat/i)).toBeNull();
     expect(screen.getByRole('button', { name: /player/i })).toBeInTheDocument();
   });
 
@@ -380,7 +384,6 @@ describe('Tournaments Figma rebuild', () => {
 
     renderDetail();
 
-    expect(screen.getByText('OFFLINE')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-live-frame')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
     expect(screen.queryByText(/viewers/i)).toBeNull();
@@ -404,7 +407,6 @@ describe('Tournaments Figma rebuild', () => {
 
     renderDetail();
 
-    expect(screen.getByText('OFFLINE')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-live-frame')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
   });

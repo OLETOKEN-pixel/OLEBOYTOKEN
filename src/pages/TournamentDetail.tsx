@@ -234,6 +234,7 @@ function TournamentDetailContent({
   const mapCode = getModeRules(t.mode).mapCode;
   const creatorTwitchUsername = t.creator?.twitch_username?.trim() || null;
   const hasCreatorTwitch = Boolean(creatorTwitchUsername);
+  const firstSectionMinHeight = hasCreatorTwitch ? 920 : 955;
   const canRegister = !!currentUserId && t.status === 'registering' && !alreadyJoined;
   const canStart = (isCreator || isAdmin) && t.status === 'registering' && participantCount >= 2;
   const canCancel = (isCreator || isAdmin) && (t.status === 'registering' || t.status === 'ready_up');
@@ -301,7 +302,7 @@ function TournamentDetailContent({
         contentWidth="min(1748px, calc(100% - 48px))"
         contentClassName="pb-20"
       >
-        <div className={`relative ${hasCreatorTwitch ? 'min-h-[1086px]' : 'min-h-[955px]'}`}>
+        <div className="relative" style={{ minHeight: `${firstSectionMinHeight}px` }}>
           <TournamentHeroMeta
             title={headerTitle}
             entry={Number(t.entry_fee) === 0 ? 'free' : Number(t.entry_fee).toFixed(2)}
@@ -314,7 +315,7 @@ function TournamentDetailContent({
             onCopyMapCode={handleCopyMapCode}
           />
 
-          <div className="absolute left-0 top-[317px]">
+          <div className={`absolute left-0 ${hasCreatorTwitch ? 'top-[296px]' : 'top-[317px]'}`}>
             <TournamentDetailHeader
               registrationProgress={{
                 current: participantCount,
@@ -342,7 +343,7 @@ function TournamentDetailContent({
             />
           </div>
 
-          <div className={`absolute right-0 flex w-[560px] flex-col items-center ${hasCreatorTwitch ? 'top-[306px]' : 'top-[276px]'}`}>
+          <div className={`absolute right-0 flex w-[560px] flex-col items-center ${hasCreatorTwitch ? 'top-[282px]' : 'top-[276px]'}`}>
             <div className="flex w-full items-center justify-end gap-[10px]">
               <TournamentActionButton
                 label="RULES"
@@ -365,7 +366,7 @@ function TournamentDetailContent({
             <PrizePodium tournament={t} />
           </div>
 
-          <div className={`absolute left-1/2 -translate-x-1/2 ${hasCreatorTwitch ? 'top-[1040px]' : 'top-[815px]'}`}>
+          <div className={`absolute left-1/2 -translate-x-1/2 ${hasCreatorTwitch ? 'top-[848px]' : 'top-[815px]'}`}>
             <button
               type="button"
               className="flex h-[65px] w-[292px] items-center justify-center gap-[20px] rounded-[50px] border border-[#ff1654] bg-[rgba(255,22,84,0.23)] text-[32px] leading-none text-white shadow-[inset_0px_-4px_4px_rgba(0,0,0,0.25),inset_0px_4px_4px_rgba(255,255,255,0.14)] transition hover:brightness-110"
