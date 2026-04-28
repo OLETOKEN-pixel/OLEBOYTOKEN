@@ -255,11 +255,14 @@ describe('Tournaments Figma rebuild', () => {
 
     expect(screen.getByTestId('tournament-detail-header')).toBeInTheDocument();
     expect(screen.getByText('1V1 BOXFIGHT')).toBeInTheDocument();
+    expect(within(screen.getByTestId('tournament-detail-header')).queryByText('1V1 BOXFIGHT')).toBeNull();
     expect(screen.getByText('Registrasion Progress')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /rules/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /leaderboard/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /prize/i })).toBeInTheDocument();
     expect(screen.getByTestId('tournament-prize-podium')).toBeInTheDocument();
+    expect(document.querySelector('img[src="/figma-assets/tournaments/detail-copy-icon.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/tournaments/prize-crown.svg"]')).not.toBeNull();
     expect(document.querySelector('img[src="/figma-assets/tournaments/rank-star-1.svg"]')).not.toBeNull();
     expect(document.querySelector('img[src="/figma-assets/tournaments/rank-star-2.svg"]')).not.toBeNull();
     expect(document.querySelector('img[src="/figma-assets/tournaments/rank-star-3.svg"]')).not.toBeNull();

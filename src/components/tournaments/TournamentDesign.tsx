@@ -19,6 +19,7 @@ export const TOURNAMENT_ASSETS = {
   arrowStroke: '/figma-assets/tournaments/arrow-stroke.svg',
   cardDivider: '/figma-assets/tournaments/card-divider.svg',
   detailArrow: '/figma-assets/tournaments/detail-arrow.svg',
+  detailCopyIcon: '/figma-assets/tournaments/detail-copy-icon.svg',
   infoCircle: '/figma-assets/tournaments/info-circle.svg',
   pinkDot: '/figma-assets/tournaments/pink-dot.svg',
   pinkDotSmall: '/figma-assets/tournaments/pink-dot-2.svg',
@@ -52,6 +53,7 @@ export function TournamentPageShell({
   bottomNeonTop,
   topNeonSrc = TOURNAMENT_ASSETS.neon,
   bottomNeonSrc = TOURNAMENT_ASSETS.neon,
+  contentWidth = 'min(1532px, calc(100% - 48px))',
 }: {
   children: ReactNode;
   className?: string;
@@ -60,6 +62,7 @@ export function TournamentPageShell({
   bottomNeonTop?: number;
   topNeonSrc?: string;
   bottomNeonSrc?: string;
+  contentWidth?: string;
 }) {
   return (
     <section
@@ -74,7 +77,8 @@ export function TournamentPageShell({
       />
       {bottomNeonTop === undefined ? null : <TournamentBottomNeon top={bottomNeonTop} src={bottomNeonSrc} />}
       <div
-        className={cn('relative z-10 mx-auto w-[min(1532px,calc(100%_-_48px))]', contentClassName)}
+        className={cn('relative z-10 mx-auto', contentClassName)}
+        style={{ width: contentWidth }}
       >
         {children}
       </div>

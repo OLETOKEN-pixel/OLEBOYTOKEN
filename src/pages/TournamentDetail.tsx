@@ -251,18 +251,22 @@ function TournamentDetailContent({
         bottomNeonTop={809}
         topNeonSrc={TOURNAMENT_ASSETS.neonDetail}
         bottomNeonSrc={TOURNAMENT_ASSETS.neonDetail}
+        contentWidth="min(1748px, calc(100% - 48px))"
         contentClassName="pb-20"
       >
         <div className="relative min-h-[955px]">
-          <div className="absolute left-0 top-[241px]">
+          <TournamentHeroMeta
+            title={headerTitle}
+            entry={Number(t.entry_fee) === 0 ? 'free' : Number(t.entry_fee).toFixed(2)}
+            prize={Number(t.prize_pool_total).toFixed(2)}
+            firstTo={String(t.first_to)}
+            platform={t.platform === 'All' ? 'ANY' : String(t.platform).toUpperCase()}
+            matchId={tournamentCode(t.id)}
+            matchTime={formatStartDate(t.scheduled_start_at)}
+          />
+
+          <div className="absolute left-0 top-[421px]">
             <TournamentDetailHeader
-              title={headerTitle}
-              entry={Number(t.entry_fee) === 0 ? 'free' : Number(t.entry_fee).toFixed(2)}
-              prize={Number(t.prize_pool_total).toFixed(2)}
-              firstTo={String(t.first_to)}
-              platform={t.platform === 'All' ? 'ANY' : String(t.platform).toUpperCase()}
-              matchId={tournamentCode(t.id)}
-              matchTime={formatStartDate(t.scheduled_start_at)}
               registrationProgress={{
                 current: participantCount,
                 total: t.max_participants,
@@ -405,20 +409,102 @@ function TournamentActionButton({
   return (
     <button
       type="button"
-      className={`flex h-[47px] items-center justify-center gap-[8px] rounded-[16px] border border-white/50 bg-[rgba(40,40,40,0.8)] text-[18px] text-white transition hover:border-[#ff1654] hover:brightness-110 ${className}`}
+      className={`flex h-[47px] items-center justify-center gap-[8px] rounded-[16px] border text-[18px] text-white transition hover:brightness-110 ${
+        icon === 'leaderboard'
+          ? 'border-[#b7d932] bg-[rgba(183,217,50,0.13)]'
+          : icon === 'prize'
+            ? 'border-[#635bff] bg-[#635bff]'
+            : 'border-white/50 bg-[rgba(40,40,40,0.8)]'
+      } ${className}`}
       style={{ fontFamily: FONTS.expandedBold }}
       onClick={onClick}
     >
       {icon === 'info' ? (
         <img className="h-[16px] w-[16px]" src={TOURNAMENT_ASSETS.infoCircle} alt="" aria-hidden="true" />
       ) : (
-        <span
-          className={`h-[16px] w-[16px] rounded-[4px] ${icon === 'leaderboard' ? 'bg-[rgba(119,254,92,0.79)]' : 'bg-[#ff1654]'}`}
+        <img
+          className="h-[16px] w-[19px]"
+          src={TOURNAMENT_ASSETS.prizeCrown}
+          alt=""
           aria-hidden="true"
+          style={{
+            filter:
+              icon === 'leaderboard'
+                ? 'hue-rotate(87deg) saturate(1.55) brightness(1.25)'
+                : 'hue-rotate(230deg) saturate(1.45) brightness(1.35)',
+          }}
         />
       )}
       {label}
     </button>
+  );
+}
+
+function TournamentHeroMeta({
+  title,
+  entry,
+  prize,
+  firstTo,
+  platform,
+  matchId,
+  matchTime,
+}: {
+  title: string;
+  entry: string;
+  prize: string;
+  firstTo: string;
+  platform: string;
+  matchId: string;
+  matchTime: string;
+}) {
+  return (
+    <div className="absolute left-0 top-[241px] h-[150px] w-[951px]">
+      <img
+        className="absolute left-[33px] top-0 h-[89px] w-[59px]"
+        src={TOURNAMENT_ASSETS.trianglesCard}
+        alt=""
+        aria-hidden="true"
+      />
+      <h2
+        className="absolute left-[70px] top-[52px] whitespace-nowrap text-[53px] leading-none tracking-[-0.035em] text-white"
+        style={{ fontFamily: FONTS.expandedBlack }}
+      >
+        {title}
+      </h2>
+      <div
+        className="absolute left-[632px] top-[59px] flex h-[30px] w-[214px] items-center justify-center gap-[8px] rounded-[22px] border border-[#ff1654] bg-[rgba(255,22,84,0.2)] px-[10px] text-[16px] text-white"
+        style={{ fontFamily: FONTS.expanded }}
+      >
+        <img className="h-[13px] w-[11px]" src={TOURNAMENT_ASSETS.detailCopyIcon} alt="" aria-hidden="true" />
+        <span className="truncate">{matchId}</span>
+      </div>
+      <div
+        className="absolute left-[853px] top-[59px] flex h-[30px] w-[183px] items-center justify-center rounded-[22px] border border-white/50 bg-[#282828] text-[16px] text-white/70"
+        style={{ fontFamily: FONTS.expanded }}
+      >
+        <span className="truncate">{matchTime}</span>
+      </div>
+      <div className="absolute left-[70px] top-[105px] flex items-center gap-[10px]">
+        <HeroChip label="Entry" value={entry} className="w-[137px]" />
+        <HeroChip label="Prize" value={prize} className="w-[146px]" />
+        <HeroChip label="First to" value={firstTo} className="w-[162px]" />
+        <HeroChip label="Platform" value={platform} className="w-[183px]" />
+      </div>
+    </div>
+  );
+}
+
+function HeroChip({ label, value, className }: { label: string; value: string; className: string }) {
+  return (
+    <div
+      className={`flex h-[30px] items-center justify-center whitespace-nowrap rounded-[22px] border border-[#ff1654] text-[16px] text-white ${className}`}
+      style={{ fontFamily: FONTS.expanded }}
+    >
+      <span>{label}: </span>
+      <strong className="ml-[4px]" style={{ fontFamily: FONTS.expandedBold }}>
+        {value}
+      </strong>
+    </div>
   );
 }
 
