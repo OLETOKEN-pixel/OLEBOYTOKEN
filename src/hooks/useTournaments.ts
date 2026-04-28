@@ -10,13 +10,13 @@ import type {
 
 const TOURNAMENT_LIST_SELECT = `
   *,
-  creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url),
+  creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, twitch_username),
   prize_positions:tournament_prize_positions(*)
 `;
 
 const TOURNAMENT_DETAIL_SELECT = `
   *,
-  creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url),
+  creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, twitch_username),
   prize_positions:tournament_prize_positions(*),
   participants:tournament_participants(
     *,

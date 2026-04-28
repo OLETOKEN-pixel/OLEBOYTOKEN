@@ -17,6 +17,8 @@ export const queryKeys = {
     all: ['tournaments'] as const,
     list: (filter?: string) => [...queryKeys.tournaments.all, 'list', filter] as const,
     detail: (id: string) => [...queryKeys.tournaments.all, 'detail', id] as const,
+    streamStatus: (username: string) =>
+      [...queryKeys.tournaments.all, 'stream-status', username.toLowerCase()] as const,
   },
   wallet: (userId: string) => ['wallet', userId] as const,
   profile: (userId: string) => ['profile', userId] as const,

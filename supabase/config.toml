@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.twitch-auth-callback]
 verify_jwt = false
+
+[functions.twitch-stream-status]
+verify_jwt = false

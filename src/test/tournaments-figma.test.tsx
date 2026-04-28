@@ -22,6 +22,7 @@ const {
   listState,
   detailState,
   eligibleTeamsState,
+  streamStatusState,
   createMutationMock,
   registerMutationMock,
   startMutationMock,
@@ -32,7 +33,7 @@ const {
   authState: {
     value: {
       user: { id: 'user-current' },
-      profile: { user_id: 'user-current', username: 'Owner', role: 'user' },
+      profile: { user_id: 'user-current', username: 'Owner', role: 'user', twitch_username: null },
       wallet: { balance: 100 },
     },
   },
@@ -41,6 +42,13 @@ const {
   eligibleTeamsState: {
     eligibleTeams: [] as EligibleTeamFixture[],
     loading: false,
+  },
+  streamStatusState: {
+    value: {
+      data: null,
+      isLoading: false,
+      error: null,
+    },
   },
   createMutationMock: { mutateAsync: vi.fn(), isPending: false },
   registerMutationMock: { mutateAsync: vi.fn(), isPending: false },
@@ -56,6 +64,11 @@ vi.mock('@/components/layout/PublicLayout', () => ({
 
 vi.mock('@/components/home/sections/FooterSection', () => ({
   FooterSection: () => <footer data-testid="tournament-footer" />,
+}));
+
+vi.mock('@/components/player/PlayerStatsModal', () => ({
+  PlayerStatsModal: ({ open, userId }: { open: boolean; userId: string }) =>
+    open ? <div data-testid="mock-player-stats-modal">{userId}</div> : null,
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -74,6 +87,10 @@ vi.mock('@/hooks/useEligibleTeams', () => ({
     loading: eligibleTeamsState.loading,
     refresh: vi.fn(),
   }),
+}));
+
+vi.mock('@/hooks/useTournamentStreamStatus', () => ({
+  useTournamentStreamStatus: () => streamStatusState.value,
 }));
 
 vi.mock('@/hooks/useTournaments', () => ({
@@ -120,6 +137,13 @@ function tournamentFixture(overrides: Partial<Tournament> = {}): Tournament {
     finalized_at: null,
     created_at: '2026-04-27T10:00:00.000Z',
     updated_at: '2026-04-27T10:00:00.000Z',
+    creator: {
+      user_id: 'creator-1',
+      username: 'HostChannel',
+      avatar_url: null,
+      discord_avatar_url: null,
+      twitch_username: null,
+    },
     participants: [
       {
         id: 'participant-1',
@@ -187,10 +211,20 @@ describe('Tournaments Figma rebuild', () => {
       value: scrollIntoViewMock,
       configurable: true,
     });
+    authState.value = {
+      user: { id: 'user-current' },
+      profile: { user_id: 'user-current', username: 'Owner', role: 'user', twitch_username: null },
+      wallet: { balance: 100 },
+    };
     listState.data = [tournamentFixture()];
     listState.isLoading = false;
     detailState.data = tournamentFixture();
     detailState.isLoading = false;
+    streamStatusState.value = {
+      data: null,
+      isLoading: false,
+      error: null,
+    };
     eligibleTeamsState.eligibleTeams = [];
     eligibleTeamsState.loading = false;
     createMutationMock.mutateAsync.mockReset();
@@ -273,6 +307,151 @@ describe('Tournaments Figma rebuild', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /player/i }));
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('keeps the compact detail layout when the creator has no Twitch linked', () => {
+    renderDetail();
+
+    expect(screen.queryByTestId('tournament-twitch-panel')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'CHAT' })).toBeNull();
+  });
+
+  it('renders the Twitch live panel for creators with Twitch and shows live viewers', () => {
+    detailState.data = tournamentFixture({
+      creator: {
+        user_id: 'creator-1',
+        username: 'HostChannel',
+        avatar_url: null,
+        discord_avatar_url: null,
+        twitch_username: 'host_channel',
+      },
+    });
+    streamStatusState.value = {
+      data: {
+        twitchUsername: 'host_channel',
+        displayName: 'HostChannel',
+        channelUrl: 'https://www.twitch.tv/host_channel',
+        isLive: true,
+        viewerCount: 311,
+        thumbnailUrl: 'https://example.com/live.jpg',
+        offlineImageUrl: 'https://example.com/offline.jpg',
+        profileImageUrl: 'https://example.com/profile.jpg',
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    renderDetail();
+
+    expect(screen.getByTestId('tournament-twitch-panel')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'LIVE' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'CHAT' })).toBeInTheDocument();
+    expect(screen.getByTitle('HostChannel Twitch live')).toBeInTheDocument();
+    expect(screen.getByText('311 viewers')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /player/i })).toBeInTheDocument();
+  });
+
+  it('shows the offline Twitch fallback without viewer count when the creator is offline', () => {
+    detailState.data = tournamentFixture({
+      creator: {
+        user_id: 'creator-1',
+        username: 'HostChannel',
+        avatar_url: null,
+        discord_avatar_url: null,
+        twitch_username: 'host_channel',
+      },
+    });
+    streamStatusState.value = {
+      data: {
+        twitchUsername: 'host_channel',
+        displayName: 'HostChannel',
+        channelUrl: 'https://www.twitch.tv/host_channel',
+        isLive: false,
+        viewerCount: null,
+        thumbnailUrl: null,
+        offlineImageUrl: 'https://example.com/offline.jpg',
+        profileImageUrl: 'https://example.com/profile.jpg',
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    renderDetail();
+
+    expect(screen.getByText('OFFLINE')).toBeInTheDocument();
+    expect(screen.getByText('Channel currently offline')).toBeInTheDocument();
+    expect(screen.queryByText(/viewers/i)).toBeNull();
+  });
+
+  it('renders the Twitch chat iframe for viewers who linked Twitch', () => {
+    authState.value = {
+      ...authState.value,
+      profile: {
+        ...authState.value.profile,
+        twitch_username: 'viewer_channel',
+      },
+    };
+    detailState.data = tournamentFixture({
+      creator: {
+        user_id: 'creator-1',
+        username: 'HostChannel',
+        avatar_url: null,
+        discord_avatar_url: null,
+        twitch_username: 'host_channel',
+      },
+    });
+    streamStatusState.value = {
+      data: {
+        twitchUsername: 'host_channel',
+        displayName: 'HostChannel',
+        channelUrl: 'https://www.twitch.tv/host_channel',
+        isLive: false,
+        viewerCount: null,
+        thumbnailUrl: null,
+        offlineImageUrl: 'https://example.com/offline.jpg',
+        profileImageUrl: 'https://example.com/profile.jpg',
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    renderDetail();
+    fireEvent.click(screen.getByRole('button', { name: 'CHAT' }));
+
+    expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
+    expect(screen.queryByTestId('tournament-twitch-chat-locked')).toBeNull();
+  });
+
+  it('locks the Twitch chat tab for viewers without Twitch linked on the site', () => {
+    detailState.data = tournamentFixture({
+      creator: {
+        user_id: 'creator-1',
+        username: 'HostChannel',
+        avatar_url: null,
+        discord_avatar_url: null,
+        twitch_username: 'host_channel',
+      },
+    });
+    streamStatusState.value = {
+      data: {
+        twitchUsername: 'host_channel',
+        displayName: 'HostChannel',
+        channelUrl: 'https://www.twitch.tv/host_channel',
+        isLive: false,
+        viewerCount: null,
+        thumbnailUrl: null,
+        offlineImageUrl: 'https://example.com/offline.jpg',
+        profileImageUrl: 'https://example.com/profile.jpg',
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    renderDetail();
+    fireEvent.click(screen.getByRole('button', { name: 'CHAT' }));
+
+    expect(screen.getByTestId('tournament-twitch-chat-locked')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Connect Twitch' })).toHaveAttribute('href', '/profile?tab=connections');
   });
 
   it('opens the rules overlay from the Figma rules button', () => {

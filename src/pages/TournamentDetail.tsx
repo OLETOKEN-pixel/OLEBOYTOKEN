@@ -5,6 +5,7 @@ import { FooterSection } from '@/components/home/sections/FooterSection';
 import { TournamentDetailHeader } from '@/components/tournaments/TournamentDetailHeader';
 import { TournamentRegisterOverlay } from '@/components/tournaments/TournamentRegisterOverlay';
 import { TournamentRulesOverlay } from '@/components/tournaments/TournamentRulesOverlay';
+import { TournamentTwitchPanel } from '@/components/tournaments/TournamentTwitchPanel';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import {
   TournamentTeamsTable,
@@ -126,6 +127,7 @@ export default function TournamentDetail() {
       tournament={tournament}
       currentUserId={user?.id ?? null}
       isAdmin={profile?.role === 'admin'}
+      viewerHasTwitchLink={Boolean(profile?.twitch_username)}
       busy={busy}
       onRegister={async (teamId) => {
         try {
@@ -185,6 +187,7 @@ interface ContentProps {
   tournament: Tournament;
   currentUserId: string | null;
   isAdmin: boolean;
+  viewerHasTwitchLink: boolean;
   busy: boolean;
   onRegister: (teamId?: string) => Promise<void>;
   onStart: () => Promise<void>;
@@ -196,6 +199,7 @@ function TournamentDetailContent({
   tournament: t,
   currentUserId,
   isAdmin,
+  viewerHasTwitchLink,
   busy,
   onRegister,
   onStart,
@@ -219,6 +223,8 @@ function TournamentDetailContent({
   const headerTitle = `${t.team_size}V${t.team_size} ${t.mode.toUpperCase().replace(/\s+/g, '')}`;
   const rosterLabel = isTeamTournament ? `TEAMS (${participantCount})` : `PLAYERS (${participantCount})`;
   const mapCode = getModeRules(t.mode).mapCode;
+  const creatorTwitchUsername = t.creator?.twitch_username?.trim() || null;
+  const hasCreatorTwitch = Boolean(creatorTwitchUsername);
   const canRegister = !!currentUserId && t.status === 'registering' && !alreadyJoined;
   const canStart = (isCreator || isAdmin) && t.status === 'registering' && participantCount >= 2;
   const canCancel = (isCreator || isAdmin) && (t.status === 'registering' || t.status === 'ready_up');
@@ -317,6 +323,14 @@ function TournamentDetailContent({
               }
               registerDisabled={!canRegister || busy}
               onRegister={() => setRegisterOpen(true)}
+              twitchPanel={
+                hasCreatorTwitch ? (
+                  <TournamentTwitchPanel
+                    twitchUsername={creatorTwitchUsername!}
+                    viewerHasTwitchLink={viewerHasTwitchLink}
+                  />
+                ) : undefined
+              }
             />
           </div>
 
@@ -343,7 +357,7 @@ function TournamentDetailContent({
             <PrizePodium tournament={t} />
           </div>
 
-          <div className="absolute left-1/2 top-[815px] -translate-x-1/2">
+          <div className={`absolute left-1/2 -translate-x-1/2 ${hasCreatorTwitch ? 'top-[932px]' : 'top-[815px]'}`}>
             <button
               type="button"
               className="flex h-[65px] w-[292px] items-center justify-center gap-[20px] rounded-[50px] border border-[#ff1654] bg-[rgba(255,22,84,0.23)] text-[32px] leading-none text-white shadow-[inset_0px_-4px_4px_rgba(0,0,0,0.25),inset_0px_4px_4px_rgba(255,255,255,0.14)] transition hover:brightness-110"
@@ -502,7 +516,7 @@ function TournamentHeroMeta({
   duration: string;
   onCopyMapCode: () => void;
 }) {
-  const matchTimeLabel = duration ? `${matchTime} • ${duration}` : matchTime;
+  const matchTimeLabel = duration ? `${matchTime} / ${duration}` : matchTime;
 
   return (
     <div className="absolute left-0 top-[137px] h-[150px] w-[951px]">

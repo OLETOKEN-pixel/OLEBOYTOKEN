@@ -1764,6 +1764,7 @@ export type Database = {
           id: string | null
           preferred_platform: string | null
           preferred_region: string | null
+          twitch_username: string | null
           user_id: string | null
           username: string | null
         }
@@ -1776,6 +1777,7 @@ export type Database = {
           id?: string | null
           preferred_platform?: string | null
           preferred_region?: string | null
+          twitch_username?: string | null
           user_id?: string | null
           username?: string | null
         }
@@ -1788,6 +1790,7 @@ export type Database = {
           id?: string | null
           preferred_platform?: string | null
           preferred_region?: string | null
+          twitch_username?: string | null
           user_id?: string | null
           username?: string | null
         }

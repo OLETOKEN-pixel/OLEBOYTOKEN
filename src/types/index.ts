@@ -91,6 +91,7 @@ export interface ProfileSummary {
   discord_avatar_url?: string | null;
   epic_username?: string | null;
   discord_display_name?: string | null;
+  twitch_username?: string | null;
 }
 
 export type WithdrawalStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'failed' | 'completed';
