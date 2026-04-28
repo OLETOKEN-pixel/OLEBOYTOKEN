@@ -8,7 +8,6 @@ import {
   FigmaPillButton,
   FONTS,
   TOURNAMENT_ASSETS,
-  TournamentBottomNeon,
   TournamentPageShell,
   TournamentTitle,
 } from '@/components/tournaments/TournamentDesign';
@@ -24,7 +23,7 @@ export default function Tournaments() {
 
   return (
     <PublicLayout>
-      <TournamentPageShell minHeight={955} contentClassName="pb-[170px] pt-[156px]">
+      <TournamentPageShell minHeight={955} bottomNeonTop={809} contentClassName="pb-[170px] pt-[156px]">
         <TournamentTitle outlineWidth={806}>TOURNAMENTS</TournamentTitle>
 
         <div className="mt-[26px] flex min-h-[47px] flex-wrap items-center gap-[12px]">
@@ -73,7 +72,6 @@ export default function Tournaments() {
             ))
           )}
         </div>
-        <TournamentBottomNeon />
       </TournamentPageShell>
       <CreateTournamentOverlay open={createOpen} onClose={() => setCreateOpen(false)} />
     </PublicLayout>
@@ -83,7 +81,7 @@ export default function Tournaments() {
 function StatusMessage({ children }: { children: ReactNode }) {
   return (
     <p
-      className="col-span-full rounded-[18px] border border-[#ff1654]/35 bg-[#282828] px-6 py-8 text-center text-[22px] text-white/65"
+      className="col-span-full flex h-[120px] w-[300px] items-center text-[20px] text-white/45"
       style={{ fontFamily: FONTS.expanded }}
     >
       {children}

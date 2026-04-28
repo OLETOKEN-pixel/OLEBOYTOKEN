@@ -63,6 +63,8 @@ export function TournamentCard({ tournament: t }: TournamentCardProps) {
   const date = formatDate(t.scheduled_start_at);
   const time = formatTime(t.scheduled_start_at);
   const opensIn = formatOpensIn(t.scheduled_start_at);
+  const opensInMs = t.scheduled_start_at ? new Date(t.scheduled_start_at).getTime() - Date.now() : 0;
+  const showOpensIn = t.status === 'registering' && opensInMs > 0;
   const entryFee = Number(t.entry_fee) === 0 ? 'Free' : Number(t.entry_fee).toFixed(2);
   const prizePool = Number(t.prize_pool_total).toFixed(2);
   const playersRegistered = `${participantCount}/${t.max_participants}`;
@@ -97,7 +99,7 @@ export function TournamentCard({ tournament: t }: TournamentCardProps) {
         data-testid="tournament-card"
       >
         <h2
-          className="absolute left-1/2 top-[9px] w-[280px] -translate-x-1/2 truncate text-center text-[32px] leading-none"
+          className="absolute left-1/2 top-[17px] max-w-none -translate-x-1/2 whitespace-nowrap text-center text-[32px] leading-none tracking-[-0.035em]"
           style={{ fontFamily: FONTS.wideBlack }}
         >
           {title}
@@ -110,8 +112,15 @@ export function TournamentCard({ tournament: t }: TournamentCardProps) {
           aria-hidden="true"
         />
 
-        <Metric label="Date" value={date} detail={time} left={38} top={90} />
-        <Metric label="Opens in" value={opensIn} left={162} top={90} />
+        <Metric
+          label="Date"
+          value={showOpensIn ? date : `${date}${time ? ` ${time}` : ''}`}
+          detail={showOpensIn ? time : undefined}
+          left={38}
+          top={showOpensIn ? 90 : 97}
+          width={showOpensIn ? 112 : 168}
+        />
+        {showOpensIn ? <Metric label="Opens in" value={opensIn} left={162} top={90} /> : null}
 
         <p className="absolute left-[38px] top-[179px] text-[20px] leading-none" style={{ fontFamily: FONTS.regular }}>
           Entry fee
@@ -164,12 +173,14 @@ function Metric({
   detail,
   left,
   top,
+  width = 112,
 }: {
   label: string;
   value: string;
   detail?: string;
   left: number;
   top: number;
+  width?: number;
 }) {
   return (
     <>
@@ -180,8 +191,8 @@ function Metric({
         {label}
       </p>
       <p
-        className="absolute w-[112px] text-[24px] leading-[1.04]"
-        style={{ left, top: top + 27, fontFamily: FONTS.bold }}
+        className="absolute text-[24px] leading-[1.04]"
+        style={{ left, top: top + 27, width, fontFamily: FONTS.bold }}
       >
         {value}
         {detail ? (

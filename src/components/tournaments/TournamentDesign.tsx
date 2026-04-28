@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 export const TOURNAMENT_ASSETS = {
-  neon: '/figma-assets/figma-neon.png',
+  neon: '/figma-assets/tournaments/bottom-neon.png',
   triangles: '/figma-assets/tournaments/triangles.svg',
   trianglesCard: '/figma-assets/tournaments/triangles-card.svg',
   outline: '/figma-assets/tournaments/outline.svg',
@@ -48,11 +48,13 @@ export function TournamentPageShell({
   className,
   contentClassName,
   minHeight = 955,
+  bottomNeonTop,
 }: {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
   minHeight?: number;
+  bottomNeonTop?: number;
 }) {
   return (
     <section
@@ -65,6 +67,7 @@ export function TournamentPageShell({
         alt=""
         aria-hidden="true"
       />
+      {bottomNeonTop === undefined ? null : <TournamentBottomNeon top={bottomNeonTop} />}
       <div
         className={cn('relative z-10 mx-auto w-[min(1532px,calc(100%_-_48px))]', contentClassName)}
       >
@@ -119,7 +122,7 @@ export function TournamentTitle({
         {children}
       </h1>
       <img
-        className="absolute left-[59px] top-[168px] h-[18px] max-w-none object-fill"
+        className="absolute left-[67px] top-[168px] h-[16px] max-w-none object-fill"
         style={{ width: outlineWidth }}
         src={TOURNAMENT_ASSETS.outline}
         alt=""
@@ -144,9 +147,9 @@ export function FigmaPillButton({
     <button
       type={type}
       className={cn(
-        'inline-flex h-[47px] items-center justify-center rounded-[16px] border border-white/50 px-5 text-center text-[24px] leading-none text-white transition hover:brightness-110 disabled:cursor-default disabled:opacity-50',
+        'inline-flex h-[47px] items-center justify-center whitespace-nowrap rounded-[16px] border border-white/50 px-5 text-center text-[24px] leading-none text-white transition hover:brightness-110 disabled:cursor-default disabled:opacity-50',
         pink ? 'bg-[#ff1654]' : 'bg-[#3d3d3d]',
-        active && 'border-[#ff1654] bg-[rgba(255,22,84,0.2)]',
+        active && !pink && 'bg-[#3d3d3d]',
         className,
       )}
       style={{ fontFamily: FONTS.expanded, ...props.style }}

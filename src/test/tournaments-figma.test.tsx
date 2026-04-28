@@ -206,7 +206,7 @@ describe('Tournaments Figma rebuild', () => {
     expect(screen.getByRole('button', { name: 'Past Tournamets' })).toHaveClass('w-[293px]');
     expect(document.querySelector('img[src="/figma-assets/tournaments/triangles.svg"]')).not.toBeNull();
     expect(document.querySelector('img[src="/figma-assets/tournaments/outline.svg"]')).not.toBeNull();
-    expect(document.querySelector('img[src="/figma-assets/figma-neon.png"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/tournaments/bottom-neon.png"]')).not.toBeNull();
 
     const card = screen.getByTestId('tournament-card');
     expect(card).toHaveClass('h-[400px]');
