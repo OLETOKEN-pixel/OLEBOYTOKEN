@@ -55,6 +55,14 @@ type CreatorWithOptionalTwitch = Tournament['creator'] & {
   twitch_username?: string | null;
 };
 
+type PlayerProfileViewRpcPayload = {
+  success?: boolean;
+  profile?: {
+    user_id?: string | null;
+    twitch_username?: string | null;
+  } | null;
+};
+
 function shouldRetryWithoutTwitchUsername(error: QueryErrorLike | null | undefined): boolean {
   if (!error) return false;
 
@@ -150,7 +158,34 @@ async function hydrateCreatorTwitchUsernames(tournaments: Tournament[]): Promise
 async function hydrateSingleCreatorTwitchUsername(tournament: Tournament | null): Promise<Tournament | null> {
   if (!tournament) return tournament;
   const [hydratedTournament] = await hydrateCreatorTwitchUsernames([tournament]);
-  return hydratedTournament ?? tournament;
+  const creatorId = hydratedTournament?.creator?.user_id ?? hydratedTournament?.creator_id ?? null;
+
+  if (!hydratedTournament || !creatorId || hydratedTournament.creator?.twitch_username) {
+    return hydratedTournament ?? tournament;
+  }
+
+  const { data, error } = await supabase.rpc('get_player_profile_view', {
+    p_user_id: creatorId,
+  });
+
+  if (error) {
+    return hydratedTournament;
+  }
+
+  const payload = (data ?? null) as PlayerProfileViewRpcPayload | null;
+  const rpcTwitchUsername = payload?.success ? payload.profile?.twitch_username?.trim() ?? null : null;
+
+  if (!rpcTwitchUsername || !hydratedTournament.creator) {
+    return hydratedTournament;
+  }
+
+  return {
+    ...hydratedTournament,
+    creator: {
+      ...hydratedTournament.creator,
+      twitch_username: rpcTwitchUsername,
+    },
+  };
 }
 
 export function useTournaments(filter: TournamentListFilter = 'live') {

@@ -10,6 +10,7 @@ const {
   fromMock,
   profilesInMock,
   removeChannelMock,
+  rpcMock,
 } = vi.hoisted(() => {
   const channel = {
     on: vi.fn(),
@@ -23,6 +24,7 @@ const {
     fromMock: vi.fn(),
     profilesInMock: vi.fn(),
     removeChannelMock: vi.fn(),
+    rpcMock: vi.fn(),
   };
 });
 
@@ -31,6 +33,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: fromMock,
     channel: vi.fn(() => channelBuilder),
     removeChannel: removeChannelMock,
+    rpc: rpcMock,
   },
 }));
 
@@ -100,6 +103,16 @@ describe('useTournaments fallback compatibility', () => {
     channelBuilder.subscribe.mockReturnValue(channelBuilder);
     profilesInMock.mockResolvedValue({
       data: [{ user_id: 'creator-1', twitch_username: 'host_channel' }],
+      error: null,
+    });
+    rpcMock.mockResolvedValue({
+      data: {
+        success: true,
+        profile: {
+          user_id: 'creator-1',
+          twitch_username: 'host_channel',
+        },
+      },
       error: null,
     });
   });
@@ -204,5 +217,49 @@ describe('useTournaments fallback compatibility', () => {
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
 
     consoleWarnSpy.mockRestore();
+  });
+
+  it('hydrates detail creator twitch username from player profile rpc when direct profile access is blocked', async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn(() => ({
+            in: vi.fn(() =>
+              Promise.resolve({
+                data: null,
+                error: {
+                  code: '42501',
+                  message: 'permission denied for table profiles',
+                },
+              }),
+            ),
+          })),
+        };
+      }
+
+      if (table !== 'tournaments') throw new Error(`Unexpected table ${table}`);
+
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(() =>
+              Promise.resolve({
+                data: tournamentFixture(),
+                error: null,
+              }),
+            ),
+          })),
+        })),
+      };
+    });
+
+    const { result } = renderHook(() => useTournament('tournament-1'), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith('get_player_profile_view', { p_user_id: 'creator-1' });
+    expect(result.current.data?.creator?.twitch_username).toBe('host_channel');
   });
 });
