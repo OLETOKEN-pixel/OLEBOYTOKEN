@@ -313,10 +313,10 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.queryByTestId('tournament-twitch-panel')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'CHAT' })).toBeNull();
+    expect(screen.queryByTestId('tournament-twitch-chat-frame')).toBeNull();
   });
 
-  it('renders the Twitch live panel for creators with Twitch and shows live viewers', () => {
+  it('renders the Twitch live and chat panels together for creators with Twitch and shows live viewers', () => {
     detailState.data = tournamentFixture({
       creator: {
         user_id: 'creator-1',
@@ -344,10 +344,12 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.getByTestId('tournament-twitch-panel')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'LIVE' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'CHAT' })).toBeInTheDocument();
+    expect(screen.getByTestId('tournament-detail-header')).toHaveClass('h-[720px]');
     expect(screen.getByTitle('HostChannel Twitch player')).toBeInTheDocument();
+    expect(screen.getByTitle('HostChannel Twitch chat')).toBeInTheDocument();
     expect(screen.getByText('311 viewers')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'LIVE' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'CHAT' })).toBeNull();
     expect(screen.getByRole('button', { name: /player/i })).toBeInTheDocument();
   });
 
@@ -380,6 +382,7 @@ describe('Tournaments Figma rebuild', () => {
 
     expect(screen.getByText('OFFLINE')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-live-frame')).toBeInTheDocument();
+    expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
     expect(screen.queryByText(/viewers/i)).toBeNull();
   });
 
@@ -403,6 +406,44 @@ describe('Tournaments Figma rebuild', () => {
 
     expect(screen.getByText('OFFLINE')).toBeInTheDocument();
     expect(screen.getByTestId('tournament-twitch-live-frame')).toBeInTheDocument();
+    expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
+  });
+
+  it('renders the Twitch chat iframe even when the viewer has not linked Twitch on the site', () => {
+    authState.value = {
+      ...authState.value,
+      profile: {
+        ...authState.value.profile,
+        twitch_username: null,
+      },
+    };
+    detailState.data = tournamentFixture({
+      creator: {
+        user_id: 'creator-1',
+        username: 'HostChannel',
+        avatar_url: null,
+        discord_avatar_url: null,
+        twitch_username: 'host_channel',
+      },
+    });
+    streamStatusState.value = {
+      data: {
+        twitchUsername: 'host_channel',
+        displayName: 'HostChannel',
+        channelUrl: 'https://www.twitch.tv/host_channel',
+        isLive: false,
+        viewerCount: null,
+        thumbnailUrl: null,
+        offlineImageUrl: 'https://example.com/offline.jpg',
+        profileImageUrl: 'https://example.com/profile.jpg',
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    renderDetail();
+
+    expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
   });
 
   it('renders the Twitch chat iframe for viewers who linked Twitch', () => {
@@ -438,42 +479,8 @@ describe('Tournaments Figma rebuild', () => {
     };
 
     renderDetail();
-    fireEvent.click(screen.getByRole('button', { name: 'CHAT' }));
 
     expect(screen.getByTestId('tournament-twitch-chat-frame')).toBeInTheDocument();
-    expect(screen.queryByTestId('tournament-twitch-chat-locked')).toBeNull();
-  });
-
-  it('locks the Twitch chat tab for viewers without Twitch linked on the site', () => {
-    detailState.data = tournamentFixture({
-      creator: {
-        user_id: 'creator-1',
-        username: 'HostChannel',
-        avatar_url: null,
-        discord_avatar_url: null,
-        twitch_username: 'host_channel',
-      },
-    });
-    streamStatusState.value = {
-      data: {
-        twitchUsername: 'host_channel',
-        displayName: 'HostChannel',
-        channelUrl: 'https://www.twitch.tv/host_channel',
-        isLive: false,
-        viewerCount: null,
-        thumbnailUrl: null,
-        offlineImageUrl: 'https://example.com/offline.jpg',
-        profileImageUrl: 'https://example.com/profile.jpg',
-      },
-      isLoading: false,
-      error: null,
-    };
-
-    renderDetail();
-    fireEvent.click(screen.getByRole('button', { name: 'CHAT' }));
-
-    expect(screen.getByTestId('tournament-twitch-chat-locked')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Connect Twitch' })).toHaveAttribute('href', '/profile?tab=connections');
   });
 
   it('opens the rules overlay from the Figma rules button', () => {

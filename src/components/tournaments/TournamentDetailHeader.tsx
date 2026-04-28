@@ -26,13 +26,13 @@ export function TournamentDetailHeader({
   return (
     <article
       className={`relative w-[951px] rounded-[18px] border-[1.462px] border-[#ff1654] bg-[#282828] text-white ${
-        hasTwitchPanel ? 'h-[581px]' : 'h-[473px]'
+        hasTwitchPanel ? 'h-[720px]' : 'h-[473px]'
       }`}
       data-testid="tournament-detail-header"
     >
       <h3
         className={`absolute left-[40px] whitespace-nowrap text-[56px] leading-[1] text-white ${
-          hasTwitchPanel ? 'top-[56px]' : 'top-[48px]'
+          hasTwitchPanel ? 'top-[42px]' : 'top-[48px]'
         }`}
         style={{
           fontFamily: FONTS.expandedBlack,
@@ -47,7 +47,7 @@ export function TournamentDetailHeader({
 
       <p
         className={`absolute right-[60px] whitespace-nowrap text-[16px] text-white ${
-          hasTwitchPanel ? 'top-[145px]' : 'top-[235px]'
+          hasTwitchPanel ? 'top-[132px]' : 'top-[235px]'
         }`}
         style={{ fontFamily: FONTS.expandedBlack }}
       >
@@ -56,7 +56,7 @@ export function TournamentDetailHeader({
 
       <div
         className={`absolute left-[40px] h-[25px] w-[851px] overflow-hidden rounded-[4px] bg-[#ff1654] ${
-          hasTwitchPanel ? 'top-[178px]' : 'top-[266px]'
+          hasTwitchPanel ? 'top-[166px]' : 'top-[266px]'
         }`}
       >
         <div className="h-full bg-[rgba(119,254,92,0.79)]" style={{ width: `${greenWidth}%` }} />
@@ -64,7 +64,7 @@ export function TournamentDetailHeader({
 
       <p
         className={`absolute left-[40px] whitespace-nowrap text-[15px] ${
-          hasTwitchPanel ? 'top-[214px]' : 'top-[315px]'
+          hasTwitchPanel ? 'top-[202px]' : 'top-[315px]'
         }`}
         style={{ fontFamily: FONTS.expanded }}
       >
@@ -76,7 +76,7 @@ export function TournamentDetailHeader({
         onClick={onRegister}
         disabled={registerDisabled}
         className={`absolute left-1/2 flex h-[44px] w-[247px] -translate-x-1/2 items-center justify-center rounded-[8px] bg-[#ff1654] text-[20px] leading-none text-white transition hover:bg-[#e61450] disabled:cursor-default disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
-          hasTwitchPanel ? 'top-[246px]' : 'top-[388px]'
+          hasTwitchPanel ? 'top-[226px]' : 'top-[388px]'
         }`}
         style={{ fontFamily: FONTS.wideBlack }}
       >
@@ -84,7 +84,7 @@ export function TournamentDetailHeader({
       </button>
 
       {hasTwitchPanel ? (
-        <div className="absolute left-1/2 top-[286px] -translate-x-1/2">
+        <div className="absolute left-[40px] top-[300px]">
           {twitchPanel}
         </div>
       ) : null}

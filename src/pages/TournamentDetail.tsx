@@ -139,7 +139,6 @@ export default function TournamentDetail() {
       tournament={tournament}
       currentUserId={user?.id ?? null}
       isAdmin={profile?.role === 'admin'}
-      viewerHasTwitchLink={Boolean(profile?.twitch_username)}
       busy={busy}
       onRegister={async (teamId) => {
         try {
@@ -199,7 +198,6 @@ interface ContentProps {
   tournament: Tournament;
   currentUserId: string | null;
   isAdmin: boolean;
-  viewerHasTwitchLink: boolean;
   busy: boolean;
   onRegister: (teamId?: string) => Promise<void>;
   onStart: () => Promise<void>;
@@ -211,7 +209,6 @@ function TournamentDetailContent({
   tournament: t,
   currentUserId,
   isAdmin,
-  viewerHasTwitchLink,
   busy,
   onRegister,
   onStart,
@@ -304,7 +301,7 @@ function TournamentDetailContent({
         contentWidth="min(1748px, calc(100% - 48px))"
         contentClassName="pb-20"
       >
-        <div className="relative min-h-[955px]">
+        <div className={`relative ${hasCreatorTwitch ? 'min-h-[1086px]' : 'min-h-[955px]'}`}>
           <TournamentHeroMeta
             title={headerTitle}
             entry={Number(t.entry_fee) === 0 ? 'free' : Number(t.entry_fee).toFixed(2)}
@@ -339,14 +336,13 @@ function TournamentDetailContent({
                 hasCreatorTwitch ? (
                   <TournamentTwitchPanel
                     twitchUsername={creatorTwitchUsername!}
-                    viewerHasTwitchLink={viewerHasTwitchLink}
                   />
                 ) : undefined
               }
             />
           </div>
 
-          <div className="absolute right-0 top-[276px] flex w-[560px] flex-col items-center">
+          <div className={`absolute right-0 flex w-[560px] flex-col items-center ${hasCreatorTwitch ? 'top-[306px]' : 'top-[276px]'}`}>
             <div className="flex w-full items-center justify-end gap-[10px]">
               <TournamentActionButton
                 label="RULES"
@@ -369,7 +365,7 @@ function TournamentDetailContent({
             <PrizePodium tournament={t} />
           </div>
 
-          <div className={`absolute left-1/2 -translate-x-1/2 ${hasCreatorTwitch ? 'top-[932px]' : 'top-[815px]'}`}>
+          <div className={`absolute left-1/2 -translate-x-1/2 ${hasCreatorTwitch ? 'top-[1040px]' : 'top-[815px]'}`}>
             <button
               type="button"
               className="flex h-[65px] w-[292px] items-center justify-center gap-[20px] rounded-[50px] border border-[#ff1654] bg-[rgba(255,22,84,0.23)] text-[32px] leading-none text-white shadow-[inset_0px_-4px_4px_rgba(0,0,0,0.25),inset_0px_4px_4px_rgba(255,255,255,0.14)] transition hover:brightness-110"
