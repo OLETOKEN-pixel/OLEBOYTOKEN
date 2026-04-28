@@ -51,6 +51,10 @@ type QueryErrorLike = {
   hint?: string;
 };
 
+type CreatorWithOptionalTwitch = Tournament['creator'] & {
+  twitch_username?: string | null;
+};
+
 function shouldRetryWithoutTwitchUsername(error: QueryErrorLike | null | undefined): boolean {
   if (!error) return false;
 
@@ -66,6 +70,11 @@ function warnLegacyTournamentCreatorFallback() {
   console.warn(
     '[tournaments] profiles_public.twitch_username is unavailable; falling back to legacy tournament creator select.',
   );
+}
+
+function warnCreatorTwitchHydrationFailure(error: QueryErrorLike | null | undefined) {
+  const message = error?.message ?? 'Unknown error';
+  console.warn(`[tournaments] Unable to hydrate creator twitch usernames from profiles: ${message}`);
 }
 
 async function runTournamentListQuery(filter: TournamentListFilter, select: string) {
@@ -91,6 +100,59 @@ async function runTournamentDetailQuery(id: string, select: string) {
     .maybeSingle();
 }
 
+function withCreatorTwitchUsername(tournament: Tournament, twitchUsernameByUserId: Map<string, string | null>): Tournament {
+  const creatorId = tournament.creator?.user_id ?? tournament.creator_id;
+  if (!creatorId || !tournament.creator) return tournament;
+
+  if (!twitchUsernameByUserId.has(creatorId)) {
+    return tournament;
+  }
+
+  const creator: CreatorWithOptionalTwitch = tournament.creator;
+  return {
+    ...tournament,
+    creator: {
+      ...creator,
+      twitch_username: twitchUsernameByUserId.get(creatorId) ?? null,
+    },
+  };
+}
+
+async function hydrateCreatorTwitchUsernames(tournaments: Tournament[]): Promise<Tournament[]> {
+  const creatorIds = [...new Set(
+    tournaments
+      .filter((tournament) => !tournament.creator?.twitch_username)
+      .map((tournament) => tournament.creator?.user_id ?? tournament.creator_id)
+      .filter((creatorId): creatorId is string => Boolean(creatorId)),
+  )];
+
+  if (creatorIds.length === 0) {
+    return tournaments;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, twitch_username')
+    .in('user_id', creatorIds);
+
+  if (error) {
+    warnCreatorTwitchHydrationFailure(error);
+    return tournaments;
+  }
+
+  const twitchUsernameByUserId = new Map<string, string | null>(
+    (data ?? []).map((profile) => [profile.user_id, profile.twitch_username ?? null]),
+  );
+
+  return tournaments.map((tournament) => withCreatorTwitchUsername(tournament, twitchUsernameByUserId));
+}
+
+async function hydrateSingleCreatorTwitchUsername(tournament: Tournament | null): Promise<Tournament | null> {
+  if (!tournament) return tournament;
+  const [hydratedTournament] = await hydrateCreatorTwitchUsernames([tournament]);
+  return hydratedTournament ?? tournament;
+}
+
 export function useTournaments(filter: TournamentListFilter = 'live') {
   const queryClient = useQueryClient();
 
@@ -105,7 +167,7 @@ export function useTournaments(filter: TournamentListFilter = 'live') {
       }
 
       if (error) throw error;
-      return (data ?? []) as unknown as Tournament[];
+      return await hydrateCreatorTwitchUsernames((data ?? []) as unknown as Tournament[]);
     },
   });
 
@@ -145,7 +207,7 @@ export function useTournament(id: string | undefined) {
       }
 
       if (error) throw error;
-      return data as unknown as Tournament | null;
+      return await hydrateSingleCreatorTwitchUsername(data as unknown as Tournament | null);
     },
   });
 

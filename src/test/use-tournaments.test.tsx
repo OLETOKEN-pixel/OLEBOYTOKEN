@@ -8,6 +8,7 @@ import type { Tournament } from '@/types';
 const {
   channelBuilder,
   fromMock,
+  profilesInMock,
   removeChannelMock,
 } = vi.hoisted(() => {
   const channel = {
@@ -20,6 +21,7 @@ const {
   return {
     channelBuilder: channel,
     fromMock: vi.fn(),
+    profilesInMock: vi.fn(),
     removeChannelMock: vi.fn(),
   };
 });
@@ -96,6 +98,10 @@ describe('useTournaments fallback compatibility', () => {
     vi.clearAllMocks();
     channelBuilder.on.mockReturnValue(channelBuilder);
     channelBuilder.subscribe.mockReturnValue(channelBuilder);
+    profilesInMock.mockResolvedValue({
+      data: [{ user_id: 'creator-1', twitch_username: 'host_channel' }],
+      error: null,
+    });
   });
 
   it('falls back to the legacy detail select when profiles_public lacks twitch_username', async () => {
@@ -103,6 +109,14 @@ describe('useTournaments fallback compatibility', () => {
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     fromMock.mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn(() => ({
+            in: profilesInMock,
+          })),
+        };
+      }
+
       if (table !== 'tournaments') throw new Error(`Unexpected table ${table}`);
 
       return {
@@ -134,7 +148,8 @@ describe('useTournaments fallback compatibility', () => {
     expect(selections[0]).toContain('twitch_username');
     expect(selections[1]).not.toContain('twitch_username');
     expect(result.current.data?.id).toBe('tournament-1');
-    expect(result.current.data?.creator?.twitch_username).toBeUndefined();
+    expect(result.current.data?.creator?.twitch_username).toBe('host_channel');
+    expect(profilesInMock).toHaveBeenCalledWith('user_id', ['creator-1']);
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
 
     consoleWarnSpy.mockRestore();
@@ -145,6 +160,14 @@ describe('useTournaments fallback compatibility', () => {
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     fromMock.mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn(() => ({
+            in: profilesInMock,
+          })),
+        };
+      }
+
       if (table !== 'tournaments') throw new Error(`Unexpected table ${table}`);
 
       return {
@@ -176,6 +199,8 @@ describe('useTournaments fallback compatibility', () => {
     expect(selections[0]).toContain('twitch_username');
     expect(selections[1]).not.toContain('twitch_username');
     expect(result.current.data?.map((tournament) => tournament.id)).toEqual(['tournament-1']);
+    expect(result.current.data?.[0]?.creator?.twitch_username).toBe('host_channel');
+    expect(profilesInMock).toHaveBeenCalledWith('user_id', ['creator-1']);
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
 
     consoleWarnSpy.mockRestore();
