@@ -257,9 +257,9 @@ function InlineCustomSelection({
     return (
       <SelectionButton
         active={false}
-        label="set custom"
+        label="CUSTOM"
         onClick={onActivate}
-        className={className}
+        className={cn('text-[20px] tracking-[0.14em]', className)}
       />
     );
   }
@@ -282,8 +282,8 @@ function InlineCustomSelection({
         value={value}
         onChange={(event) => onChange(event.target.value.replace(/[^\d]/g, ''))}
         inputMode="numeric"
-        placeholder="set custom"
-        className="w-full bg-transparent text-center text-[28px] text-white outline-none placeholder:text-white"
+        placeholder="VALUE"
+        className="w-full appearance-none border-0 bg-transparent text-center text-[28px] text-white outline-none ring-0 placeholder:text-white/55 focus:border-0 focus:outline-none focus:ring-0"
         style={{ fontFamily: FONT_EXPANDED_BOLD }}
       />
     </div>
@@ -346,7 +346,7 @@ function FigmaTextInput({
         onChange={(event) => onChange(event.target.value)}
         inputMode={inputMode}
         placeholder={placeholder}
-        className="w-full bg-transparent text-[28px] text-white outline-none placeholder:text-white/36"
+        className="w-full appearance-none border-0 bg-transparent text-[28px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
         style={{ fontFamily: FONT_EXPANDED_BOLD }}
       />
     </FigmaField>
@@ -367,7 +367,7 @@ function FigmaSelectField({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-full w-full appearance-none bg-transparent text-[28px] text-white outline-none"
+        className="h-full w-full appearance-none border-0 bg-transparent text-[28px] text-white outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0"
         style={{ fontFamily: FONT_EXPANDED_BOLD }}
       >
         {options.map((option) => (
@@ -819,22 +819,9 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     </div>
   );
 
-  const renderAdminBanner = () =>
-    isAdmin ? (
-      <div
-        className="flex h-[46px] items-center gap-3 rounded-[18px] border border-emerald-500/30 bg-emerald-500/10 px-5 text-[16px] text-emerald-200"
-        style={{ fontFamily: FONT_REGULAR }}
-      >
-        <ShieldCheck className="h-4 w-4 shrink-0" />
-        Admin mode: your wallet will not be debited for the tournament seed.
-      </div>
-    ) : null;
-
   const renderDetailsStep = () => (
     <div className="mt-[28px] flex flex-1 flex-col">
-      {renderAdminBanner()}
-
-      <div className={cn('space-y-[26px]', isAdmin ? 'mt-[18px]' : '')}>
+      <div className="space-y-[26px]">
         <section>
           <FigmaSectionLabel>Tournament name:</FigmaSectionLabel>
           <FigmaTextInput
@@ -914,9 +901,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
 
   const renderPrizeStep = () => (
     <div className="mt-[28px] flex flex-1 flex-col">
-      {renderAdminBanner()}
-
-      <div className={cn('space-y-[24px]', isAdmin ? 'mt-[16px]' : '')}>
+      <div className="space-y-[24px]">
         <div className="grid grid-cols-[minmax(0,1fr)_270px] gap-[26px]">
           <section>
             <FigmaSectionLabel>{`Prize pool${!isAdmin ? ` (balance ${balance.toFixed(2)})` : ''}:`}</FigmaSectionLabel>
@@ -946,7 +931,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                 rows={5}
                 maxLength={2000}
                 placeholder="Map rules, banned weapons, or schedule notes."
-                className="h-[118px] w-full resize-none bg-transparent text-[18px] text-white outline-none placeholder:text-white/36"
+                className="h-[118px] w-full resize-none appearance-none border-0 bg-transparent text-[18px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
                 style={{ fontFamily: FONT_REGULAR }}
               />
             </div>
@@ -1009,7 +994,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                   min="0"
                   value={row.amount}
                   onChange={(event) => updateRowAmount(idx, event.target.value)}
-                  className="mt-[8px] w-full bg-transparent text-[30px] text-white outline-none placeholder:text-white/36"
+                  className="mt-[8px] w-full appearance-none border-0 bg-transparent text-[30px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
                   style={{ fontFamily: FONT_EXPANDED_BOLD }}
                 />
                 <p className="mt-1 text-[14px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>

@@ -87,7 +87,7 @@ describe('CreateTournamentOverlay', () => {
     renderOverlay();
 
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
-    fireEvent.click(screen.getAllByRole('button', { name: 'set custom' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'CUSTOM' })[0]);
 
     const inlineInput = screen.getByLabelText('Custom first to');
 
