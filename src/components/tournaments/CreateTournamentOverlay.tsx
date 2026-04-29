@@ -199,23 +199,26 @@ function FooterAction({
   onClick,
   disabled,
   loading,
+  compact,
 }: {
   label: 'NEXT STEP' | 'CREATE TOURNAMENT';
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <div className="mt-auto pt-[20px]">
-      <div className="mx-auto h-px w-[589px] bg-white/60" />
-      <div className="mt-[19px] flex justify-center">
+    <div className={cn('mt-auto', compact ? 'pt-[10px]' : 'pt-[20px]')}>
+      <div className={cn('mx-auto h-px bg-white/60', compact ? 'w-[560px]' : 'w-[589px]')} />
+      <div className={cn('flex justify-center', compact ? 'mt-[12px]' : 'mt-[19px]')}>
         <button
           type="button"
           onClick={onClick}
           disabled={disabled || loading}
           className={cn(
-            'inline-flex h-[69px] items-center justify-center gap-3 rounded-[23px] bg-[#ff1654] px-8 text-[36px] text-white transition-all duration-200',
-            label === 'NEXT STEP' ? 'w-[361px]' : 'w-[495px]',
+            'inline-flex items-center justify-center gap-3 rounded-[23px] bg-[#ff1654] px-8 text-white transition-all duration-200',
+            compact ? 'h-[60px] text-[32px]' : 'h-[69px] text-[36px]',
+            label === 'NEXT STEP' ? 'w-[361px]' : compact ? 'w-[455px]' : 'w-[495px]',
             (disabled || loading) && 'cursor-not-allowed opacity-45',
           )}
           style={{ fontFamily: FONT_WIDE_BLACK }}
@@ -900,8 +903,8 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
   );
 
   const renderPrizeStep = () => (
-    <div className="mt-[18px] flex flex-1 flex-col">
-      <div className="space-y-[18px]">
+    <div className="mt-[12px] flex flex-1 flex-col">
+      <div className="space-y-[14px]">
         <section>
           <FigmaSectionLabel>{`Prize pool${!isAdmin ? ` (balance ${balance.toFixed(2)})` : ''}:`}</FigmaSectionLabel>
           <FigmaTextInput
@@ -910,7 +913,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
             step="0.01"
             value={prizePool}
             onChange={setPrizePool}
-            className={cn('mt-[8px]', insufficientBalance && 'border-red-500')}
+            className={cn('mt-[6px]', insufficientBalance && 'border-red-500')}
             testId="tournament-prize-pool-field"
           />
           {insufficientBalance && (
@@ -923,14 +926,14 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
 
         <section>
           <FigmaSectionLabel>Prize preset:</FigmaSectionLabel>
-          <div className="mt-[8px] grid grid-cols-3 gap-[14px]">
+          <div className="mt-[6px] grid grid-cols-3 gap-[12px]">
             {TOURNAMENT_PRIZE_PRESETS.map((preset, idx) => (
               <SelectionButton
                 key={preset.label}
                 active={activePresetIdx === idx}
                 label={preset.label.toUpperCase()}
                 onClick={() => applyPreset(idx)}
-                className="h-[58px] px-3 text-[18px] leading-[1.02]"
+                className="h-[54px] px-3 text-[17px] leading-[1.02]"
               />
             ))}
           </div>
@@ -942,7 +945,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
             <button
               type="button"
               onClick={addRow}
-              className="inline-flex h-[40px] items-center gap-2 rounded-[14px] border border-[#ff1654] bg-[rgba(255,22,84,0.18)] px-4 text-[15px] text-white transition-colors hover:bg-[rgba(255,22,84,0.28)]"
+              className="inline-flex h-[36px] items-center gap-2 rounded-[14px] border border-[#ff1654] bg-[rgba(255,22,84,0.18)] px-4 text-[14px] text-white transition-colors hover:bg-[rgba(255,22,84,0.28)]"
               style={{ fontFamily: FONT_EXPANDED_BOLD }}
             >
               <Plus className="h-4 w-4" />
@@ -950,7 +953,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
             </button>
           </div>
 
-          <div className="mt-[4px] text-right text-[14px]" style={{ fontFamily: FONT_REGULAR }}>
+          <div className="mt-[2px] text-right text-[13px]" style={{ fontFamily: FONT_REGULAR }}>
             <div className="text-white/70">
               Sum <span className="text-white">{prizeRowsSum.toFixed(2)}</span> / {seedNum.toFixed(2)}
             </div>
@@ -960,14 +963,14 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
           </div>
 
           <div
-            className="mt-[10px] grid gap-[12px]"
+            className="mt-[8px] grid gap-[10px]"
             data-testid="prize-distribution-grid"
             style={{ gridTemplateColumns: `repeat(${Math.min(prizeRows.length, 5)}, minmax(0, 1fr))` }}
           >
             {prizeRows.map((row, idx) => (
               <div
                 key={`${row.position}-${idx}`}
-                className="rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] px-3 py-3"
+                className="rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] px-3 py-[10px]"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] uppercase tracking-[0.12em] text-white/55" style={{ fontFamily: FONT_EXPANDED }}>
@@ -991,10 +994,10 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                   min="0"
                   value={row.amount}
                   onChange={(event) => updateRowAmount(idx, event.target.value)}
-                  className="mt-[8px] w-full appearance-none border-0 bg-transparent text-[26px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
+                  className="mt-[6px] w-full appearance-none border-0 bg-transparent text-[24px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
                   style={{ fontFamily: FONT_EXPANDED_BOLD }}
                 />
-                <p className="mt-1 text-[12px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>
+                <p className="mt-[2px] text-[11px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>
                   coins
                 </p>
               </div>
@@ -1008,6 +1011,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
         onClick={handleSubmit}
         disabled={!canSubmit}
         loading={createMutation.isPending}
+        compact
       />
     </div>
   );
