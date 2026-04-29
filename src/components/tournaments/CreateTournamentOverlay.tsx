@@ -13,7 +13,7 @@ import {
   type Region,
 } from '@/types';
 
-type CreateStep = 'game' | 'tokens' | 'finalize';
+type CreateStep = 'game' | 'tokens' | 'details';
 
 interface PrizeRow {
   position: number;
@@ -165,14 +165,15 @@ function StepTabs({
   activeStep,
   onSelect,
 }: {
-  activeStep: 'game' | 'tokens';
-  onSelect: (step: 'game' | 'tokens') => void;
+  activeStep: CreateStep;
+  onSelect: (step: CreateStep) => void;
 }) {
   return (
-    <div className="mt-[35px] flex items-center justify-center gap-[150px]" role="tablist" aria-label="Create tournament steps">
+    <div className="mt-[35px] flex items-center justify-center gap-[96px]" role="tablist" aria-label="Create tournament steps">
       {[
         { id: 'game' as const, label: 'GAME' },
         { id: 'tokens' as const, label: 'TOKENS' },
+        { id: 'details' as const, label: 'DETAILS' },
       ].map((tab) => {
         const isActive = activeStep === tab.id;
 
@@ -237,36 +238,59 @@ function FooterAction({
   );
 }
 
-function CustomInput({
-  label,
-  value,
-  onChange,
-  suffix,
-}: {
-  label: string;
+interface InlineCustomSelectionProps {
+  active: boolean;
   value: string;
+  onActivate: () => void;
   onChange: (value: string) => void;
-  suffix?: string;
-}) {
+  ariaLabel: string;
+  className?: string;
+  testId?: string;
+}
+
+function InlineCustomSelection({
+  active,
+  value,
+  onActivate,
+  onChange,
+  ariaLabel,
+  className,
+  testId,
+}: InlineCustomSelectionProps) {
+  if (!active) {
+    return (
+      <SelectionButton
+        active={false}
+        label="set custom"
+        onClick={onActivate}
+        className={className}
+      />
+    );
+  }
+
   return (
-    <label className="mt-[12px] flex items-center gap-3 rounded-[18px] border border-[#ff1654]/30 bg-black/25 px-4 py-3">
-      <span className="text-[14px] uppercase tracking-[0.12em] text-white/55" style={{ fontFamily: FONT_EXPANDED }}>
-        {label}
-      </span>
+    <div
+      className={cn(
+        'flex h-[59px] items-center rounded-[18px] border border-[#ff1654] bg-[rgba(255,22,84,0.34)] px-6',
+        className,
+      )}
+      data-testid={testId}
+      onClick={(event) => {
+        const input = event.currentTarget.querySelector('input');
+        input?.focus();
+      }}
+    >
       <input
+        aria-label={ariaLabel}
+        autoFocus
         value={value}
         onChange={(event) => onChange(event.target.value.replace(/[^\d]/g, ''))}
         inputMode="numeric"
-        className="min-w-0 flex-1 bg-transparent text-right text-[24px] text-white outline-none placeholder:text-white/25"
-        placeholder="Type a value"
+        placeholder="set custom"
+        className="w-full bg-transparent text-center text-[28px] text-white outline-none placeholder:text-white"
         style={{ fontFamily: FONT_EXPANDED_BOLD }}
       />
-      {suffix ? (
-        <span className="text-[20px] text-white/60" style={{ fontFamily: FONT_EXPANDED_BOLD }}>
-          {suffix}
-        </span>
-      ) : null}
-    </label>
+    </div>
   );
 }
 
@@ -484,7 +508,16 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     setPrizeRows((rows) => rows.map((row, index) => (index === idx ? { ...row, amount } : row)));
   }
 
-  function handleTabSelect(target: 'game' | 'tokens') {
+  function handleTabSelect(target: CreateStep) {
+    if (target === 'details' && !tokensStepValid) {
+      toast({
+        title: 'Complete token settings',
+        description: 'Set valid values for first to, capacity, and duration before opening details.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setStep(target);
   }
 
@@ -498,7 +531,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
       return;
     }
 
-    setStep('finalize');
+    setStep('details');
   }
 
   async function handleSubmit() {
@@ -549,8 +582,6 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
   if (!open || typeof document === 'undefined') {
     return null;
   }
-
-  const activeVisibleStep = step === 'game' ? 'game' : 'tokens';
 
   const renderGameStep = () => (
     <div className="mt-[31px] flex flex-1 flex-col">
@@ -607,7 +638,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
       <div className="space-y-[30px]">
         <section>
           <FigmaSectionLabel>First to:</FigmaSectionLabel>
-          <div className="mt-[18px] grid grid-cols-[86px_86px_86px_minmax(0,1fr)] gap-[13px]">
+          <div className="mt-[18px] grid grid-cols-[86px_86px_86px_minmax(0,1fr)] gap-[13px]" data-testid="first-to-options">
             {FIRST_TO_PRESETS.map((value) => (
               <SelectionButton
                 key={value}
@@ -617,25 +648,21 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                 className="w-[86px] px-0"
               />
             ))}
-            <SelectionButton
+            <InlineCustomSelection
               active={firstToSelection === 'custom'}
-              label="set custom"
-              onClick={() => setFirstToSelection('custom')}
+              value={customFirstToInput}
+              onActivate={() => setFirstToSelection('custom')}
+              onChange={setCustomFirstToInput}
+              ariaLabel="Custom first to"
               className="w-full justify-self-stretch px-6"
+              testId="custom-first-to-inline"
             />
           </div>
-          {firstToSelection === 'custom' && (
-            <CustomInput
-              label="First to"
-              value={customFirstToInput}
-              onChange={setCustomFirstToInput}
-            />
-          )}
         </section>
 
         <section>
           <FigmaSectionLabel>Capacity:</FigmaSectionLabel>
-          <div className="mt-[18px] grid grid-cols-[138px_138px_138px_minmax(0,1fr)] gap-[28px]">
+          <div className="mt-[18px] grid grid-cols-[138px_138px_138px_minmax(0,1fr)] gap-[28px]" data-testid="capacity-options">
             {CAPACITY_PRESETS.map((value) => (
               <SelectionButton
                 key={value}
@@ -645,25 +672,21 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                 className="w-[138px] px-0"
               />
             ))}
-            <SelectionButton
+            <InlineCustomSelection
               active={capacitySelection === 'custom'}
-              label="set custom"
-              onClick={() => setCapacitySelection('custom')}
+              value={customCapacityInput}
+              onActivate={() => setCapacitySelection('custom')}
+              onChange={setCustomCapacityInput}
+              ariaLabel="Custom capacity"
               className="w-full justify-self-stretch px-6"
+              testId="custom-capacity-inline"
             />
           </div>
-          {capacitySelection === 'custom' && (
-            <CustomInput
-              label="Capacity"
-              value={customCapacityInput}
-              onChange={setCustomCapacityInput}
-            />
-          )}
         </section>
 
         <section>
           <FigmaSectionLabel>Duration:</FigmaSectionLabel>
-          <div className="mt-[18px] grid grid-cols-[138px_138px_138px_minmax(0,1fr)] gap-[28px]">
+          <div className="mt-[18px] grid grid-cols-[138px_138px_138px_minmax(0,1fr)] gap-[28px]" data-testid="duration-options">
             {DURATION_PRESETS.map((option) => (
               <SelectionButton
                 key={option.value}
@@ -673,21 +696,16 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                 className="w-[138px] px-0"
               />
             ))}
-            <SelectionButton
+            <InlineCustomSelection
               active={durationSelection === 'custom'}
-              label="set custom"
-              onClick={() => setDurationSelection('custom')}
+              value={customDurationInput}
+              onActivate={() => setDurationSelection('custom')}
+              onChange={setCustomDurationInput}
+              ariaLabel="Custom duration"
               className="w-full justify-self-stretch px-6"
+              testId="custom-duration-inline"
             />
           </div>
-          {durationSelection === 'custom' && (
-            <CustomInput
-              label="Duration"
-              value={customDurationInput}
-              onChange={setCustomDurationInput}
-              suffix="min"
-            />
-          )}
         </section>
       </div>
 
@@ -695,7 +713,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     </div>
   );
 
-  const renderFinalizeStep = () => (
+  const renderDetailsStep = () => (
     <div className="mt-[24px] flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-2">
         {isAdmin && (
@@ -956,12 +974,12 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
               >
                 SET TOURNAMEMNTS
               </h1>
-              <StepTabs activeStep={activeVisibleStep} onSelect={handleTabSelect} />
+              <StepTabs activeStep={step} onSelect={handleTabSelect} />
             </div>
 
             {step === 'game' && renderGameStep()}
             {step === 'tokens' && renderTokensStep()}
-            {step === 'finalize' && renderFinalizeStep()}
+            {step === 'details' && renderDetailsStep()}
           </div>
         </section>
       </div>
