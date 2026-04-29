@@ -56,11 +56,12 @@ describe('CreateTournamentOverlay', () => {
     mockOnCreated.mockReset();
   });
 
-  it('follows the figma-style game to tokens to finalize wizard flow', () => {
+  it('follows the figma-style game to tokens to details wizard flow', () => {
     renderOverlay();
 
     expect(screen.getByTestId('create-tournament-overlay').className).toContain('z-[70]');
     expect(screen.getByRole('tab', { name: 'GAME' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'DETAILS' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /create tournament/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
@@ -70,9 +71,25 @@ describe('CreateTournamentOverlay', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
 
+    expect(screen.getByRole('tab', { name: 'DETAILS' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: /create tournament/i })).toBeInTheDocument();
     expect(screen.getByText(/Mode:/i)).toBeInTheDocument();
     expect(screen.getByText(/Capacity:/i)).toBeInTheDocument();
+  });
+
+  it('edits custom values inline in the token row instead of opening a second field block', () => {
+    renderOverlay();
+
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'set custom' })[0]);
+
+    const inlineInput = screen.getByLabelText('Custom first to');
+
+    expect(screen.getByTestId('first-to-options')).toContainElement(inlineInput);
+
+    fireEvent.change(inlineInput, { target: { value: '37' } });
+
+    expect(screen.getByLabelText('Custom first to')).toHaveValue('37');
   });
 
   it('submits the tournament payload using the selections from the figma steps', async () => {
