@@ -900,80 +900,77 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
   );
 
   const renderPrizeStep = () => (
-    <div className="mt-[28px] flex flex-1 flex-col">
-      <div className="space-y-[24px]">
-        <div className="grid grid-cols-[minmax(0,1fr)_270px] gap-[26px]">
-          <section>
-            <FigmaSectionLabel>{`Prize pool${!isAdmin ? ` (balance ${balance.toFixed(2)})` : ''}:`}</FigmaSectionLabel>
-            <FigmaTextInput
-              type="number"
-              min="0"
-              step="0.01"
-              value={prizePool}
-              onChange={setPrizePool}
-              className={cn('mt-[10px]', insufficientBalance && 'border-red-500')}
-              testId="tournament-prize-pool-field"
-            />
-            {insufficientBalance && (
-              <p className="mt-2 flex items-center gap-2 text-[15px] text-red-400" style={{ fontFamily: FONT_REGULAR }}>
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                Insufficient balance for this prize pool.
-              </p>
-            )}
-          </section>
-
-          <section>
-            <FigmaSectionLabel>Rules:</FigmaSectionLabel>
-            <div className="mt-[10px] rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] p-4">
-              <textarea
-                value={rules}
-                onChange={(event) => setRules(event.target.value)}
-                rows={5}
-                maxLength={2000}
-                placeholder="Map rules, banned weapons, or schedule notes."
-                className="h-[118px] w-full resize-none appearance-none border-0 bg-transparent text-[18px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
-                style={{ fontFamily: FONT_REGULAR }}
-              />
-            </div>
-          </section>
-        </div>
+    <div className="mt-[18px] flex flex-1 flex-col">
+      <div className="space-y-[18px]">
+        <section>
+          <FigmaSectionLabel>{`Prize pool${!isAdmin ? ` (balance ${balance.toFixed(2)})` : ''}:`}</FigmaSectionLabel>
+          <FigmaTextInput
+            type="number"
+            min="0"
+            step="0.01"
+            value={prizePool}
+            onChange={setPrizePool}
+            className={cn('mt-[8px]', insufficientBalance && 'border-red-500')}
+            testId="tournament-prize-pool-field"
+          />
+          {insufficientBalance && (
+            <p className="mt-2 flex items-center gap-2 text-[15px] text-red-400" style={{ fontFamily: FONT_REGULAR }}>
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Insufficient balance for this prize pool.
+            </p>
+          )}
+        </section>
 
         <section>
           <FigmaSectionLabel>Prize preset:</FigmaSectionLabel>
-          <div className="mt-[10px] grid grid-cols-3 gap-[18px]">
+          <div className="mt-[8px] grid grid-cols-3 gap-[14px]">
             {TOURNAMENT_PRIZE_PRESETS.map((preset, idx) => (
               <SelectionButton
                 key={preset.label}
                 active={activePresetIdx === idx}
                 label={preset.label.toUpperCase()}
                 onClick={() => applyPreset(idx)}
-                className="text-[22px] leading-[1.05]"
+                className="h-[58px] px-3 text-[18px] leading-[1.02]"
               />
             ))}
           </div>
         </section>
 
         <section>
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-4">
             <FigmaSectionLabel>Prize distribution:</FigmaSectionLabel>
-            <div className="text-right text-[15px]" style={{ fontFamily: FONT_REGULAR }}>
-              <div className="text-white/70">
-                Sum <span className="text-white">{prizeRowsSum.toFixed(2)}</span> / {seedNum.toFixed(2)}
-              </div>
-              <div className={sumValid ? 'text-emerald-400' : 'text-red-400'}>
-                {sumValid ? 'Valid split' : 'Must equal prize pool'}
-              </div>
+            <button
+              type="button"
+              onClick={addRow}
+              className="inline-flex h-[40px] items-center gap-2 rounded-[14px] border border-[#ff1654] bg-[rgba(255,22,84,0.18)] px-4 text-[15px] text-white transition-colors hover:bg-[rgba(255,22,84,0.28)]"
+              style={{ fontFamily: FONT_EXPANDED_BOLD }}
+            >
+              <Plus className="h-4 w-4" />
+              ADD
+            </button>
+          </div>
+
+          <div className="mt-[4px] text-right text-[14px]" style={{ fontFamily: FONT_REGULAR }}>
+            <div className="text-white/70">
+              Sum <span className="text-white">{prizeRowsSum.toFixed(2)}</span> / {seedNum.toFixed(2)}
+            </div>
+            <div className={sumValid ? 'text-emerald-400' : 'text-red-400'}>
+              {sumValid ? 'Valid split' : 'Must equal prize pool'}
             </div>
           </div>
 
-          <div className="mt-[10px] grid grid-cols-3 gap-[16px]" data-testid="prize-distribution-grid">
+          <div
+            className="mt-[10px] grid gap-[12px]"
+            data-testid="prize-distribution-grid"
+            style={{ gridTemplateColumns: `repeat(${Math.min(prizeRows.length, 5)}, minmax(0, 1fr))` }}
+          >
             {prizeRows.map((row, idx) => (
               <div
                 key={`${row.position}-${idx}`}
-                className="rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] px-4 py-3"
+                className="rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] px-3 py-3"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[14px] uppercase tracking-[0.12em] text-white/55" style={{ fontFamily: FONT_EXPANDED }}>
+                  <span className="text-[12px] uppercase tracking-[0.12em] text-white/55" style={{ fontFamily: FONT_EXPANDED }}>
                     Position {row.position}
                   </span>
                   {prizeRows.length > 1 && (
@@ -994,25 +991,15 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
                   min="0"
                   value={row.amount}
                   onChange={(event) => updateRowAmount(idx, event.target.value)}
-                  className="mt-[8px] w-full appearance-none border-0 bg-transparent text-[30px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
+                  className="mt-[8px] w-full appearance-none border-0 bg-transparent text-[26px] text-white outline-none ring-0 placeholder:text-white/36 focus:border-0 focus:outline-none focus:ring-0"
                   style={{ fontFamily: FONT_EXPANDED_BOLD }}
                 />
-                <p className="mt-1 text-[14px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>
+                <p className="mt-1 text-[12px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>
                   coins
                 </p>
               </div>
             ))}
           </div>
-
-          <button
-            type="button"
-            onClick={addRow}
-            className="mt-[14px] inline-flex h-[48px] items-center gap-2 rounded-[18px] border border-[#ff1654] bg-[rgba(255,22,84,0.18)] px-5 text-[18px] text-white transition-colors hover:bg-[rgba(255,22,84,0.28)]"
-            style={{ fontFamily: FONT_EXPANDED_BOLD }}
-          >
-            <Plus className="h-4 w-4" />
-            ADD POSITION
-          </button>
         </section>
       </div>
 
