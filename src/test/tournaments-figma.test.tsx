@@ -259,28 +259,30 @@ describe('Tournaments Figma rebuild', () => {
     renderWithRouter(<Tournaments />);
 
     fireEvent.click(screen.getByRole('button', { name: /create/i }));
-    const dialog = screen.getByRole('dialog', { name: 'SET YOUR ARENA' });
+    const dialog = screen.getByRole('dialog', { name: 'SET TOURNAMEMNTS' });
     expect(dialog).toHaveClass('rounded-[18px]');
     expect(dialog).toHaveClass('border-[#ff1654]');
 
-    const submit = within(dialog).getByRole('button', { name: /create tournament/i });
-    expect(submit).toBeDisabled();
-
-    fireEvent.change(screen.getByPlaceholderText('e.g. Friday Night Box Fight'), {
+    fireEvent.click(within(dialog).getByRole('button', { name: /next step/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /next step/i }));
+    fireEvent.change(within(dialog).getByPlaceholderText('e.g. Friday Night Box Fight'), {
       target: { value: 'Night Cup' },
     });
+    fireEvent.click(within(dialog).getByRole('button', { name: /next step/i }));
+
+    const submit = within(dialog).getByRole('button', { name: /create tournament/i });
     expect(submit).not.toBeDisabled();
 
     fireEvent.click(submit);
     await waitFor(() => {
-      expect(createMutationMock.mutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'Night Cup',
-          mode: 'Box Fight',
-          team_size: 1,
-          prize_pool: 20,
-        }),
-      );
+        expect(createMutationMock.mutateAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Night Cup',
+            mode: 'Box Fight',
+            team_size: 3,
+            prize_pool: 20,
+          }),
+        );
     });
   });
 

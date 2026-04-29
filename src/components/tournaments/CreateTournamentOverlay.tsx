@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, Plus, ShieldCheck, Trash2 } from 'lucide-react';
@@ -13,7 +13,7 @@ import {
   type Region,
 } from '@/types';
 
-type CreateStep = 'game' | 'tokens' | 'details';
+type CreateStep = 'game' | 'tokens' | 'details' | 'prize';
 
 interface PrizeRow {
   position: number;
@@ -64,6 +64,12 @@ const DURATION_PRESETS = [
   { value: 1800, label: '30m' },
   { value: 4800, label: '80m' },
   { value: 7200, label: '120m' },
+] as const;
+const CREATE_STEPS = [
+  { id: 'game' as const, label: 'GAME' },
+  { id: 'tokens' as const, label: 'TOKENS' },
+  { id: 'details' as const, label: 'DETAILS' },
+  { id: 'prize' as const, label: 'PRIZE' },
 ] as const;
 
 function isAdminProfile(role?: string | null) {
@@ -161,20 +167,10 @@ function SelectionButton({ active, label, onClick, className }: SelectionButtonP
   );
 }
 
-function StepTabs({
-  activeStep,
-  onSelect,
-}: {
-  activeStep: CreateStep;
-  onSelect: (step: CreateStep) => void;
-}) {
+function StepTabs({ activeStep, onSelect }: { activeStep: CreateStep; onSelect: (step: CreateStep) => void }) {
   return (
-    <div className="mt-[35px] flex items-center justify-center gap-[96px]" role="tablist" aria-label="Create tournament steps">
-      {[
-        { id: 'game' as const, label: 'GAME' },
-        { id: 'tokens' as const, label: 'TOKENS' },
-        { id: 'details' as const, label: 'DETAILS' },
-      ].map((tab) => {
+    <div className="mt-[35px] flex items-center justify-center gap-[58px]" role="tablist" aria-label="Create tournament steps">
+      {CREATE_STEPS.map((tab) => {
         const isActive = activeStep === tab.id;
 
         return (
@@ -294,25 +290,99 @@ function InlineCustomSelection({
   );
 }
 
-function DetailSection({ label, children }: { label: string; children: ReactNode }) {
+function FigmaField({
+  children,
+  className,
+  testId,
+}: {
+  children: ReactNode;
+  className?: string;
+  testId?: string;
+}) {
   return (
-    <div>
-      <p
-        className="mb-2 text-[12px] uppercase tracking-[0.15em] text-white/60"
-        style={{ fontFamily: FONT_EXPANDED }}
-      >
-        {label}
-      </p>
+    <div
+      className={cn(
+        'flex h-[68px] items-center rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] px-5',
+        className,
+      )}
+      data-testid={testId}
+    >
       {children}
     </div>
   );
 }
 
-function SummaryChip({ children }: { children: ReactNode }) {
+function FigmaTextInput({
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  inputMode,
+  className,
+  min,
+  step,
+  maxLength,
+  testId,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+  inputMode?: InputHTMLAttributes<HTMLInputElement>['inputMode'];
+  className?: string;
+  min?: string;
+  step?: string;
+  maxLength?: number;
+  testId?: string;
+}) {
   return (
-    <div className="rounded-full border border-white/12 bg-black/25 px-3 py-1.5 text-[12px] text-white/80" style={{ fontFamily: FONT_REGULAR }}>
-      {children}
-    </div>
+    <FigmaField className={className} testId={testId}>
+      <input
+        type={type}
+        min={min}
+        step={step}
+        maxLength={maxLength}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        inputMode={inputMode}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-[28px] text-white outline-none placeholder:text-white/36"
+        style={{ fontFamily: FONT_EXPANDED_BOLD }}
+      />
+    </FigmaField>
+  );
+}
+
+function FigmaSelectField({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+}) {
+  return (
+    <FigmaField className="relative pr-14">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-full w-full appearance-none bg-transparent text-[28px] text-white outline-none"
+        style={{ fontFamily: FONT_EXPANDED_BOLD }}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <span
+        className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-[20px] text-white/70"
+        style={{ fontFamily: FONT_BOLD }}
+      >
+        v
+      </span>
+    </FigmaField>
   );
 }
 
@@ -468,12 +538,15 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     resolvedFirstTo !== null &&
     resolvedCapacity !== null &&
     resolvedDurationSeconds !== null;
-  const canSubmit =
+  const detailsStepValid =
     name.trim().length >= 3 &&
+    scheduledStartIso !== null &&
+    !startInPast;
+  const canSubmit =
+    detailsStepValid &&
     tokensStepValid &&
     sumValid &&
     !insufficientBalance &&
-    !startInPast &&
     !createMutation.isPending;
 
   const rawScale = Math.min(
@@ -518,6 +591,26 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
       return;
     }
 
+    if (target === 'prize') {
+      if (!tokensStepValid) {
+        toast({
+          title: 'Complete token settings',
+          description: 'Set valid values for first to, capacity, and duration before opening prize setup.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!detailsStepValid) {
+        toast({
+          title: 'Complete tournament details',
+          description: 'Set tournament name, date, and time before opening prize setup.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     setStep(target);
   }
 
@@ -532,6 +625,19 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     }
 
     setStep('details');
+  }
+
+  function handleDetailsNext() {
+    if (!detailsStepValid) {
+      toast({
+        title: 'Complete tournament details',
+        description: 'Set tournament name, date, and time before continuing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStep('prize');
   }
 
   async function handleSubmit() {
@@ -713,218 +819,216 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
     </div>
   );
 
+  const renderAdminBanner = () =>
+    isAdmin ? (
+      <div
+        className="flex h-[46px] items-center gap-3 rounded-[18px] border border-emerald-500/30 bg-emerald-500/10 px-5 text-[16px] text-emerald-200"
+        style={{ fontFamily: FONT_REGULAR }}
+      >
+        <ShieldCheck className="h-4 w-4 shrink-0" />
+        Admin mode: your wallet will not be debited for the tournament seed.
+      </div>
+    ) : null;
+
   const renderDetailsStep = () => (
-    <div className="mt-[24px] flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-2">
-        {isAdmin && (
-          <div className="rounded-[18px] border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-[13px] text-emerald-200" style={{ fontFamily: FONT_REGULAR }}>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              Admin mode: your wallet will not be debited for the tournament seed.
-            </div>
-          </div>
-        )}
+    <div className="mt-[28px] flex flex-1 flex-col">
+      {renderAdminBanner()}
 
-        <div className="flex flex-wrap gap-2">
-          <SummaryChip>Mode: {mode.toUpperCase()}</SummaryChip>
-          <SummaryChip>Size: {teamSize}v{teamSize}</SummaryChip>
-          <SummaryChip>Platform: {platform === 'All' ? 'ANY' : platform.toUpperCase()}</SummaryChip>
-          <SummaryChip>First to: {resolvedFirstTo ?? '—'}</SummaryChip>
-          <SummaryChip>Capacity: {resolvedCapacity ?? '—'}</SummaryChip>
-          <SummaryChip>Duration: {resolvedDurationSeconds ? `${Math.round(resolvedDurationSeconds / 60)}m` : '—'}</SummaryChip>
-        </div>
+      <div className={cn('space-y-[26px]', isAdmin ? 'mt-[18px]' : '')}>
+        <section>
+          <FigmaSectionLabel>Tournament name:</FigmaSectionLabel>
+          <FigmaTextInput
+            value={name}
+            onChange={(value) => {
+              setNameEditedManually(true);
+              setName(value);
+            }}
+            maxLength={60}
+            placeholder="e.g. Friday Night Box Fight"
+            className="mt-[10px]"
+            testId="tournament-name-field"
+          />
+        </section>
 
-        <div className="grid grid-cols-2 gap-4">
-          <DetailSection label="TOURNAMENT NAME">
-            <input
-              value={name}
-              onChange={(event) => {
-                setNameEditedManually(true);
-                setName(event.target.value);
-              }}
-              maxLength={60}
-              placeholder="e.g. Friday Night Box Fight"
-              className="h-11 w-full rounded-lg border border-white/15 bg-[#1a0a0a] px-4 text-[15px] text-white outline-none transition-colors focus:border-[#ff1654]"
-              style={{ fontFamily: FONT_REGULAR }}
-            />
-          </DetailSection>
-
-          <DetailSection label="REGION">
-            <select
-              value={region}
-              onChange={(event) => setRegion(event.target.value as Region)}
-              className="h-11 w-full rounded-lg border border-white/15 bg-[#1a0a0a] px-4 text-[15px] text-white outline-none focus:border-[#ff1654]"
-              style={{ fontFamily: FONT_REGULAR }}
-            >
-              {REGIONS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </DetailSection>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <DetailSection label="START DATE">
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
-                className="h-11 w-1/2 rounded-lg border border-white/15 bg-[#1a0a0a] px-3 text-[15px] text-white outline-none focus:border-[#ff1654]"
-                style={{ fontFamily: FONT_REGULAR }}
-              />
-              <input
-                type="time"
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-                className="h-11 w-1/2 rounded-lg border border-white/15 bg-[#1a0a0a] px-3 text-[15px] text-white outline-none focus:border-[#ff1654]"
-                style={{ fontFamily: FONT_REGULAR }}
+        <div className="grid grid-cols-2 gap-[26px]">
+          <section>
+            <FigmaSectionLabel>Region:</FigmaSectionLabel>
+            <div className="mt-[10px]">
+              <FigmaSelectField
+                value={region}
+                onChange={(value) => setRegion(value as Region)}
+                options={REGIONS.map((value) => ({ value, label: value }))}
               />
             </div>
-            {startInPast && (
-              <p className="mt-1 flex items-center gap-1 text-[12px] text-red-400" style={{ fontFamily: FONT_REGULAR }}>
-                <AlertCircle className="h-3 w-3" /> Start date must be in the future.
-              </p>
-            )}
-          </DetailSection>
+          </section>
 
-          <DetailSection label="ENTRY FEE">
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={entryFee}
-                onChange={(event) => setEntryFee(event.target.value)}
-                className="h-11 w-full rounded-lg border border-white/15 bg-[#1a0a0a] px-4 text-[15px] text-white outline-none focus:border-[#ff1654]"
-                style={{ fontFamily: FONT_REGULAR }}
-              />
-              <button
-                type="button"
+          <section>
+            <FigmaSectionLabel>Entry fee:</FigmaSectionLabel>
+            <div className="mt-[10px] grid grid-cols-[minmax(0,1fr)_120px] gap-[18px]">
+              <FigmaTextInput type="number" min="0" step="0.01" value={entryFee} onChange={setEntryFee} placeholder="0" />
+              <SelectionButton
+                active={entryNum === 0}
+                label="FREE"
                 onClick={() => setEntryFee('0')}
-                className={cn(
-                  'h-11 whitespace-nowrap rounded-lg border px-3 text-[12px] uppercase transition-colors',
-                  entryNum === 0
-                    ? 'border-[#ff1654] bg-[#ff1654]/20 text-white'
-                    : 'border-white/15 text-white/70 hover:border-white/40',
-                )}
-                style={{ fontFamily: FONT_EXPANDED_BOLD }}
-              >
-                FREE
-              </button>
+                className="h-[68px] px-0 text-[24px]"
+              />
             </div>
-          </DetailSection>
+          </section>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <DetailSection label={`PRIZE POOL${!isAdmin ? ` - BALANCE ${balance.toFixed(2)}` : ''}`}>
-            <input
+        <div className="grid grid-cols-2 gap-[26px]">
+          <section>
+            <FigmaSectionLabel>Start date:</FigmaSectionLabel>
+            <FigmaTextInput
+              type="date"
+              value={startDate}
+              onChange={setStartDate}
+              className="mt-[10px]"
+              testId="tournament-start-date-field"
+            />
+          </section>
+
+          <section>
+            <FigmaSectionLabel>Start time:</FigmaSectionLabel>
+            <FigmaTextInput
+              type="time"
+              value={startTime}
+              onChange={setStartTime}
+              className="mt-[10px]"
+              testId="tournament-start-time-field"
+            />
+          </section>
+        </div>
+
+        {startInPast && (
+          <p className="flex items-center gap-2 text-[15px] text-red-400" style={{ fontFamily: FONT_REGULAR }}>
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            Start date must be in the future.
+          </p>
+        )}
+      </div>
+
+      <FooterAction label="NEXT STEP" onClick={handleDetailsNext} disabled={!detailsStepValid} />
+    </div>
+  );
+
+  const renderPrizeStep = () => (
+    <div className="mt-[28px] flex flex-1 flex-col">
+      {renderAdminBanner()}
+
+      <div className={cn('space-y-[24px]', isAdmin ? 'mt-[16px]' : '')}>
+        <div className="grid grid-cols-[minmax(0,1fr)_270px] gap-[26px]">
+          <section>
+            <FigmaSectionLabel>{`Prize pool${!isAdmin ? ` (balance ${balance.toFixed(2)})` : ''}:`}</FigmaSectionLabel>
+            <FigmaTextInput
               type="number"
-              step="0.01"
               min="0"
+              step="0.01"
               value={prizePool}
-              onChange={(event) => setPrizePool(event.target.value)}
-              className={cn(
-                'h-11 w-full rounded-lg border bg-[#1a0a0a] px-4 text-[15px] text-white outline-none',
-                insufficientBalance ? 'border-red-500' : 'border-white/15 focus:border-[#ff1654]',
-              )}
-              style={{ fontFamily: FONT_REGULAR }}
+              onChange={setPrizePool}
+              className={cn('mt-[10px]', insufficientBalance && 'border-red-500')}
+              testId="tournament-prize-pool-field"
             />
             {insufficientBalance && (
-              <p className="mt-1 flex items-center gap-1 text-[12px] text-red-400" style={{ fontFamily: FONT_REGULAR }}>
-                <AlertCircle className="h-3 w-3" /> Insufficient balance for this prize pool.
+              <p className="mt-2 flex items-center gap-2 text-[15px] text-red-400" style={{ fontFamily: FONT_REGULAR }}>
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                Insufficient balance for this prize pool.
               </p>
             )}
-          </DetailSection>
+          </section>
 
-          <DetailSection label="PRIZE PRESET">
-            <div className="flex flex-wrap gap-2">
-              {TOURNAMENT_PRIZE_PRESETS.map((preset, idx) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => applyPreset(idx)}
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-[12px] uppercase transition-colors',
-                    activePresetIdx === idx
-                      ? 'border-[#ff1654] bg-[#ff1654]/20 text-white'
-                      : 'border-white/15 text-white/70 hover:border-white/40',
-                  )}
-                  style={{ fontFamily: FONT_EXPANDED_BOLD }}
-                >
-                  {preset.label}
-                </button>
-              ))}
+          <section>
+            <FigmaSectionLabel>Rules:</FigmaSectionLabel>
+            <div className="mt-[10px] rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] p-4">
+              <textarea
+                value={rules}
+                onChange={(event) => setRules(event.target.value)}
+                rows={5}
+                maxLength={2000}
+                placeholder="Map rules, banned weapons, or schedule notes."
+                className="h-[118px] w-full resize-none bg-transparent text-[18px] text-white outline-none placeholder:text-white/36"
+                style={{ fontFamily: FONT_REGULAR }}
+              />
             </div>
-          </DetailSection>
+          </section>
         </div>
 
-        <DetailSection label="PRIZE DISTRIBUTION">
-          <div className="space-y-2">
-            {prizeRows.map((row, idx) => (
-              <div key={`${row.position}-${idx}`} className="flex items-center gap-3">
-                <div className="w-12 text-center text-[14px] text-white/60" style={{ fontFamily: FONT_REGULAR }}>
-                  #{row.position}
-                </div>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={row.amount}
-                  onChange={(event) => updateRowAmount(idx, event.target.value)}
-                  className="h-10 w-32 rounded-lg border border-white/15 bg-[#1a0a0a] px-3 text-[14px] text-white outline-none focus:border-[#ff1654]"
-                  style={{ fontFamily: FONT_REGULAR }}
-                />
-                <span className="text-[12px] text-white/50" style={{ fontFamily: FONT_REGULAR }}>
-                  coins
-                </span>
-                {prizeRows.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeRow(idx)}
-                    className="ml-auto rounded-md p-1 text-white/40 transition-colors hover:bg-white/5 hover:text-red-400"
-                    aria-label={`Remove prize position ${row.position}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+        <section>
+          <FigmaSectionLabel>Prize preset:</FigmaSectionLabel>
+          <div className="mt-[10px] grid grid-cols-3 gap-[18px]">
+            {TOURNAMENT_PRIZE_PRESETS.map((preset, idx) => (
+              <SelectionButton
+                key={preset.label}
+                active={activePresetIdx === idx}
+                label={preset.label.toUpperCase()}
+                onClick={() => applyPreset(idx)}
+                className="text-[22px] leading-[1.05]"
+              />
             ))}
           </div>
+        </section>
 
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={addRow}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-3 py-2 text-[12px] uppercase text-white/70 transition-colors hover:border-white/40"
-              style={{ fontFamily: FONT_EXPANDED_BOLD }}
-            >
-              <Plus className="h-3 w-3" /> Position
-            </button>
-            <div className="text-right text-[13px]" style={{ fontFamily: FONT_REGULAR }}>
-              <div className="text-white/60">
-                Sum: <span className="text-white">{prizeRowsSum.toFixed(2)}</span> / {seedNum.toFixed(2)}
+        <section>
+          <div className="flex items-end justify-between">
+            <FigmaSectionLabel>Prize distribution:</FigmaSectionLabel>
+            <div className="text-right text-[15px]" style={{ fontFamily: FONT_REGULAR }}>
+              <div className="text-white/70">
+                Sum <span className="text-white">{prizeRowsSum.toFixed(2)}</span> / {seedNum.toFixed(2)}
               </div>
               <div className={sumValid ? 'text-emerald-400' : 'text-red-400'}>
                 {sumValid ? 'Valid split' : 'Must equal prize pool'}
               </div>
             </div>
           </div>
-        </DetailSection>
 
-        <DetailSection label="RULES (OPTIONAL)">
-          <textarea
-            value={rules}
-            onChange={(event) => setRules(event.target.value)}
-            rows={3}
-            maxLength={2000}
-            placeholder="Map rules, banned weapons, or schedule notes."
-            className="w-full rounded-lg border border-white/15 bg-[#1a0a0a] px-4 py-3 text-[14px] text-white outline-none focus:border-[#ff1654]"
-            style={{ fontFamily: FONT_REGULAR }}
-          />
-        </DetailSection>
+          <div className="mt-[10px] grid grid-cols-3 gap-[16px]" data-testid="prize-distribution-grid">
+            {prizeRows.map((row, idx) => (
+              <div
+                key={`${row.position}-${idx}`}
+                className="rounded-[18px] border border-[#ff1654] bg-[rgba(0,0,0,0.38)] px-4 py-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[14px] uppercase tracking-[0.12em] text-white/55" style={{ fontFamily: FONT_EXPANDED }}>
+                    Position {row.position}
+                  </span>
+                  {prizeRows.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeRow(idx)}
+                      className="rounded-full p-1 text-white/35 transition-colors hover:bg-white/5 hover:text-red-400"
+                      aria-label={`Remove prize position ${row.position}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={row.amount}
+                  onChange={(event) => updateRowAmount(idx, event.target.value)}
+                  className="mt-[8px] w-full bg-transparent text-[30px] text-white outline-none placeholder:text-white/36"
+                  style={{ fontFamily: FONT_EXPANDED_BOLD }}
+                />
+                <p className="mt-1 text-[14px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONT_EXPANDED }}>
+                  coins
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addRow}
+            className="mt-[14px] inline-flex h-[48px] items-center gap-2 rounded-[18px] border border-[#ff1654] bg-[rgba(255,22,84,0.18)] px-5 text-[18px] text-white transition-colors hover:bg-[rgba(255,22,84,0.28)]"
+            style={{ fontFamily: FONT_EXPANDED_BOLD }}
+          >
+            <Plus className="h-4 w-4" />
+            ADD POSITION
+          </button>
+        </section>
       </div>
 
       <FooterAction
@@ -980,6 +1084,7 @@ export function CreateTournamentOverlay({ open, onClose, onCreated }: CreateTour
             {step === 'game' && renderGameStep()}
             {step === 'tokens' && renderTokensStep()}
             {step === 'details' && renderDetailsStep()}
+            {step === 'prize' && renderPrizeStep()}
           </div>
         </section>
       </div>
