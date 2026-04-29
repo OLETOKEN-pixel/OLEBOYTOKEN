@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTournamentStreamStatus } from '@/hooks/useTournamentStreamStatus';
-import { buildTwitchChatUrl, buildTwitchPlayerUrl } from '@/lib/twitchEmbed';
+import { buildTwitchPlayerUrl } from '@/lib/twitchEmbed';
 
 interface TournamentTwitchPanelProps {
   twitchUsername: string;
@@ -12,13 +12,12 @@ export function TournamentTwitchPanel({
   const { data } = useTournamentStreamStatus(twitchUsername);
 
   const playerUrl = useMemo(() => buildTwitchPlayerUrl(twitchUsername), [twitchUsername]);
-  const chatUrl = useMemo(() => buildTwitchChatUrl(twitchUsername), [twitchUsername]);
 
   const channelLabel = data?.displayName || twitchUsername;
 
   return (
     <div
-      className="grid w-[895px] max-w-full grid-cols-1 gap-[16px] md:grid-cols-[520px_359px]"
+      className="flex w-[895px] max-w-full justify-center"
       data-testid="tournament-twitch-panel"
     >
       <section
@@ -28,23 +27,10 @@ export function TournamentTwitchPanel({
         <iframe
           title={`${channelLabel} Twitch player`}
           src={playerUrl}
-          className="block h-[236px] w-full border-0 bg-black md:h-[308px]"
+          className="block h-[236px] w-[min(560px,calc(100vw-120px))] border-0 bg-black md:h-[308px]"
           allowFullScreen
           loading="lazy"
           data-testid="tournament-twitch-live-frame"
-        />
-      </section>
-
-      <section
-        className="overflow-hidden rounded-[16px] border border-white/12 bg-[#161616] shadow-[0_18px_40px_rgba(0,0,0,0.32)]"
-        data-testid="tournament-twitch-chat-shell"
-      >
-        <iframe
-          title={`${channelLabel} Twitch chat`}
-          src={chatUrl}
-          className="block h-[236px] w-full border-0 bg-[#0f0404] md:h-[308px]"
-          loading="lazy"
-          data-testid="tournament-twitch-chat-frame"
         />
       </section>
     </div>

@@ -26,7 +26,7 @@ export function TournamentDetailHeader({
   return (
     <article
       className={`relative w-[951px] rounded-[18px] border-[1.462px] border-[#ff1654] bg-[#282828] text-white ${
-        hasTwitchPanel ? 'h-[572px]' : 'h-[473px]'
+        hasTwitchPanel ? 'h-[548px]' : 'h-[473px]'
       }`}
       data-testid="tournament-detail-header"
     >
@@ -76,7 +76,7 @@ export function TournamentDetailHeader({
         onClick={onRegister}
         disabled={registerDisabled}
         className={`absolute left-1/2 flex h-[44px] w-[247px] -translate-x-1/2 items-center justify-center rounded-[8px] bg-[#ff1654] text-[20px] leading-none text-white transition hover:bg-[#e61450] disabled:cursor-default disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
-          hasTwitchPanel ? 'top-[170px]' : 'top-[388px]'
+          hasTwitchPanel ? 'top-[164px]' : 'top-[388px]'
         }`}
         style={{ fontFamily: FONTS.wideBlack }}
       >
@@ -84,7 +84,7 @@ export function TournamentDetailHeader({
       </button>
 
       {hasTwitchPanel ? (
-        <div className="absolute left-[28px] top-[224px]">
+        <div className="absolute left-1/2 top-[212px] -translate-x-1/2">
           {twitchPanel}
         </div>
       ) : null}
