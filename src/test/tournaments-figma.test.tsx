@@ -259,7 +259,7 @@ describe('Tournaments Figma rebuild', () => {
     renderWithRouter(<Tournaments />);
 
     fireEvent.click(screen.getByRole('button', { name: /create/i }));
-    const dialog = screen.getByRole('dialog', { name: 'SET TOURNAMEMNTS' });
+    const dialog = screen.getByRole('dialog', { name: 'SET TOURNAMENTS' });
     expect(dialog).toHaveClass('rounded-[18px]');
     expect(dialog).toHaveClass('border-[#ff1654]');
 
@@ -352,6 +352,96 @@ describe('Tournaments Figma rebuild', () => {
     expect(screen.queryByTestId('tournament-twitch-chat-shell')).toBeNull();
     expect(screen.queryByTestId('tournament-twitch-chat-frame')).toBeNull();
     expect(screen.getByRole('button', { name: /player/i })).toBeInTheDocument();
+  });
+
+  it('turns the main registration action into ready up when the user must confirm before start', () => {
+    detailState.data = tournamentFixture({
+      status: 'ready_up',
+      participants: [
+        {
+          id: 'participant-current',
+          tournament_id: 'tournament-1',
+          user_id: 'user-current',
+          team_id: null,
+          payer_user_id: 'user-current',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:00:00.000Z',
+          ready: false,
+          ready_at: null,
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          current_match_id: null,
+          eliminated: false,
+          user: { user_id: 'user-current', username: 'Current Player', avatar_url: null, discord_avatar_url: null },
+        },
+      ],
+    });
+
+    renderDetail();
+
+    expect(screen.getByTestId('tournament-primary-action')).toHaveTextContent('Ready Up');
+  });
+
+  it('shows a matchmaking animation after the player is ready but before a match is assigned', () => {
+    detailState.data = tournamentFixture({
+      status: 'running',
+      participants: [
+        {
+          id: 'participant-current',
+          tournament_id: 'tournament-1',
+          user_id: 'user-current',
+          team_id: null,
+          payer_user_id: 'user-current',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:00:00.000Z',
+          ready: true,
+          ready_at: '2026-04-27T10:05:00.000Z',
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          current_match_id: null,
+          eliminated: false,
+          user: { user_id: 'user-current', username: 'Current Player', avatar_url: null, discord_avatar_url: null },
+        },
+      ],
+    });
+
+    renderDetail();
+
+    expect(screen.getByTestId('tournament-matchmaking-indicator')).toBeInTheDocument();
+  });
+
+  it('shows an open match action as soon as pairing assigns a tournament match', () => {
+    detailState.data = tournamentFixture({
+      status: 'running',
+      participants: [
+        {
+          id: 'participant-current',
+          tournament_id: 'tournament-1',
+          user_id: 'user-current',
+          team_id: null,
+          payer_user_id: 'user-current',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:00:00.000Z',
+          ready: true,
+          ready_at: '2026-04-27T10:05:00.000Z',
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          current_match_id: 'match-777',
+          eliminated: false,
+          user: { user_id: 'user-current', username: 'Current Player', avatar_url: null, discord_avatar_url: null },
+        },
+      ],
+    });
+
+    renderDetail();
+
+    expect(screen.getByTestId('tournament-primary-action')).toHaveTextContent('Open Match');
   });
 
   it('keeps the Twitch player mounted without viewer count when the creator is offline', () => {

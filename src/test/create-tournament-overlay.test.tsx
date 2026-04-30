@@ -137,4 +137,20 @@ describe('CreateTournamentOverlay', () => {
     expect(mockOnCreated).toHaveBeenCalledWith('tournament-123');
     expect(mockToast).toHaveBeenCalledWith({ title: 'Tournament created!' });
   });
+
+  it('keeps the footer visible and scrolls only the prize distribution area when many positions are added', () => {
+    renderOverlay();
+
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+
+    for (let index = 0; index < 3; index += 1) {
+      fireEvent.click(screen.getByRole('button', { name: /add/i }));
+    }
+
+    expect(screen.getByText('Position 6')).toBeInTheDocument();
+    expect(screen.getByTestId('prize-distribution-scroll').className).toContain('overflow-y-auto');
+    expect(screen.getByRole('button', { name: /create tournament/i })).toBeInTheDocument();
+  });
 });

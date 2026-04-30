@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { FooterSection } from '@/components/home/sections/FooterSection';
@@ -167,7 +167,10 @@ export default function TournamentDetail() {
       onReady={async () => {
         try {
           await readyMutation.mutateAsync(tournament.id);
-          toast({ title: 'Ready up confirmed' });
+          toast({
+            title: 'Ready up confirmed',
+            description: 'Matchmaking started. We are looking for your next tournament match.',
+          });
         } catch (err) {
           toast({
             title: 'Error',
@@ -216,7 +219,9 @@ function TournamentDetailContent({
   onCancel,
 }: ContentProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const rosterRef = useRef<HTMLElement>(null);
+  const announcedMatchIdRef = useRef<string | null | undefined>(undefined);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
@@ -241,7 +246,66 @@ function TournamentDetailContent({
   const myParticipation = participants.find(
     (p) => p.user_id === currentUserId || p.payer_user_id === currentUserId,
   );
-  const needsReady = t.status === 'ready_up' && alreadyJoined && !myParticipation?.ready;
+  const currentMatchId = myParticipation?.current_match_id ?? null;
+  const isEliminated = Boolean(myParticipation?.eliminated);
+  const needsReady =
+    alreadyJoined &&
+    !isEliminated &&
+    !myParticipation?.ready &&
+    (t.status === 'ready_up' || t.status === 'running');
+  const isSearchingMatch =
+    alreadyJoined &&
+    !isEliminated &&
+    Boolean(myParticipation?.ready) &&
+    !currentMatchId &&
+    (t.status === 'ready_up' || t.status === 'running');
+  const canOpenAssignedMatch = Boolean(currentMatchId);
+
+  useEffect(() => {
+    if (announcedMatchIdRef.current === undefined) {
+      announcedMatchIdRef.current = currentMatchId;
+      return;
+    }
+
+    if (currentMatchId && announcedMatchIdRef.current !== currentMatchId) {
+      toast({
+        title: 'Match found',
+        description: 'Your tournament match is ready to open.',
+      });
+    }
+
+    announcedMatchIdRef.current = currentMatchId;
+  }, [currentMatchId, toast]);
+
+  let primaryActionLabel: ReactNode = tournamentStatusLabel(t.status);
+  let primaryActionDisabled = true;
+  let primaryActionStatus: 'default' | 'searching' = 'default';
+  let primaryActionClick: (() => void) | undefined;
+
+  if (canRegister) {
+    primaryActionLabel = busy ? 'Working...' : 'Register';
+    primaryActionDisabled = busy;
+    primaryActionClick = () => setRegisterOpen(true);
+  } else if (needsReady) {
+    primaryActionLabel = busy ? 'Working...' : 'Ready Up';
+    primaryActionDisabled = busy;
+    primaryActionClick = () => setReadyOpen(true);
+  } else if (canOpenAssignedMatch) {
+    primaryActionLabel = 'Open Match';
+    primaryActionDisabled = false;
+    primaryActionClick = () => navigate(`/matches/${currentMatchId}`);
+  } else if (isSearchingMatch) {
+    primaryActionLabel = <SearchingMatchIndicator />;
+    primaryActionDisabled = true;
+    primaryActionStatus = 'searching';
+  } else if (alreadyJoined && t.status === 'registering') {
+    primaryActionLabel = 'Joined';
+    primaryActionDisabled = true;
+  } else if (isEliminated) {
+    primaryActionLabel = 'Eliminated';
+    primaryActionDisabled = true;
+  }
+
   const handleCopyMapCode = async () => {
     try {
       const copied = await copyTextToClipboard(mapCode);
@@ -322,17 +386,10 @@ function TournamentDetailContent({
                 total: t.max_participants,
                 percent: fillPct,
               }}
-              registerLabel={
-                t.status !== 'registering'
-                  ? tournamentStatusLabel(t.status)
-                  : alreadyJoined
-                    ? 'Joined'
-                    : busy
-                      ? 'Working...'
-                      : 'Register'
-              }
-              registerDisabled={!canRegister || busy}
-              onRegister={() => setRegisterOpen(true)}
+              registerLabel={primaryActionLabel}
+              registerDisabled={primaryActionDisabled}
+              registerStatus={primaryActionStatus}
+              onRegister={primaryActionClick}
               twitchPanel={
                 hasCreatorTwitch ? (
                   <TournamentTwitchPanel
@@ -413,11 +470,6 @@ function TournamentDetailContent({
               Cancel
             </FigmaPillButton>
           ) : null}
-          {needsReady ? (
-            <FigmaPillButton pink className="w-[222px]" disabled={busy} onClick={() => setReadyOpen(true)}>
-              Ready Up
-            </FigmaPillButton>
-          ) : null}
         </div>
       </TournamentPageShell>
 
@@ -456,6 +508,26 @@ function TournamentDetailContent({
         }}
       />
     </PublicLayout>
+  );
+}
+
+function SearchingMatchIndicator() {
+  return (
+    <span
+      className="inline-flex items-center gap-[10px] whitespace-nowrap"
+      data-testid="tournament-matchmaking-indicator"
+    >
+      <span>SEARCHING</span>
+      <span className="flex items-center gap-[5px]" aria-hidden="true">
+        {[0, 1, 2].map((index) => (
+          <span
+            key={index}
+            className="h-[6px] w-[6px] rounded-full bg-white/90 animate-pulse"
+            style={{ animationDelay: `${index * 160}ms`, animationDuration: '1.1s' }}
+          />
+        ))}
+      </span>
+    </span>
   );
 }
 
@@ -801,7 +873,7 @@ function ReadyUpOverlay({
     >
       <div className="rounded-[18px] border border-[#ff1654] bg-[#0f0404]/55 p-7">
         <p className="text-[26px] leading-[1.25] text-white" style={{ fontFamily: FONTS.expandedBold }}>
-          Confirm ready before the deadline. Players who do not ready up can be eliminated when the tournament starts.
+          Confirm ready before the deadline. Once players are ready, the tournament starts pairing random matches automatically and leaderboard points update after every result.
         </p>
         <p className="mt-5 text-[44px] leading-none text-[#ff1654]" style={{ fontFamily: FONTS.expandedBlack }}>
           {formatRemaining(tournament.ready_up_deadline)}

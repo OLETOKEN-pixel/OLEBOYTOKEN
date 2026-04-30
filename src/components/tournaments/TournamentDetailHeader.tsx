@@ -7,8 +7,9 @@ export interface TournamentDetailHeaderProps {
     total: number;
     percent: number;
   };
-  registerLabel?: string;
+  registerLabel?: ReactNode;
   registerDisabled?: boolean;
+  registerStatus?: 'default' | 'searching';
   onRegister?: () => void;
   twitchPanel?: ReactNode;
 }
@@ -17,6 +18,7 @@ export function TournamentDetailHeader({
   registrationProgress,
   registerLabel = 'Register',
   registerDisabled = false,
+  registerStatus = 'default',
   onRegister,
   twitchPanel,
 }: TournamentDetailHeaderProps) {
@@ -75,8 +77,17 @@ export function TournamentDetailHeader({
         type="button"
         onClick={onRegister}
         disabled={registerDisabled}
-        className={`absolute left-1/2 flex h-[44px] w-[247px] -translate-x-1/2 items-center justify-center rounded-[8px] bg-[#ff1654] text-[20px] leading-none text-white transition hover:bg-[#e61450] disabled:cursor-default disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+        data-testid="tournament-primary-action"
+        className={`absolute left-1/2 flex h-[44px] w-[247px] -translate-x-1/2 items-center justify-center rounded-[8px] text-[20px] leading-none text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
           hasTwitchPanel ? 'top-[164px]' : 'top-[388px]'
+        } ${
+          registerStatus === 'searching'
+            ? 'border border-[#ff1654] bg-[rgba(255,22,84,0.22)] shadow-[0_0_22px_rgba(255,22,84,0.18)]'
+            : 'bg-[#ff1654] hover:bg-[#e61450]'
+        } ${
+          registerStatus === 'searching'
+            ? 'disabled:cursor-default disabled:opacity-100'
+            : 'disabled:cursor-default disabled:opacity-60'
         }`}
         style={{ fontFamily: FONTS.wideBlack }}
       >
