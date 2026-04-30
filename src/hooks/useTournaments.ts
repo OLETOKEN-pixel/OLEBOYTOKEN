@@ -11,12 +11,14 @@ import type {
 const TOURNAMENT_LIST_SELECT = `
   *,
   creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url, twitch_username),
+  participants:tournament_participants(id),
   prize_positions:tournament_prize_positions(*)
 `;
 
 const TOURNAMENT_LIST_SELECT_LEGACY = `
   *,
   creator:profiles_public!tournaments_creator_id_fkey(user_id, username, avatar_url, discord_avatar_url),
+  participants:tournament_participants(id),
   prize_positions:tournament_prize_positions(*)
 `;
 
@@ -126,6 +128,13 @@ function withCreatorTwitchUsername(tournament: Tournament, twitchUsernameByUserI
   };
 }
 
+function normalizeTournamentListParticipantCounts(tournaments: Tournament[]): Tournament[] {
+  return tournaments.map((tournament) => ({
+    ...tournament,
+    participant_count: tournament.participants?.length ?? tournament.participant_count ?? 0,
+  }));
+}
+
 async function hydrateCreatorTwitchUsernames(tournaments: Tournament[]): Promise<Tournament[]> {
   const creatorIds = [...new Set(
     tournaments
@@ -152,7 +161,9 @@ async function hydrateCreatorTwitchUsernames(tournaments: Tournament[]): Promise
     (data ?? []).map((profile) => [profile.user_id, profile.twitch_username ?? null]),
   );
 
-  return tournaments.map((tournament) => withCreatorTwitchUsername(tournament, twitchUsernameByUserId));
+  return normalizeTournamentListParticipantCounts(
+    tournaments.map((tournament) => withCreatorTwitchUsername(tournament, twitchUsernameByUserId)),
+  );
 }
 
 async function hydrateSingleCreatorTwitchUsername(tournament: Tournament | null): Promise<Tournament | null> {
@@ -213,6 +224,13 @@ export function useTournaments(filter: TournamentListFilter = 'live') {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tournaments' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.tournaments.all });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tournament_participants' },
         () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.tournaments.all });
         }

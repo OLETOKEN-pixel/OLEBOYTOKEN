@@ -219,6 +219,47 @@ describe('useTournaments fallback compatibility', () => {
     consoleWarnSpy.mockRestore();
   });
 
+  it('derives the live participant count for tournament cards from embedded tournament participants', async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn(() => ({
+            in: profilesInMock,
+          })),
+        };
+      }
+
+      if (table !== 'tournaments') throw new Error(`Unexpected table ${table}`);
+
+      return {
+        select: vi.fn(() => ({
+          order: vi.fn(() => ({
+            in: vi.fn(() =>
+              Promise.resolve({
+                data: [
+                  tournamentFixture({
+                    participant_count: 0,
+                    participants: [{ id: 'p-1' }, { id: 'p-2' }] as Tournament['participants'],
+                  }),
+                ],
+                error: null,
+              }),
+            ),
+          })),
+        })),
+      };
+    });
+
+    const { result } = renderHook(() => useTournaments('live'), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.[0]?.participant_count).toBe(2);
+    expect(result.current.data?.[0]?.participants).toHaveLength(2);
+  });
+
   it('hydrates detail creator twitch username from player profile rpc when direct profile access is blocked', async () => {
     fromMock.mockImplementation((table: string) => {
       if (table === 'profiles') {
