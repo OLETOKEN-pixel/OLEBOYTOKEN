@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLoadingGuard } from "@/components/common/AppLoadingGuard";
 import { GlobalMatchEventListener } from "@/components/common/GlobalMatchEventListener";
+import { TournamentAutoTick } from "@/components/common/TournamentAutoTick";
 import { getCanonicalRedirectUrl } from "@/lib/oauth";
 import { WalletPurchaseProvider } from "@/contexts/WalletPurchaseContext";
 
@@ -129,6 +130,7 @@ function App() {
             <CanonicalDomainRedirect />
             <ScrollToTopOnRouteChange />
             <AuthenticatedGlobalListeners />
+            <TournamentAutoTick />
             {/* Match detail uses its own Figma neon layer. */}
             <GlobalBottomNeon />
             <WalletPurchaseProvider>
