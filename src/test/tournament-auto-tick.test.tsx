@@ -50,7 +50,25 @@ describe('TournamentAutoTick', () => {
 
   it('runs tournament_tick on mount and invalidates tournament and match queries when state changes', async () => {
     rpcMock.mockResolvedValue({
-      data: { auto_opened: 1, started: 0, finalized: 0 },
+      data: { auto_opened: 1, started: 0, reconciled: 0, finalized: 0 },
+      error: null,
+    });
+
+    const { invalidateSpy } = renderWithProviders('/tournaments/tournament-1');
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith('tournament_tick');
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.tournaments.all });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.matches.all });
+  });
+
+  it('invalidates tournaments and matches when the tick only reconciles finished tournament matches', async () => {
+    rpcMock.mockResolvedValue({
+      data: { auto_opened: 0, started: 0, reconciled: 1, finalized: 0 },
       error: null,
     });
 
@@ -68,7 +86,7 @@ describe('TournamentAutoTick', () => {
 
   it('keeps polling on an interval outside auth callback routes', async () => {
     rpcMock.mockResolvedValue({
-      data: { auto_opened: 0, started: 0, finalized: 0 },
+      data: { auto_opened: 0, started: 0, reconciled: 0, finalized: 0 },
       error: null,
     });
 
@@ -87,7 +105,7 @@ describe('TournamentAutoTick', () => {
 
   it('skips the heartbeat on auth callback routes', async () => {
     rpcMock.mockResolvedValue({
-      data: { auto_opened: 1, started: 0, finalized: 0 },
+      data: { auto_opened: 1, started: 0, reconciled: 0, finalized: 0 },
       error: null,
     });
 

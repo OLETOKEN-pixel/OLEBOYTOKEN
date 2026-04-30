@@ -9,6 +9,7 @@ const TICK_INTERVAL_MS = 15_000;
 type TournamentTickResult = {
   auto_opened?: number | null;
   started?: number | null;
+  reconciled?: number | null;
   finalized?: number | null;
 } | null;
 
@@ -51,6 +52,7 @@ export function TournamentAutoTick() {
         const changedCount =
           Number(result?.auto_opened ?? 0) +
           Number(result?.started ?? 0) +
+          Number(result?.reconciled ?? 0) +
           Number(result?.finalized ?? 0);
 
         if (changedCount > 0) {
