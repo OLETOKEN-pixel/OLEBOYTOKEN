@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 import type {
+  MatchParticipant,
+  MatchResult,
   ProfileSummary,
   Tournament,
   TournamentParticipant,
@@ -45,6 +47,27 @@ const TOURNAMENT_DETAIL_SELECT_LEGACY = `
   )
 `;
 
+const TOURNAMENT_MATCHES_SELECT = `
+  id,
+  tournament_id,
+  status,
+  finished_at,
+  created_at,
+  team_size,
+  team_a_id,
+  team_b_id,
+  participants:match_participants(
+    user_id,
+    team_id,
+    team_side
+  ),
+  result:match_results(
+    winner_user_id,
+    winner_team_id,
+    status
+  )
+`;
+
 export type TournamentListFilter = 'live' | 'past' | 'all';
 
 type QueryErrorLike = {
@@ -57,6 +80,19 @@ type QueryErrorLike = {
 type CreatorWithOptionalTwitch = Tournament['creator'] & {
   twitch_username?: string | null;
 };
+
+export interface TournamentMatchSummary {
+  id: string;
+  tournament_id: string | null;
+  status: string;
+  finished_at: string | null;
+  created_at: string;
+  team_size: number;
+  team_a_id?: string | null;
+  team_b_id?: string | null;
+  participants?: Array<Pick<MatchParticipant, 'user_id' | 'team_id' | 'team_side'>>;
+  result?: Pick<MatchResult, 'winner_user_id' | 'winner_team_id' | 'status'> | null;
+}
 
 type PlayerProfileViewRpcPayload = {
   success?: boolean;
@@ -354,6 +390,58 @@ export function useTournament(id: string | undefined) {
       supabase.removeChannel(channel);
     };
   }, [id, queryClient]);
+
+  return query;
+}
+
+export function useTournamentMatches(tournamentId: string | undefined) {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(
+    () =>
+      tournamentId
+        ? [...queryKeys.matches.all, 'tournament', tournamentId]
+        : [...queryKeys.matches.all, 'tournament', 'undefined'],
+    [tournamentId],
+  );
+
+  const query = useQuery({
+    queryKey,
+    enabled: !!tournamentId,
+    queryFn: async () => {
+      if (!tournamentId) return [];
+
+      const { data, error } = await supabase
+        .from('matches')
+        .select(TOURNAMENT_MATCHES_SELECT)
+        .eq('tournament_id', tournamentId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return (data ?? []) as unknown as TournamentMatchSummary[];
+    },
+  });
+
+  useEffect(() => {
+    if (!tournamentId) return;
+
+    const channel = supabase
+      .channel(`tournament-matches-${tournamentId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournamentId}` },
+        () => queryClient.invalidateQueries({ queryKey })
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'match_results' },
+        () => queryClient.invalidateQueries({ queryKey })
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, queryKey, tournamentId]);
 
   return query;
 }

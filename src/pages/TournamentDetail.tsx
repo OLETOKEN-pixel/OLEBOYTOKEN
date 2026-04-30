@@ -28,12 +28,25 @@ import {
   useRegisterTournament,
   useSetTournamentReady,
   useStartTournament,
+  type TournamentMatchSummary,
+  useTournamentMatches,
   useTournament,
 } from '@/hooks/useTournaments';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { copyTextToClipboard } from '@/lib/copyToClipboard';
 import { getModeRules } from '@/lib/matchRules';
-import type { Tournament } from '@/types';
+import type { Tournament, TournamentParticipant } from '@/types';
+
+const TERMINAL_TOURNAMENT_STATUSES = new Set(['completed', 'cancelled']);
+const FINAL_MATCH_STATUSES = new Set(['completed', 'finished', 'admin_resolved']);
+const CLOSED_MATCH_STATUSES = new Set([
+  'completed',
+  'finished',
+  'admin_resolved',
+  'expired',
+  'cancelled',
+  'canceled',
+]);
 
 function formatRemaining(endsAt: string | null): string {
   if (!endsAt) return 'TBD';
@@ -72,6 +85,91 @@ function formatDuration(seconds: number): string {
   const rest = totalMin % 60;
   if (rest === 0) return `${hours}h`;
   return `${hours}h ${rest}m`;
+}
+
+function deriveTournamentParticipantStats(
+  tournament: Tournament,
+  participants: TournamentParticipant[],
+  matches: TournamentMatchSummary[],
+) {
+  const derived = new Map<
+    string,
+    { points: number; wins: number; losses: number; matches_played: number; current_match_id: string | null }
+  >();
+  const participantByUserId = new Map<string, string>();
+  const participantByTeamId = new Map<string, string>();
+
+  for (const participant of participants) {
+    derived.set(participant.id, {
+      points: 0,
+      wins: 0,
+      losses: 0,
+      matches_played: 0,
+      current_match_id: null,
+    });
+
+    if (participant.user_id) participantByUserId.set(participant.user_id, participant.id);
+    if (participant.team_id) participantByTeamId.set(participant.team_id, participant.id);
+  }
+
+  for (const match of matches) {
+    const participantIds = new Set<string>();
+
+    for (const matchParticipant of match.participants ?? []) {
+      const participantId =
+        tournament.team_size > 1
+          ? (matchParticipant.team_id ? participantByTeamId.get(matchParticipant.team_id) : null)
+          : (matchParticipant.user_id ? participantByUserId.get(matchParticipant.user_id) : null);
+
+      if (participantId) {
+        participantIds.add(participantId);
+      }
+    }
+
+    if (
+      FINAL_MATCH_STATUSES.has(match.status) &&
+      match.result &&
+      (match.result.winner_user_id || match.result.winner_team_id)
+    ) {
+      const winnerParticipantId =
+        tournament.team_size > 1
+          ? (match.result.winner_team_id ? participantByTeamId.get(match.result.winner_team_id) : null)
+          : (match.result.winner_user_id ? participantByUserId.get(match.result.winner_user_id) : null);
+
+      if (winnerParticipantId) {
+        const winnerStats = derived.get(winnerParticipantId);
+        if (winnerStats) {
+          winnerStats.points += 3;
+          winnerStats.wins += 1;
+          winnerStats.matches_played += 1;
+          winnerStats.current_match_id = null;
+        }
+      }
+
+      for (const participantId of participantIds) {
+        if (participantId === winnerParticipantId) continue;
+        const loserStats = derived.get(participantId);
+        if (loserStats) {
+          loserStats.losses += 1;
+          loserStats.matches_played += 1;
+          loserStats.current_match_id = null;
+        }
+      }
+
+      continue;
+    }
+
+    if (!TERMINAL_TOURNAMENT_STATUSES.has(tournament.status) && !CLOSED_MATCH_STATUSES.has(match.status)) {
+      for (const participantId of participantIds) {
+        const stats = derived.get(participantId);
+        if (stats) {
+          stats.current_match_id = match.id;
+        }
+      }
+    }
+  }
+
+  return derived;
 }
 
 export default function TournamentDetail() {
@@ -220,6 +318,7 @@ function TournamentDetailContent({
 }: ContentProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: tournamentMatches = [] } = useTournamentMatches(t.id);
   const rosterRef = useRef<HTMLElement>(null);
   const announcedMatchIdRef = useRef<string | null | undefined>(undefined);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -228,7 +327,29 @@ function TournamentDetailContent({
   const [prizeOpen, setPrizeOpen] = useState(false);
   const [readyOpen, setReadyOpen] = useState(true);
   const [statsUserId, setStatsUserId] = useState<string | null>(null);
-  const participants = useMemo(() => t.participants ?? [], [t.participants]);
+  const participants = useMemo(() => {
+    const baseParticipants = t.participants ?? [];
+    const derivedStats = deriveTournamentParticipantStats(t, baseParticipants, tournamentMatches);
+
+    return baseParticipants.map((participant) => {
+      const derived = derivedStats.get(participant.id);
+      if (!derived) {
+        return participant;
+      }
+
+      return {
+        ...participant,
+        points: Math.max(participant.points, derived.points),
+        wins: Math.max(participant.wins, derived.wins),
+        losses: Math.max(participant.losses, derived.losses),
+        matches_played: Math.max(participant.matches_played, derived.matches_played),
+        current_match_id: TERMINAL_TOURNAMENT_STATUSES.has(t.status)
+          ? null
+          : participant.current_match_id ?? derived.current_match_id,
+        ready: TERMINAL_TOURNAMENT_STATUSES.has(t.status) ? false : participant.ready,
+      };
+    });
+  }, [t, tournamentMatches]);
   const participantCount = participants.length;
   const fillPct = Math.min(100, (participantCount / t.max_participants) * 100);
   const alreadyJoined = isParticipating(t, currentUserId);
@@ -246,20 +367,31 @@ function TournamentDetailContent({
   const myParticipation = participants.find(
     (p) => p.user_id === currentUserId || p.payer_user_id === currentUserId,
   );
-  const currentMatchId = myParticipation?.current_match_id ?? null;
+  const currentMatchId = TERMINAL_TOURNAMENT_STATUSES.has(t.status)
+    ? null
+    : myParticipation?.current_match_id ?? null;
+  const currentTournamentMatch = currentMatchId
+    ? tournamentMatches.find((match) => match.id === currentMatchId) ?? null
+    : null;
   const isEliminated = Boolean(myParticipation?.eliminated);
   const needsReady =
     alreadyJoined &&
     !isEliminated &&
     !myParticipation?.ready &&
+    !TERMINAL_TOURNAMENT_STATUSES.has(t.status) &&
     (t.status === 'ready_up' || t.status === 'running');
   const isSearchingMatch =
     alreadyJoined &&
     !isEliminated &&
     Boolean(myParticipation?.ready) &&
     !currentMatchId &&
+    !TERMINAL_TOURNAMENT_STATUSES.has(t.status) &&
     (t.status === 'ready_up' || t.status === 'running');
-  const canOpenAssignedMatch = Boolean(currentMatchId);
+  const canOpenAssignedMatch = Boolean(
+    currentMatchId &&
+      !TERMINAL_TOURNAMENT_STATUSES.has(t.status) &&
+      (!currentTournamentMatch || !CLOSED_MATCH_STATUSES.has(currentTournamentMatch.status)),
+  );
 
   useEffect(() => {
     if (announcedMatchIdRef.current === undefined) {
@@ -367,6 +499,10 @@ function TournamentDetailContent({
     record: `${participant.wins}-${participant.losses}`,
     status: participant.eliminated
       ? 'OUT'
+      : t.status === 'completed'
+        ? 'COMPLETED'
+        : t.status === 'cancelled'
+          ? 'CANCELLED'
       : participant.current_match_id
         ? 'IN MATCH'
         : participant.ready
@@ -898,6 +1034,10 @@ function TournamentLeaderboardOverlay({
                             ? 'border-[#ff1654] bg-[rgba(255,22,84,0.16)] text-white'
                             : row.status === 'READY'
                               ? 'border-[#7fe05b] bg-[rgba(127,224,91,0.14)] text-[#7fe05b]'
+                              : row.status === 'COMPLETED'
+                                ? 'border-[#7fe05b] bg-[rgba(127,224,91,0.14)] text-[#7fe05b]'
+                                : row.status === 'CANCELLED'
+                                  ? 'border-white/20 bg-white/5 text-white/55'
                               : row.status === 'OUT'
                                 ? 'border-white/20 bg-white/5 text-white/55'
                                 : 'border-white/20 bg-white/5 text-white/75'

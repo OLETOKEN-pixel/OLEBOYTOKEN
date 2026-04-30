@@ -21,6 +21,7 @@ const {
   authState,
   listState,
   detailState,
+  tournamentMatchesState,
   eligibleTeamsState,
   streamStatusState,
   createMutationMock,
@@ -39,6 +40,7 @@ const {
   },
   listState: { data: [] as Tournament[], isLoading: false },
   detailState: { data: null as Tournament | null, isLoading: false },
+  tournamentMatchesState: { data: [] as unknown[] },
   eligibleTeamsState: {
     eligibleTeams: [] as EligibleTeamFixture[],
     loading: false,
@@ -96,6 +98,7 @@ vi.mock('@/hooks/useTournamentStreamStatus', () => ({
 vi.mock('@/hooks/useTournaments', () => ({
   useTournaments: () => listState,
   useTournament: () => detailState,
+  useTournamentMatches: () => ({ data: tournamentMatchesState.data, isLoading: false }),
   useCreateTournament: () => createMutationMock,
   useRegisterTournament: () => registerMutationMock,
   useStartTournament: () => startMutationMock,
@@ -220,6 +223,7 @@ describe('Tournaments Figma rebuild', () => {
     listState.isLoading = false;
     detailState.data = tournamentFixture();
     detailState.isLoading = false;
+    tournamentMatchesState.data = [];
     streamStatusState.value = {
       data: null,
       isLoading: false,
@@ -442,6 +446,101 @@ describe('Tournaments Figma rebuild', () => {
     renderDetail();
 
     expect(screen.getByTestId('tournament-primary-action')).toHaveTextContent('Open Match');
+  });
+
+  it('hides stale open match actions and rebuilds completed leaderboard stats from tournament matches', () => {
+    detailState.data = tournamentFixture({
+      status: 'completed',
+      participants: [
+        {
+          id: 'participant-owner',
+          tournament_id: 'tournament-1',
+          user_id: 'player-1',
+          team_id: null,
+          payer_user_id: 'player-1',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:00:00.000Z',
+          ready: true,
+          ready_at: '2026-04-27T10:01:00.000Z',
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          current_match_id: 'match-final',
+          eliminated: false,
+          user: { user_id: 'player-1', username: 'owener1', avatar_url: null, discord_avatar_url: null },
+        },
+        {
+          id: 'participant-current',
+          tournament_id: 'tournament-1',
+          user_id: 'user-current',
+          team_id: null,
+          payer_user_id: 'user-current',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:05:00.000Z',
+          ready: true,
+          ready_at: '2026-04-27T10:06:00.000Z',
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          current_match_id: 'match-final',
+          eliminated: false,
+          user: { user_id: 'user-current', username: 'OleBoyTokens', avatar_url: null, discord_avatar_url: null },
+        },
+        {
+          id: 'participant-third',
+          tournament_id: 'tournament-1',
+          user_id: 'player-3',
+          team_id: null,
+          payer_user_id: 'player-3',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:09:00.000Z',
+          ready: false,
+          ready_at: null,
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          current_match_id: null,
+          eliminated: false,
+          user: { user_id: 'player-3', username: 'marv', avatar_url: null, discord_avatar_url: null },
+        },
+      ],
+      participant_count: 3,
+    });
+    tournamentMatchesState.data = [
+      {
+        id: 'match-final',
+        tournament_id: 'tournament-1',
+        status: 'finished',
+        finished_at: '2026-04-27T10:15:00.000Z',
+        created_at: '2026-04-27T10:10:00.000Z',
+        team_size: 1,
+        participants: [
+          { user_id: 'player-1', team_id: null, team_side: 'A' },
+          { user_id: 'user-current', team_id: null, team_side: 'B' },
+        ],
+        result: {
+          winner_user_id: 'user-current',
+          winner_team_id: null,
+          status: 'confirmed',
+        },
+      },
+    ];
+
+    renderDetail();
+
+    expect(screen.queryByRole('button', { name: /open match/i })).toBeNull();
+    expect(screen.getByTestId('tournament-primary-action')).toHaveTextContent('COMPLETED');
+
+    fireEvent.click(screen.getByRole('button', { name: /leaderboard/i }));
+    const dialog = screen.getByRole('dialog', { name: 'LEADERBOARD' });
+
+    expect(within(dialog).queryByText('IN MATCH')).toBeNull();
+    expect(within(dialog).getAllByText('COMPLETED').length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText('1-0').length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText('0-1').length).toBeGreaterThan(0);
   });
 
   it('keeps the Twitch player mounted without viewer count when the creator is offline', () => {
