@@ -505,6 +505,61 @@ describe('Tournaments Figma rebuild', () => {
     expect(within(dialog).getByText('No banned weapons. Ready up on time.')).toBeInTheDocument();
   });
 
+  it('renders the leaderboard overlay as a ranking view instead of reusing the plain players table', () => {
+    detailState.data = tournamentFixture({
+      participants: [
+        {
+          id: 'participant-1',
+          tournament_id: 'tournament-1',
+          user_id: 'player-1',
+          team_id: null,
+          payer_user_id: 'player-1',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:00:00.000Z',
+          ready: true,
+          ready_at: '2026-04-27T10:01:00.000Z',
+          matches_played: 4,
+          wins: 3,
+          losses: 1,
+          points: 9,
+          current_match_id: 'match-1',
+          eliminated: false,
+          user: { user_id: 'player-1', username: 'Lorem Ipsum', avatar_url: null, discord_avatar_url: null },
+        },
+        {
+          id: 'participant-2',
+          tournament_id: 'tournament-1',
+          user_id: 'player-2',
+          team_id: null,
+          payer_user_id: 'player-2',
+          paid_amount: 0,
+          joined_at: '2026-04-27T10:05:00.000Z',
+          ready: true,
+          ready_at: '2026-04-27T10:06:00.000Z',
+          matches_played: 2,
+          wins: 1,
+          losses: 1,
+          points: 3,
+          current_match_id: null,
+          eliminated: false,
+          user: { user_id: 'player-2', username: 'Second Player', avatar_url: null, discord_avatar_url: null },
+        },
+      ],
+      participant_count: 2,
+    });
+
+    renderDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: /leaderboard/i }));
+    const dialog = screen.getByRole('dialog', { name: 'LEADERBOARD' });
+
+    expect(within(dialog).getByText('LIVE RANKING')).toBeInTheDocument();
+    expect(within(dialog).getByRole('columnheader', { name: 'Points' })).toBeInTheDocument();
+    expect(within(dialog).getByText('IN MATCH')).toBeInTheDocument();
+    expect(within(dialog).getByText('READY')).toBeInTheDocument();
+    expect(within(dialog).getAllByText('#1')).toHaveLength(2);
+  });
+
   it('registers team tournaments through the Figma team selection overlay', async () => {
     detailState.data = tournamentFixture({
       team_size: 2,

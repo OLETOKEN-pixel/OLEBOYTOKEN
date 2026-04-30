@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 import type {
+  ProfileSummary,
   Tournament,
   TournamentParticipant,
   TournamentStatus,
@@ -61,6 +62,10 @@ type PlayerProfileViewRpcPayload = {
   success?: boolean;
   profile?: {
     user_id?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+    discord_avatar_url?: string | null;
+    epic_username?: string | null;
     twitch_username?: string | null;
   } | null;
 };
@@ -135,6 +140,35 @@ function normalizeTournamentListParticipantCounts(tournaments: Tournament[]): To
   }));
 }
 
+function toProfileSummaryFromRpc(payload: PlayerProfileViewRpcPayload | null): ProfileSummary | null {
+  if (!payload?.success || !payload.profile?.user_id) {
+    return null;
+  }
+
+  return {
+    user_id: String(payload.profile.user_id),
+    username: String(payload.profile.username || 'Unknown Player'),
+    avatar_url: payload.profile.avatar_url ?? payload.profile.discord_avatar_url ?? null,
+    discord_avatar_url: payload.profile.discord_avatar_url ?? payload.profile.avatar_url ?? null,
+    epic_username: payload.profile.epic_username ?? null,
+    twitch_username: payload.profile.twitch_username ?? null,
+  };
+}
+
+function mergeProfileSummary(
+  current: ProfileSummary | null | undefined,
+  fallback: ProfileSummary,
+): ProfileSummary {
+  return {
+    user_id: current?.user_id ?? fallback.user_id,
+    username: current?.username || fallback.username,
+    avatar_url: current?.avatar_url ?? fallback.avatar_url ?? null,
+    discord_avatar_url: current?.discord_avatar_url ?? fallback.discord_avatar_url ?? null,
+    epic_username: current?.epic_username ?? fallback.epic_username ?? null,
+    twitch_username: current?.twitch_username ?? fallback.twitch_username ?? null,
+  };
+}
+
 async function hydrateCreatorTwitchUsernames(tournaments: Tournament[]): Promise<Tournament[]> {
   const creatorIds = [...new Set(
     tournaments
@@ -171,31 +205,68 @@ async function hydrateSingleCreatorTwitchUsername(tournament: Tournament | null)
   const [hydratedTournament] = await hydrateCreatorTwitchUsernames([tournament]);
   const creatorId = hydratedTournament?.creator?.user_id ?? hydratedTournament?.creator_id ?? null;
 
-  if (!hydratedTournament || !creatorId || hydratedTournament.creator?.twitch_username) {
-    return hydratedTournament ?? tournament;
+  if (!hydratedTournament) {
+    return tournament;
   }
 
-  const { data, error } = await supabase.rpc('get_player_profile_view', {
-    p_user_id: creatorId,
-  });
+  const missingUserIds = [
+    ...new Set(
+      [
+        !hydratedTournament.creator || !hydratedTournament.creator.twitch_username ? creatorId : null,
+        ...(hydratedTournament.participants ?? [])
+          .filter((participant) => participant.user_id && !participant.user)
+          .map((participant) => participant.user_id),
+      ].filter((userId): userId is string => Boolean(userId)),
+    ),
+  ];
 
-  if (error) {
+  if (missingUserIds.length === 0) {
     return hydratedTournament;
   }
 
-  const payload = (data ?? null) as PlayerProfileViewRpcPayload | null;
-  const rpcTwitchUsername = payload?.success ? payload.profile?.twitch_username?.trim() ?? null : null;
+  const rpcProfiles = await Promise.all(
+    missingUserIds.map(async (userId) => {
+      const { data, error } = await supabase.rpc('get_player_profile_view', {
+        p_user_id: userId,
+      });
 
-  if (!rpcTwitchUsername || !hydratedTournament.creator) {
+      if (error) {
+        return null;
+      }
+
+      const summary = toProfileSummaryFromRpc((data ?? null) as PlayerProfileViewRpcPayload | null);
+      return summary ? [userId, summary] as const : null;
+    }),
+  );
+
+  const rpcProfileMap = new Map<string, ProfileSummary>(
+    rpcProfiles.filter((entry): entry is readonly [string, ProfileSummary] => Boolean(entry)),
+  );
+
+  if (rpcProfileMap.size === 0) {
     return hydratedTournament;
   }
 
   return {
     ...hydratedTournament,
-    creator: {
-      ...hydratedTournament.creator,
-      twitch_username: rpcTwitchUsername,
-    },
+    creator: creatorId && rpcProfileMap.has(creatorId)
+      ? mergeProfileSummary(hydratedTournament.creator, rpcProfileMap.get(creatorId)!)
+      : hydratedTournament.creator,
+    participants: (hydratedTournament.participants ?? []).map((participant) => {
+      if (!participant.user_id) {
+        return participant;
+      }
+
+      const fallbackProfile = rpcProfileMap.get(participant.user_id);
+      if (!fallbackProfile) {
+        return participant;
+      }
+
+      return {
+        ...participant,
+        user: mergeProfileSummary(participant.user, fallbackProfile),
+      };
+    }),
   };
 }
 

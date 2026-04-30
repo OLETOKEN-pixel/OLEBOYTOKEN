@@ -352,6 +352,28 @@ function TournamentDetailContent({
     };
   });
 
+  const leaderboardRows = ranked.map((participant, index) => ({
+    id: participant.id,
+    rank: index + 1,
+    name: isTeamTournament
+      ? participant.team?.name ?? 'Unknown Team'
+      : participant.user?.username ?? 'Unknown Player',
+    avatarUrl: getDiscordAvatarUrl(participant.user ?? participant.team?.owner ?? null),
+    points: participant.points,
+    winRate:
+      participant.matches_played > 0
+        ? `${((participant.wins / participant.matches_played) * 100).toFixed(2)}%`
+        : '0.00%',
+    record: `${participant.wins}-${participant.losses}`,
+    status: participant.eliminated
+      ? 'OUT'
+      : participant.current_match_id
+        ? 'IN MATCH'
+        : participant.ready
+          ? 'READY'
+          : 'WAITING',
+  }));
+
   const openParticipantStats = (rowId: string) => {
     const participant = participants.find((item) => item.id === rowId);
     const userId = participant?.user_id ?? participant?.payer_user_id ?? null;
@@ -489,7 +511,7 @@ function TournamentDetailContent({
       <TournamentLeaderboardOverlay
         open={leaderboardOpen}
         title={rosterLabel}
-        rows={teamRows}
+        rows={leaderboardRows}
         onClose={() => setLeaderboardOpen(false)}
       />
       <TournamentPrizeOverlay open={prizeOpen} tournament={t} onClose={() => setPrizeOpen(false)} />
@@ -735,15 +757,27 @@ function TournamentLeaderboardOverlay({
 }: {
   open: boolean;
   title: string;
-  rows: TournamentTeamRow[];
+  rows: Array<{
+    id: string;
+    rank: number;
+    name: string;
+    avatarUrl?: string | null;
+    points: number;
+    winRate: string;
+    record: string;
+    status: string;
+  }>;
   onClose: () => void;
 }) {
+  const podiumRows = rows.slice(0, 3);
+
   return (
     <TournamentModalShell
       open={open}
       onClose={onClose}
       eyebrow="TOURNAMENT LEADERBOARD"
-      title={title}
+      title="LEADERBOARD"
+      maxWidth={1120}
       footer={
         <div className="flex justify-end">
           <FigmaPillButton pink className="w-[247px]" onClick={onClose}>
@@ -753,28 +787,126 @@ function TournamentLeaderboardOverlay({
       }
     >
       <div className="rounded-[18px] border border-[#ff1654] bg-[#0f0404]/55 p-5">
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[18px] uppercase tracking-[0.14em] text-white/45" style={{ fontFamily: FONTS.expandedBold }}>
+              {title}
+            </p>
+            <p className="mt-2 text-[30px] text-white" style={{ fontFamily: FONTS.expandedBlack }}>
+              LIVE RANKING
+            </p>
+          </div>
+          <div className="rounded-[16px] border border-[#ff1654] bg-[rgba(255,22,84,0.12)] px-4 py-3 text-right">
+            <p className="text-[13px] uppercase tracking-[0.14em] text-white/45" style={{ fontFamily: FONTS.expandedBold }}>
+              Total Entries
+            </p>
+            <p className="mt-1 text-[26px] text-white" style={{ fontFamily: FONTS.expandedBlack }}>
+              {rows.length}
+            </p>
+          </div>
+        </div>
+
+        {podiumRows.length > 0 ? (
+          <div className="mb-6 grid gap-4 md:grid-cols-3">
+            {podiumRows.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-[18px] border border-[#ff1654] bg-[#161616] px-5 py-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {row.avatarUrl ? (
+                      <img src={row.avatarUrl} alt="" aria-hidden="true" className="h-[58px] w-[58px] rounded-full object-cover" />
+                    ) : (
+                      <img src={TOURNAMENT_ASSETS.teamAvatar} alt="" aria-hidden="true" className="h-[58px] w-[58px]" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-[24px] text-white" style={{ fontFamily: FONTS.expandedBold }}>
+                        {row.name}
+                      </p>
+                      <p className="mt-1 text-[13px] uppercase tracking-[0.12em] text-white/45" style={{ fontFamily: FONTS.expandedBold }}>
+                        {row.record} record
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-[14px] border border-[#ff1654] bg-[rgba(255,22,84,0.16)] px-3 py-2 text-[24px] text-white" style={{ fontFamily: FONTS.expandedBlack }}>
+                    #{row.rank}
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-center justify-between rounded-[14px] bg-black/35 px-4 py-4">
+                  <div>
+                    <p className="text-[12px] uppercase tracking-[0.14em] text-white/45" style={{ fontFamily: FONTS.expandedBold }}>
+                      Points
+                    </p>
+                    <p className="mt-1 text-[30px] text-white" style={{ fontFamily: FONTS.expandedBlack }}>
+                      {row.points}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[12px] uppercase tracking-[0.14em] text-white/45" style={{ fontFamily: FONTS.expandedBold }}>
+                      Win Rate
+                    </p>
+                    <p className="mt-1 text-[26px] text-white" style={{ fontFamily: FONTS.expandedBold }}>
+                      {row.winRate}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         {rows.length === 0 ? (
           <p className="text-[24px] text-white/65" style={{ fontFamily: FONTS.expanded }}>
             No players registered yet.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[620px] text-left text-white">
+          <div className="overflow-x-auto rounded-[18px] border border-white/10 bg-[#1b1b1b]">
+            <table className="w-full min-w-[760px] text-left text-white">
               <thead className="text-[14px] uppercase text-white/55" style={{ fontFamily: FONTS.expandedBold }}>
                 <tr>
                   <th className="px-4 py-3">Rank</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Size</th>
+                  <th className="px-4 py-3">Player</th>
+                  <th className="px-4 py-3">Points</th>
+                  <th className="px-4 py-3">Record</th>
                   <th className="px-4 py-3">Win Rate</th>
+                  <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
               <tbody className="text-[20px]" style={{ fontFamily: FONTS.expandedBold }}>
-                {rows.map((row, index) => (
+                {rows.map((row) => (
                   <tr key={row.id} className="border-t border-white/10">
-                    <td className="px-4 py-4 text-[#ff1654]">#{index + 1}</td>
-                    <td className="px-4 py-4">{row.name}</td>
-                    <td className="px-4 py-4">{row.size}</td>
+                    <td className="px-4 py-4 text-[#ff1654]">#{row.rank}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        {row.avatarUrl ? (
+                          <img src={row.avatarUrl} alt="" aria-hidden="true" className="h-[40px] w-[40px] rounded-full object-cover" />
+                        ) : (
+                          <img src={TOURNAMENT_ASSETS.teamAvatar} alt="" aria-hidden="true" className="h-[40px] w-[40px]" />
+                        )}
+                        <span>{row.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">{row.points}</td>
+                    <td className="px-4 py-4">{row.record}</td>
                     <td className="px-4 py-4">{row.winRate}</td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex rounded-[999px] border px-3 py-2 text-[13px] uppercase tracking-[0.12em] ${
+                          row.status === 'IN MATCH'
+                            ? 'border-[#ff1654] bg-[rgba(255,22,84,0.16)] text-white'
+                            : row.status === 'READY'
+                              ? 'border-[#7fe05b] bg-[rgba(127,224,91,0.14)] text-[#7fe05b]'
+                              : row.status === 'OUT'
+                                ? 'border-white/20 bg-white/5 text-white/55'
+                                : 'border-white/20 bg-white/5 text-white/75'
+                        }`}
+                        style={{ fontFamily: FONTS.expandedBold }}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

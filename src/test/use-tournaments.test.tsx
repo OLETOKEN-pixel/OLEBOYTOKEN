@@ -303,4 +303,105 @@ describe('useTournaments fallback compatibility', () => {
     expect(rpcMock).toHaveBeenCalledWith('get_player_profile_view', { p_user_id: 'creator-1' });
     expect(result.current.data?.creator?.twitch_username).toBe('host_channel');
   });
+
+  it('hydrates missing tournament creator and participant profiles from the player profile rpc', async () => {
+    rpcMock.mockImplementation((_fn: string, args: { p_user_id: string }) => {
+      if (args.p_user_id === 'creator-1') {
+        return Promise.resolve({
+          data: {
+            success: true,
+            profile: {
+              user_id: 'creator-1',
+              username: 'HostChannel',
+              avatar_url: null,
+              discord_avatar_url: null,
+              twitch_username: 'host_channel',
+            },
+          },
+          error: null,
+        });
+      }
+
+      return Promise.resolve({
+        data: {
+          success: true,
+          profile: {
+            user_id: 'player-2',
+            username: 'SecondPlayer',
+            avatar_url: null,
+            discord_avatar_url: null,
+            epic_username: 'SecondEpic',
+            twitch_username: null,
+          },
+        },
+        error: null,
+      });
+    });
+
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn(() => ({
+            in: vi.fn(() =>
+              Promise.resolve({
+                data: null,
+                error: {
+                  code: '42501',
+                  message: 'permission denied for table profiles',
+                },
+              }),
+            ),
+          })),
+        };
+      }
+
+      if (table !== 'tournaments') throw new Error(`Unexpected table ${table}`);
+
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(() =>
+              Promise.resolve({
+                data: tournamentFixture({
+                  creator: undefined,
+                  participants: [
+                    {
+                      id: 'participant-2',
+                      tournament_id: 'tournament-1',
+                      user_id: 'player-2',
+                      team_id: null,
+                      payer_user_id: 'player-2',
+                      paid_amount: 0,
+                      joined_at: '2026-04-28T11:00:00.000Z',
+                      ready: false,
+                      ready_at: null,
+                      matches_played: 0,
+                      wins: 0,
+                      losses: 0,
+                      points: 0,
+                      current_match_id: null,
+                      eliminated: false,
+                      user: undefined,
+                    },
+                  ],
+                }),
+                error: null,
+              }),
+            ),
+          })),
+        })),
+      };
+    });
+
+    const { result } = renderHook(() => useTournament('tournament-1'), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.creator?.username).toBe('HostChannel');
+    expect(result.current.data?.creator?.twitch_username).toBe('host_channel');
+    expect(result.current.data?.participants?.[0]?.user?.username).toBe('SecondPlayer');
+    expect(result.current.data?.participants?.[0]?.user?.epic_username).toBe('SecondEpic');
+  });
 });
