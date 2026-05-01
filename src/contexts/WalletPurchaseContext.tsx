@@ -31,17 +31,21 @@ const FALLBACK_CONTEXT: WalletPurchaseContextValue = {
 const WalletPurchaseContext = createContext<WalletPurchaseContextValue>(FALLBACK_CONTEXT);
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
+const FR = "'Base_Neue_Trial:Regular', 'Base Neue Trial-Regular', 'Base Neue Trial', sans-serif";
 const FE = "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif";
 const FB = "'Base_Neue_Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
-const FO = "'Base_Neue_Trial-BoldOblique', 'Base Neue Trial', sans-serif";
+const FBO = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
+const FBD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
+const FWB = "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial-WideBlack', 'Base Neue Trial', sans-serif";
 
 const BEST_SELLER_PACKAGE_ID = 'pack-25';
 const DEFAULT_PACKAGE_ID = 'pack-5';
-const VIP_PRICE_LABEL = '€9,99';
+const EURO = '\u20AC';
+const VIP_PRICE_LABEL = `${EURO}9,99`;
 const VIP_BENEFITS = ['Real rewards', 'Giveaways', 'Less levels, more prizes'];
 
 function formatEuroLabel(amount: number) {
-  return `€ ${amount.toFixed(2).replace('.', ',')}`;
+  return `${EURO} ${amount.toFixed(2).replace('.', ',')}`;
 }
 
 export function useWalletPurchase() {
@@ -248,13 +252,13 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
 
           <div
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'max-content max-content',
               justifyContent: 'center',
-              gap: '32px',
-              width: 'min(520px, calc(100% - 32px))',
+              alignItems: 'end',
+              columnGap: 'clamp(28px, 5vw, 56px)',
               marginTop: '51px',
-              borderBottom: '1px solid transparent',
-              flexWrap: 'wrap',
+              width: 'min(100%, 520px)',
             }}
           >
             <WalletTabButton active={activeTab === 'coins'} onClick={() => setActiveTab('coins')}>
@@ -500,8 +504,8 @@ function WalletTabButton({
         background: 'transparent',
         color: '#ffffff',
         cursor: 'pointer',
-        fontFamily: active ? FB : F,
-        fontSize: 'clamp(24px, 3.2vw, 32px)',
+        fontFamily: active ? FBD : FR,
+        fontSize: 'clamp(20px, 2.4vw, 32px)',
         lineHeight: 1,
         padding: '0 0 11px',
         outline: 'none',
@@ -580,7 +584,7 @@ function CoinPackageButton({
               top: '3px',
               right: '23px',
               color: '#ffffff',
-              fontFamily: FO,
+              fontFamily: FBO,
               fontSize: '12px',
               lineHeight: 1,
               whiteSpace: 'nowrap',
@@ -622,7 +626,7 @@ function CoinPackageButton({
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             color: 'transparent',
-            fontFamily: FO,
+            fontFamily: FBO,
             fontSize: '28px',
             lineHeight: 1,
             whiteSpace: 'nowrap',
@@ -786,10 +790,12 @@ function PrimaryActionButton({
           placeItems: 'center',
           width: '100%',
           height: '100%',
-          fontFamily: FB,
-          fontSize: 'clamp(24px, 3.8vw, 32px)',
+          fontFamily: FWB,
+          fontSize: useVipAsset ? '32px' : '28px',
           lineHeight: 1,
           whiteSpace: 'nowrap',
+          maxWidth: 'calc(100% - 20px)',
+          margin: '0 auto',
         }}
       >
         {label}
