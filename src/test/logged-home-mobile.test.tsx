@@ -278,6 +278,28 @@ describe('HomeRegistered mobile logged-in landing', () => {
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/challenges|');
   });
 
+  it('routes the mobile rank up CTA to the standalone leaderboard page', async () => {
+    setViewportWidth(390);
+
+    renderWithProviders(
+      <MemoryRouter initialEntries={['/']}>
+        <HomeRegistered displayName="Tester" />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Redline')).toBeInTheDocument();
+      expect(screen.getByText('Win one match')).toBeInTheDocument();
+      expect(screen.getByText('140')).toBeInTheDocument();
+      expect(screen.getByText('Alpha')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open leaderboard page' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/leaderboard|');
+  });
+
   it('marks mobile logged-home roots as horizontally clipped', async () => {
     setViewportWidth(320);
 

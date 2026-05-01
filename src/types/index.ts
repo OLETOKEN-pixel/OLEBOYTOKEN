@@ -285,6 +285,37 @@ export interface LeaderboardEntry {
   total_earnings: number;
 }
 
+export type LeaderboardTab = 'earnings' | 'profit' | 'wins' | 'teams';
+
+export type PlayerLeaderboardTab = Exclude<LeaderboardTab, 'teams'>;
+
+export interface PlayerLeaderboardMetricRow {
+  rank: number;
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  discord_avatar_url: string | null;
+  wins: number;
+  total_matches: number;
+  total_earnings: number;
+  total_profit: number;
+}
+
+export interface TeamLeaderboardRow {
+  rank: number;
+  team_id: string;
+  team_name: string;
+  team_tag: string;
+  logo_url: string | null;
+  owner_user_id: string;
+  owner_username: string;
+  owner_avatar_url: string | null;
+  owner_discord_avatar_url: string | null;
+  wins: number;
+  total_matches: number;
+  total_earnings: number;
+}
+
 // =====================================================================
 // TOURNAMENTS
 // =====================================================================

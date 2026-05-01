@@ -20,6 +20,13 @@ export const queryKeys = {
     streamStatus: (username: string) =>
       [...queryKeys.tournaments.all, 'stream-status', username.toLowerCase()] as const,
   },
+  leaderboard: {
+    all: ['leaderboard'] as const,
+    players: (metric: string, search: string, page: number) =>
+      [...queryKeys.leaderboard.all, 'players', metric, search, page] as const,
+    teams: (search: string, page: number) =>
+      [...queryKeys.leaderboard.all, 'teams', search, page] as const,
+  },
   wallet: (userId: string) => ['wallet', userId] as const,
   profile: (userId: string) => ['profile', userId] as const,
   playerProfile: (userId: string) => ['player-profile', userId] as const,

@@ -101,6 +101,17 @@ describe('NavbarFigmaLoggedIn', () => {
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/|s-shop');
   });
 
+  it('keeps leaderboard active on the standalone leaderboard route', () => {
+    render(
+      <MemoryRouter initialEntries={['/leaderboard?tab=profit']}>
+        <NavbarFigmaLoggedIn />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'LEADERBOARD' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'leaderboard' })).not.toBeInTheDocument();
+  });
+
   it('sends matches clicks to the logged-home matches section instead of staying on /matches', () => {
     render(
       <MemoryRouter initialEntries={['/matches']}>
@@ -125,6 +136,19 @@ describe('NavbarFigmaLoggedIn', () => {
     fireEvent.click(screen.getByRole('button', { name: 'teams' }));
 
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/teams|');
+  });
+
+  it('routes leaderboard clicks to the standalone leaderboard page', () => {
+    render(
+      <MemoryRouter initialEntries={['/matches']}>
+        <NavbarFigmaLoggedIn />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'leaderboard' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/leaderboard|');
   });
 
   it('routes challenges clicks to the standalone challenges page', () => {

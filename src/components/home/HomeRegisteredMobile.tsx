@@ -593,6 +593,7 @@ function SmallValue({ label, value }: { label: string; value: string }) {
 }
 
 function LeaderboardMobile() {
+  const navigate = useNavigate();
   const [players, setPlayers] = useState<PlayerDisplay[]>(PLACEHOLDER_PLAYERS);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRank, setSelectedRank] = useState<number | null>(null);
@@ -723,7 +724,7 @@ function LeaderboardMobile() {
           </Panel>
         ))}
       </div>
-      <MobileCta ariaLabel="Rank up">RANK UP</MobileCta>
+      <MobileCta onClick={() => navigate('/leaderboard')} ariaLabel="Open leaderboard page">RANK UP</MobileCta>
       <PlayerStatsModal
         open={!!selectedUserId}
         onOpenChange={(open) => {

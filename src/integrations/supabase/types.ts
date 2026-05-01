@@ -2043,6 +2043,25 @@ export type Database = {
           wins: number
         }[]
       }
+      get_player_leaderboard_metric: {
+        Args: {
+          p_limit?: number
+          p_metric: string
+          p_offset?: number
+          p_query?: string | null
+        }
+        Returns: {
+          avatar_url: string
+          discord_avatar_url: string
+          rank: number
+          total_earnings: number
+          total_matches: number
+          total_profit: number
+          user_id: string
+          username: string
+          wins: number
+        }[]
+      }
       get_leaderboard_weekly: {
         Args: { p_limit?: number }
         Returns: {
@@ -2060,6 +2079,23 @@ export type Database = {
       get_player_stats: { Args: { p_user_id: string }; Returns: Json }
       get_team_detail: { Args: { p_team_id: string }; Returns: Json }
       get_team_invites: { Args: never; Returns: Json }
+      get_team_leaderboard_earnings: {
+        Args: { p_limit?: number; p_offset?: number; p_query?: string | null }
+        Returns: {
+          logo_url: string
+          owner_avatar_url: string
+          owner_discord_avatar_url: string
+          owner_user_id: string
+          owner_username: string
+          rank: number
+          team_id: string
+          team_name: string
+          team_tag: string
+          total_earnings: number
+          total_matches: number
+          wins: number
+        }[]
+      }
       get_team_members: { Args: { p_team_id: string }; Returns: Json }
       get_team_members_with_balance: {
         Args: { p_team_id: string }

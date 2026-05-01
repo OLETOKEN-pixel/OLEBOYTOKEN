@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LeaderboardSection } from '@/components/home/sections/LeaderboardSection';
 
@@ -19,6 +20,20 @@ vi.mock('@/components/player/PlayerStatsModal', () => ({
 }));
 
 describe('LeaderboardSection', () => {
+  function LocationProbe() {
+    const location = useLocation();
+    return <div data-testid="location-probe">{location.pathname}</div>;
+  }
+
+  function renderSection() {
+    return render(
+      <MemoryRouter initialEntries={['/']}>
+        <LeaderboardSection />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+  }
+
   beforeEach(() => {
     rpcMock.mockReset();
   });
@@ -54,7 +69,7 @@ describe('LeaderboardSection', () => {
       ],
     });
 
-    render(<LeaderboardSection />);
+    renderSection();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open owener1 profile' }));
 
@@ -85,10 +100,23 @@ describe('LeaderboardSection', () => {
       ],
     });
 
-    render(<LeaderboardSection />);
+    renderSection();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open marv profile' }));
 
     expect(screen.getByTestId('mock-player-profile')).toHaveTextContent('PROFILE VIEW user-top-2 RANK 2');
+  });
+
+  it('routes the desktop rank up CTA to the standalone leaderboard page', async () => {
+    rpcMock.mockResolvedValue({
+      error: null,
+      data: [],
+    });
+
+    renderSection();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Open leaderboard page' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/leaderboard');
   });
 });

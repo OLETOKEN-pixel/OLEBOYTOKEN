@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
@@ -15,6 +16,7 @@ interface PlayerDisplay {
 }
 
 export const LeaderboardSection = () => {
+  const navigate = useNavigate();
   const [players, setPlayers] = useState<PlayerDisplay[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRank, setSelectedRank] = useState<number | null>(null);
@@ -93,12 +95,17 @@ export const LeaderboardSection = () => {
         <div className="absolute top-[126px] left-[705px] w-[868px] h-[596px]">
           <img className="absolute top-[102px] left-[47px] w-[760px] h-[388px]" alt="" src={ACTIVE_HOME_ASSETS.leaderboard.star} />
 
-          <div className="absolute top-[406px] left-[294px] w-[278px] h-[65px] flex bg-[#ff16543b] rounded-[50px] border border-solid border-[#ff1654] shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]">
+          <button
+            type="button"
+            aria-label="Open leaderboard page"
+            onClick={() => navigate('/leaderboard')}
+            className="absolute top-[406px] left-[294px] flex h-[65px] w-[278px] cursor-pointer rounded-[50px] border border-solid border-[#ff1654] bg-[#ff16543b] p-0 shadow-[inset_0px_4px_4px_#ffffff24,inset_0px_-4px_4px_#00000040]"
+          >
             <div className="w-[211px] ml-[34px] gap-3 mt-3.5 flex">
               <div className="w-[165px] h-[38px] [font-family:'Base_Neue_Trial-WideBlack',Helvetica] font-black text-white text-[32px] text-center tracking-[0] leading-[normal] whitespace-nowrap">RANK UP</div>
               <img className="mt-[7px] w-8 h-[23px]" alt="" src={ACTIVE_HOME_ASSETS.shared.ctaArrow} />
             </div>
-          </div>
+          </button>
 
           <div className="absolute top-[217px] left-[135px] w-[600px] h-[171px] flex flex-col items-center justify-center [font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] font-bold text-white text-[48px] text-center tracking-[0] leading-[58px]">
             <span>Get on top of the</span>
