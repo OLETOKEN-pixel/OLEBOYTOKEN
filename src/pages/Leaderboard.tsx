@@ -50,15 +50,24 @@ const ASSETS = {
 
 const DESKTOP_TAB_SPECS: Record<
   LeaderboardTab,
-  { label: string; value: LeaderboardTab; width: number }
+  { label: string; value: LeaderboardTab; width: number; left: number }
 > = {
-  earnings: { label: 'MOST EARNINGS', value: 'earnings', width: 192 },
-  profit: { label: 'MOST PROFIT', value: 'profit', width: 153 },
-  wins: { label: 'MOST WINS', value: 'wins', width: 132 },
-  teams: { label: 'TEAMS EARNINGS', value: 'teams', width: 211 },
+  earnings: { label: 'MOST EARNINGS', value: 'earnings', width: 192, left: 150 },
+  profit: { label: 'MOST PROFIT', value: 'profit', width: 153, left: 471 },
+  wins: { label: 'MOST WINS', value: 'wins', width: 132, left: 753 },
+  teams: { label: 'TEAMS EARNINGS', value: 'teams', width: 211, left: 1014 },
 };
 
 const TAB_ORDER: LeaderboardTab[] = ['earnings', 'profit', 'wins', 'teams'];
+const DESKTOP_RAIL_WIDTH = 1350;
+const DESKTOP_ROW_LAYOUT = {
+  railWidth: 1350,
+  rankWidth: 111,
+  avatarLeft: 146,
+  avatarSize: 68,
+  nameLeft: 253,
+  metricWidth: 353,
+};
 
 const pageShellStyle: CSSProperties = {
   position: 'relative',
@@ -355,19 +364,37 @@ function DesktopRow({
       style={{
         position: 'relative',
         height: '105px',
-        display: 'grid',
-        gridTemplateColumns: '111px 68px minmax(0, 1fr) auto',
-        alignItems: 'center',
-        columnGap: '18px',
-        padding: '0 49px',
+        width: 'min(1350px, calc(100% - 98px))',
+        margin: '0 auto',
         boxSizing: 'border-box',
       }}
     >
-      <div>
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: `${DESKTOP_ROW_LAYOUT.rankWidth}px`,
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         {row ? <RankBadgeDesktop rank={row.rank} /> : <div style={{ width: '111px' }} />}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div
+        style={{
+          position: 'absolute',
+          left: `${DESKTOP_ROW_LAYOUT.avatarLeft}px`,
+          top: 0,
+          width: `${DESKTOP_ROW_LAYOUT.avatarSize}px`,
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
         {row == null ? null : 'team_name' in row ? (
           <TeamAvatar row={row} size={68} />
         ) : (
@@ -377,6 +404,13 @@ function DesktopRow({
 
       <div
         style={{
+          position: 'absolute',
+          left: `${DESKTOP_ROW_LAYOUT.nameLeft}px`,
+          right: `${DESKTOP_ROW_LAYOUT.metricWidth}px`,
+          top: 0,
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
           minWidth: 0,
           fontFamily: FONT_EXPANDED_BOLD,
           fontSize: '24px',
@@ -392,10 +426,14 @@ function DesktopRow({
 
       <div
         style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          width: `${DESKTOP_ROW_LAYOUT.metricWidth}px`,
+          height: '100%',
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
-          minWidth: '198px',
           justifyContent: 'flex-end',
           color: row ? getMetricColor(tab, row) : 'transparent',
           fontFamily: FONT_EXPANDED_BOLD,
@@ -475,9 +513,6 @@ function DesktopBoard({
           width: 'min(1350px, calc(100% - 98px))',
           margin: '0 auto',
           height: '75px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
         }}
       >
         {TAB_ORDER.map((tab) => {
@@ -492,6 +527,9 @@ function DesktopBoard({
               type="button"
               onClick={() => onChangeTab(tab)}
               style={{
+                position: 'absolute',
+                left: `${(spec.left / DESKTOP_RAIL_WIDTH) * 100}%`,
+                top: 0,
                 width: `${spec.width}px`,
                 height: '75px',
                 border: 0,
@@ -504,6 +542,11 @@ function DesktopBoard({
                 fontSize: '24px',
                 lineHeight: '29px',
                 textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                whiteSpace: 'nowrap',
+                letterSpacing: 0,
               }}
             >
               {spec.label}
@@ -622,7 +665,12 @@ function PaginationControls({
           padding: 0,
         }}
       >
-        <img src={ASSETS.paginationArrowLeft} alt="" aria-hidden="true" style={iconStyle} />
+        <img
+          src={ASSETS.paginationArrowLeft}
+          alt=""
+          aria-hidden="true"
+          style={{ ...iconStyle, transform: 'rotate(-90deg) scaleY(-1)' }}
+        />
         <span>PREVIOUS</span>
       </button>
 
@@ -646,7 +694,12 @@ function PaginationControls({
         }}
       >
         <span>NEXT</span>
-        <img src={ASSETS.paginationArrowRight} alt="" aria-hidden="true" style={iconStyle} />
+        <img
+          src={ASSETS.paginationArrowRight}
+          alt=""
+          aria-hidden="true"
+          style={{ ...iconStyle, transform: 'rotate(90deg) scaleY(-1)' }}
+        />
       </button>
     </div>
   );
