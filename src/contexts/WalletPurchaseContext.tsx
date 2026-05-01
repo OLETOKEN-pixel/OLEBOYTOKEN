@@ -11,7 +11,6 @@ import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { VipModal } from '@/components/vip/VipModal';
 import { COIN_PACKAGES } from '@/types';
 import type { CoinPackage } from '@/types';
 import { redirectToCheckout } from '@/lib/checkoutRedirect';
@@ -21,6 +20,8 @@ type WalletPurchaseContextValue = {
   openWalletPurchase: () => void;
   closeWalletPurchase: () => void;
 };
+
+type WalletTabKey = 'coins' | 'vip';
 
 const FALLBACK_CONTEXT: WalletPurchaseContextValue = {
   openWalletPurchase: () => undefined,
@@ -32,8 +33,16 @@ const WalletPurchaseContext = createContext<WalletPurchaseContextValue>(FALLBACK
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 const FE = "'Base_Neue_Trial-ExpandedBlack_Oblique', 'Base Neue Trial', sans-serif";
 const FB = "'Base_Neue_Trial-ExpandedBold', 'Base Neue Trial', sans-serif";
+const FO = "'Base_Neue_Trial-BoldOblique', 'Base Neue Trial', sans-serif";
+
 const BEST_SELLER_PACKAGE_ID = 'pack-25';
 const DEFAULT_PACKAGE_ID = 'pack-5';
+const VIP_PRICE_LABEL = '€9,99';
+const VIP_BENEFITS = ['Real rewards', 'Giveaways', 'Less levels, more prizes'];
+
+function formatEuroLabel(amount: number) {
+  return `€ ${amount.toFixed(2).replace('.', ',')}`;
+}
 
 export function useWalletPurchase() {
   return useContext(WalletPurchaseContext);
@@ -59,14 +68,17 @@ export function WalletPurchaseProvider({ children }: { children: ReactNode }) {
 }
 
 function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { user, wallet } = useAuth();
+  const { user, refreshWallet } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'coins' | 'vip'>('coins');
+  const [activeTab, setActiveTab] = useState<WalletTabKey>('coins');
   const [selectedPackageId, setSelectedPackageId] = useState(DEFAULT_PACKAGE_ID);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [vipOpen, setVipOpen] = useState(false);
+  const [vipLoading, setVipLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(true);
 
   const selectedPackage = COIN_PACKAGES.find((pack) => pack.id === selectedPackageId) ?? COIN_PACKAGES[0];
+  const actionLoading = activeTab === 'coins' ? checkoutLoading : vipLoading;
+  const actionDisabled = actionLoading || !acceptedTerms;
 
   useEffect(() => {
     if (!open) return;
@@ -75,21 +87,24 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
       if (event.key === 'Escape') onClose();
     };
 
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKeyDown);
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [onClose, open]);
 
   useEffect(() => {
-    if (open) {
-      setActiveTab('coins');
-      setSelectedPackageId(DEFAULT_PACKAGE_ID);
-      setCheckoutLoading(false);
-    }
+    if (!open) return;
+
+    setActiveTab('coins');
+    setSelectedPackageId(DEFAULT_PACKAGE_ID);
+    setAcceptedTerms(true);
+    setCheckoutLoading(false);
+    setVipLoading(false);
   }, [open]);
 
   const startCheckout = async () => {
@@ -126,230 +141,354 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
     }
   };
 
-  const openVip = () => {
-    setActiveTab('vip');
-    setVipOpen(true);
+  const startVipPurchase = async () => {
+    if (!user) {
+      toast({
+        title: 'Login required',
+        description: 'Sign in before getting VIP.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setVipLoading(true);
+
+    try {
+      const { data, error } = await supabase.rpc('purchase_vip');
+      if (error) throw error;
+
+      const result = data as { success?: boolean; error?: string } | null;
+      if (!result?.success) {
+        throw new Error(result?.error ?? 'Unable to activate VIP.');
+      }
+
+      await refreshWallet();
+      toast({
+        title: 'VIP activated',
+        description: 'Your VIP membership is now active for 30 days.',
+      });
+      onClose();
+    } catch (error) {
+      const message = await extractFunctionErrorMessage(error, 'Unable to activate VIP.');
+      toast({
+        title: 'VIP error',
+        description: message,
+        variant: 'destructive',
+      });
+      setVipLoading(false);
+    }
   };
 
   if (!open || typeof document === 'undefined') {
-    return (
-      <VipModal
-        open={vipOpen}
-        onBuyCoins={() => {
-          setVipOpen(false);
-          setActiveTab('coins');
-        }}
-        onOpenChange={(nextOpen) => {
-          setVipOpen(nextOpen);
-          if (!nextOpen) setActiveTab('coins');
-        }}
-      />
-    );
+    return null;
   }
 
-  return (
-    <>
-      {createPortal(
+  return createPortal(
+    <div
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 200,
+        display: 'grid',
+        placeItems: 'center',
+        background: 'rgba(15, 4, 4, 0.7)',
+        backdropFilter: 'blur(3px)',
+        WebkitBackdropFilter: 'blur(3px)',
+        padding: '12px',
+        fontFamily: F,
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wallet-purchase-title"
+        data-testid="wallet-purchase-overlay"
+        style={{
+          position: 'relative',
+          width: 'min(903px, calc(100vw - 24px))',
+          minHeight: 'min(800px, calc(100vh - 24px))',
+          maxHeight: 'calc(100vh - 24px)',
+          borderRadius: '18px',
+          border: '1.462px solid #ff1654',
+          background: '#282828',
+          boxShadow: '0 4px 4px rgba(0,0,0,0.25), 0 16px 16px rgba(0,0,0,0.35)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
         <div
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) onClose();
-          }}
           style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 200,
-            display: 'grid',
-            placeItems: 'center',
-            background: 'rgba(0, 0, 0, 0.72)',
-            backdropFilter: 'blur(3px)',
-            WebkitBackdropFilter: 'blur(3px)',
-            fontFamily: F,
+            display: 'flex',
+            minHeight: '100%',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '31px 24px 28px',
+            boxSizing: 'border-box',
           }}
         >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="wallet-purchase-title"
-            data-testid="wallet-purchase-overlay"
+          <h2
+            id="wallet-purchase-title"
             style={{
-              position: 'relative',
-              width: 'min(903px, calc(100vw - 34px))',
-              height: 'min(800px, calc(100vh - 34px))',
-              borderRadius: '18px',
-              border: '1px solid #ff1654',
-              background: '#282828',
-              boxShadow: '0 28px 80px rgba(0,0,0,0.58)',
-              overflow: 'hidden',
+              margin: 0,
+              color: '#ffffff',
+              fontFamily: FB,
+              fontSize: 'clamp(44px, 7vw, 64px)',
+              lineHeight: 1,
+              letterSpacing: 0,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
             }}
           >
-            <button
-              type="button"
-              aria-label="Close wallet"
-              onClick={onClose}
-              style={{
-                position: 'absolute',
-                top: '26px',
-                right: '30px',
-                width: '34px',
-                height: '34px',
-                border: '1px solid rgba(255,255,255,0.18)',
-                borderRadius: '8px',
-                background: 'rgba(15,15,15,0.48)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontFamily: FB,
-                fontSize: '23px',
-                lineHeight: 1,
-                outline: 'none',
-              }}
-            >
-              x
-            </button>
+            WALLET
+          </h2>
 
-            <h2
-              id="wallet-purchase-title"
-              style={{
-                margin: '42px 0 0',
-                textAlign: 'center',
-                fontFamily: FE,
-                fontWeight: 900,
-                fontStyle: 'oblique',
-                fontSize: '58px',
-                lineHeight: '66px',
-                color: '#ffffff',
-                letterSpacing: 0,
-              }}
-            >
-              WALLET
-            </h2>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '32px',
+              width: 'min(520px, calc(100% - 32px))',
+              marginTop: '51px',
+              borderBottom: '1px solid transparent',
+              flexWrap: 'wrap',
+            }}
+          >
+            <WalletTabButton active={activeTab === 'coins'} onClick={() => setActiveTab('coins')}>
+              TOKENS COINS
+            </WalletTabButton>
+            <WalletTabButton active={activeTab === 'vip'} onClick={() => setActiveTab('vip')}>
+              VIP MEMBERSHIP
+            </WalletTabButton>
+          </div>
 
-            <div
-              style={{
-                position: 'absolute',
-                top: '151px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '75px',
-                width: '546px',
-                maxWidth: 'calc(100% - 60px)',
-              }}
-            >
-              <WalletTab active={activeTab === 'coins'} onClick={() => setActiveTab('coins')}>
-                TOKENS COINS
-              </WalletTab>
-              <WalletTab active={activeTab === 'vip'} onClick={openVip}>
-                VIP MEMBERSHIP
-              </WalletTab>
-            </div>
+          {activeTab === 'coins' ? (
+            <>
+              <div
+                style={{
+                  display: 'grid',
+                  width: 'min(608px, calc(100% - 32px))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(178px, 178px))',
+                  justifyContent: 'center',
+                  columnGap: '37px',
+                  rowGap: '27px',
+                  marginTop: '46px',
+                }}
+              >
+                {COIN_PACKAGES.map((pack) => (
+                  <CoinPackageButton
+                    key={pack.id}
+                    pack={pack}
+                    selected={pack.id === selectedPackageId}
+                    bestSeller={pack.id === BEST_SELLER_PACKAGE_ID}
+                    onSelect={() => setSelectedPackageId(pack.id)}
+                  />
+                ))}
+              </div>
 
-            <div
-              style={{
-                position: 'absolute',
-                top: '210px',
-                left: '30px',
-                right: '30px',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: '47px 40px',
-              }}
-            >
-              {COIN_PACKAGES.map((pack) => (
-                <CoinPackageButton
-                  key={pack.id}
-                  pack={pack}
-                  selected={pack.id === selectedPackage.id}
-                  bestSeller={pack.id === BEST_SELLER_PACKAGE_ID}
-                  onSelect={() => {
-                    setActiveTab('coins');
-                    setSelectedPackageId(pack.id);
+              <TermsRow
+                accepted={acceptedTerms}
+                onToggle={() => setAcceptedTerms((current) => !current)}
+                marginTop="43px"
+              />
+
+              <div
+                aria-hidden="true"
+                style={{
+                  width: 'min(589px, calc(100% - 64px))',
+                  height: '1px',
+                  marginTop: '22px',
+                  background: 'rgba(217, 217, 217, 0.82)',
+                }}
+              />
+
+              <PrimaryActionButton
+                label={checkoutLoading ? 'OPENING STRIPE' : `PURCHASE ${selectedPackage.coins} COINS`}
+                ariaLabel={`Purchase ${selectedPackage.coins} coins`}
+                width="min(385px, calc(100% - 80px))"
+                disabled={actionDisabled}
+                onClick={startCheckout}
+                marginTop="18px"
+              />
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  width: 'min(640px, calc(100% - 32px))',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                  gap: '34px',
+                  marginTop: '61px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div
+                  style={{
+                    flex: '0 1 320px',
+                    minWidth: '280px',
                   }}
-                />
-              ))}
-            </div>
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '11px',
+                    }}
+                  >
+                    <img
+                      src="/figma-assets/wallet-overlay/benefits-flare.svg"
+                      alt=""
+                      aria-hidden
+                      style={{ width: '29.87px', height: '44.81px', flexShrink: 0 }}
+                    />
+                    <span
+                      style={{
+                        color: '#ffffff',
+                        fontFamily: FE,
+                        fontSize: '32px',
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      BENEFITS:
+                    </span>
+                  </div>
 
-            <div
-              style={{
-                position: 'absolute',
-                left: '157px',
-                right: '157px',
-                bottom: '122px',
-                height: '1px',
-                background: '#d9d9d9',
-                opacity: 0.82,
-              }}
-            />
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: '15px',
+                      marginTop: '38px',
+                    }}
+                  >
+                    {VIP_BENEFITS.map((benefit) => (
+                      <div
+                        key={benefit}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '16px',
+                        }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: '31px',
+                            height: '31px',
+                            borderRadius: '5.588px',
+                            background: '#ff1654',
+                            display: 'grid',
+                            placeItems: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <img
+                            src="/figma-assets/wallet-overlay/benefit-check.svg"
+                            alt=""
+                            aria-hidden
+                            style={{ width: '17px', height: '13px' }}
+                          />
+                        </span>
+                        <span
+                          style={{
+                            color: '#ffffff',
+                            fontFamily: FB,
+                            fontSize: '24px',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {benefit}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              onClick={activeTab === 'vip' ? openVip : startCheckout}
-              disabled={checkoutLoading}
-              aria-label={`Purchase ${selectedPackage.coins} coins`}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                bottom: '34px',
-                transform: 'translateX(-50%)',
-                width: 'min(385px, calc(100% - 80px))',
-                height: '69px',
-                borderRadius: '18px',
-                border: '1px solid #ff1654',
-                background: '#ff1654',
-                color: '#ffffff',
-                cursor: checkoutLoading ? 'wait' : 'pointer',
-                fontFamily: FB,
-                fontSize: '29px',
-                lineHeight: '33px',
-                opacity: checkoutLoading ? 0.72 : 1,
-                outline: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {activeTab === 'vip'
-                ? 'OPEN VIP'
-                : checkoutLoading
-                  ? 'OPENING STRIPE'
-                  : `PURCHASE ${selectedPackage.coins} COINS`}
-            </button>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    paddingTop: '26px',
+                    flex: '0 0 180px',
+                  }}
+                >
+                  <img
+                    src="/figma-assets/wallet-overlay/vip-crown.svg"
+                    alt=""
+                    aria-hidden
+                    style={{
+                      width: '180px',
+                      height: '137px',
+                      display: 'block',
+                    }}
+                  />
+                  <span
+                    style={{
+                      marginTop: '6px',
+                      background: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                      fontFamily: FE,
+                      fontSize: '32px',
+                      lineHeight: 1,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    x1 MONTH
+                  </span>
+                </div>
+              </div>
 
-            <p
-              aria-label="Wallet balance"
-              style={{
-                position: 'absolute',
-                right: '36px',
-                top: '116px',
-                margin: 0,
-                color: 'rgba(255,255,255,0.58)',
-                fontFamily: FB,
-                fontSize: '18px',
-              }}
-            >
-              BALANCE {Number(wallet?.balance ?? 0).toFixed(2)}
-            </p>
-          </section>
-        </div>,
-        document.body,
-      )}
+              <TermsRow
+                accepted={acceptedTerms}
+                onToggle={() => setAcceptedTerms((current) => !current)}
+                marginTop="44px"
+              />
 
-      <VipModal
-        open={vipOpen}
-        onBuyCoins={() => {
-          setVipOpen(false);
-          setActiveTab('coins');
-        }}
-        onOpenChange={(nextOpen) => {
-          setVipOpen(nextOpen);
-          if (!nextOpen) setActiveTab('coins');
-        }}
-      />
-    </>
+              <div
+                aria-hidden="true"
+                style={{
+                  width: 'min(589px, calc(100% - 64px))',
+                  height: '1px',
+                  marginTop: '36px',
+                  background: 'rgba(217, 217, 217, 0.82)',
+                }}
+              />
+
+              <PrimaryActionButton
+                label={vipLoading ? 'ACTIVATING VIP' : `GET VIP for ${VIP_PRICE_LABEL}`}
+                ariaLabel={`Get VIP for ${VIP_PRICE_LABEL}`}
+                width="min(523px, calc(100% - 48px))"
+                disabled={actionDisabled}
+                onClick={startVipPurchase}
+                marginTop="13px"
+                useVipAsset
+              />
+            </>
+          )}
+        </div>
+      </section>
+    </div>,
+    document.body,
   );
 }
 
-function WalletTab({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
+function WalletTabButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -362,12 +501,12 @@ function WalletTab({ active, children, onClick }: { active: boolean; children: R
         color: '#ffffff',
         cursor: 'pointer',
         fontFamily: active ? FB : F,
-        fontWeight: active ? 700 : 400,
-        fontSize: '23px',
-        lineHeight: '33px',
-        padding: '0 0 10px',
+        fontSize: 'clamp(24px, 3.2vw, 32px)',
+        lineHeight: 1,
+        padding: '0 0 11px',
         outline: 'none',
         whiteSpace: 'nowrap',
+        opacity: active ? 1 : 0.82,
       }}
     >
       {children}
@@ -407,65 +546,253 @@ function CoinPackageButton({
       aria-pressed={selected}
       style={{
         position: 'relative',
+        width: '178px',
         height: '158px',
-        borderRadius: '8px',
-        border: `1px solid ${selected ? '#ff1654' : 'rgba(255,255,255,0.04)'}`,
-        background: selected ? 'rgba(255,22,84,0.38)' : '#141414',
-        boxShadow: selected ? 'inset 0 0 0 1px rgba(255,255,255,0.05)' : 'none',
-        cursor: 'pointer',
+        borderRadius: '18px',
+        border: selected ? '1px solid #ff1654' : '1px solid transparent',
+        background: selected
+          ? 'linear-gradient(0deg, rgba(255,22,84,0.2), rgba(255,22,84,0.2)), rgba(0,0,0,0.5)'
+          : 'rgba(0,0,0,0.5)',
         color: '#ffffff',
+        cursor: 'pointer',
         outline: 'none',
+        padding: 0,
       }}
     >
       {bestSeller ? (
-        <span
-          style={{
-            position: 'absolute',
-            top: '7px',
-            right: '8px',
-            height: '28px',
-            minWidth: '111px',
-            display: 'grid',
-            placeItems: 'center',
-            borderRadius: '8px',
-            border: '1px solid #ff1654',
-            background: 'rgba(255,22,84,0.42)',
-            fontFamily: FB,
-            fontSize: '11px',
-            color: '#ffffff',
-          }}
-        >
-          BEST SELLER
-        </span>
+        <>
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '14px',
+              width: '97px',
+              height: '24px',
+              borderRadius: '9px',
+              border: '1px solid #ff1654',
+              background: 'rgba(255,22,84,0.2)',
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              top: '3px',
+              right: '23px',
+              color: '#ffffff',
+              fontFamily: FO,
+              fontSize: '12px',
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            BEST SELLER
+          </span>
+        </>
       ) : null}
 
       <span
-        aria-hidden="true"
         style={{
           position: 'absolute',
-          top: '52px',
           left: '50%',
+          top: '19px',
+          width: '110px',
+          height: '79px',
           transform: 'translateX(-50%)',
-          width: '50px',
-          height: '50px',
-          borderRadius: '50%',
-          background: '#ff1654',
         }}
-      />
+      >
+        <img
+          src="/figma-assets/wallet-overlay/coin-badge.svg"
+          alt=""
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '63px',
+            height: '63px',
+          }}
+        />
+        <span
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: '41px',
+            background: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+            fontFamily: FO,
+            fontSize: '28px',
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          x{pack.coins}
+        </span>
+      </span>
+
       <span
         style={{
           position: 'absolute',
-          left: 0,
-          right: 0,
+          left: '50%',
           bottom: '22px',
-          textAlign: 'center',
-          fontFamily: FB,
-          fontSize: '29px',
-          lineHeight: '29px',
+          transform: 'translateX(-50%)',
           color: '#ffffff',
+          fontFamily: FB,
+          fontSize: '28px',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
         }}
       >
-        {pack.coins} COINS
+        {formatEuroLabel(pack.price)}
+      </span>
+    </button>
+  );
+}
+
+function TermsRow({
+  accepted,
+  onToggle,
+  marginTop,
+}: {
+  accepted: boolean;
+  onToggle: () => void;
+  marginTop: string;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '22px',
+        marginTop,
+        flexWrap: 'wrap',
+      }}
+    >
+      <button
+        type="button"
+        aria-pressed={accepted}
+        aria-label={accepted ? 'Accepted terms and conditions' : 'Accept terms and conditions'}
+        onClick={onToggle}
+        style={{
+          width: '44px',
+          height: '44px',
+          border: accepted ? '1px solid #ff1654' : '1px solid rgba(255,22,84,0.65)',
+          borderRadius: '8px',
+          background: accepted ? '#ff1654' : 'transparent',
+          display: 'grid',
+          placeItems: 'center',
+          padding: 0,
+          cursor: 'pointer',
+          outline: 'none',
+          flexShrink: 0,
+        }}
+      >
+        {accepted ? (
+          <img
+            src="/figma-assets/wallet-overlay/terms-check.svg"
+            alt=""
+            aria-hidden
+            style={{ width: '32px', height: '32px' }}
+          />
+        ) : null}
+      </button>
+
+      <p
+        style={{
+          margin: 0,
+          color: '#ffffff',
+          fontFamily: F,
+          fontSize: '20px',
+          lineHeight: 1,
+          textAlign: 'center',
+        }}
+      >
+        Accept our{' '}
+        <a
+          href="/terms"
+          style={{
+            color: '#ffffff',
+            textDecoration: 'underline',
+            textDecorationSkipInk: 'none',
+          }}
+        >
+          Terms & Conditions
+        </a>
+      </p>
+    </div>
+  );
+}
+
+function PrimaryActionButton({
+  label,
+  ariaLabel,
+  width,
+  disabled,
+  onClick,
+  marginTop,
+  useVipAsset = false,
+}: {
+  label: string;
+  ariaLabel: string;
+  width: string;
+  disabled: boolean;
+  onClick: () => void;
+  marginTop: string;
+  useVipAsset?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        width,
+        height: '69px',
+        marginTop,
+        border: 'none',
+        borderRadius: '23px',
+        background: useVipAsset ? 'transparent' : '#ff1654',
+        color: '#ffffff',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.55 : 1,
+        outline: 'none',
+        padding: 0,
+      }}
+    >
+      {useVipAsset ? (
+        <img
+          src="/figma-assets/wallet-overlay/vip-cta.svg"
+          alt=""
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+          }}
+        />
+      ) : null}
+      <span
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'grid',
+          placeItems: 'center',
+          width: '100%',
+          height: '100%',
+          fontFamily: FB,
+          fontSize: 'clamp(24px, 3.8vw, 32px)',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
       </span>
     </button>
   );

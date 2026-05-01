@@ -6,6 +6,7 @@ import { WalletPurchaseProvider, useWalletPurchase } from '@/contexts/WalletPurc
 
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
+  rpc: vi.fn(),
   toast: vi.fn(),
   redirectToCheckout: vi.fn(),
 }));
@@ -15,6 +16,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     functions: {
       invoke: mocks.invoke,
     },
+    rpc: mocks.rpc,
   },
 }));
 
@@ -32,11 +34,6 @@ vi.mock('@/hooks/use-toast', () => ({
 
 vi.mock('@/lib/checkoutRedirect', () => ({
   redirectToCheckout: mocks.redirectToCheckout,
-}));
-
-vi.mock('@/components/vip/VipModal', () => ({
-  VipModal: ({ open }: { open: boolean; onOpenChange: (open: boolean) => void; onBuyCoins?: () => void }) =>
-    open ? <div data-testid="vip-modal">VIP MODAL OPEN</div> : null,
 }));
 
 function Trigger({ children = 'OPEN WALLET' }: { children?: ReactNode }) {
@@ -61,6 +58,7 @@ function renderOverlay() {
 describe('WalletPurchaseOverlay', () => {
   beforeEach(() => {
     mocks.invoke.mockReset();
+    mocks.rpc.mockReset();
     mocks.toast.mockReset();
     mocks.redirectToCheckout.mockReset();
   });
@@ -74,10 +72,12 @@ describe('WalletPurchaseOverlay', () => {
     expect(screen.getByRole('button', { name: 'TOKENS COINS' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'VIP MEMBERSHIP' })).toBeInTheDocument();
 
-    for (const label of ['3 COINS', '5 COINS', '10 COINS', '15 COINS', '25 COINS', '50 COINS']) {
+    for (const label of ['x3', 'x5', 'x10', 'x15', 'x25', 'x50']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
 
+    expect(screen.getByText('Accept our')).toBeInTheDocument();
+    expect(screen.getByText('Terms & Conditions')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Purchase 5 coins' })).toHaveTextContent('PURCHASE 5 COINS');
   });
 
@@ -87,7 +87,7 @@ describe('WalletPurchaseOverlay', () => {
     renderOverlay();
 
     fireEvent.click(screen.getByRole('button', { name: 'OPEN WALLET' }));
-    fireEvent.click(screen.getByRole('button', { name: /25 COINS/ }));
+    fireEvent.click(screen.getByRole('button', { name: /x25/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Purchase 25 coins' }));
 
     await waitFor(() => {
@@ -98,12 +98,28 @@ describe('WalletPurchaseOverlay', () => {
     expect(mocks.redirectToCheckout).toHaveBeenCalledWith('https://checkout.stripe.test/session');
   });
 
-  it('opens the existing VIP modal from the VIP tab', () => {
+  it('switches to the VIP section inside the same overlay', () => {
     renderOverlay();
 
     fireEvent.click(screen.getByRole('button', { name: 'OPEN WALLET' }));
     fireEvent.click(screen.getByRole('button', { name: 'VIP MEMBERSHIP' }));
 
-    expect(screen.getByTestId('vip-modal')).toBeInTheDocument();
+    expect(screen.getByText('BENEFITS:')).toBeInTheDocument();
+    expect(screen.getByText('Real rewards')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Get VIP for €9,99' })).toHaveTextContent('GET VIP for €9,99');
+  });
+
+  it('starts the VIP purchase from the VIP tab', async () => {
+    mocks.rpc.mockResolvedValue({ data: { success: true }, error: null });
+
+    renderOverlay();
+
+    fireEvent.click(screen.getByRole('button', { name: 'OPEN WALLET' }));
+    fireEvent.click(screen.getByRole('button', { name: 'VIP MEMBERSHIP' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Get VIP for €9,99' }));
+
+    await waitFor(() => {
+      expect(mocks.rpc).toHaveBeenCalledWith('purchase_vip');
+    });
   });
 });
