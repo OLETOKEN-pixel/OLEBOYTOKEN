@@ -214,8 +214,7 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
         style={{
           position: 'relative',
           width: 'min(903px, calc(100vw - 24px))',
-          minHeight: 'min(800px, calc(100vh - 24px))',
-          maxHeight: 'calc(100vh - 24px)',
+          height: 'min(800px, calc(100vh - 24px))',
           borderRadius: '18px',
           border: '1.462px solid #ff1654',
           background: '#282828',
@@ -227,7 +226,7 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
         <div
           style={{
             display: 'flex',
-            minHeight: '100%',
+            height: '100%',
             flexDirection: 'column',
             alignItems: 'center',
             padding: '31px 24px 28px',
@@ -450,31 +449,42 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
                 </div>
               </div>
 
-              <TermsRow
-                accepted={acceptedTerms}
-                onToggle={() => setAcceptedTerms((current) => !current)}
-                marginTop="44px"
-              />
-
               <div
-                aria-hidden="true"
                 style={{
-                  width: 'min(589px, calc(100% - 64px))',
-                  height: '1px',
-                  marginTop: '36px',
-                  background: 'rgba(217, 217, 217, 0.82)',
+                  width: '100%',
+                  marginTop: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  paddingTop: '18px',
                 }}
-              />
+              >
+                <TermsRow
+                  accepted={acceptedTerms}
+                  onToggle={() => setAcceptedTerms((current) => !current)}
+                  marginTop="0"
+                />
 
-              <PrimaryActionButton
-                label={vipLoading ? 'ACTIVATING VIP' : `GET VIP for ${VIP_PRICE_LABEL}`}
-                ariaLabel={`Get VIP for ${VIP_PRICE_LABEL}`}
-                width="min(523px, calc(100% - 48px))"
-                disabled={actionDisabled}
-                onClick={startVipPurchase}
-                marginTop="13px"
-                useVipAsset
-              />
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: 'min(589px, calc(100% - 64px))',
+                    height: '1px',
+                    marginTop: '36px',
+                    background: 'rgba(217, 217, 217, 0.82)',
+                  }}
+                />
+
+                <PrimaryActionButton
+                  label={vipLoading ? 'ACTIVATING VIP' : `GET VIP for ${VIP_PRICE_LABEL}`}
+                  ariaLabel={`Get VIP for ${VIP_PRICE_LABEL}`}
+                  width="min(523px, calc(100% - 48px))"
+                  disabled={actionDisabled}
+                  onClick={startVipPurchase}
+                  marginTop="17px"
+                  useVipAsset
+                />
+              </div>
             </>
           )}
         </div>
