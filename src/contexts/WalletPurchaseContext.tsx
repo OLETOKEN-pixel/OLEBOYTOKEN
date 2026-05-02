@@ -42,8 +42,11 @@ const BEST_SELLER_PACKAGE_ID = 'pack-25';
 const DEFAULT_PACKAGE_ID = 'pack-5';
 const EURO = '\u20AC';
 const VIP_PRICE_LABEL = `${EURO}9,99`;
-const FIGMA_COIN_CARD_PRICE = `${EURO} 0,33`;
 const VIP_BENEFITS = ['Real rewards', 'Giveaways', 'Less levels, more prizes'];
+
+function formatEuroLabel(amount: number) {
+  return `${EURO} ${amount.toFixed(2).replace('.', ',')}`;
+}
 
 export function useWalletPurchase() {
   return useContext(WalletPurchaseContext);
@@ -650,7 +653,7 @@ function CoinPackageButton({
           whiteSpace: 'nowrap',
         }}
       >
-        {FIGMA_COIN_CARD_PRICE}
+        {formatEuroLabel(pack.price)}
       </span>
     </button>
   );
