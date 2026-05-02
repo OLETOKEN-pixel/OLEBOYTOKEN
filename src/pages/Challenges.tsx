@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingPage } from '@/components/common/LoadingSpinner';
 import { FooterSection } from '@/components/home/sections/FooterSection';
+import { FigmaFrame } from '@/components/layout/FigmaFrame';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChallenges, type Challenge } from '@/hooks/useChallenges';
@@ -1172,15 +1173,14 @@ function ChallengesDesktopView({
   return (
     <section
       data-testid="challenges-page"
-      className="relative overflow-x-auto bg-[#0f0404] text-white"
+      className="relative overflow-x-hidden bg-[#0f0404] text-white"
     >
+      <FigmaFrame baseWidth={DESKTOP_CANVAS_WIDTH} baseHeight={DESKTOP_TOTAL_HEIGHT} origin="top center">
       <div
         style={{
           position: 'relative',
-          width: `${DESKTOP_CANVAS_WIDTH}px`,
-          minWidth: `${DESKTOP_CANVAS_WIDTH}px`,
-          height: `${DESKTOP_TOTAL_HEIGHT}px`,
-          margin: '0 auto',
+          width: '100%',
+          height: '100%',
           background: '#0f0404',
         }}
       >
@@ -1264,6 +1264,7 @@ function ChallengesDesktopView({
           <FooterSection />
         </div>
       </div>
+      </FigmaFrame>
     </section>
   );
 }

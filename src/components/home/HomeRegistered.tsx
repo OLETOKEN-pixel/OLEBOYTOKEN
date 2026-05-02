@@ -14,6 +14,7 @@ import { ShopSection } from './sections/ShopSection';
 import { FooterSection } from './sections/FooterSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { HomeRegisteredMobile } from './HomeRegisteredMobile';
+import { FigmaFrame } from '@/components/layout/FigmaFrame';
 
 interface HomeRegisteredProps {
   displayName: string;
@@ -27,19 +28,22 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
   }
 
   return (
-    <div className="bg-[#0f0404] w-full min-w-[1920px] min-h-[7321px] flex flex-col">
-      <LaunchVideoSection displayName={displayName} />
+    <div className="bg-[#0f0404] w-full overflow-x-hidden">
+      {/* Top neon gradient overlay — fixed at viewport top, span full width regardless of scale */}
+      <div className="fixed top-0 left-0 w-screen h-[146px] z-[7] bg-[linear-gradient(180deg,rgba(255,22,84,0.05)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
 
-      {/* Top neon gradient overlay — very subtle, matches Figma */}
-      <div className="fixed top-0 left-0 w-[1920px] h-[146px] z-[7] bg-[linear-gradient(180deg,rgba(255,22,84,0.05)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
-
-      <LiveMatchesSection />
-      <LeaderboardSection />
-      <ChallengesSection />
-      <HighlightsSection />
-      <TeamsSection />
-      <ShopSection />
-      <FooterSection />
+      <FigmaFrame baseWidth={1920} baseHeight={7321} origin="top center">
+        <div className="bg-[#0f0404] w-full h-full flex flex-col">
+          <LaunchVideoSection displayName={displayName} />
+          <LiveMatchesSection />
+          <LeaderboardSection />
+          <ChallengesSection />
+          <HighlightsSection />
+          <TeamsSection />
+          <ShopSection />
+          <FooterSection />
+        </div>
+      </FigmaFrame>
     </div>
   );
 }

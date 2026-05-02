@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { HomeNotRegisteredMobile } from './HomeNotRegisteredMobile';
+import { FigmaFrame } from '@/components/layout/FigmaFrame';
 
 // ─── Asset URLs ─────────────────────────────────────────────────────────────
 const A_NEON          = '/figma-assets/figma-neon.png';
@@ -109,6 +110,8 @@ function HomeNotRegisteredDesktop() {
 
   return (
     <div style={{ width: '100%', background: '#0f0404', overflowX: 'hidden' }}>
+      <FigmaFrame baseWidth={1920} baseHeight={4457} origin="top center">
+        <div style={{ width: '100%', height: '100%', background: '#0f0404' }}>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 1 — HERO (First page)
@@ -117,7 +120,6 @@ function HomeNotRegisteredDesktop() {
         id="s-hero"
         style={{
           position: 'relative',
-          minHeight: '100vh',
           height: '955px',
           width: '100%',
           background: SECTION_BG,
@@ -298,7 +300,6 @@ function HomeNotRegisteredDesktop() {
         id="s-rank"
         style={{
           position: 'relative',
-          minHeight: '100vh',
           height: '955px',
           width: '100%',
           overflow: 'hidden',
@@ -432,7 +433,6 @@ function HomeNotRegisteredDesktop() {
         id="s-arena"
         style={{
           position: 'relative',
-          minHeight: '100vh',
           height: '955px',
           width: '100%',
           overflow: 'hidden',
@@ -576,7 +576,6 @@ function HomeNotRegisteredDesktop() {
         id="s-rewards"
         style={{
           position: 'relative',
-          minHeight: '100vh',
           height: '955px',
           width: '100%',
           overflow: 'hidden',
@@ -823,6 +822,8 @@ function HomeNotRegisteredDesktop() {
           <span>2026 OLEBOY. All Rights Reserved.</span>
         </div>
       </section>
+        </div>
+      </FigmaFrame>
     </div>
   );
 }

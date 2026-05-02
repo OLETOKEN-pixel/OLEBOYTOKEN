@@ -6,8 +6,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useFigmaScale } from '@/hooks/useFigmaScale';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
+
+const NAVBAR_BASE_WIDTH = 1532;
+const NAVBAR_VIEWPORT_PADDING = 100;
 
 const A_LOGO    = '/figma-assets/figma-logo.svg';
 const A_TWITTER = '/figma-assets/figma-twitter-x.png';
@@ -17,6 +21,7 @@ const A_DS_NAV  = '/figma-assets/figma-ds-icon-nav.png';
 
 export function NavbarFigma() {
   const isMobile = useIsMobile();
+  const navScale = useFigmaScale(NAVBAR_BASE_WIDTH + NAVBAR_VIEWPORT_PADDING);
 
   if (isMobile) {
     return <NavbarFigmaMobile />;
@@ -28,8 +33,9 @@ export function NavbarFigma() {
         position: 'fixed',
         top: '55px',
         left: '50%',
-        transform: 'translateX(-50%)',
-        width: 'min(1532px, calc(100% - 100px))',
+        transform: `translateX(-50%) scale(${navScale})`,
+        transformOrigin: 'top center',
+        width: `${NAVBAR_BASE_WIDTH}px`,
         height: '91px',
         zIndex: 50,
         borderRadius: '50px',

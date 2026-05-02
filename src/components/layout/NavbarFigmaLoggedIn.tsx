@@ -25,9 +25,13 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useFigmaScale } from '@/hooks/useFigmaScale';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
 import { getLevel } from '@/lib/xp';
 import type { Profile } from '@/types';
+
+const NAVBAR_BASE_WIDTH = 1532;
+const NAVBAR_VIEWPORT_PADDING = 100;
 
 const NAV_SECTIONS: Record<string, string> = {
   matches: 's-matches',
@@ -78,6 +82,9 @@ export function NavbarFigmaLoggedIn() {
 
   const isOnHome = location.pathname === '/';
   const navItems = Object.keys(NAV_SECTIONS) as NavItem[];
+
+  // Scale navbar down to fit smaller viewports while keeping the Figma 1532x91 layout intact.
+  const navScale = useFigmaScale(NAVBAR_BASE_WIDTH + NAVBAR_VIEWPORT_PADDING);
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
   // Determine active nav item from current route (when not on home page)
@@ -182,8 +189,9 @@ export function NavbarFigmaLoggedIn() {
           position: 'fixed',
           top: '55px',
           left: '50%',
-          transform: 'translateX(-50%)',
-          width: 'min(1532px, calc(100% - 100px))',
+          transform: `translateX(-50%) scale(${navScale})`,
+          transformOrigin: 'top center',
+          width: `${NAVBAR_BASE_WIDTH}px`,
           height: '91px',
           zIndex: 50,
         }}

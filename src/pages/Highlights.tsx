@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties, type Rea
 import { ExternalLink, Info, Loader2, Plus, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { FooterSection } from '@/components/home/sections/FooterSection';
+import { FigmaFrame } from '@/components/layout/FigmaFrame';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import {
   Dialog,
@@ -451,36 +452,38 @@ export default function Highlights() {
           />
 
           <div className="mx-auto w-full max-w-[1532px] px-8 pb-32">
-            <header className="relative min-h-[205px]">
-              <img
-                aria-hidden="true"
-                src="/highlights/title-triangles.svg"
-                alt=""
-                className="absolute left-[-71px] top-0 h-[185.808px] w-[123.872px]"
-              />
-              <h1
-                className="absolute left-0 top-[77px] m-0 text-[80px] leading-none text-white"
-                style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
-              >
-                HIGHLIGHTS
-              </h1>
-              <div
-                aria-hidden="true"
-                className="absolute left-[-12px] top-[165.5px] flex h-[21.289px] w-[820.394px] max-w-[72vw] items-center justify-center overflow-visible"
-              >
-                <div className="h-[820.335px] w-[18.421px] flex-none rotate-[89.8deg] -scale-y-100">
-                  <div className="relative h-full w-full">
-                    <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
-                      <img
-                        src="/highlights/title-underline-raw.svg"
-                        alt=""
-                        className="block h-full w-full max-w-none"
-                      />
+            <FigmaFrame baseWidth={1532} baseHeight={205} origin="top center" style={{ marginBottom: 0 }}>
+              <header className="relative min-h-[205px]" style={{ width: '100%', height: '100%' }}>
+                <img
+                  aria-hidden="true"
+                  src="/highlights/title-triangles.svg"
+                  alt=""
+                  className="absolute left-[-71px] top-0 h-[185.808px] w-[123.872px]"
+                />
+                <h1
+                  className="absolute left-0 top-[77px] m-0 text-[80px] leading-none text-white"
+                  style={{ fontFamily: F_HEAD, letterSpacing: 0 }}
+                >
+                  HIGHLIGHTS
+                </h1>
+                <div
+                  aria-hidden="true"
+                  className="absolute left-[-12px] top-[165.5px] flex h-[21.289px] w-[820.394px] max-w-[72vw] items-center justify-center overflow-visible"
+                >
+                  <div className="h-[820.335px] w-[18.421px] flex-none rotate-[89.8deg] -scale-y-100">
+                    <div className="relative h-full w-full">
+                      <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
+                        <img
+                          src="/highlights/title-underline-raw.svg"
+                          alt=""
+                          className="block h-full w-full max-w-none"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </header>
+              </header>
+            </FigmaFrame>
 
             <HighlightsToolbar
               activeTab={activeTab}
