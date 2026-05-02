@@ -1175,7 +1175,7 @@ function ChallengesDesktopView({
       data-testid="challenges-page"
       className="relative overflow-x-hidden bg-[#0f0404] text-white"
     >
-      <FigmaFrame baseWidth={DESKTOP_CANVAS_WIDTH} baseHeight={DESKTOP_TOTAL_HEIGHT} origin="top center">
+      <FigmaFrame baseWidth={DESKTOP_CANVAS_WIDTH} baseHeight={DESKTOP_TOTAL_HEIGHT}>
       <div
         style={{
           position: 'relative',

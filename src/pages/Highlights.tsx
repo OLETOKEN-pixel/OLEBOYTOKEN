@@ -452,7 +452,7 @@ export default function Highlights() {
           />
 
           <div className="mx-auto w-full max-w-[1532px] px-8 pb-32">
-            <FigmaFrame baseWidth={1532} baseHeight={205} origin="top center" style={{ marginBottom: 0 }}>
+            <FigmaFrame baseWidth={1532} baseHeight={205} style={{ marginBottom: 0 }}>
               <header className="relative min-h-[205px]" style={{ width: '100%', height: '100%' }}>
                 <img
                   aria-hidden="true"

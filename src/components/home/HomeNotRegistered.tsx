@@ -110,7 +110,7 @@ function HomeNotRegisteredDesktop() {
 
   return (
     <div style={{ width: '100%', background: '#0f0404', overflowX: 'hidden' }}>
-      <FigmaFrame baseWidth={1920} baseHeight={4457} origin="top center">
+      <FigmaFrame baseWidth={1920} baseHeight={4457}>
         <div style={{ width: '100%', height: '100%', background: '#0f0404' }}>
 
       {/* ═══════════════════════════════════════════════════════════════════════

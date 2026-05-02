@@ -32,7 +32,7 @@ export function HomeRegistered({ displayName }: HomeRegisteredProps) {
       {/* Top neon gradient overlay — fixed at viewport top, span full width regardless of scale */}
       <div className="fixed top-0 left-0 w-screen h-[146px] z-[7] bg-[linear-gradient(180deg,rgba(255,22,84,0.05)_0%,rgba(0,0,0,0)_100%)] pointer-events-none" />
 
-      <FigmaFrame baseWidth={1920} baseHeight={7321} origin="top center">
+      <FigmaFrame baseWidth={1920} baseHeight={7321}>
         <div className="bg-[#0f0404] w-full h-full flex flex-col">
           <LaunchVideoSection displayName={displayName} />
           <LiveMatchesSection />

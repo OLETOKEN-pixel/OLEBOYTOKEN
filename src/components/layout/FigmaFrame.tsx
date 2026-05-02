@@ -15,7 +15,7 @@ type FigmaFrameProps = {
 export function FigmaFrame({
   baseWidth = FIGMA_DEFAULT_BASE_WIDTH,
   baseHeight,
-  origin = "top center",
+  origin = "top left",
   className,
   innerClassName,
   style,
