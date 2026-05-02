@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useFigmaScale, FIGMA_DEFAULT_BASE_WIDTH } from "@/hooks/useFigmaScale";
 
 type FigmaFrameProps = {
@@ -12,6 +12,8 @@ type FigmaFrameProps = {
   children: ReactNode;
 };
 
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function FigmaFrame({
   baseWidth = FIGMA_DEFAULT_BASE_WIDTH,
   baseHeight,
@@ -23,10 +25,37 @@ export function FigmaFrame({
   children,
 }: FigmaFrameProps) {
   const scale = useFigmaScale(baseWidth);
+  const innerRef = useRef<HTMLDivElement | null>(null);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
+
+  // When baseHeight is not provided, measure the inner content so the outer box
+  // collapses to the right scaled height (otherwise position: absolute inner ⇒ outer height 0).
+  useIsomorphicLayoutEffect(() => {
+    if (baseHeight) return;
+    const node = innerRef.current;
+    if (!node) return;
+
+    const update = () => {
+      setMeasuredHeight(node.scrollHeight);
+    };
+    update();
+
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(update);
+    ro.observe(node);
+    return () => ro.disconnect();
+  }, [baseHeight, children]);
+
+  const innerHeightPx = baseHeight ?? measuredHeight ?? 0;
+  const outerHeight = baseHeight
+    ? `${baseHeight * scale}px`
+    : measuredHeight !== null
+    ? `${measuredHeight * scale}px`
+    : undefined;
 
   const outerStyle: CSSProperties = {
     width: `${baseWidth * scale}px`,
-    height: baseHeight ? `${baseHeight * scale}px` : undefined,
+    height: outerHeight,
     margin: "0 auto",
     position: "relative",
     ...style,
@@ -35,6 +64,7 @@ export function FigmaFrame({
   const composedInnerStyle: CSSProperties = {
     width: `${baseWidth}px`,
     height: baseHeight ? `${baseHeight}px` : undefined,
+    minHeight: baseHeight ? undefined : `${innerHeightPx}px`,
     transform: `scale(${scale})`,
     transformOrigin: origin,
     position: "absolute",
@@ -45,7 +75,7 @@ export function FigmaFrame({
 
   return (
     <div className={className} style={outerStyle}>
-      <div className={innerClassName} style={composedInnerStyle}>
+      <div ref={innerRef} className={innerClassName} style={composedInnerStyle}>
         {children}
       </div>
     </div>
