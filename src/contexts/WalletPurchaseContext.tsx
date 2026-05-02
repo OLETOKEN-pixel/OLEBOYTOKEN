@@ -574,35 +574,30 @@ function CoinPackageButton({
       }}
     >
       {bestSeller ? (
-        <>
-          <span
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              top: '-2px',
-              right: '14px',
-              width: '97px',
-              height: '24px',
-              borderRadius: '9px',
-              border: '1px solid #ff1654',
-              background: 'rgba(255,22,84,0.2)',
-            }}
-          />
-          <span
-            style={{
-              position: 'absolute',
-              top: '3px',
-              right: '23px',
-              color: '#ffffff',
-              fontFamily: FBO,
-              fontSize: '12px',
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            BEST SELLER
-          </span>
-        </>
+        <span
+          style={{
+            position: 'absolute',
+            top: '-2px',
+            left: '60px',
+            width: '97px',
+            height: '24px',
+            borderRadius: '9px',
+            border: '1px solid #ff1654',
+            background: 'rgba(255,22,84,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            fontFamily: FBO,
+            fontSize: '12px',
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+            boxSizing: 'border-box',
+            paddingTop: '1px',
+          }}
+        >
+          BEST SELLER
+        </span>
       ) : null}
 
       <span
@@ -630,8 +625,8 @@ function CoinPackageButton({
         <span
           style={{
             position: 'absolute',
-            right: 0,
-            top: '41px',
+            right: '12px',
+            top: '34px',
             background: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
