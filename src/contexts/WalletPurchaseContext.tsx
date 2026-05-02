@@ -42,11 +42,8 @@ const BEST_SELLER_PACKAGE_ID = 'pack-25';
 const DEFAULT_PACKAGE_ID = 'pack-5';
 const EURO = '\u20AC';
 const VIP_PRICE_LABEL = `${EURO}9,99`;
+const FIGMA_COIN_CARD_PRICE = `${EURO} 0,33`;
 const VIP_BENEFITS = ['Real rewards', 'Giveaways', 'Less levels, more prizes'];
-
-function formatEuroLabel(amount: number) {
-  return `${EURO} ${amount.toFixed(2).replace('.', ',')}`;
-}
 
 export function useWalletPurchase() {
   return useContext(WalletPurchaseContext);
@@ -574,78 +571,77 @@ function CoinPackageButton({
       }}
     >
       {bestSeller ? (
-        <span
-          style={{
-            position: 'absolute',
-            top: '-2px',
-            left: '60px',
-            width: '97px',
-            height: '24px',
-            borderRadius: '9px',
-            border: '1px solid #ff1654',
-            background: 'rgba(255,22,84,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff',
-            fontFamily: FBO,
-            fontSize: '12px',
-            lineHeight: 1,
-            whiteSpace: 'nowrap',
-            boxSizing: 'border-box',
-            paddingTop: '1px',
-          }}
-        >
-          BEST SELLER
-        </span>
+        <>
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: '-2px',
+              left: '109px',
+              width: '97px',
+              height: '24px',
+              borderRadius: '9px',
+              border: '1px solid #ff1654',
+              background: 'rgba(255,22,84,0.2)',
+              boxSizing: 'border-box',
+              zIndex: 2,
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              top: '4px',
+              left: '121px',
+              color: '#ffffff',
+              fontFamily: FBO,
+              fontSize: '12px',
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+              zIndex: 3,
+            }}
+          >
+            BEST SELLER
+          </span>
+        </>
       ) : null}
+
+      <img
+        src="/figma-assets/wallet-overlay/coin-badge.svg"
+        alt=""
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: '49px',
+          top: '19px',
+          width: '63px',
+          height: '63px',
+        }}
+      />
 
       <span
         style={{
           position: 'absolute',
-          left: '50%',
-          top: '19px',
-          width: '110px',
-          height: '79px',
-          transform: 'translateX(-50%)',
+          left: '128px',
+          top: '60px',
+          transform: 'translateX(-100%)',
+          background: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          color: 'transparent',
+          fontFamily: FBO,
+          fontSize: '28px',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
         }}
       >
-        <img
-          src="/figma-assets/wallet-overlay/coin-badge.svg"
-          alt=""
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '63px',
-            height: '63px',
-          }}
-        />
-        <span
-          style={{
-            position: 'absolute',
-            right: '12px',
-            top: '34px',
-            background: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent',
-            fontFamily: FBO,
-            fontSize: '28px',
-            lineHeight: 1,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          x{pack.coins}
-        </span>
+        x{pack.coins}
       </span>
 
       <span
         style={{
           position: 'absolute',
           left: '50%',
-          bottom: '22px',
+          top: '106px',
           transform: 'translateX(-50%)',
           color: '#ffffff',
           fontFamily: FB,
@@ -654,7 +650,7 @@ function CoinPackageButton({
           whiteSpace: 'nowrap',
         }}
       >
-        {formatEuroLabel(pack.price)}
+        {FIGMA_COIN_CARD_PRICE}
       </span>
     </button>
   );
