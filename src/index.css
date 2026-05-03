@@ -414,6 +414,11 @@
       @apply border-border;
     }
 
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
     body {
       @apply bg-background text-foreground antialiased;
       font-family: 'Base Neue', 'Inter', system-ui, sans-serif;

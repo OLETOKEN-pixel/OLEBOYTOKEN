@@ -58,6 +58,9 @@ export function FigmaFrame({
     height: outerHeight,
     margin: "0 auto",
     position: "relative",
+    // Clip the inner's untransformed layout box (still baseWidth wide) so it
+    // doesn't trigger horizontal page scroll on touch devices like iPad.
+    overflow: "hidden",
     ...style,
   };
 
