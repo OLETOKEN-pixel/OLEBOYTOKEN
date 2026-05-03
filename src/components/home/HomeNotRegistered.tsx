@@ -27,10 +27,11 @@ const A_DS_BTN        = '/figma-assets/figma-ds-icon-hero.png';
 const A_GUIDE         = '/figma-assets/figma-guide.svg';
 const A_SPAC_BOTTOM   = '/figma-assets/figma-spaccato-bottom.svg';
 const A_ANIMATION     = '/figma-assets/figma-animation.svg';
+const A_RANK_VIDEO    = '/videos/rank-up-animation.mp4';
 const A_STAR_SHAPE    = '/figma-assets/figma-star-shape.svg';
 const A_SPAC_TITLE_2  = '/figma-assets/figma-spaccato-title-s2.svg';
 // Section 3 - JOIN THE ARENA
-const A_ANIMATION_S3  = '/figma-assets/figma-animation-s3.svg';
+const A_ARENA_VIDEO   = '/videos/join-arena-animation.mp4';
 const A_SPAC_BOTTOM_S3= '/figma-assets/figma-spaccato-bottom-s3.svg';
 const A_STAR_S3       = '/figma-assets/figma-star-s3.svg';
 // Section 4 - GET REWARDS
@@ -390,7 +391,7 @@ function HomeNotRegisteredDesktop() {
           </p>
         </div>
 
-        {/* Animation placeholder (video area) */}
+        {/* Animation (video area) */}
         <div
           style={{
             position: 'absolute',
@@ -402,9 +403,18 @@ function HomeNotRegisteredDesktop() {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '8px',
             backdropFilter: 'blur(8px)',
+            overflow: 'hidden',
           }}
         >
-          <img src={A_ANIMATION} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: '8px' }} />
+          <video
+            src={A_RANK_VIDEO}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+          />
         </div>
 
         {/* Spaccato bottom decoration */}
@@ -496,7 +506,7 @@ function HomeNotRegisteredDesktop() {
           </div>
         </div>
 
-        {/* Animation placeholder (video area) — left side, mirrored */}
+        {/* Animation (video area) — left side */}
         <div
           style={{
             position: 'absolute',
@@ -508,10 +518,18 @@ function HomeNotRegisteredDesktop() {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '8px',
             backdropFilter: 'blur(8px)',
-            transform: 'scaleX(-1)',
+            overflow: 'hidden',
           }}
         >
-          <img src={A_ANIMATION_S3} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: '8px' }} />
+          <video
+            src={A_ARENA_VIDEO}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+          />
         </div>
 
         {/* Spaccato bottom — left side, mirrored */}

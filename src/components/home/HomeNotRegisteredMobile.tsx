@@ -5,7 +5,8 @@ import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 const A_NEON = '/figma-assets/figma-neon.png';
 const A_DS_BTN = '/figma-assets/figma-ds-icon-hero.png';
 const A_ANIMATION = '/figma-assets/figma-animation.svg';
-const A_ANIMATION_S3 = '/figma-assets/figma-animation-s3.svg';
+const A_RANK_VIDEO = '/videos/rank-up-animation.mp4';
+const A_ARENA_VIDEO = '/videos/join-arena-animation.mp4';
 const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
 const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
 
@@ -140,7 +141,19 @@ function MobileInfoSection({
             boxShadow: '0 18px 46px rgba(0, 0, 0, 0.36)',
           }}
         >
-          <img src={animation} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          {animation.endsWith('.mp4') || animation.endsWith('.webm') ? (
+            <video
+              src={animation}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <img src={animation} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          )}
         </div>
         <MobileNavArrows prevIndex={prevIndex} nextIndex={nextIndex} scrollTo={scrollTo} />
       </div>
@@ -345,7 +358,7 @@ export function HomeNotRegisteredMobile() {
       <MobileInfoSection
         id="s-rank"
         title="RANK UP!"
-        animation={A_ANIMATION}
+        animation={A_RANK_VIDEO}
         prevIndex={0}
         nextIndex={2}
         scrollTo={scrollTo}
@@ -360,7 +373,7 @@ export function HomeNotRegisteredMobile() {
       <MobileInfoSection
         id="s-arena"
         title="JOIN THE ARENA!"
-        animation={A_ANIMATION_S3}
+        animation={A_ARENA_VIDEO}
         prevIndex={1}
         nextIndex={3}
         align="right"
