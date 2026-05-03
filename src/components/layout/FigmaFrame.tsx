@@ -9,6 +9,17 @@ type FigmaFrameProps = {
   innerClassName?: string;
   style?: CSSProperties;
   innerStyle?: CSSProperties;
+  /**
+   * Background applied to the outer wrapper so it matches the page when the
+   * scaled inner content is shorter than the viewport (otherwise iPad-tall
+   * viewports show an empty band below short pages).
+   */
+  fillBackground?: string;
+  /**
+   * Whether the outer should expand to at least viewport height. Defaults to
+   * true — disable only when stacking FigmaFrames vertically.
+   */
+  fillViewport?: boolean;
   children: ReactNode;
 };
 
@@ -22,6 +33,8 @@ export function FigmaFrame({
   innerClassName,
   style,
   innerStyle,
+  fillBackground = "#0f0404",
+  fillViewport = true,
   children,
 }: FigmaFrameProps) {
   const scale = useFigmaScale(baseWidth);
@@ -56,8 +69,10 @@ export function FigmaFrame({
   const outerStyle: CSSProperties = {
     width: `${baseWidth * scale}px`,
     height: outerHeight,
+    minHeight: fillViewport ? "100vh" : undefined,
     margin: "0 auto",
     position: "relative",
+    background: fillBackground,
     // Clip the inner's untransformed layout box (still baseWidth wide) so it
     // doesn't trigger horizontal page scroll on touch devices like iPad.
     overflow: "hidden",
