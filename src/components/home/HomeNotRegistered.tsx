@@ -399,11 +399,7 @@ function HomeNotRegisteredDesktop() {
             top: '480.21px',
             width: '408.932px',
             height: '230.024px',
-            background: 'rgba(30, 30, 40, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            backdropFilter: 'blur(8px)',
-            overflow: 'hidden',
+            pointerEvents: 'none',
           }}
         >
           <video
@@ -413,7 +409,7 @@ function HomeNotRegisteredDesktop() {
             loop
             playsInline
             preload="auto"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'screen' }}
           />
         </div>
 
@@ -514,11 +510,7 @@ function HomeNotRegisteredDesktop() {
             top: '454px',
             width: '408.932px',
             height: '230.024px',
-            background: 'rgba(30, 30, 40, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            backdropFilter: 'blur(8px)',
-            overflow: 'hidden',
+            pointerEvents: 'none',
           }}
         >
           <video
@@ -528,7 +520,7 @@ function HomeNotRegisteredDesktop() {
             loop
             playsInline
             preload="auto"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'screen' }}
           />
         </div>
 

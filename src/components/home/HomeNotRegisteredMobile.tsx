@@ -128,20 +128,16 @@ function MobileInfoSection({
         >
           {copy}
         </div>
-        <div
-          style={{
-            position: 'relative',
-            marginTop: '34px',
-            width: '100%',
-            aspectRatio: '408.932 / 230.024',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '8px',
-            background: 'rgba(30, 30, 40, 0.8)',
-            overflow: 'hidden',
-            boxShadow: '0 18px 46px rgba(0, 0, 0, 0.36)',
-          }}
-        >
-          {animation.endsWith('.mp4') || animation.endsWith('.webm') ? (
+        {animation.endsWith('.mp4') || animation.endsWith('.webm') ? (
+          <div
+            style={{
+              position: 'relative',
+              marginTop: '34px',
+              width: '100%',
+              aspectRatio: '408.932 / 230.024',
+              pointerEvents: 'none',
+            }}
+          >
             <video
               src={animation}
               autoPlay
@@ -149,12 +145,26 @@ function MobileInfoSection({
               loop
               playsInline
               preload="auto"
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'screen' }}
             />
-          ) : (
+          </div>
+        ) : (
+          <div
+            style={{
+              position: 'relative',
+              marginTop: '34px',
+              width: '100%',
+              aspectRatio: '408.932 / 230.024',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '8px',
+              background: 'rgba(30, 30, 40, 0.8)',
+              overflow: 'hidden',
+              boxShadow: '0 18px 46px rgba(0, 0, 0, 0.36)',
+            }}
+          >
             <img src={animation} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-          )}
-        </div>
+          </div>
+        )}
         <MobileNavArrows prevIndex={prevIndex} nextIndex={nextIndex} scrollTo={scrollTo} />
       </div>
     </section>
