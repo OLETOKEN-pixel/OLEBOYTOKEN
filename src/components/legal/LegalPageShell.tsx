@@ -39,7 +39,7 @@ export function LegalPageShell({
           minHeight: '100vh',
           overflowX: 'hidden',
           background:
-            'radial-gradient(circle at bottom, rgba(255,22,84,0.24), transparent 33%), linear-gradient(180deg, #160406 0%, #090203 100%)',
+            'linear-gradient(180deg, #160406 0%, #090203 100%)',
           color: '#fff',
           fontFamily: FONT_REGULAR,
         }}
@@ -222,7 +222,6 @@ export function LegalPageShell({
               height: 6px;
               border-radius: 999px;
               background: #ff1654;
-              box-shadow: 0 0 10px rgba(255, 22, 84, 0.65);
             }
 
             .legal-content li ul {
@@ -347,6 +346,21 @@ export function LegalPageShell({
             width: '100vw',
             height: 146,
             transform: 'translateX(-50%)',
+            objectFit: 'cover',
+            pointerEvents: 'none',
+          }}
+        />
+        <img
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: 0,
+            width: '100vw',
+            height: 146,
+            transform: 'translateX(-50%) scaleY(-1)',
             objectFit: 'cover',
             pointerEvents: 'none',
           }}

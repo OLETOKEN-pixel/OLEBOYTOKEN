@@ -124,10 +124,16 @@ export default function MyMatches() {
     <PublicLayout>
       <section
         data-testid="my-matches-page"
-        className="relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_bottom,rgba(255,22,84,0.23),transparent_38%),linear-gradient(180deg,#22000b_0%,#060003_48%,#090004_100%)] text-white"
+        className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#22000b_0%,#060003_48%,#090004_100%)] text-white"
       >
         <img
           className="pointer-events-none absolute left-1/2 top-0 h-[146px] w-screen -translate-x-1/2 object-cover"
+          src="/figma-assets/figma-neon.png"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="pointer-events-none absolute left-1/2 bottom-0 h-[146px] w-screen -translate-x-1/2 object-cover scale-y-[-1]"
           src="/figma-assets/figma-neon.png"
           alt=""
           aria-hidden="true"
