@@ -1066,7 +1066,7 @@ function ShopPrice({ price }: { price: string }) {
   const showCoinIcon = /^\d/.test(price);
   return (
     <div style={{ position: 'absolute', left: '10px', right: '10px', bottom: '10px', display: 'flex', alignItems: 'center', gap: '7px' }}>
-      {showCoinIcon ? <img src="/showreel/coin-icon.svg" alt="" aria-hidden style={{ width: '19px', height: '19px', flexShrink: 0 }} /> : null}
+      {showCoinIcon ? <img src="/coin.png" alt="" aria-hidden style={{ width: '19px', height: '19px', flexShrink: 0, objectFit: 'contain' }} /> : null}
       <span style={{ fontFamily: "'Base Neue Trial-ExpandedBold', 'Base Neue Trial', sans-serif", fontWeight: 700, fontSize: price.startsWith('EUR') ? '20px' : price.startsWith('LVL') ? '18px' : '25px', lineHeight: '29px', color: '#ffffff', whiteSpace: 'nowrap' }}>
         {price}
       </span>

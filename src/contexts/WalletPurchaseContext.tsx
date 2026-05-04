@@ -609,7 +609,7 @@ function CoinPackageButton({
       ) : null}
 
       <img
-        src="/figma-assets/wallet-overlay/coin-badge.svg"
+        src="/coin.png"
         alt=""
         aria-hidden
         style={{
@@ -618,6 +618,7 @@ function CoinPackageButton({
           top: '19px',
           width: '63px',
           height: '63px',
+          objectFit: 'contain',
         }}
       />
 

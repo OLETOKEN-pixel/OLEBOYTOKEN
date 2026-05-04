@@ -105,6 +105,8 @@ serve(async (req) => {
       origin,
     });
 
+    const coinImageUrl = `${origin}/coin.png`;
+
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
       // Stripe Checkout uses the Dashboard-configured dynamic payment methods
@@ -116,6 +118,7 @@ serve(async (req) => {
             product_data: {
               name: `${coinPackage.coins} Coins`,
               description: "OLEBOY TOKEN Gaming Coins",
+              images: [coinImageUrl],
             },
             unit_amount: Math.round(coinPackage.price * 100),
           },
