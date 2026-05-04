@@ -134,7 +134,7 @@ function MobileInfoSection({
               position: 'relative',
               marginTop: '34px',
               width: '100%',
-              aspectRatio: '408.932 / 230.024',
+              aspectRatio: '1 / 1',
               pointerEvents: 'none',
             }}
           >

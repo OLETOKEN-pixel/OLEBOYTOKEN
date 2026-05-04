@@ -395,10 +395,10 @@ function HomeNotRegisteredDesktop() {
         <div
           style={{
             position: 'absolute',
-            left: 'calc(64% - 1.27px)',
-            top: '480.21px',
-            width: '408.932px',
-            height: '230.024px',
+            left: 'calc(64% - 96.8px)',
+            top: '295.22px',
+            width: '600px',
+            height: '600px',
             pointerEvents: 'none',
           }}
         >
@@ -506,10 +506,10 @@ function HomeNotRegisteredDesktop() {
         <div
           style={{
             position: 'absolute',
-            left: 'calc(16% + 3.8px)',
-            top: '454px',
-            width: '408.932px',
-            height: '230.024px',
+            left: 'calc(16% - 91.7px)',
+            top: '269px',
+            width: '600px',
+            height: '600px',
             pointerEvents: 'none',
           }}
         >
