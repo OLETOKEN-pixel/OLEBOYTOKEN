@@ -4,9 +4,9 @@ import { getCurrentPathWithQueryAndHash, startDiscordAuth } from '@/lib/oauth';
 
 const A_NEON = '/figma-assets/figma-neon.png';
 const A_DS_BTN = '/figma-assets/figma-ds-icon-hero.png';
-const A_ANIMATION = '/figma-assets/figma-animation.svg';
 const A_RANK_VIDEO = '/videos/rank-up-animation.mp4';
 const A_ARENA_VIDEO = '/videos/join-arena-animation.mp4';
+const A_REWARDS_VIDEO = '/videos/get-rewards-animation.mp4';
 const A_BW_ARROW = '/figma-assets/figma-bw-arrow.svg';
 const A_FW_ARROW = '/figma-assets/figma-fw-arrow.svg';
 
@@ -400,7 +400,7 @@ export function HomeNotRegisteredMobile() {
       <MobileInfoSection
         id="s-rewards"
         title="GET REWARDS!"
-        animation={A_ANIMATION}
+        animation={A_REWARDS_VIDEO}
         prevIndex={2}
         nextIndex={4}
         scrollTo={scrollTo}

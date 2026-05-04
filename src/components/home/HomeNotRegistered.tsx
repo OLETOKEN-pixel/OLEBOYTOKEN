@@ -26,7 +26,6 @@ const A_DS_BTN        = '/figma-assets/figma-ds-icon-hero.png';
 // Section 2 - RANK UP
 const A_GUIDE         = '/figma-assets/figma-guide.svg';
 const A_SPAC_BOTTOM   = '/figma-assets/figma-spaccato-bottom.svg';
-const A_ANIMATION     = '/figma-assets/figma-animation.svg';
 const A_RANK_VIDEO    = '/videos/rank-up-animation.mp4';
 const A_STAR_SHAPE    = '/figma-assets/figma-star-shape.svg';
 const A_SPAC_TITLE_2  = '/figma-assets/figma-spaccato-title-s2.svg';
@@ -35,6 +34,7 @@ const A_ARENA_VIDEO   = '/videos/join-arena-animation.mp4';
 const A_SPAC_BOTTOM_S3= '/figma-assets/figma-spaccato-bottom-s3.svg';
 const A_STAR_S3       = '/figma-assets/figma-star-s3.svg';
 // Section 4 - GET REWARDS
+const A_REWARDS_VIDEO = '/videos/get-rewards-animation.mp4';
 const A_VECTOR19      = '/figma-assets/figma-vector19.svg';
 const A_SPAC_TITLE_4  = '/figma-assets/figma-spaccato-title-s4.svg';
 // ─── Font ────────────────────────────────────────────────────────────────────
@@ -677,21 +677,26 @@ function HomeNotRegisteredDesktop() {
           get OBCoins.
         </p>
 
-        {/* Animation placeholder (video area) */}
+        {/* Animation (video area) */}
         <div
           style={{
             position: 'absolute',
-            left: 'calc(64% - 1.27px)',
-            top: '480.21px',
-            width: '408.932px',
-            height: '230.024px',
-            background: 'rgba(30, 30, 40, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            backdropFilter: 'blur(8px)',
+            left: 'calc(64% - 96.8px)',
+            top: '295.22px',
+            width: '600px',
+            height: '600px',
+            pointerEvents: 'none',
           }}
         >
-          <img src={A_ANIMATION} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: '8px' }} />
+          <video
+            src={A_REWARDS_VIDEO}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'screen' }}
+          />
         </div>
 
         {/* Spaccato bottom decoration */}
