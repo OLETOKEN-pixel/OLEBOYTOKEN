@@ -443,14 +443,14 @@ function DesktopRow({
           whiteSpace: 'nowrap',
         }}
       >
-        <span
+        <img
+          src="/coin.png"
+          alt=""
           aria-hidden="true"
           style={{
-            width: '14px',
-            height: '14px',
-            borderRadius: '999px',
-            background: '#ff1654',
-            display: 'inline-block',
+            width: '28px',
+            height: '28px',
+            objectFit: 'contain',
             opacity: row ? 1 : 0,
             flexShrink: 0,
           }}
@@ -1111,14 +1111,14 @@ function MobileRow({
             lineHeight: '22px',
           }}
         >
-          <span
+          <img
+            src="/coin.png"
+            alt=""
             aria-hidden="true"
             style={{
-              width: '12px',
-              height: '12px',
-              borderRadius: '999px',
-              background: '#ff1654',
-              display: 'inline-block',
+              width: '22px',
+              height: '22px',
+              objectFit: 'contain',
               opacity: row ? 1 : 0,
               flexShrink: 0,
             }}

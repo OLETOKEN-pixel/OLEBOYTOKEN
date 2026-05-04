@@ -285,36 +285,36 @@ export function NavbarFigmaLoggedIn() {
           })}
         </div>
 
-        {/* TAB section — 394x50px pill + PFP extending beyond right edge */}
+        {/* TAB section — 394x56px pill + PFP extending beyond right edge */}
         <div
           style={{
             position: 'relative',
             width: '398px', /* 394 + 4px for PFP overflow */
-            height: '50px',
+            height: '56px',
             flexShrink: 0,
           }}
         >
-          {/* TAB background pill — 394x50px */}
+          {/* TAB background pill — 394x56px */}
           <div
             style={{
               position: 'absolute',
               left: 0,
               top: 0,
               width: '394px',
-              height: '50px',
+              height: '56px',
               background: 'rgba(255, 22, 84, 0.2)',
-              borderRadius: '23px',
+              borderRadius: '26px',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
             }}
           />
 
-          {/* COINS — red circle 29x29 at left:23, top:11 + balance text */}
+          {/* COINS — coin 40x40 + balance text, vertically centered in 56px pill */}
           <div
             style={{
               position: 'absolute',
-              left: '23px',
-              top: '11px',
+              left: '20px',
+              top: '8px',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
@@ -325,8 +325,8 @@ export function NavbarFigmaLoggedIn() {
               alt=""
               aria-hidden
               style={{
-                width: '29px',
-                height: '29px',
+                width: '40px',
+                height: '40px',
                 objectFit: 'contain',
                 flexShrink: 0,
               }}
@@ -345,15 +345,15 @@ export function NavbarFigmaLoggedIn() {
             </span>
           </div>
 
-          {/* RECHARGE "+" — Ellipse 16x16 at left:190, top:18 inside TAB */}
+          {/* RECHARGE "+" — Ellipse 16x16 centered in 56px pill */}
           <button
             type="button"
             onClick={openWalletPurchase}
             aria-label="Open wallet purchase"
             style={{
               position: 'absolute',
-              left: '190px',
-              top: '18px',
+              left: '195px',
+              top: '20px',
               width: '16px',
               height: '16px',
               background: 'rgba(255, 22, 84, 0.5)',
@@ -381,12 +381,12 @@ export function NavbarFigmaLoggedIn() {
             </span>
           </button>
 
-          {/* SEP — separator line at left:228, top:10, height:30 */}
+          {/* SEP — separator line centered vertically in 56px pill */}
           <div
             style={{
               position: 'absolute',
-              left: '228px',
-              top: '10px',
+              left: '233px',
+              top: '13px',
               width: '1px',
               height: '30px',
             }}
@@ -399,12 +399,12 @@ export function NavbarFigmaLoggedIn() {
             />
           </div>
 
-          {/* LVL — at left:245, top:11 */}
+          {/* LVL — vertically centered in 56px pill */}
           <span
             style={{
               position: 'absolute',
-              left: '245px',
-              top: '11px',
+              left: '250px',
+              top: '14px',
               fontFamily: "'Base_Neue_Trial-WideBlack', 'Base Neue Trial', sans-serif",
               fontWeight: 'normal',
               fontSize: '15px',
@@ -424,10 +424,10 @@ export function NavbarFigmaLoggedIn() {
                 aria-haspopup="menu"
                 style={{
                   position: 'absolute',
-                  left: '347px',
+                  left: '342px',
                   top: 0,
-                  width: '50px',
-                  height: '50px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
                   overflow: 'hidden',
                   padding: 0,
@@ -678,19 +678,19 @@ function NavbarFigmaLoggedInMobile({
           aria-label="Wallet balance"
           style={{
             minWidth: 0,
-            maxWidth: '128px',
+            maxWidth: '136px',
             flex: 1,
-            height: '38px',
-            borderRadius: '8px',
+            height: '44px',
+            borderRadius: '10px',
             background: 'rgba(255, 22, 84, 0.2)',
             border: '1px solid rgba(255, 22, 84, 0.38)',
             display: 'flex',
             alignItems: 'center',
             gap: '7px',
-            padding: '0 7px',
+            padding: '0 8px',
           }}
         >
-          <img src="/coin.png" alt="" aria-hidden style={{ width: '15px', height: '15px', objectFit: 'contain', flexShrink: 0 }} />
+          <img src="/coin.png" alt="" aria-hidden style={{ width: '24px', height: '24px', objectFit: 'contain', flexShrink: 0 }} />
           <span
             style={{
               minWidth: 0,

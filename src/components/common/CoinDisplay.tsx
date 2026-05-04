@@ -10,9 +10,9 @@ interface CoinDisplayProps {
 }
 
 const iconSizeMap = {
-  sm: 'xs' as const,
-  md: 'sm' as const,
-  lg: 'md' as const,
+  sm: 'sm' as const,
+  md: 'md' as const,
+  lg: 'lg' as const,
 };
 
 export function CoinDisplay({ 

@@ -108,7 +108,7 @@ export const ChallengesSection = () => {
               <span className="[font-family:'Base_Neue_Trial-Bold',Helvetica] font-bold text-white text-[11px] tracking-[0]">LVL.</span>
               <span className="text-lg">{level}</span>
             </p>
-            <div className="top-[42px] left-[26px] w-11 h-11 rounded-[22px] absolute bg-[#ff1654]" />
+            <img src="/coin.png" alt="" aria-hidden className="absolute top-[42px] left-[26px] w-11 h-11 object-contain" />
             <div className="absolute top-[93px] left-[13px] w-[69px] bg-[linear-gradient(90deg,rgba(255,255,255,1)_0%,rgba(255,78,125,1)_100%)] [-webkit-background-clip:text] bg-clip-text [-webkit-text-fill-color:transparent] [font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] font-black text-transparent text-sm text-right tracking-[0] leading-[normal]">
               +0.50OBC
             </div>

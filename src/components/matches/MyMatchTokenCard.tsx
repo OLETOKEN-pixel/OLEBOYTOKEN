@@ -253,12 +253,12 @@ export function MyMatchTokenCard({ match, now, currentUserId, className }: MyMat
           src="/coin.png"
           alt=""
           aria-hidden="true"
-          style={{ position: 'absolute', left: 0, top: '31px', width: '19px', height: '19px', objectFit: 'contain' }}
+          style={{ position: 'absolute', left: 0, top: '22px', width: '32px', height: '32px', objectFit: 'contain' }}
         />
         <span
           style={{
             position: 'absolute',
-            left: '24px',
+            left: '36px',
             top: '26px',
             fontFamily: FONT_WIDE_BLACK,
             fontSize: '24px',

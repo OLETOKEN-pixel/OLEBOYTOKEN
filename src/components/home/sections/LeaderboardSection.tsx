@@ -148,7 +148,7 @@ export const LeaderboardSection = () => {
             </div>
 
             {/* 1st place stats */}
-            <div className="absolute top-[265px] left-48 w-[147px] flex flex-col gap-[6px]">
+            <div className="absolute top-[265px] left-48 w-[147px] flex flex-col gap-[10px]">
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[15px]">Win rate</span>
                 <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[15px]">{first.winRate}</span>
@@ -159,15 +159,15 @@ export const LeaderboardSection = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[15px]">Earnings</span>
-                <div className="flex items-center gap-1">
-                  <img src="/coin.png" alt="" aria-hidden className="w-[11px] h-[11px] flex-shrink-0 object-contain" />
+                <div className="flex items-center gap-2">
+                  <img src="/coin.png" alt="" aria-hidden className="w-[20px] h-[20px] flex-shrink-0 object-contain" />
                   <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[15px]">{first.earnings}</span>
                 </div>
               </div>
             </div>
 
             {/* 2nd place small stats */}
-            <div className="left-0 absolute top-[294px] w-[111px] flex flex-col gap-[6.6px]">
+            <div className="left-0 absolute top-[294px] w-[111px] flex flex-col gap-[10px]">
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Win rate</span>
                 <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{second.winRate}</span>
@@ -178,15 +178,15 @@ export const LeaderboardSection = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Earnings</span>
-                <div className="flex items-center gap-0.5">
-                  <img src="/coin.png" alt="" aria-hidden className="w-[8.31px] h-[8.31px] flex-shrink-0 object-contain" />
+                <div className="flex items-center gap-1.5">
+                  <img src="/coin.png" alt="" aria-hidden className="w-[14px] h-[14px] flex-shrink-0 object-contain" />
                   <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{second.earnings}</span>
                 </div>
               </div>
             </div>
 
             {/* 3rd place small stats */}
-            <div className="left-[417px] absolute top-[294px] w-[111px] flex flex-col gap-[6.6px]">
+            <div className="left-[417px] absolute top-[294px] w-[111px] flex flex-col gap-[10px]">
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Win rate</span>
                 <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{third.winRate}</span>
@@ -197,8 +197,8 @@ export const LeaderboardSection = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Earnings</span>
-                <div className="flex items-center gap-0.5">
-                  <img src="/coin.png" alt="" aria-hidden className="w-[8.31px] h-[8.31px] flex-shrink-0 object-contain" />
+                <div className="flex items-center gap-1.5">
+                  <img src="/coin.png" alt="" aria-hidden className="w-[14px] h-[14px] flex-shrink-0 object-contain" />
                   <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{third.earnings}</span>
                 </div>
               </div>

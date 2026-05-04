@@ -32,7 +32,7 @@ const VARIANT_STYLES = {
     platform: 'text-[23px]',
     action: 'mt-5 h-[50px] rounded-[8px] text-[20px]',
     triangles: 'h-[22px] w-[15px]',
-    dot: 'h-[17px] w-[17px]',
+    dot: 'h-[24px] w-[24px] object-contain',
     prizeIcon: 'h-[18px] w-[21px]',
     arrow: 'h-[11px] w-[16px]',
   },
@@ -98,12 +98,12 @@ export function MatchesLiveCard({
             Prize
           </span>
           <img
-            className="absolute left-0 top-[31px] h-[19px] w-[19px] object-contain"
+            className="absolute left-0 top-[22px] h-[32px] w-[32px] object-contain"
             src="/coin.png"
             alt=""
             aria-hidden="true"
           />
-          <span className="absolute left-[24px] top-[26px] whitespace-nowrap text-[24px] leading-none text-white" style={{ fontFamily: FONT_WIDE_BLACK }}>
+          <span className="absolute left-[36px] top-[26px] whitespace-nowrap text-[24px] leading-none text-white" style={{ fontFamily: FONT_WIDE_BLACK }}>
             {entryFee}
           </span>
           <img
@@ -233,7 +233,7 @@ export function MatchesLiveCard({
             <div className="flex items-center gap-3">
               <img
                 className={styles.dot}
-                src="/figma-assets/matches-entry-dot.svg"
+                src="/coin.png"
                 alt=""
                 aria-hidden="true"
               />
