@@ -320,12 +320,14 @@ export function NavbarFigmaLoggedIn() {
               gap: '12px',
             }}
           >
-            <div
+            <img
+              src="/coin.png"
+              alt=""
+              aria-hidden
               style={{
                 width: '29px',
                 height: '29px',
-                borderRadius: '50%',
-                background: '#ff1654',
+                objectFit: 'contain',
                 flexShrink: 0,
               }}
             />
@@ -688,7 +690,7 @@ function NavbarFigmaLoggedInMobile({
             padding: '0 7px',
           }}
         >
-          <span aria-hidden="true" style={{ width: '15px', height: '15px', borderRadius: '50%', background: '#ff1654', flexShrink: 0 }} />
+          <img src="/coin.png" alt="" aria-hidden style={{ width: '15px', height: '15px', objectFit: 'contain', flexShrink: 0 }} />
           <span
             style={{
               minWidth: 0,

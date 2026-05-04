@@ -30,7 +30,7 @@ describe('MatchesLiveCard', () => {
     expect(acceptButton.className).toContain('w-[247px]');
     expect(srcs).toContain('/figma-assets/matches-card-divider.svg');
     expect(srcs).toContain('/figma-assets/matches-first-to-triangles.svg');
-    expect(srcs).toContain('/figma-assets/matches-entry-dot.svg');
+    expect(srcs).toContain('/coin.png');
     expect(srcs).toContain('/figma-assets/matches-prize-icon.svg');
     expect(srcs).toContain('/figma-assets/matches-expiry-dot.svg');
   });

@@ -614,10 +614,10 @@ function CoinPackageButton({
         aria-hidden
         style={{
           position: 'absolute',
-          left: '49px',
-          top: '19px',
-          width: '63px',
-          height: '63px',
+          left: '30px',
+          top: '0px',
+          width: '100px',
+          height: '100px',
           objectFit: 'contain',
         }}
       />

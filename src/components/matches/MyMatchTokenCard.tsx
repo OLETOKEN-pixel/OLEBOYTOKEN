@@ -250,10 +250,10 @@ export function MyMatchTokenCard({ match, now, currentUserId, className }: MyMat
           Prize
         </span>
         <img
-          src="/figma-assets/matches-entry-dot.svg"
+          src="/coin.png"
           alt=""
           aria-hidden="true"
-          style={{ position: 'absolute', left: 0, top: '31px', width: '19px', height: '19px' }}
+          style={{ position: 'absolute', left: 0, top: '31px', width: '19px', height: '19px', objectFit: 'contain' }}
         />
         <span
           style={{

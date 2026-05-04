@@ -98,8 +98,8 @@ export function MatchesLiveCard({
             Prize
           </span>
           <img
-            className="absolute left-0 top-[31px] h-[19px] w-[19px]"
-            src="/figma-assets/matches-entry-dot.svg"
+            className="absolute left-0 top-[31px] h-[19px] w-[19px] object-contain"
+            src="/coin.png"
             alt=""
             aria-hidden="true"
           />

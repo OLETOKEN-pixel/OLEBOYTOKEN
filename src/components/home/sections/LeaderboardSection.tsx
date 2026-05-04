@@ -160,7 +160,7 @@ export const LeaderboardSection = () => {
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[15px]">Earnings</span>
                 <div className="flex items-center gap-1">
-                  <div className="w-[11px] h-[11px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                  <img src="/coin.png" alt="" aria-hidden className="w-[11px] h-[11px] flex-shrink-0 object-contain" />
                   <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[15px]">{first.earnings}</span>
                 </div>
               </div>
@@ -179,7 +179,7 @@ export const LeaderboardSection = () => {
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Earnings</span>
                 <div className="flex items-center gap-0.5">
-                  <div className="w-[8.31px] h-[8.31px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                  <img src="/coin.png" alt="" aria-hidden className="w-[8.31px] h-[8.31px] flex-shrink-0 object-contain" />
                   <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{second.earnings}</span>
                 </div>
               </div>
@@ -198,7 +198,7 @@ export const LeaderboardSection = () => {
               <div className="flex justify-between items-center">
                 <span className="[font-family:'Base_Neue_Trial-Regular',Helvetica] text-white text-[11.3px]">Earnings</span>
                 <div className="flex items-center gap-0.5">
-                  <div className="w-[8.31px] h-[8.31px] bg-[#ff1654] rounded-full flex-shrink-0" />
+                  <img src="/coin.png" alt="" aria-hidden className="w-[8.31px] h-[8.31px] flex-shrink-0 object-contain" />
                   <span className="[font-family:'Base_Neue_Trial-RegularOblique',Helvetica] text-[#ff1654] text-[11.3px]">{third.earnings}</span>
                 </div>
               </div>
