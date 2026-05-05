@@ -74,7 +74,7 @@ describe('Shop page', () => {
     expect(srcs).toContain('/figma-assets/shop/title-triangles.svg');
     expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
     expect(srcs).toContain('/figma-assets/shop/reward-figure.png');
-    expect(srcs).toContain('/shop/tappetino.png');
+    expect(srcs).toContain('/figma-assets/shop/reward-mousepad.png');
     expect(srcs.some((src) => src.startsWith('https://www.figma.com/api/mcp/asset/'))).toBe(false);
   });
 

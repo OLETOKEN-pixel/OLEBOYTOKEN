@@ -24,6 +24,7 @@ const SHOP_ASSETS = {
   titleTriangles: '/figma-assets/shop/title-triangles.svg',
   searchIcon: '/figma-assets/shop/search-icon.svg',
   rewardFigure: '/figma-assets/shop/reward-figure.png',
+  vipHeroMask: '/figma-assets/shop/vip-hero-mask.svg',
   vipHeroOverlay: '/figma-assets/shop/vip-hero-overlay.svg',
   rewardTrianglesLeft: '/figma-assets/shop/reward-triangles-left.svg',
   rewardTrianglesRight: '/figma-assets/shop/reward-triangles-right.svg',
@@ -31,7 +32,7 @@ const SHOP_ASSETS = {
   rewardVectorSmall: '/figma-assets/shop/reward-vector-small.svg',
   arrowStroke: '/figma-assets/figma-arrow-stroke.svg',
   starShape: '/figma-assets/figma-star-shape.svg',
-  mousepad: '/shop/tappetino.png',
+  mousepad: '/figma-assets/shop/reward-mousepad.png',
 };
 
 type ShopCard = {
@@ -67,9 +68,17 @@ const rewardCards: ShopCard[] = [
   })),
 ];
 
+const DESKTOP_PAGE_WIDTH = 1920;
+const DESKTOP_PAGE_HEIGHT = 2547;
+const DESKTOP_SHELL_WIDTH = 1532;
+const DESKTOP_CONTENT_LEFT = 42;
+const DESKTOP_CONTENT_WIDTH = 1448;
+const DESKTOP_CARD_X = [0, 303.966, 607.954, 911.94, 1216.078] as const;
+const DESKTOP_FOOTER_TOP = 1910;
+
 const desktopPageStyle: CSSProperties = {
-  width: '1920px',
-  minHeight: '2547px',
+  width: `${DESKTOP_PAGE_WIDTH}px`,
+  height: `${DESKTOP_PAGE_HEIGHT}px`,
   background: '#0f0404',
   color: '#ffffff',
   position: 'relative',
@@ -87,12 +96,12 @@ function matchesQuery(card: ShopCard, query: string) {
 
 function TitleLockup() {
   return (
-    <div style={{ position: 'relative', height: 187, marginLeft: '-71px' }}>
+    <div style={{ position: 'relative', width: 476, height: 187 }}>
       <img
         src={SHOP_ASSETS.titleTriangles}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 0, top: 0, width: 124, height: 186, display: 'block' }}
+        style={{ position: 'absolute', left: 0, top: 0, width: 123.871, height: 185.808, display: 'block' }}
       />
       <h1
         style={{
@@ -476,20 +485,25 @@ function CoinStackCard({ card }: { card: ShopCard }) {
 
 function CardRow({ cards }: { cards: ShopCard[] }) {
   return (
-    <div
-      style={{
-        width: 1448,
-        minHeight: 271.875,
-        display: 'flex',
-        gap: 45,
-        alignItems: 'flex-start',
-      }}
-    >
-      {cards.map((card) => {
-        if (card.kind === 'reward-figure') return <FigureCard key={card.id} card={card} />;
-        if (card.kind === 'price-only') return <PriceOnlyCard key={card.id} card={card} />;
-        return <CoinStackCard key={card.id} card={card} />;
-      })}
+    <div style={{ position: 'relative', width: DESKTOP_CONTENT_WIDTH, height: 271.875 }}>
+      {cards.slice(0, DESKTOP_CARD_X.length).map((card, index) => (
+        <div
+          key={card.id}
+          style={{
+            position: 'absolute',
+            left: DESKTOP_CARD_X[index],
+            top: 0,
+          }}
+        >
+          {card.kind === 'reward-figure' ? (
+            <FigureCard card={card} />
+          ) : card.kind === 'price-only' ? (
+            <PriceOnlyCard card={card} />
+          ) : (
+            <CoinStackCard card={card} />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -498,26 +512,80 @@ function DesktopHeroVip({ onKnowMore }: { onKnowMore: () => void }) {
   return (
     <section
       style={{
-        width: 1448,
+        width: DESKTOP_CONTENT_WIDTH,
         height: 225,
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(90deg, #ff1654 0%, #80102e 42%, #33000d 72%, #140005 100%)',
+        background: '#0f0404',
       }}
     >
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+          opacity: 0.5,
+          filter: 'blur(110.65px)',
+          transform: 'scale(1.08)',
+          transformOrigin: 'center',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 282.966,
+          top: -141,
+          width: 1251.741,
+          height: 421.215,
+          overflow: 'hidden',
+          WebkitMaskImage: `url(${SHOP_ASSETS.vipHeroMask})`,
+          WebkitMaskPosition: '-283px 141px',
+          WebkitMaskSize: '1448px 225px',
+          WebkitMaskRepeat: 'no-repeat',
+          maskImage: `url(${SHOP_ASSETS.vipHeroMask})`,
+          maskPosition: '-283px 141px',
+          maskSize: '1448px 225px',
+          maskRepeat: 'no-repeat',
+          pointerEvents: 'none',
+        }}
+      >
+        <img
+          src={SHOP_ASSETS.vipHeroOverlay}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            display: 'block',
+          }}
+        />
+      </div>
       <img
         src={SHOP_ASSETS.vipHeroOverlay}
         alt=""
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: 443,
+          left: 282.966,
           top: -141,
           width: 1251.741,
           height: 421.215,
           display: 'block',
-          opacity: 0.9,
+          opacity: 0.12,
           pointerEvents: 'none',
+          mixBlendMode: 'screen',
         }}
       />
 
@@ -537,7 +605,7 @@ function DesktopHeroVip({ onKnowMore }: { onKnowMore: () => void }) {
         GET VIP NOW!
       </p>
 
-      <div style={{ position: 'absolute', right: 63, top: 80 }}>
+      <div style={{ position: 'absolute', left: 1124.09, top: 80 }}>
         <KnowMoreButton onClick={onKnowMore} />
       </div>
     </section>
@@ -548,48 +616,68 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
   return (
     <section
       style={{
-        width: 1448,
+        width: DESKTOP_CONTENT_WIDTH,
         height: 225,
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(90deg, #ff1654 0%, #86112f 34%, #36000d 72%, #140005 100%)',
+        background: '#0f0404',
       }}
     >
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+          opacity: 0.5,
+          filter: 'blur(110.65px)',
+          transform: 'scale(1.08)',
+          transformOrigin: 'center',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+        }}
+      />
       <img
         src={SHOP_ASSETS.rewardTrianglesLeft}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 448, top: 102, width: 97.498, height: 123.28, display: 'block', pointerEvents: 'none' }}
+        style={{ position: 'absolute', left: 674.962, top: 105.01, width: 97.498, height: 123.28, display: 'block', pointerEvents: 'none' }}
       />
       <img
         src={SHOP_ASSETS.rewardTrianglesRight}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 391, top: 0, width: 186.392, height: 226.288, display: 'block', pointerEvents: 'none' }}
+        style={{ position: 'absolute', left: 282.966, top: -53, width: 186.392, height: 226.288, display: 'block', pointerEvents: 'none' }}
       />
       <img
         src={SHOP_ASSETS.rewardVectorLarge}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', right: 154, top: 20, width: 228.74, height: 256.896, display: 'block', pointerEvents: 'none' }}
+        style={{ position: 'absolute', left: 1306.068, top: -100, width: 228.74, height: 256.896, display: 'block', pointerEvents: 'none' }}
       />
       <img
         src={SHOP_ASSETS.rewardVectorSmall}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', right: 367, top: 145, width: 120.396, height: 135.216, display: 'block', pointerEvents: 'none' }}
+        style={{ position: 'absolute', left: 1050.09, top: 145, width: 120.396, height: 135.216, display: 'block', pointerEvents: 'none' }}
       />
       <img
         src={SHOP_ASSETS.starShape}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 655, top: -12, width: 451.005, height: 310.452, display: 'block', pointerEvents: 'none', transform: 'rotate(-15.44deg)' }}
+        style={{ position: 'absolute', left: 765.932, top: -141, width: 451.005, height: 310.452, display: 'block', pointerEvents: 'none', transform: 'rotate(-15.44deg)' }}
       />
       <img
         src={SHOP_ASSETS.mousepad}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 810, top: 29, width: 179, height: 168, objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
+        style={{ position: 'absolute', left: 791.932, top: 29, width: 179, height: 168, objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
       />
 
       <p
@@ -611,7 +699,7 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
         <span style={{ fontSize: 24, lineHeight: '24px' }}>FOR CRAZY REWARDS...</span>
       </p>
 
-      <div style={{ position: 'absolute', right: 63, top: 80 }}>
+      <div style={{ position: 'absolute', left: 1124.09, top: 80 }}>
         <KnowMoreButton onClick={onKnowMore} />
       </div>
     </section>
@@ -640,45 +728,54 @@ function DesktopShopContent() {
         src={SHOP_ASSETS.topNeon}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 0, top: 827, width: 1920, height: 146, objectFit: 'cover', display: 'block', pointerEvents: 'none', transform: 'scaleY(-1)' }}
+        style={{ position: 'absolute', left: 0, top: 827, width: DESKTOP_PAGE_WIDTH, height: 146, objectFit: 'cover', display: 'block', pointerEvents: 'none', transform: 'scaleY(-1)' }}
       />
 
-      <div style={{ width: 1532, margin: '0 auto', paddingTop: 156, position: 'relative', zIndex: 2 }}>
-        <TitleLockup />
-
-        <div
-          style={{
-            marginTop: 53,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <SearchBar value={search} onChange={(event) => setSearch(event.target.value)} />
-          <div style={{ display: 'flex', gap: 18 }}>
-            <ActionPill kind="policy" label="POLICY" onClick={() => navigate('/privacy')} />
-            <ActionPill kind="wallet" label="WALLET" onClick={() => openWalletPurchase('coins')} />
-          </div>
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          width: DESKTOP_SHELL_WIDTH,
+          height: DESKTOP_FOOTER_TOP,
+          transform: 'translateX(-50%)',
+          zIndex: 2,
+        }}
+      >
+        <div style={{ position: 'absolute', left: -29, top: 156 }}>
+          <TitleLockup />
         </div>
 
-        <div style={{ width: 1448, marginTop: 54 }}>
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 396 }}>
+          <SearchBar value={search} onChange={(event) => setSearch(event.target.value)} />
+        </div>
+
+        <div style={{ position: 'absolute', left: 1116.09, top: 395 }}>
+          <ActionPill kind="policy" label="POLICY" onClick={() => navigate('/privacy')} />
+        </div>
+
+        <div style={{ position: 'absolute', left: 1299.078, top: 395 }}>
+          <ActionPill kind="wallet" label="WALLET" onClick={() => openWalletPurchase('coins')} />
+        </div>
+
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 496 }}>
           <DesktopHeroVip onKnowMore={() => openWalletPurchase('vip')} />
         </div>
 
-        <div style={{ width: 1448, marginTop: 153 }}>
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 874 }}>
           <CardRow cards={filteredVipCards} />
         </div>
 
-        <div style={{ width: 1448, marginTop: 87 }}>
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1233 }}>
           <DesktopHeroRewards onKnowMore={() => rewardRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })} />
         </div>
 
-        <div ref={rewardRowRef} style={{ width: 1448, marginTop: 88 }}>
+        <div ref={rewardRowRef} style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1546 }}>
           <CardRow cards={filteredRewardCards} />
         </div>
       </div>
 
-      <div style={{ marginTop: 92 }}>
+      <div style={{ position: 'absolute', left: 0, top: DESKTOP_FOOTER_TOP, width: '100%' }}>
         <FooterSection />
       </div>
     </div>
