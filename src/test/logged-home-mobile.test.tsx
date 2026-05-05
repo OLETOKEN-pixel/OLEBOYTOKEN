@@ -300,6 +300,28 @@ describe('HomeRegistered mobile logged-in landing', () => {
     expect(screen.getByTestId('location-probe')).toHaveTextContent('/leaderboard|');
   });
 
+  it('routes the mobile shop CTA to the standalone shop page', async () => {
+    setViewportWidth(390);
+
+    renderWithProviders(
+      <MemoryRouter initialEntries={['/']}>
+        <HomeRegistered displayName="Tester" />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Redline')).toBeInTheDocument();
+      expect(screen.getByText('Win one match')).toBeInTheDocument();
+      expect(screen.getByText('140')).toBeInTheDocument();
+      expect(screen.getByText('Alpha')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open shop page' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/shop|');
+  });
+
   it('marks mobile logged-home roots as horizontally clipped', async () => {
     setViewportWidth(320);
 
@@ -350,7 +372,7 @@ describe('NavbarFigmaLoggedIn mobile navigation', () => {
     expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
   });
 
-  it('opens the mobile section menu and routes standalone pages back to home section ids', () => {
+  it('opens the mobile section menu and routes standalone shop clicks to /shop', () => {
     setViewportWidth(390);
 
     const { container } = renderWithProviders(
@@ -368,6 +390,6 @@ describe('NavbarFigmaLoggedIn mobile navigation', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'shop' }));
 
-    expect(screen.getByTestId('location-probe')).toHaveTextContent('/|s-shop');
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/shop|');
   });
 });

@@ -27,6 +27,7 @@ import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFigmaScale } from '@/hooks/useFigmaScale';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
+import { BRAND_LOGO_SRC, DESKTOP_BRAND_LOGO_SIZE, MOBILE_BRAND_LOGO_SIZE } from '@/lib/brand';
 import { getLevel } from '@/lib/xp';
 import type { Profile } from '@/types';
 
@@ -57,6 +58,7 @@ const ACTIVE_ROUTE_MATCHERS: Record<string, string> = {
   challenges: '/challenges',
   hls: '/highlights',
   teams: '/teams',
+  shop: '/shop',
 };
 
 type NavItem = keyof typeof NAV_SECTIONS;
@@ -158,6 +160,15 @@ export function NavbarFigmaLoggedIn() {
       return;
     }
 
+    if (item === 'shop') {
+      if (isOnHome) {
+        scrollToSection(NAV_SECTIONS[item]);
+      } else {
+        navigate('/shop');
+      }
+      return;
+    }
+
     if (isOnHome) {
       scrollToSection(NAV_SECTIONS[item]);
     } else {
@@ -229,16 +240,21 @@ export function NavbarFigmaLoggedIn() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '65px',
-            height: '55px',
+            width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
+            height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
             flexShrink: 0,
             filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))',
           }}
         >
           <img
-            src="/figma-assets/84-287.svg"
+            src={BRAND_LOGO_SRC}
             alt="OleBoy"
-            style={{ display: 'block', width: '65px', height: '55px' }}
+            style={{
+              display: 'block',
+              width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
+              height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
+              objectFit: 'contain',
+            }}
           />
         </Link>
 
@@ -249,7 +265,7 @@ export function NavbarFigmaLoggedIn() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '26px',
-            marginLeft: '72px',
+            marginLeft: '56px',
             flex: 1,
           }}
         >
@@ -663,7 +679,7 @@ function NavbarFigmaLoggedInMobile({
           aria-label="OleBoy home"
           onClick={closeMenu}
           style={{
-            width: '38px',
+            width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
             height: '44px',
             display: 'flex',
             alignItems: 'center',
@@ -671,7 +687,16 @@ function NavbarFigmaLoggedInMobile({
             flexShrink: 0,
           }}
         >
-          <img src="/figma-assets/84-287.svg" alt="OleBoy" style={{ display: 'block', width: '38px', height: '32px' }} />
+          <img
+            src={BRAND_LOGO_SRC}
+            alt="OleBoy"
+            style={{
+              display: 'block',
+              width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
+              height: `${MOBILE_BRAND_LOGO_SIZE.height}px`,
+              objectFit: 'contain',
+            }}
+          />
         </Link>
 
         <div

@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { BRAND_LOGO_SRC, DESKTOP_BRAND_LOGO_SIZE, MOBILE_BRAND_LOGO_SIZE } from '@/lib/brand';
 import { useFigmaScale } from '@/hooks/useFigmaScale';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
@@ -13,7 +14,6 @@ const F = "'Base Neue Trial', 'Base Neue', sans-serif";
 const NAVBAR_BASE_WIDTH = 1532;
 const NAVBAR_VIEWPORT_PADDING = 100;
 
-const A_LOGO    = '/figma-assets/figma-logo.svg';
 const A_TWITTER = '/figma-assets/figma-twitter-x.png';
 const A_TIKTOK  = '/figma-assets/figma-tiktok.png';
 const A_ELLIPSE = '/figma-assets/figma-ellipse.svg';
@@ -57,14 +57,21 @@ export function NavbarFigma() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '65px',
-          height: '55px',
+          width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
+          height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
           flexShrink: 0,
         }}
       >
-        <div style={{ transform: 'rotate(89.78deg)', flexShrink: 0 }}>
-          <img src={A_LOGO} alt="OleBoy" style={{ display: 'block', width: '55px', height: '65px' }} />
-        </div>
+        <img
+          src={BRAND_LOGO_SRC}
+          alt="OleBoy"
+          style={{
+            display: 'block',
+            width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
+            height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
+            objectFit: 'contain',
+          }}
+        />
       </Link>
 
       {/* Nav Links */}
@@ -259,7 +266,7 @@ function NavbarFigmaMobile() {
           aria-label="OleBoy home"
           onClick={closeMenu}
           style={{
-            width: '45px',
+            width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
             height: '44px',
             display: 'flex',
             alignItems: 'center',
@@ -267,9 +274,16 @@ function NavbarFigmaMobile() {
             flexShrink: 0,
           }}
         >
-          <div style={{ transform: 'rotate(89.78deg)', flexShrink: 0 }}>
-            <img src={A_LOGO} alt="OleBoy" style={{ display: 'block', width: '40px', height: '48px' }} />
-          </div>
+          <img
+            src={BRAND_LOGO_SRC}
+            alt="OleBoy"
+            style={{
+              display: 'block',
+              width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
+              height: `${MOBILE_BRAND_LOGO_SIZE.height}px`,
+              objectFit: 'contain',
+            }}
+          />
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>

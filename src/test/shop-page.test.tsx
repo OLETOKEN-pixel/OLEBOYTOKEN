@@ -1,0 +1,120 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { ReactNode } from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import Shop from '@/pages/Shop';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(here, '..', '..');
+
+const mocks = vi.hoisted(() => ({
+  isMobile: false,
+  openWalletPurchase: vi.fn(),
+}));
+
+vi.mock('@/components/layout/PublicLayout', () => ({
+  PublicLayout: ({ children }: { children: ReactNode }) => <div data-testid="public-layout">{children}</div>,
+}));
+
+vi.mock('@/components/home/sections/FooterSection', () => ({
+  FooterSection: () => <footer data-testid="shop-footer" />,
+}));
+
+vi.mock('@/contexts/WalletPurchaseContext', () => ({
+  useWalletPurchase: () => ({
+    openWalletPurchase: mocks.openWalletPurchase,
+  }),
+}));
+
+vi.mock('@/hooks/use-mobile', () => ({
+  useIsMobile: () => mocks.isMobile,
+}));
+
+function renderShop() {
+  return render(
+    <MemoryRouter initialEntries={['/shop']}>
+      <Routes>
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/privacy" element={<div data-testid="privacy-page">PRIVACY</div>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('Shop page', () => {
+  beforeEach(() => {
+    mocks.isMobile = false;
+    mocks.openWalletPurchase.mockReset();
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  it('registers the standalone /shop route in the app shell', () => {
+    const appFile = fs.readFileSync(path.join(rootDir, 'src', 'App.tsx'), 'utf8');
+
+    expect(appFile).toContain('path="/shop"');
+  });
+
+  it('renders the desktop Figma shop page with only local assets', () => {
+    const { container } = renderShop();
+    const srcs = Array.from(container.querySelectorAll('img'))
+      .map((img) => img.getAttribute('src'))
+      .filter((src): src is string => Boolean(src));
+
+    expect(screen.getByTestId('shop-page')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search for items by title or price')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'POLICY' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'WALLET' })).toBeInTheDocument();
+    expect(screen.getByText('GET VIP NOW!')).toBeInTheDocument();
+    expect(screen.getByText(/REACH/i)).toBeInTheDocument();
+    expect(screen.getByTestId('shop-footer')).toBeInTheDocument();
+    expect(srcs).toContain('/figma-assets/shop/title-outline.svg');
+    expect(srcs).toContain('/figma-assets/shop/title-triangles.svg');
+    expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
+    expect(srcs).toContain('/figma-assets/shop/reward-figure.png');
+    expect(srcs).toContain('/shop/tappetino.png');
+    expect(srcs.some((src) => src.startsWith('https://www.figma.com/api/mcp/asset/'))).toBe(false);
+  });
+
+  it('wires policy, wallet, VIP and rewards actions to the intended flows', () => {
+    renderShop();
+
+    fireEvent.click(screen.getByRole('button', { name: 'WALLET' }));
+    expect(mocks.openWalletPurchase).toHaveBeenCalledWith('coins');
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'KNOW MORE' })[0]);
+    expect(mocks.openWalletPurchase).toHaveBeenCalledWith('vip');
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'KNOW MORE' })[1]);
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'POLICY' }));
+    expect(screen.getByTestId('privacy-page')).toBeInTheDocument();
+  });
+
+  it('filters the rendered catalog client-side from the search field', () => {
+    const { container } = renderShop();
+    const input = screen.getByPlaceholderText('Search for items by title or price');
+
+    expect(container.querySelectorAll('[data-shop-card]').length).toBe(10);
+
+    fireEvent.change(input, { target: { value: 'x100' } });
+    expect(container.querySelectorAll('[data-shop-card]').length).toBe(4);
+
+    fireEvent.change(input, { target: { value: '' } });
+    expect(container.querySelectorAll('[data-shop-card]').length).toBe(10);
+  });
+
+  it('renders the responsive mobile adaptation', () => {
+    mocks.isMobile = true;
+
+    renderShop();
+
+    expect(screen.getByTestId('shop-page')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search for items by title or price')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'POLICY' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'WALLET' })).toBeInTheDocument();
+  });
+});

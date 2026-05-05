@@ -41,6 +41,7 @@ import Highlights from "./pages/Highlights";
 import Leaderboard from "./pages/Leaderboard";
 import Teams from "./pages/Teams";
 import Challenges from "./pages/Challenges";
+import Shop from "./pages/Shop";
 import BuyCoins from "./pages/BuyCoins";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Tournaments from "./pages/Tournaments";
@@ -165,6 +166,7 @@ function App() {
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/challenges" element={<Challenges />} />
                   <Route path="/teams" element={<Teams />} />
+                  <Route path="/shop" element={<Shop />} />
                   <Route path="/my-matches" element={<MyMatches />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/wallet" element={<Wallet />} />

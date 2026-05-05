@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Home, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import logoOleboy from '@/assets/logo-oleboy.png';
+import { BRAND_LOGO_SRC } from '@/lib/brand';
 
 export default function NotFound() {
   return (
@@ -10,7 +10,7 @@ export default function NotFound() {
       
       <div className="text-center relative">
         <img
-          src={logoOleboy}
+          src={BRAND_LOGO_SRC}
           alt="OLEBOY TOKEN"
           className="w-24 h-24 mx-auto mb-6 opacity-50"
         />

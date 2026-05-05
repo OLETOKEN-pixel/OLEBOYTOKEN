@@ -45,6 +45,15 @@ function Trigger({ children = 'OPEN WALLET' }: { children?: ReactNode }) {
   );
 }
 
+function TriggerVip() {
+  const { openWalletPurchase } = useWalletPurchase();
+  return (
+    <button type="button" onClick={() => openWalletPurchase('vip')}>
+      OPEN VIP
+    </button>
+  );
+}
+
 function renderOverlay() {
   return render(
     <MemoryRouter>
@@ -121,5 +130,20 @@ describe('WalletPurchaseOverlay', () => {
     await waitFor(() => {
       expect(mocks.rpc).toHaveBeenCalledWith('purchase_vip');
     });
+  });
+
+  it('opens directly on the VIP tab when requested', () => {
+    render(
+      <MemoryRouter>
+        <WalletPurchaseProvider>
+          <TriggerVip />
+        </WalletPurchaseProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'OPEN VIP' }));
+
+    expect(screen.getByText('BENEFITS:')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Get VIP for/i })).toHaveTextContent('GET VIP for €9,99');
   });
 });

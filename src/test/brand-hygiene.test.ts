@@ -50,9 +50,8 @@ describe('active app brand hygiene', () => {
     const html = readProjectFile('index.html');
 
     expect(html).toContain('<title>OleBoy Token</title>');
-    expect(html).toContain('/favicon-oleboy.png');
-    expect(html).toContain('/favicon.ico');
-    expect(fs.existsSync(path.join(rootDir, 'public', 'favicon.ico'))).toBe(true);
+    expect(html).toContain('/figma-assets/brand/logo-official.png');
+    expect(fs.existsSync(path.join(rootDir, 'public', 'figma-assets', 'brand', 'logo-official.png'))).toBe(true);
   });
 
   it('stores active-home svg assets as plain svg files instead of gzip payloads', () => {

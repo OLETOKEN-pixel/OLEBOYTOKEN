@@ -354,12 +354,42 @@ function ActionBar({
         onClick={() => onView(view === 'my' ? 'list' : 'my')}
         style={{
           ...buttonBase,
-          width: 187,
+          width: 212,
           borderColor: '#d8ff16',
           background: view === 'my' ? '#d8ff16' : 'rgba(216,255,22,0.2)',
           color: view === 'my' ? '#282828' : '#fff',
         }}
       >
+        <span style={{ position: 'relative', width: 22, height: 19, flex: '0 0 auto' }}>
+          <img
+            src={`${TEAMS_ASSETS}/my-team-user-primary.svg`}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: 14.503,
+              height: 19,
+              display: 'block',
+              filter: view === 'my' ? 'brightness(0) saturate(100%)' : 'none',
+            }}
+          />
+          <img
+            src={`${TEAMS_ASSETS}/my-team-user-secondary.svg`}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: 11.6,
+              top: 5.8,
+              width: 10.152,
+              height: 13.199,
+              display: 'block',
+              filter: view === 'my' ? 'brightness(0) saturate(100%)' : 'none',
+            }}
+          />
+        </span>
         MY TEAM
       </button>
       <button
@@ -367,11 +397,17 @@ function ActionBar({
         onClick={() => onView(view === 'invites' ? 'list' : 'invites')}
         style={{
           ...buttonBase,
-          width: 156,
+          width: 182,
           borderColor: '#625afa',
           background: view === 'invites' ? '#625afa' : 'rgba(98,90,250,0.2)',
         }}
       >
+        <img
+          src={`${TEAMS_ASSETS}/invites-icon.svg`}
+          alt=""
+          aria-hidden="true"
+          style={{ width: 26, height: 17, display: 'block', flex: '0 0 auto' }}
+        />
         INVITES
       </button>
       <button type="button" onClick={onCreate} style={{ ...buttonBase, width: 182 }}>

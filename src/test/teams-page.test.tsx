@@ -274,6 +274,9 @@ describe('Teams page', () => {
     expect(screen.getByText('VIEW TEAM')).toBeInTheDocument();
     expect(screen.queryByText('ACCEPTED')).not.toBeInTheDocument();
     expect(document.querySelector('img[src="/figma-assets/teams/title-outline-teams.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/teams/my-team-user-primary.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/teams/my-team-user-secondary.svg"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/figma-assets/teams/invites-icon.svg"]')).not.toBeNull();
     expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'Search a team');
     expect(screen.getByRole('button', { name: /refresh/i })).toBeInTheDocument();
     expect(screen.getByTestId('teams-footer')).toBeInTheDocument();

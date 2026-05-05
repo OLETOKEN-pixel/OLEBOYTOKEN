@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 73.3433 108.466" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="triangles" opacity="0.16" filter="url(#filter0_f_0_23)">
+<path id="Polygon 6" d="M39.5 53.2107L9.5711 83.6206L33.434 95.4446L39.5 53.2107Z" fill="var(--fill-0, #FF1654)"/>
+<path id="Polygon 7" d="M46.2113 44.9246L62.2097 33.2044L66.0433 44.9744L46.2113 44.9246Z" fill="var(--fill-0, #FF1654)"/>
+<path id="Polygon 8" d="M44.8559 32.027L48.4594 33.6876L44.1301 38.3431L44.8559 32.027Z" stroke="var(--stroke-0, #FF1654)"/>
+<path id="Polygon 9" d="M20.0297 56.5565L17.7091 48.6416L30.9179 49.0665L20.0297 56.5565Z" stroke="var(--stroke-0, #FF1654)"/>
+<path id="Polygon 10" d="M38.2254 44.7392L26.4959 10.2692L8.34022 23.9393L38.2254 44.7392Z" fill="var(--fill-0, #FF1654)"/>
+</g>
+<defs>
+<filter id="filter0_f_0_23" x="1.04022" y="2.96923" width="72.3031" height="99.7754" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="3.65" result="effect1_foregroundBlur_0_23"/>
+</filter>
+</defs>
+</svg>

@@ -273,8 +273,8 @@ describe('CreateMatchOverlay', () => {
         '1V1 BOX FIGHT',
         expect.objectContaining({
           body: 'ENTRY 5.00 COINS · WIN 9.50 COINS',
-          icon: '/favicon-oleboy.png',
-          badge: '/favicon-oleboy.png',
+          icon: '/figma-assets/brand/logo-official.png',
+          badge: '/figma-assets/brand/logo-official.png',
           tag: 'oleboy-match-match-123',
           data: {
             matchId: 'match-123',

@@ -10,8 +10,8 @@
   "theme_color": "#ff1654",
   "icons": [
     {
-      "src": "/favicon-oleboy.png",
-      "sizes": "256x256",
+      "src": "/figma-assets/brand/logo-official.png",
+      "sizes": "2000x2000",
       "type": "image/png",
       "purpose": "any maskable"
     }

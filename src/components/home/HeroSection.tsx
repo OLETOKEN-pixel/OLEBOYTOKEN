@@ -3,7 +3,7 @@ import { Swords, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CoinIcon } from '@/components/common/CoinIcon';
-import logoOleboy from '@/assets/logo-oleboy.png';
+import { BRAND_LOGO_SRC } from '@/lib/brand';
 
 export function HeroSection() {
   const { user } = useAuth();
@@ -19,7 +19,7 @@ export function HeroSection() {
         {/* Logo - larger and more impactful */}
         <div className="mb-4 flex justify-center">
           <img 
-            src={logoOleboy} 
+            src={BRAND_LOGO_SRC} 
             alt="OleBoy Token" 
             className="w-28 h-28 lg:w-36 lg:h-36 object-contain animate-float"
           />

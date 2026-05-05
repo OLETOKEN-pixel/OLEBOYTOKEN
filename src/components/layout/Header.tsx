@@ -18,7 +18,6 @@ import { NotificationsDropdown } from '@/components/notifications/NotificationsD
 import { VipModal } from '@/components/vip/VipModal';
 import { TipModal } from '@/components/vip/TipModal';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
-import oleboyLogo from '@/assets/logo-oleboy.png';
 import olebyCoin from '@/assets/oleboy-coin.png';
 
 export function Header() {

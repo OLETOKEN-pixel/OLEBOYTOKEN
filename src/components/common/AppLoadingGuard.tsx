@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
-import logo from '@/assets/logo-oleboy.png';
+import { BRAND_LOGO_SRC } from '@/lib/brand';
 
 interface AppLoadingGuardProps {
   children: React.ReactNode;
@@ -31,7 +31,7 @@ export function AppLoadingGuard({ children }: AppLoadingGuardProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <img 
-            src={logo} 
+            src={BRAND_LOGO_SRC} 
             className="w-20 h-20 animate-pulse mx-auto mb-4 object-contain" 
             alt="Loading..."
           />

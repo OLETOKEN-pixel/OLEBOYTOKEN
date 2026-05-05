@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FooterSection } from '@/components/home/sections/FooterSection';
 import { ShopSection } from '@/components/home/sections/ShopSection';
@@ -76,6 +76,13 @@ function createWrapper() {
 
 const renderWithRouter = (ui: React.ReactElement) => render(ui, { wrapper: createWrapper() });
 
+function LocationProbe() {
+  const location = useLocation();
+  const scrollTo = (location.state as { scrollTo?: string } | null)?.scrollTo ?? '';
+
+  return <div data-testid="location-probe">{`${location.pathname}|${scrollTo}`}</div>;
+}
+
 describe('logged home section assets', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,6 +129,34 @@ describe('logged home section assets', () => {
     expect(srcs).toContain('/shop/mouse.webp');
     expect(srcs).toContain('/showreel/vip-icon.svg');
     expect(srcs.some((src) => src.includes('https://www.figma.com/api/mcp/asset/'))).toBe(false);
+  });
+
+  it('routes the desktop ShopSection CTA to /shop', async () => {
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({
+            defaultOptions: {
+              queries: { retry: false },
+              mutations: { retry: false },
+            },
+          })
+        }
+      >
+        <MemoryRouter initialEntries={['/']}>
+          <ShopSection />
+          <LocationProbe />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'SHOP' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'SHOP' }));
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/shop|');
   });
 
   it('aligns the logged-home footer copyright and prevents wordmark edge clipping', () => {

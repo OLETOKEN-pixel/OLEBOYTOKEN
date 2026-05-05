@@ -88,7 +88,7 @@ describe('NavbarFigmaLoggedIn', () => {
     expect(screen.queryByRole('button', { name: 'challenges' })).not.toBeInTheDocument();
   });
 
-  it('routes standalone pages back to the requested logged-home section', () => {
+  it('routes standalone shop clicks to the standalone shop page', () => {
     render(
       <MemoryRouter initialEntries={['/matches']}>
         <NavbarFigmaLoggedIn />
@@ -98,7 +98,7 @@ describe('NavbarFigmaLoggedIn', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'shop' }));
 
-    expect(screen.getByTestId('location-probe')).toHaveTextContent('/|s-shop');
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/shop|');
   });
 
   it('keeps leaderboard active on the standalone leaderboard route', () => {
@@ -110,6 +110,17 @@ describe('NavbarFigmaLoggedIn', () => {
 
     expect(screen.getByRole('button', { name: 'LEADERBOARD' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'leaderboard' })).not.toBeInTheDocument();
+  });
+
+  it('keeps shop active on the standalone shop route', () => {
+    render(
+      <MemoryRouter initialEntries={['/shop']}>
+        <NavbarFigmaLoggedIn />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'SHOP' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'shop' })).not.toBeInTheDocument();
   });
 
   it('sends matches clicks to the logged-home matches section instead of staying on /matches', () => {

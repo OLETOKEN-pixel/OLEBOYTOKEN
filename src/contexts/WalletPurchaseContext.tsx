@@ -17,7 +17,7 @@ import { redirectToCheckout } from '@/lib/checkoutRedirect';
 import { extractFunctionErrorMessage } from '@/lib/oauth';
 
 type WalletPurchaseContextValue = {
-  openWalletPurchase: () => void;
+  openWalletPurchase: (initialTab?: WalletTabKey) => void;
   closeWalletPurchase: () => void;
 };
 
@@ -48,14 +48,22 @@ function formatEuroLabel(amount: number) {
   return `${EURO} ${amount.toFixed(2).replace('.', ',')}`;
 }
 
+function resolveWalletTab(value: unknown): WalletTabKey {
+  return value === 'vip' ? 'vip' : 'coins';
+}
+
 export function useWalletPurchase() {
   return useContext(WalletPurchaseContext);
 }
 
 export function WalletPurchaseProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [requestedTab, setRequestedTab] = useState<WalletTabKey>('coins');
 
-  const openWalletPurchase = useCallback(() => setOpen(true), []);
+  const openWalletPurchase = useCallback((initialTab?: WalletTabKey) => {
+    setRequestedTab(resolveWalletTab(initialTab));
+    setOpen(true);
+  }, []);
   const closeWalletPurchase = useCallback(() => setOpen(false), []);
 
   const value = useMemo(
@@ -66,12 +74,20 @@ export function WalletPurchaseProvider({ children }: { children: ReactNode }) {
   return (
     <WalletPurchaseContext.Provider value={value}>
       {children}
-      <WalletPurchaseOverlay open={open} onClose={closeWalletPurchase} />
+      <WalletPurchaseOverlay open={open} initialTab={requestedTab} onClose={closeWalletPurchase} />
     </WalletPurchaseContext.Provider>
   );
 }
 
-function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+function WalletPurchaseOverlay({
+  open,
+  initialTab,
+  onClose,
+}: {
+  open: boolean;
+  initialTab: WalletTabKey;
+  onClose: () => void;
+}) {
   const { user, refreshWallet } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<WalletTabKey>('coins');
@@ -104,12 +120,12 @@ function WalletPurchaseOverlay({ open, onClose }: { open: boolean; onClose: () =
   useEffect(() => {
     if (!open) return;
 
-    setActiveTab('coins');
+    setActiveTab(initialTab);
     setSelectedPackageId(DEFAULT_PACKAGE_ID);
     setAcceptedTerms(true);
     setCheckoutLoading(false);
     setVipLoading(false);
-  }, [open]);
+  }, [initialTab, open]);
 
   const startCheckout = async () => {
     if (!user) {

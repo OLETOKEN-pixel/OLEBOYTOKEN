@@ -8,7 +8,6 @@ import { getLevel, getLevelXpRequired, getXpInLevel, getXpToNext } from '@/lib/x
 import type { Match } from '@/types';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
-import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 import { useShopLevelRewards } from '@/hooks/useShopLevelRewards';
 
 interface HomeRegisteredMobileProps {
@@ -1076,7 +1075,6 @@ function ShopPrice({ price }: { price: string }) {
 
 function ShopMobile() {
   const navigate = useNavigate();
-  const { openWalletPurchase } = useWalletPurchase();
   const { rewards } = useShopLevelRewards();
   const mobileShopItems: ShopItem[] = [
     ...rewards.map((reward) => ({
@@ -1131,7 +1129,7 @@ function ShopMobile() {
           </Panel>
         ))}
       </div>
-      <MobileCta onClick={openWalletPurchase} ariaLabel="Open shop page">SHOP</MobileCta>
+      <MobileCta onClick={() => navigate('/shop')} ariaLabel="Open shop page">SHOP</MobileCta>
     </MobileSection>
   );
 }

@@ -1,4 +1,5 @@
 import { getOleboyServiceWorkerRegistration } from '@/lib/pwa';
+import { BRAND_ICON_SRC } from '@/lib/brand';
 
 export type MatchLockScreenNotificationStatus = 'shown' | 'denied' | 'unsupported' | 'requires_pwa';
 
@@ -133,8 +134,8 @@ export function buildMatchLockScreenNotification(
     title,
     options: {
       body,
-      icon: '/favicon-oleboy.png',
-      badge: '/favicon-oleboy.png',
+      icon: BRAND_ICON_SRC,
+      badge: BRAND_ICON_SRC,
       tag: `oleboy-match-${input.matchId}`,
       data: {
         matchId: input.matchId,
