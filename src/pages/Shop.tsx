@@ -678,13 +678,23 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
           style={{ position: 'absolute', left: 791.932, top: 29, width: 179, height: 168, objectFit: 'contain', display: 'block' }}
         />
       </div>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 2,
+          pointerEvents: 'none',
+          background: 'linear-gradient(90deg, rgba(255,22,84,0.08) 0%, rgba(111,8,32,0.16) 46%, rgba(24,0,3,0.28) 100%)',
+        }}
+      />
 
       <p
         style={{
           position: 'absolute',
           left: 51,
           top: 46,
-          zIndex: 2,
+          zIndex: 3,
           margin: 0,
           fontFamily: FONT_BOLD,
           color: '#ffffff',
@@ -699,7 +709,7 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
         <span style={{ fontSize: 24, lineHeight: '24px' }}>FOR CRAZY REWARDS...</span>
       </p>
 
-      <div style={{ position: 'absolute', left: 1124.09, top: 80, zIndex: 2 }}>
+      <div style={{ position: 'absolute', left: 1124.09, top: 80, zIndex: 3 }}>
         <KnowMoreButton onClick={onKnowMore} />
       </div>
     </section>
@@ -723,12 +733,6 @@ function DesktopShopContent() {
         alt=""
         aria-hidden="true"
         style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 146, objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
-      />
-      <img
-        src={SHOP_ASSETS.topNeon}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 0, top: 827, width: DESKTOP_PAGE_WIDTH, height: 146, objectFit: 'cover', display: 'block', pointerEvents: 'none', transform: 'scaleY(-1)' }}
       />
 
       <div

@@ -4,12 +4,8 @@ function isStandaloneMatchDetailRoute(pathname: string) {
   return /^\/matches\/(?!create(?:\/|$))[^/]+$/.test(pathname);
 }
 
-function isShopRoute(pathname: string) {
-  return pathname === '/shop' || pathname.startsWith('/shop/');
-}
-
 export function shouldRenderGlobalBottomNeon(pathname: string) {
-  return !isStandaloneMatchDetailRoute(pathname) && !isShopRoute(pathname);
+  return !isStandaloneMatchDetailRoute(pathname);
 }
 
 export function GlobalBottomNeon() {

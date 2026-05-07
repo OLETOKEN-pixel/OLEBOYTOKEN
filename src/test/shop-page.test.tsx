@@ -62,6 +62,7 @@ describe('Shop page', () => {
     const srcs = Array.from(container.querySelectorAll('img'))
       .map((img) => img.getAttribute('src'))
       .filter((src): src is string => Boolean(src));
+    const localNeons = srcs.filter((src) => src === '/figma-assets/figma-neon.png');
 
     expect(screen.getByTestId('shop-page')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Search for items by title or price')).toBeInTheDocument();
@@ -74,6 +75,7 @@ describe('Shop page', () => {
     expect(screen.getByTestId('shop-footer')).toBeInTheDocument();
     expect(container.querySelector('[data-wallet-coin="true"]')).not.toBeNull();
     expect(srcs).toContain('/figma-assets/shop-spaccato-title.svg');
+    expect(localNeons).toHaveLength(1);
     expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
     expect(srcs).toContain('/figma-assets/shop/reward-figure.png');
     expect(srcs).toContain('/figma-assets/shop/reward-mousepad.png');

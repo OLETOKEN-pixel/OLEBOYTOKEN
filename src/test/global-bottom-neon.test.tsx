@@ -14,15 +14,15 @@ function renderNeonAt(pathname: string) {
 }
 
 describe('GlobalBottomNeon', () => {
-  it('does not render the fixed neon on the standalone shop route', () => {
+  it('keeps rendering the fixed neon on the standalone shop route', () => {
     const { container } = renderNeonAt('/shop');
 
-    expect(container.querySelector('[data-global-neon="true"]')).toBeNull();
+    expect(container.querySelector('[data-global-neon="true"]')).not.toBeNull();
   });
 
-  it('keeps rendering the fixed neon on public routes that still use it', () => {
-    const { container } = renderNeonAt('/leaderboard');
+  it('does not render the fixed neon on standalone match detail routes', () => {
+    const { container } = renderNeonAt('/matches/abc123');
 
-    expect(container.querySelector('[data-global-neon="true"]')).not.toBeNull();
+    expect(container.querySelector('[data-global-neon="true"]')).toBeNull();
   });
 });
