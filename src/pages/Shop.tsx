@@ -667,8 +667,8 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
             height: 310.452,
             display: 'block',
             transform: 'rotate(-15.44deg)',
-            opacity: 0.74,
-            mixBlendMode: 'screen',
+            opacity: 0.22,
+            mixBlendMode: 'soft-light',
           }}
         />
         <img
