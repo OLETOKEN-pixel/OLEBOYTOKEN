@@ -32,6 +32,7 @@ const SHOP_ASSETS = {
   rewardVectorLarge: '/figma-assets/shop/reward-vector-large.svg',
   rewardVectorSmall: '/figma-assets/shop/reward-vector-small.svg',
   rewardStarShape: '/figma-assets/shop/reward-star-shape.svg',
+  rewardSticker: '/figma-assets/shop/reward-sticker.png',
   arrowStroke: '/figma-assets/figma-arrow-stroke.svg',
   starShape: '/figma-assets/figma-star-shape.svg',
   mousepad: '/figma-assets/shop/reward-mousepad.png',
@@ -103,75 +104,6 @@ function matchesQuery(card: ShopCard, query: string) {
 
 function displayLabel(value: string) {
   return value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC');
-}
-
-function BannerDecoration({
-  left,
-  top,
-  width,
-  height,
-  innerWidth,
-  innerHeight,
-  rotation,
-  src,
-  imageInset = 0,
-}: {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-  innerWidth: number;
-  innerHeight: number;
-  rotation: number;
-  src: string;
-  imageInset?: CSSProperties['inset'];
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        left,
-        top,
-        width,
-        height,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        style={{
-          width: innerWidth,
-          height: innerHeight,
-          position: 'relative',
-          flex: '0 0 auto',
-          transform: `rotate(${rotation}deg)`,
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: imageInset,
-            pointerEvents: 'none',
-          }}
-        >
-          <img
-            src={src}
-            alt=""
-            aria-hidden="true"
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function TitleLockup() {
@@ -707,71 +639,16 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
           }}
         />
 
-        <BannerDecoration
-          left={674.962}
-          top={105.01}
-          width={97.498}
-          height={123.28}
-          innerWidth={72.312}
-          innerHeight={108.466}
-          rotation={-165.28}
-          src={SHOP_ASSETS.rewardTrianglesLeft}
-          imageInset="0 -1.43% 0 0"
-        />
-        <BannerDecoration
-          left={282.966}
-          top={-53}
-          width={186.392}
-          height={226.288}
-          innerWidth={129.65}
-          innerHeight={194.467}
-          rotation={19.2}
-          src={SHOP_ASSETS.rewardTrianglesRight}
-        />
-        <BannerDecoration
-          left={1306.068}
-          top={-100}
-          width={228.74}
-          height={256.896}
-          innerWidth={118.059}
-          innerHeight={230.82}
-          rotation={34.83}
-          src={SHOP_ASSETS.rewardVectorLarge}
-          imageInset="-3.55% -6.95%"
-        />
-        <BannerDecoration
-          left={1050.09}
-          top={145}
-          width={120.396}
-          height={135.216}
-          innerWidth={62.139}
-          innerHeight={121.49}
-          rotation={-145.17}
-          src={SHOP_ASSETS.rewardVectorSmall}
-          imageInset="-6.75% -13.2%"
-        />
-        <BannerDecoration
-          left={765.932}
-          top={-141}
-          width={451.005}
-          height={310.452}
-          innerWidth={410.229}
-          innerHeight={208.751}
-          rotation={-15.44}
-          src={SHOP_ASSETS.rewardStarShape}
-          imageInset="-3.95% -1.79% -3.88% -1.79%"
-        />
         <img
-          src={SHOP_ASSETS.mousepad}
+          src={SHOP_ASSETS.rewardSticker}
           alt=""
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: 791.932,
-            top: 29,
-            width: 179,
-            height: 168,
-            objectFit: 'contain',
+            left: 282.966,
+            top: -141,
+            width: 1251.742,
+            height: 421.218,
             display: 'block',
             pointerEvents: 'none',
           }}
