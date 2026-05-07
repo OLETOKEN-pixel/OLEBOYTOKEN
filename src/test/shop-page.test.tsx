@@ -80,12 +80,12 @@ describe('Shop page', () => {
     expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
     expect(srcs).toContain('/figma-assets/shop/reward-figure.png');
     expect(srcs).toContain('/figma-assets/shop/vip-hero-overlay.svg');
-    expect(srcs).toContain('/figma-assets/shop/reward-mousepad.png');
-    expect(srcs).toContain('/figma-assets/shop/reward-triangles-left.svg');
-    expect(srcs).toContain('/figma-assets/shop/reward-triangles-right.svg');
-    expect(srcs).toContain('/figma-assets/shop/reward-vector-large.svg');
-    expect(srcs).toContain('/figma-assets/shop/reward-vector-small.svg');
-    expect(srcs).toContain('/figma-assets/shop/reward-star-shape.svg');
+    expect(srcs).toContain('/figma-assets/shop/reward-mousepad.png?v=3');
+    expect(srcs).toContain('/figma-assets/shop/reward-triangles-left.svg?v=3');
+    expect(srcs).toContain('/figma-assets/shop/reward-triangles-right.svg?v=3');
+    expect(srcs).toContain('/figma-assets/shop/reward-vector-large.svg?v=3');
+    expect(srcs).toContain('/figma-assets/shop/reward-vector-small.svg?v=3');
+    expect(srcs).toContain('/figma-assets/shop/reward-star-shape.svg?v=3');
     expect(srcs.some((src) => src.startsWith('https://www.figma.com/api/mcp/asset/'))).toBe(false);
   });
 

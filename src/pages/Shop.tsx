@@ -17,6 +17,7 @@ const FONT_BOLD_OBLIQUE = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial', sa
 const FONT_EXPANDED = "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif";
 const FONT_EXPANDED_BOLD = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif";
 const FONT_HEAD = "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif";
+const REWARD_ASSET_VERSION = '?v=3';
 
 const SHOP_ASSETS = {
   topNeon: '/figma-assets/figma-neon.png',
@@ -27,14 +28,14 @@ const SHOP_ASSETS = {
   rewardFigure: '/figma-assets/shop/reward-figure.png',
   vipHeroMask: '/figma-assets/shop/vip-hero-mask.svg',
   vipHeroOverlay: '/figma-assets/shop/vip-hero-overlay.svg',
-  rewardTrianglesLeft: '/figma-assets/shop/reward-triangles-left.svg',
-  rewardTrianglesRight: '/figma-assets/shop/reward-triangles-right.svg',
-  rewardVectorLarge: '/figma-assets/shop/reward-vector-large.svg',
-  rewardVectorSmall: '/figma-assets/shop/reward-vector-small.svg',
-  rewardStarShape: '/figma-assets/shop/reward-star-shape.svg',
+  rewardTrianglesLeft: `/figma-assets/shop/reward-triangles-left.svg${REWARD_ASSET_VERSION}`,
+  rewardTrianglesRight: `/figma-assets/shop/reward-triangles-right.svg${REWARD_ASSET_VERSION}`,
+  rewardVectorLarge: `/figma-assets/shop/reward-vector-large.svg${REWARD_ASSET_VERSION}`,
+  rewardVectorSmall: `/figma-assets/shop/reward-vector-small.svg${REWARD_ASSET_VERSION}`,
+  rewardStarShape: `/figma-assets/shop/reward-star-shape.svg${REWARD_ASSET_VERSION}`,
   arrowStroke: '/figma-assets/figma-arrow-stroke.svg',
   starShape: '/figma-assets/figma-star-shape.svg',
-  mousepad: '/figma-assets/shop/reward-mousepad.png',
+  mousepad: `/figma-assets/shop/reward-mousepad.png${REWARD_ASSET_VERSION}`,
   walletCoin: '/coin.png',
 };
 
