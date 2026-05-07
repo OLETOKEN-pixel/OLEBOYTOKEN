@@ -31,6 +31,7 @@ const SHOP_ASSETS = {
   rewardTrianglesRight: '/figma-assets/shop/reward-triangles-right.svg',
   rewardVectorLarge: '/figma-assets/shop/reward-vector-large.svg',
   rewardVectorSmall: '/figma-assets/shop/reward-vector-small.svg',
+  rewardStarShape: '/figma-assets/shop/reward-star-shape.svg',
   arrowStroke: '/figma-assets/figma-arrow-stroke.svg',
   starShape: '/figma-assets/figma-star-shape.svg',
   mousepad: '/figma-assets/shop/reward-mousepad.png',
@@ -102,6 +103,75 @@ function matchesQuery(card: ShopCard, query: string) {
 
 function displayLabel(value: string) {
   return value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC');
+}
+
+function BannerDecoration({
+  left,
+  top,
+  width,
+  height,
+  innerWidth,
+  innerHeight,
+  rotation,
+  src,
+  imageInset = 0,
+}: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  innerWidth: number;
+  innerHeight: number;
+  rotation: number;
+  src: string;
+  imageInset?: CSSProperties['inset'];
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width,
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        style={{
+          width: innerWidth,
+          height: innerHeight,
+          position: 'relative',
+          flex: '0 0 auto',
+          transform: `rotate(${rotation}deg)`,
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: imageInset,
+            pointerEvents: 'none',
+          }}
+        >
+          <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function TitleLockup() {
@@ -501,8 +571,8 @@ function DesktopHeroVip({ onKnowMore }: { onKnowMore: () => void }) {
         width: DESKTOP_CONTENT_WIDTH,
         height: 225,
         position: 'relative',
-        overflow: 'hidden',
-        background: '#0f0404',
+        overflow: 'visible',
+        background: 'transparent',
       }}
     >
       <div
@@ -515,84 +585,80 @@ function DesktopHeroVip({ onKnowMore }: { onKnowMore: () => void }) {
           filter: 'blur(110.65px)',
           transform: 'scale(1.08)',
           transformOrigin: 'center',
+          pointerEvents: 'none',
         }}
       />
       <div
-        aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 282.966,
-          top: -141,
-          width: 1251.741,
-          height: 421.215,
           overflow: 'hidden',
-          WebkitMaskImage: `url(${SHOP_ASSETS.vipHeroMask})`,
-          WebkitMaskPosition: '-283px 141px',
-          WebkitMaskSize: '1448px 225px',
-          WebkitMaskRepeat: 'no-repeat',
-          maskImage: `url(${SHOP_ASSETS.vipHeroMask})`,
-          maskPosition: '-283px 141px',
-          maskSize: '1448px 225px',
-          maskRepeat: 'no-repeat',
-          pointerEvents: 'none',
+          background: '#0f0404',
         }}
       >
-        <img
-          src={SHOP_ASSETS.vipHeroOverlay}
-          alt=""
+        <div
           aria-hidden="true"
           style={{
             position: 'absolute',
             inset: 0,
-            width: '100%',
-            height: '100%',
-            display: 'block',
+            background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+            pointerEvents: 'none',
           }}
         />
-      </div>
-      <img
-        src={SHOP_ASSETS.vipHeroOverlay}
-        alt=""
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 282.966,
-          top: -141,
-          width: 1251.741,
-          height: 421.215,
-          display: 'block',
-          opacity: 0.12,
-          pointerEvents: 'none',
-          mixBlendMode: 'screen',
-        }}
-      />
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 282.966,
+            top: -141,
+            width: 1251.741,
+            height: 421.215,
+            overflow: 'hidden',
+            WebkitMaskImage: `url(${SHOP_ASSETS.vipHeroMask})`,
+            WebkitMaskPosition: '-283px 141px',
+            WebkitMaskSize: '1448px 225px',
+            WebkitMaskRepeat: 'no-repeat',
+            maskImage: `url(${SHOP_ASSETS.vipHeroMask})`,
+            maskPosition: '-283px 141px',
+            maskSize: '1448px 225px',
+            maskRepeat: 'no-repeat',
+            pointerEvents: 'none',
+          }}
+        >
+          <img
+            src={SHOP_ASSETS.vipHeroOverlay}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              maxWidth: 'none',
+            }}
+          />
+        </div>
 
-      <p
-        style={{
-          position: 'absolute',
-          left: 52,
-          top: 48,
-          margin: 0,
-          fontFamily: FONT_BOLD,
-          fontSize: 96,
-          lineHeight: '96px',
-          color: '#ffffff',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        GET VIP NOW!
-      </p>
+        <p
+          style={{
+            position: 'absolute',
+            left: 52,
+            top: 48,
+            margin: 0,
+            fontFamily: FONT_BOLD,
+            fontSize: 96,
+            lineHeight: '96px',
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          GET VIP NOW!
+        </p>
 
-      <div style={{ position: 'absolute', left: 1124.09, top: 80 }}>
-        <KnowMoreButton onClick={onKnowMore} />
+        <div style={{ position: 'absolute', left: 1124.09, top: 80 }}>
+          <KnowMoreButton onClick={onKnowMore} />
+        </div>
       </div>
     </section>
   );
@@ -605,112 +671,135 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
         width: DESKTOP_CONTENT_WIDTH,
         height: 225,
         position: 'relative',
-        overflow: 'hidden',
-        background: '#0f0404',
-        isolation: 'isolate',
+        overflow: 'visible',
+        background: 'transparent',
       }}
     >
-      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
-            opacity: 0.5,
-            filter: 'blur(110.65px)',
-            transform: 'scale(1.08)',
-            transformOrigin: 'center',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
-          }}
-        />
-      </div>
-      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden', pointerEvents: 'none' }}>
-        <img
-          src={SHOP_ASSETS.rewardTrianglesLeft}
-          alt=""
-          aria-hidden="true"
-          style={{ position: 'absolute', left: 674.962, top: 105.01, width: 97.498, height: 123.28, display: 'block' }}
-        />
-        <img
-          src={SHOP_ASSETS.rewardTrianglesRight}
-          alt=""
-          aria-hidden="true"
-          style={{ position: 'absolute', left: 282.966, top: -53, width: 186.392, height: 226.288, display: 'block' }}
-        />
-        <img
-          src={SHOP_ASSETS.rewardVectorLarge}
-          alt=""
-          aria-hidden="true"
-          style={{ position: 'absolute', left: 1306.068, top: -100, width: 228.74, height: 256.896, display: 'block' }}
-        />
-        <img
-          src={SHOP_ASSETS.rewardVectorSmall}
-          alt=""
-          aria-hidden="true"
-          style={{ position: 'absolute', left: 1050.09, top: 145, width: 120.396, height: 135.216, display: 'block' }}
-        />
-        <img
-          src={SHOP_ASSETS.starShape}
-          alt=""
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: 765.932,
-            top: -141,
-            width: 451.005,
-            height: 310.452,
-            display: 'block',
-            transform: 'rotate(-15.44deg)',
-            opacity: 0.22,
-            mixBlendMode: 'soft-light',
-          }}
-        />
-        <img
-          src={SHOP_ASSETS.mousepad}
-          alt=""
-          aria-hidden="true"
-          style={{ position: 'absolute', left: 791.932, top: 29, width: 179, height: 168, objectFit: 'contain', display: 'block' }}
-        />
-      </div>
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
-          zIndex: 2,
+          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+          opacity: 0.5,
+          filter: 'blur(110.65px)',
+          transform: 'scale(1.08)',
+          transformOrigin: 'center',
           pointerEvents: 'none',
-          background: 'linear-gradient(90deg, rgba(255,22,84,0.08) 0%, rgba(111,8,32,0.16) 46%, rgba(24,0,3,0.28) 100%)',
         }}
       />
-
-      <p
+      <div
         style={{
           position: 'absolute',
-          left: 51,
-          top: 46,
-          zIndex: 3,
-          margin: 0,
-          fontFamily: FONT_BOLD,
-          color: '#ffffff',
-          lineHeight: 1,
-          whiteSpace: 'nowrap',
+          inset: 0,
+          overflow: 'hidden',
+          background: '#0f0404',
+          isolation: 'isolate',
         }}
       >
-        <span style={{ fontSize: 96, lineHeight: '96px' }}>REACH </span>
-        <span style={{ fontSize: 40, lineHeight: '40px' }}>LVL.</span>
-        <span style={{ fontSize: 96, lineHeight: '96px' }}>100!</span>
-        <br />
-        <span style={{ fontSize: 24, lineHeight: '24px' }}>FOR CRAZY REWARDS...</span>
-      </p>
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+            pointerEvents: 'none',
+          }}
+        />
 
-      <div style={{ position: 'absolute', left: 1124.09, top: 80, zIndex: 3 }}>
-        <KnowMoreButton onClick={onKnowMore} />
+        <BannerDecoration
+          left={674.962}
+          top={105.01}
+          width={97.498}
+          height={123.28}
+          innerWidth={72.312}
+          innerHeight={108.466}
+          rotation={-165.28}
+          src={SHOP_ASSETS.rewardTrianglesLeft}
+          imageInset="0 -1.43% 0 0"
+        />
+        <BannerDecoration
+          left={282.966}
+          top={-53}
+          width={186.392}
+          height={226.288}
+          innerWidth={129.65}
+          innerHeight={194.467}
+          rotation={19.2}
+          src={SHOP_ASSETS.rewardTrianglesRight}
+        />
+        <BannerDecoration
+          left={1306.068}
+          top={-100}
+          width={228.74}
+          height={256.896}
+          innerWidth={118.059}
+          innerHeight={230.82}
+          rotation={34.83}
+          src={SHOP_ASSETS.rewardVectorLarge}
+          imageInset="-3.55% -6.95%"
+        />
+        <BannerDecoration
+          left={1050.09}
+          top={145}
+          width={120.396}
+          height={135.216}
+          innerWidth={62.139}
+          innerHeight={121.49}
+          rotation={-145.17}
+          src={SHOP_ASSETS.rewardVectorSmall}
+          imageInset="-6.75% -13.2%"
+        />
+        <BannerDecoration
+          left={765.932}
+          top={-141}
+          width={451.005}
+          height={310.452}
+          innerWidth={410.229}
+          innerHeight={208.751}
+          rotation={-15.44}
+          src={SHOP_ASSETS.rewardStarShape}
+          imageInset="-3.95% -1.79% -3.88% -1.79%"
+        />
+        <img
+          src={SHOP_ASSETS.mousepad}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 791.932,
+            top: 29,
+            width: 179,
+            height: 168,
+            objectFit: 'contain',
+            display: 'block',
+            pointerEvents: 'none',
+          }}
+        />
+
+        <p
+          style={{
+            position: 'absolute',
+            left: 51,
+            top: 46,
+            margin: 0,
+            fontFamily: FONT_BOLD,
+            color: '#ffffff',
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+            zIndex: 2,
+          }}
+        >
+          <span style={{ fontSize: 96, lineHeight: '96px' }}>REACH </span>
+          <span style={{ fontSize: 40, lineHeight: '40px' }}>LVL.</span>
+          <span style={{ fontSize: 96, lineHeight: '96px' }}>100!</span>
+          <br />
+          <span style={{ fontSize: 24, lineHeight: '24px' }}>FOR CRAZY REWARDS...</span>
+        </p>
+
+        <div style={{ position: 'absolute', left: 1124.09, top: 80, zIndex: 2 }}>
+          <KnowMoreButton onClick={onKnowMore} />
+        </div>
       </div>
     </section>
   );

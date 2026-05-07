@@ -70,15 +70,23 @@ describe('Shop page', () => {
     expect(screen.getByRole('button', { name: 'WALLET' })).toBeInTheDocument();
     expect(screen.getByText('GET VIP NOW!')).toBeInTheDocument();
     expect(screen.getByText(/REACH/i)).toBeInTheDocument();
-    expect(screen.getAllByText('€9,99')).toHaveLength(5);
+    expect(screen.getAllByText('\u20AC9,99')).toHaveLength(5);
     expect(screen.queryByText('â‚¬9,99')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ã¢â€šÂ¬9,99')).not.toBeInTheDocument();
     expect(screen.getByTestId('shop-footer')).toBeInTheDocument();
     expect(container.querySelector('[data-wallet-coin="true"]')).not.toBeNull();
     expect(srcs).toContain('/figma-assets/shop-spaccato-title.svg');
     expect(localNeons).toHaveLength(1);
     expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
     expect(srcs).toContain('/figma-assets/shop/reward-figure.png');
+    expect(srcs).toContain('/figma-assets/shop/vip-hero-overlay.svg');
     expect(srcs).toContain('/figma-assets/shop/reward-mousepad.png');
+    expect(srcs).toContain('/figma-assets/shop/reward-triangles-left.svg');
+    expect(srcs).toContain('/figma-assets/shop/reward-triangles-right.svg');
+    expect(srcs).toContain('/figma-assets/shop/reward-vector-large.svg');
+    expect(srcs).toContain('/figma-assets/shop/reward-vector-small.svg');
+    expect(srcs).toContain('/figma-assets/shop/reward-star-shape.svg');
+    expect(srcs).not.toContain('/figma-assets/figma-star-shape.svg');
     expect(srcs.some((src) => src.startsWith('https://www.figma.com/api/mcp/asset/'))).toBe(false);
   });
 
