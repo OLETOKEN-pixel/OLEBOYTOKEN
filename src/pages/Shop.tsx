@@ -20,6 +20,7 @@ const FONT_HEAD = "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', 
 
 const SHOP_ASSETS = {
   topNeon: '/figma-assets/figma-neon.png',
+  titleLockup: '/figma-assets/shop-spaccato-title.svg',
   titleOutline: '/figma-assets/shop/title-outline.svg',
   titleTriangles: '/figma-assets/shop/title-triangles.svg',
   searchIcon: '/figma-assets/shop/search-icon.svg',
@@ -33,6 +34,7 @@ const SHOP_ASSETS = {
   arrowStroke: '/figma-assets/figma-arrow-stroke.svg',
   starShape: '/figma-assets/figma-star-shape.svg',
   mousepad: '/figma-assets/shop/reward-mousepad.png',
+  walletCoin: '/coin.png',
 };
 
 type ShopCard = {
@@ -50,6 +52,10 @@ const vipCards: ShopCard[] = Array.from({ length: 5 }, (_, index) => ({
   kind: 'reward-figure',
   badge: '500',
 }));
+
+const REWARD_PRICE = '€9,99';
+
+const BROKEN_EURO_PREFIX = REWARD_PRICE.replace('9,99', '');
 
 const rewardCards: ShopCard[] = [
   {
@@ -86,22 +92,26 @@ const desktopPageStyle: CSSProperties = {
 };
 
 function normalizeQuery(value: string) {
-  return value.trim().toLowerCase();
+  return value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC').trim().toLowerCase();
 }
 
 function matchesQuery(card: ShopCard, query: string) {
   if (!query) return true;
-  return [card.title, ...card.keywords].some((value) => value.toLowerCase().includes(query));
+  return [card.title, ...card.keywords].some((value) => value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC').toLowerCase().includes(query));
+}
+
+function displayLabel(value: string) {
+  return value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC');
 }
 
 function TitleLockup() {
   return (
-    <div style={{ position: 'relative', width: 476, height: 187 }}>
+    <div style={{ position: 'relative', width: 476, height: 187, overflow: 'hidden' }}>
       <img
-        src={SHOP_ASSETS.titleTriangles}
+        src={SHOP_ASSETS.titleLockup}
         alt=""
         aria-hidden="true"
-        style={{ position: 'absolute', left: 0, top: 0, width: 123.871, height: 185.808, display: 'block' }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', pointerEvents: 'none' }}
       />
       <h1
         style={{
@@ -119,39 +129,6 @@ function TitleLockup() {
       >
         SHOP
       </h1>
-
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 59.76,
-          top: 166.91,
-          width: 415.601,
-          height: 19.874,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'visible',
-          pointerEvents: 'none',
-        }}
-      >
-        <div
-          style={{
-            width: 18.421,
-            height: 415.539,
-            position: 'relative',
-            flex: '0 0 auto',
-            transform: 'rotate(89.8deg) scaleY(-1)',
-          }}
-        >
-          <img
-            src={SHOP_ASSETS.titleOutline}
-            alt=""
-            aria-hidden="true"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}
-          />
-        </div>
-      </div>
     </div>
   );
 }
@@ -233,21 +210,30 @@ function ActionPill({
       <span
         aria-hidden="true"
         style={{
-          width: policy ? 16 : 23,
-          height: policy ? 16 : 23,
+          width: 16,
+          height: 16,
           borderRadius: '999px',
-          background: policy ? '#ffffff' : '#ff1654',
-          color: policy ? 'rgba(40,40,40,0.8)' : 'transparent',
-          display: 'grid',
+          background: '#ffffff',
+          color: 'rgba(40,40,40,0.8)',
+          display: policy ? 'grid' : 'none',
           placeItems: 'center',
           fontFamily: FONT_EXPANDED_BOLD,
-          fontSize: policy ? 13 : 0,
+          fontSize: 13,
           lineHeight: 1,
           flexShrink: 0,
         }}
       >
-        {policy ? 'i' : ''}
+        i
       </span>
+      {policy ? null : (
+        <img
+          src={SHOP_ASSETS.walletCoin}
+          alt=""
+          aria-hidden="true"
+          data-wallet-coin="true"
+          style={{ width: 23, height: 23, objectFit: 'contain', display: 'block', flexShrink: 0 }}
+        />
+      )}
       <span
         style={{
           fontFamily: FONT_EXPANDED_BOLD,
@@ -354,7 +340,7 @@ function FigureCard({ card }: { card: ShopCard }) {
             whiteSpace: 'nowrap',
           }}
         >
-          {card.badge}
+          {displayLabel(card.badge)}
         </span>
       </div>
     </div>
@@ -388,7 +374,7 @@ function PriceOnlyCard({ card }: { card: ShopCard }) {
           whiteSpace: 'nowrap',
         }}
       >
-        {card.badge}
+        {displayLabel(card.badge)}
       </span>
     </div>
   );
@@ -477,7 +463,7 @@ function CoinStackCard({ card }: { card: ShopCard }) {
           whiteSpace: 'nowrap',
         }}
       >
-        {card.badge}
+        {displayLabel(card.badge)}
       </span>
     </div>
   );
@@ -621,70 +607,84 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
         position: 'relative',
         overflow: 'hidden',
         background: '#0f0404',
+        isolation: 'isolate',
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
-          opacity: 0.5,
-          filter: 'blur(110.65px)',
-          transform: 'scale(1.08)',
-          transformOrigin: 'center',
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
-        }}
-      />
-      <img
-        src={SHOP_ASSETS.rewardTrianglesLeft}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 674.962, top: 105.01, width: 97.498, height: 123.28, display: 'block', pointerEvents: 'none' }}
-      />
-      <img
-        src={SHOP_ASSETS.rewardTrianglesRight}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 282.966, top: -53, width: 186.392, height: 226.288, display: 'block', pointerEvents: 'none' }}
-      />
-      <img
-        src={SHOP_ASSETS.rewardVectorLarge}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 1306.068, top: -100, width: 228.74, height: 256.896, display: 'block', pointerEvents: 'none' }}
-      />
-      <img
-        src={SHOP_ASSETS.rewardVectorSmall}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 1050.09, top: 145, width: 120.396, height: 135.216, display: 'block', pointerEvents: 'none' }}
-      />
-      <img
-        src={SHOP_ASSETS.starShape}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 765.932, top: -141, width: 451.005, height: 310.452, display: 'block', pointerEvents: 'none', transform: 'rotate(-15.44deg)' }}
-      />
-      <img
-        src={SHOP_ASSETS.mousepad}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 791.932, top: 29, width: 179, height: 168, objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
-      />
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+            opacity: 0.5,
+            filter: 'blur(110.65px)',
+            transform: 'scale(1.08)',
+            transformOrigin: 'center',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(90deg, #ff1654 0%, #0f0404 100%)',
+          }}
+        />
+      </div>
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden', pointerEvents: 'none' }}>
+        <img
+          src={SHOP_ASSETS.rewardTrianglesLeft}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', left: 674.962, top: 105.01, width: 97.498, height: 123.28, display: 'block' }}
+        />
+        <img
+          src={SHOP_ASSETS.rewardTrianglesRight}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', left: 282.966, top: -53, width: 186.392, height: 226.288, display: 'block' }}
+        />
+        <img
+          src={SHOP_ASSETS.rewardVectorLarge}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', left: 1306.068, top: -100, width: 228.74, height: 256.896, display: 'block' }}
+        />
+        <img
+          src={SHOP_ASSETS.rewardVectorSmall}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', left: 1050.09, top: 145, width: 120.396, height: 135.216, display: 'block' }}
+        />
+        <img
+          src={SHOP_ASSETS.starShape}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 765.932,
+            top: -141,
+            width: 451.005,
+            height: 310.452,
+            display: 'block',
+            transform: 'rotate(-15.44deg)',
+            opacity: 0.74,
+            mixBlendMode: 'screen',
+          }}
+        />
+        <img
+          src={SHOP_ASSETS.mousepad}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', left: 791.932, top: 29, width: 179, height: 168, objectFit: 'contain', display: 'block' }}
+        />
+      </div>
 
       <p
         style={{
           position: 'absolute',
           left: 51,
           top: 46,
+          zIndex: 2,
           margin: 0,
           fontFamily: FONT_BOLD,
           color: '#ffffff',
@@ -699,7 +699,7 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
         <span style={{ fontSize: 24, lineHeight: '24px' }}>FOR CRAZY REWARDS...</span>
       </p>
 
-      <div style={{ position: 'absolute', left: 1124.09, top: 80 }}>
+      <div style={{ position: 'absolute', left: 1124.09, top: 80, zIndex: 2 }}>
         <KnowMoreButton onClick={onKnowMore} />
       </div>
     </section>
@@ -919,7 +919,7 @@ function MobileCard({ card }: { card: ShopCard }) {
       >
         {isFigure ? <span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: '999px', background: '#ff1654', display: 'block' }} /> : null}
         <span style={{ fontFamily: FONT_EXPANDED_BOLD, fontSize: 26, lineHeight: '31px', color: '#ffffff', whiteSpace: 'nowrap' }}>
-          {isFigure ? card.badge : '€9,99'}
+          {displayLabel(card.badge)}
         </span>
       </div>
     </div>

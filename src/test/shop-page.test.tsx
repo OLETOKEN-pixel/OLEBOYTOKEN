@@ -69,9 +69,11 @@ describe('Shop page', () => {
     expect(screen.getByRole('button', { name: 'WALLET' })).toBeInTheDocument();
     expect(screen.getByText('GET VIP NOW!')).toBeInTheDocument();
     expect(screen.getByText(/REACH/i)).toBeInTheDocument();
+    expect(screen.getAllByText('€9,99')).toHaveLength(5);
+    expect(screen.queryByText('â‚¬9,99')).not.toBeInTheDocument();
     expect(screen.getByTestId('shop-footer')).toBeInTheDocument();
-    expect(srcs).toContain('/figma-assets/shop/title-outline.svg');
-    expect(srcs).toContain('/figma-assets/shop/title-triangles.svg');
+    expect(container.querySelector('[data-wallet-coin="true"]')).not.toBeNull();
+    expect(srcs).toContain('/figma-assets/shop-spaccato-title.svg');
     expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
     expect(srcs).toContain('/figma-assets/shop/reward-figure.png');
     expect(srcs).toContain('/figma-assets/shop/reward-mousepad.png');

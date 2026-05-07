@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLoadingGuard } from "@/components/common/AppLoadingGuard";
 import { GlobalMatchEventListener } from "@/components/common/GlobalMatchEventListener";
 import { TournamentAutoTick } from "@/components/common/TournamentAutoTick";
+import { GlobalBottomNeon } from "@/components/layout/GlobalBottomNeon";
 import { getCanonicalRedirectUrl } from "@/lib/oauth";
 import { WalletPurchaseProvider } from "@/contexts/WalletPurchaseContext";
 
@@ -92,33 +93,6 @@ function ScrollToTopOnRouteChange() {
     window.scrollTo(0, 0);
   }, [pathname, state]);
   return null;
-}
-
-function GlobalBottomNeon() {
-  const { pathname } = useLocation();
-  const isMatchDetail = /^\/matches\/(?!create(?:\/|$))[^/]+$/.test(pathname);
-
-  if (isMatchDetail) return null;
-
-  return (
-    <img
-      aria-hidden="true"
-      data-global-neon="true"
-      src="/figma-assets/figma-neon.png"
-      alt=""
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        width: '100vw',
-        height: '146px',
-        objectFit: 'cover',
-        pointerEvents: 'none',
-        zIndex: 7,
-        transform: 'scaleY(-1)',
-      }}
-    />
-  );
 }
 
 function App() {
