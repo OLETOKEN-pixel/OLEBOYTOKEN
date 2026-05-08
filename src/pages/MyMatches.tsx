@@ -189,26 +189,28 @@ function MyMatchesDesktop({
       className="relative mx-auto box-border min-h-screen pb-[146px] pt-[156px]"
       style={{ width: 'min(1532px, calc(100% - 100px))' }}
     >
-      <div className="relative h-[186px] w-[1031px] max-w-full overflow-visible">
+      <div className="relative min-h-[190px] w-max max-w-full overflow-visible">
         <img
           className="absolute left-0 top-0 h-[186px] w-[124px] object-contain"
           src="/figma-assets/matches-title-triangles.svg"
           alt=""
           aria-hidden="true"
         />
-        <h1
-          className="absolute left-[91px] top-[77px] whitespace-nowrap leading-none text-white"
-          style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '80px' }}
-        >
-          MY MATCHES
-        </h1>
-        <img
-          className="absolute left-[31px] top-[168px] h-[22px] w-[1000px] max-w-none object-fill"
-          src="/figma-assets/matches-title-underline.svg"
-          alt=""
-          aria-hidden="true"
-          data-testid="my-matches-title-underline"
-        />
+        <div className="relative z-10 ml-[91px] pt-[77px] inline-flex flex-col items-start">
+          <h1
+            className="whitespace-nowrap leading-none text-white"
+            style={{ fontFamily: FONT_EXPANDED_BLACK, fontSize: '80px' }}
+          >
+            MY MATCHES
+          </h1>
+          <img
+            className="mt-[11px] ml-[-60px] h-[22px] w-[calc(100%+60px)] max-w-none object-fill"
+            src="/figma-assets/matches-title-underline.svg"
+            alt=""
+            aria-hidden="true"
+            data-testid="my-matches-title-underline"
+          />
+        </div>
       </div>
 
       <MyMatchesTabs
@@ -246,13 +248,20 @@ function MyMatchesMobile({
           alt=""
           aria-hidden="true"
         />
-        <h1
-          className="relative z-10 ml-[45px] pt-[45px] whitespace-nowrap text-[42px] leading-none text-white min-[390px]:text-[48px]"
-          style={{ fontFamily: FONT_EXPANDED_BLACK }}
-        >
-          MY MATCHES
-        </h1>
-        <div className="ml-[14px] mt-4 h-[6px] w-[calc(100%-28px)] rounded-full bg-[#ff1654]" />
+        <div className="relative z-10 ml-[45px] pt-[45px] inline-flex flex-col items-start">
+          <h1
+            className="whitespace-nowrap text-[42px] leading-none text-white min-[390px]:text-[48px]"
+            style={{ fontFamily: FONT_EXPANDED_BLACK }}
+          >
+            MY MATCHES
+          </h1>
+          <img
+            className="mt-3 ml-[-31px] h-[12px] w-[calc(100%+31px)] max-w-none object-fill"
+            src="/figma-assets/matches-title-underline.svg"
+            alt=""
+            aria-hidden="true"
+          />
+        </div>
       </div>
 
       <MyMatchesTabs
