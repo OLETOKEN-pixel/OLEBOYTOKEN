@@ -8,6 +8,7 @@ import { getLevel, getLevelXpRequired, getXpInLevel, getXpToNext } from '@/lib/x
 import type { Match } from '@/types';
 import { PlayerStatsModal } from '@/components/player/PlayerStatsModal';
 import { ACTIVE_HOME_ASSETS } from './sections/activeHomeAssets';
+import { useShopCatalog } from '@/hooks/useShopCatalog';
 import { useShopLevelRewards } from '@/hooks/useShopLevelRewards';
 
 interface HomeRegisteredMobileProps {
@@ -100,7 +101,7 @@ const videoItems = [
 ];
 
 const shopItems: ShopItem[] = [
-  { type: 'vip', image: '/showreel/vip-icon.svg', price: 'EUR 9.99', label: 'VIP', sublabel: '1 MONTH' },
+  { type: 'vip', image: '/showreel/vip-icon.svg', price: '5 COINS', label: 'VIP', sublabel: '1 MONTH' },
 ];
 
 function formatTimeLeft(expiresAt: string): string {
@@ -1076,13 +1077,25 @@ function ShopPrice({ price }: { price: string }) {
 function ShopMobile() {
   const navigate = useNavigate();
   const { rewards } = useShopLevelRewards();
+  const { vipOffer } = useShopCatalog();
+  const dynamicVipItems: ShopItem[] = vipOffer
+    ? [
+        {
+          type: 'vip',
+          image: vipOffer.imagePath,
+          price: vipOffer.effectivePrice?.label ?? '5 COINS',
+          label: vipOffer.title,
+          sublabel: vipOffer.subtitle || '1 MONTH',
+        },
+      ]
+    : shopItems;
   const mobileShopItems: ShopItem[] = [
     ...rewards.map((reward) => ({
       type: 'cosmetic' as const,
       image: reward.image,
       price: `LVL ${reward.levelRequired}`,
     })),
-    ...shopItems,
+    ...dynamicVipItems,
   ];
 
   return (

@@ -9,7 +9,26 @@ const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   toast: vi.fn(),
   redirectToCheckout: vi.fn(),
+  refreshWallet: vi.fn(),
 }));
+
+const mockCoinPacks = [3, 5, 10, 15, 25, 50].map((coins) => ({
+  id: `pack-${coins}`,
+  coinAmount: coins,
+  metadata: { badge: `x${coins}` },
+  effectivePrice: { label: `€${coins},00` },
+}));
+
+const mockVipOffer = {
+  id: 'vip-30d',
+  vipDurationDays: 30,
+  metadata: {
+    benefits: ['Real rewards', 'Giveaways', 'Less levels, more prizes'],
+  },
+  effectivePrice: {
+    label: '5 COINS',
+  },
+};
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -24,7 +43,19 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'user-1', email: 'player@example.com' },
     wallet: { balance: 9.9 },
-    refreshWallet: vi.fn(),
+    refreshWallet: mocks.refreshWallet,
+  }),
+}));
+
+vi.mock('@/hooks/useShopCatalog', () => ({
+  useShopCatalog: () => ({
+    coinPacks: mockCoinPacks,
+    vipOffer: mockVipOffer,
+    catalog: {
+      viewer: {
+        isVip: false,
+      },
+    },
   }),
 }));
 
@@ -39,7 +70,7 @@ vi.mock('@/lib/checkoutRedirect', () => ({
 function Trigger({ children = 'OPEN WALLET' }: { children?: ReactNode }) {
   const { openWalletPurchase } = useWalletPurchase();
   return (
-    <button type="button" onClick={openWalletPurchase}>
+    <button type="button" onClick={() => openWalletPurchase()}>
       {children}
     </button>
   );
@@ -70,9 +101,10 @@ describe('WalletPurchaseOverlay', () => {
     mocks.rpc.mockReset();
     mocks.toast.mockReset();
     mocks.redirectToCheckout.mockReset();
+    mocks.refreshWallet.mockReset();
   });
 
-  it('renders the Figma wallet modal with the coin packages', () => {
+  it('renders the Figma wallet modal with the live coin packages', () => {
     renderOverlay();
 
     fireEvent.click(screen.getByRole('button', { name: 'OPEN WALLET' }));
@@ -90,7 +122,7 @@ describe('WalletPurchaseOverlay', () => {
     expect(screen.getByRole('button', { name: 'Purchase 5 coins' })).toHaveTextContent('PURCHASE 5 COINS');
   });
 
-  it('updates the purchase button and starts Stripe checkout for the selected package', async () => {
+  it('updates the purchase button and starts the generic shop checkout for the selected package', async () => {
     mocks.invoke.mockResolvedValue({ data: { url: 'https://checkout.stripe.test/session' }, error: null });
 
     renderOverlay();
@@ -100,8 +132,8 @@ describe('WalletPurchaseOverlay', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Purchase 25 coins' }));
 
     await waitFor(() => {
-      expect(mocks.invoke).toHaveBeenCalledWith('create-checkout', {
-        body: { packageId: 'pack-25' },
+      expect(mocks.invoke).toHaveBeenCalledWith('create-shop-checkout', {
+        body: { itemId: 'pack-25' },
       });
     });
     expect(mocks.redirectToCheckout).toHaveBeenCalledWith('https://checkout.stripe.test/session');
@@ -115,21 +147,24 @@ describe('WalletPurchaseOverlay', () => {
 
     expect(screen.getByText('BENEFITS:')).toBeInTheDocument();
     expect(screen.getByText('Real rewards')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Get VIP for €9,99' })).toHaveTextContent('GET VIP for €9,99');
+    expect(screen.getByRole('button', { name: 'Get VIP for 5 COINS' })).toHaveTextContent('GET VIP for 5 COINS');
   });
 
-  it('starts the VIP purchase from the VIP tab', async () => {
+  it('starts the catalog-backed VIP purchase from the VIP tab', async () => {
     mocks.rpc.mockResolvedValue({ data: { success: true }, error: null });
 
     renderOverlay();
 
     fireEvent.click(screen.getByRole('button', { name: 'OPEN WALLET' }));
     fireEvent.click(screen.getByRole('button', { name: 'VIP MEMBERSHIP' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Get VIP for €9,99' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Get VIP for 5 COINS' }));
 
     await waitFor(() => {
-      expect(mocks.rpc).toHaveBeenCalledWith('purchase_vip');
+      expect(mocks.rpc).toHaveBeenCalledWith('purchase_shop_wallet_item', {
+        p_item_id: 'vip-30d',
+      });
     });
+    expect(mocks.refreshWallet).toHaveBeenCalled();
   });
 
   it('opens directly on the VIP tab when requested', () => {
@@ -144,6 +179,6 @@ describe('WalletPurchaseOverlay', () => {
     fireEvent.click(screen.getByRole('button', { name: 'OPEN VIP' }));
 
     expect(screen.getByText('BENEFITS:')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get VIP for/i })).toHaveTextContent('GET VIP for €9,99');
+    expect(screen.getByRole('button', { name: /Get VIP for/i })).toHaveTextContent('GET VIP for 5 COINS');
   });
 });

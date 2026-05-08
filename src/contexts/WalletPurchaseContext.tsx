@@ -10,11 +10,11 @@ import {
 import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useShopCatalog } from '@/hooks/useShopCatalog';
 import { useToast } from '@/hooks/use-toast';
-import { COIN_PACKAGES } from '@/types';
-import type { CoinPackage } from '@/types';
 import { redirectToCheckout } from '@/lib/checkoutRedirect';
 import { extractFunctionErrorMessage } from '@/lib/oauth';
+import type { ShopCatalogItem } from '@/lib/shopCatalog';
 
 type WalletPurchaseContextValue = {
   openWalletPurchase: (initialTab?: WalletTabKey) => void;
@@ -38,15 +38,9 @@ const FBO = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial-Bold', 'Base Neue 
 const FBD = "'Base_Neue_Trial:Bold', 'Base Neue Trial-Bold', 'Base Neue Trial', sans-serif";
 const FWB = "'Base_Neue_Trial:Wide_Black', 'Base Neue Trial-WideBlack', 'Base Neue Trial', sans-serif";
 
-const BEST_SELLER_PACKAGE_ID = 'pack-25';
-const DEFAULT_PACKAGE_ID = 'pack-5';
-const EURO = '\u20AC';
-const VIP_PRICE_LABEL = `${EURO}9,99`;
-const VIP_BENEFITS = ['Real rewards', 'Giveaways', 'Less levels, more prizes'];
-
-function formatEuroLabel(amount: number) {
-  return `${EURO} ${amount.toFixed(2).replace('.', ',')}`;
-}
+const BEST_SELLER_COIN_AMOUNT = 25;
+const DEFAULT_COIN_AMOUNT = 5;
+const FALLBACK_VIP_BENEFITS = ['Real rewards', 'Giveaways', 'Less levels, more prizes'];
 
 function resolveWalletTab(value: unknown): WalletTabKey {
   return value === 'vip' ? 'vip' : 'coins';
@@ -89,14 +83,29 @@ function WalletPurchaseOverlay({
   onClose: () => void;
 }) {
   const { user, refreshWallet } = useAuth();
+  const { coinPacks, vipOffer, catalog } = useShopCatalog();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<WalletTabKey>('coins');
-  const [selectedPackageId, setSelectedPackageId] = useState(DEFAULT_PACKAGE_ID);
+  const [selectedPackageId, setSelectedPackageId] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [vipLoading, setVipLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(true);
 
-  const selectedPackage = COIN_PACKAGES.find((pack) => pack.id === selectedPackageId) ?? COIN_PACKAGES[0];
+  const selectedPackage = useMemo(
+    () =>
+      coinPacks.find((pack) => pack.id === selectedPackageId)
+      ?? coinPacks.find((pack) => pack.coinAmount === DEFAULT_COIN_AMOUNT)
+      ?? coinPacks[0]
+      ?? null,
+    [coinPacks, selectedPackageId],
+  );
+  const vipBenefits = useMemo(() => {
+    const raw = vipOffer?.metadata?.benefits;
+    return Array.isArray(raw) && raw.every((entry) => typeof entry === 'string')
+      ? (raw as string[])
+      : FALLBACK_VIP_BENEFITS;
+  }, [vipOffer]);
+  const vipPriceLabel = vipOffer?.effectivePrice?.label ?? '5 COINS';
   const actionLoading = activeTab === 'coins' ? checkoutLoading : vipLoading;
   const actionDisabled = actionLoading || !acceptedTerms;
 
@@ -121,11 +130,11 @@ function WalletPurchaseOverlay({
     if (!open) return;
 
     setActiveTab(initialTab);
-    setSelectedPackageId(DEFAULT_PACKAGE_ID);
+    setSelectedPackageId(coinPacks.find((pack) => pack.coinAmount === DEFAULT_COIN_AMOUNT)?.id ?? coinPacks[0]?.id ?? '');
     setAcceptedTerms(true);
     setCheckoutLoading(false);
     setVipLoading(false);
-  }, [initialTab, open]);
+  }, [coinPacks, initialTab, open]);
 
   const startCheckout = async () => {
     if (!user) {
@@ -137,11 +146,20 @@ function WalletPurchaseOverlay({
       return;
     }
 
+    if (!selectedPackage) {
+      toast({
+        title: 'No package available',
+        description: 'No coin pack is currently available in the live catalog.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setCheckoutLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { packageId: selectedPackage.id },
+      const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
+        body: { itemId: selectedPackage.id },
       });
 
       if (error) throw error;
@@ -171,10 +189,21 @@ function WalletPurchaseOverlay({
       return;
     }
 
+    if (!vipOffer) {
+      toast({
+        title: 'VIP unavailable',
+        description: 'No VIP offer is currently available in the live catalog.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setVipLoading(true);
 
     try {
-      const { data, error } = await supabase.rpc('purchase_vip');
+      const { data, error } = await supabase.rpc('purchase_shop_wallet_item', {
+        p_item_id: vipOffer.id,
+      });
       if (error) throw error;
 
       const result = data as { success?: boolean; error?: string } | null;
@@ -184,7 +213,7 @@ function WalletPurchaseOverlay({
 
       await refreshWallet();
       toast({
-        title: 'VIP activated',
+        title: catalog.viewer.isVip ? 'VIP renewed' : 'VIP activated',
         description: 'Your VIP membership is now active for 30 days.',
       });
       onClose();
@@ -297,12 +326,12 @@ function WalletPurchaseOverlay({
                   marginTop: '46px',
                 }}
               >
-                {COIN_PACKAGES.map((pack) => (
+                {coinPacks.map((pack) => (
                   <CoinPackageButton
                     key={pack.id}
                     pack={pack}
-                    selected={pack.id === selectedPackageId}
-                    bestSeller={pack.id === BEST_SELLER_PACKAGE_ID}
+                    selected={pack.id === selectedPackage?.id}
+                    bestSeller={pack.coinAmount === BEST_SELLER_COIN_AMOUNT}
                     onSelect={() => setSelectedPackageId(pack.id)}
                   />
                 ))}
@@ -325,10 +354,10 @@ function WalletPurchaseOverlay({
               />
 
               <PrimaryActionButton
-                label={checkoutLoading ? 'OPENING STRIPE' : `PURCHASE ${selectedPackage.coins} COINS`}
-                ariaLabel={`Purchase ${selectedPackage.coins} coins`}
+                label={checkoutLoading ? 'OPENING STRIPE' : `PURCHASE ${selectedPackage?.coinAmount ?? 0} COINS`}
+                ariaLabel={`Purchase ${selectedPackage?.coinAmount ?? 0} coins`}
                 width="min(385px, calc(100% - 80px))"
-                disabled={actionDisabled}
+                disabled={actionDisabled || !selectedPackage}
                 onClick={startCheckout}
                 marginTop="18px"
               />
@@ -385,7 +414,7 @@ function WalletPurchaseOverlay({
                       marginTop: '38px',
                     }}
                   >
-                    {VIP_BENEFITS.map((benefit) => (
+                    {vipBenefits.map((benefit) => (
                       <div
                         key={benefit}
                         style={{
@@ -460,7 +489,7 @@ function WalletPurchaseOverlay({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    x1 MONTH
+                    x{vipOffer?.vipDurationDays ?? 30} DAYS
                   </span>
                 </div>
               </div>
@@ -492,10 +521,10 @@ function WalletPurchaseOverlay({
                 />
 
                 <PrimaryActionButton
-                  label={vipLoading ? 'ACTIVATING VIP' : `GET VIP for ${VIP_PRICE_LABEL}`}
-                  ariaLabel={`Get VIP for ${VIP_PRICE_LABEL}`}
+                  label={vipLoading ? 'ACTIVATING VIP' : `${catalog.viewer.isVip ? 'RENEW VIP' : 'GET VIP'} for ${vipPriceLabel}`}
+                  ariaLabel={`${catalog.viewer.isVip ? 'Renew VIP' : 'Get VIP'} for ${vipPriceLabel}`}
                   width="min(523px, calc(100% - 48px))"
-                  disabled={actionDisabled}
+                  disabled={actionDisabled || !vipOffer}
                   onClick={startVipPurchase}
                   marginTop="17px"
                   useVipAsset
@@ -564,11 +593,16 @@ function CoinPackageButton({
   bestSeller,
   onSelect,
 }: {
-  pack: CoinPackage;
+  pack: ShopCatalogItem;
   selected: boolean;
   bestSeller: boolean;
   onSelect: () => void;
 }) {
+  const priceLabel = pack.effectivePrice?.label ?? '';
+  const badgeLabel = typeof pack.metadata.badge === 'string'
+    ? (pack.metadata.badge as string)
+    : `x${pack.coinAmount ?? 0}`;
+
   return (
     <button
       type="button"
@@ -659,7 +693,7 @@ function CoinPackageButton({
           whiteSpace: 'nowrap',
         }}
       >
-        x{pack.coins}
+        {badgeLabel}
       </span>
 
       <span
@@ -675,7 +709,7 @@ function CoinPackageButton({
           whiteSpace: 'nowrap',
         }}
       >
-        {formatEuroLabel(pack.price)}
+        {priceLabel}
       </span>
     </button>
   );

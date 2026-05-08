@@ -7,6 +7,36 @@ import { FooterSection } from '@/components/home/sections/FooterSection';
 import { ShopSection } from '@/components/home/sections/ShopSection';
 import { TeamsSection } from '@/components/home/sections/TeamsSection';
 
+vi.mock('@/hooks/useShopCatalog', () => ({
+  useShopCatalog: () => ({
+    vipOffer: {
+      imagePath: '/showreel/vip-icon.svg',
+      effectivePrice: { label: '5 COINS' },
+      title: 'VIP',
+      subtitle: '1 MONTH',
+    },
+  }),
+}));
+
+vi.mock('@/hooks/useShopLevelRewards', () => ({
+  useShopLevelRewards: () => ({
+    rewards: [
+      {
+        id: 'reward-1',
+        name: 'TAPPETINO',
+        image: '/shop/tappetino.png',
+        levelRequired: 15,
+      },
+      {
+        id: 'reward-2',
+        name: 'MOUSE',
+        image: '/shop/mouse.webp',
+        levelRequired: 30,
+      },
+    ],
+  }),
+}));
+
 function buildThenableQuery(result: { data: unknown; error: unknown }) {
   const chain: any = {};
   const returnChain = () => chain;

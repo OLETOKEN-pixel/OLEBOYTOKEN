@@ -179,6 +179,207 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_item_claims: {
+        Row: {
+          admin_note: string
+          created_at: string
+          id: string
+          item_id: string
+          requested_at: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["shop_claim_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string
+          created_at?: string
+          id?: string
+          item_id: string
+          requested_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["shop_claim_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          requested_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["shop_claim_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shop_item_prices: {
+        Row: {
+          amount_minor: number
+          audience: Database["public"]["Enums"]["shop_price_audience"]
+          compare_at_minor: number | null
+          created_at: string
+          currency: Database["public"]["Enums"]["shop_price_currency"]
+          id: string
+          is_active: boolean
+          item_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_minor: number
+          audience: Database["public"]["Enums"]["shop_price_audience"]
+          compare_at_minor?: number | null
+          created_at?: string
+          currency: Database["public"]["Enums"]["shop_price_currency"]
+          id?: string
+          is_active?: boolean
+          item_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          audience?: Database["public"]["Enums"]["shop_price_audience"]
+          compare_at_minor?: number | null
+          created_at?: string
+          currency?: Database["public"]["Enums"]["shop_price_currency"]
+          id?: string
+          is_active?: boolean
+          item_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shop_item_unlock_rules: {
+        Row: {
+          challenge_id: string | null
+          claim_once: boolean
+          created_at: string
+          item_id: string
+          level_required: number | null
+          unlock_type: Database["public"]["Enums"]["shop_unlock_type"]
+          updated_at: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          claim_once?: boolean
+          created_at?: string
+          item_id: string
+          level_required?: number | null
+          unlock_type?: Database["public"]["Enums"]["shop_unlock_type"]
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string | null
+          claim_once?: boolean
+          created_at?: string
+          item_id?: string
+          level_required?: number | null
+          unlock_type?: Database["public"]["Enums"]["shop_unlock_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shop_items: {
+        Row: {
+          action_key: string | null
+          coin_amount: number | null
+          created_at: string
+          cta_label: string
+          description: string
+          id: string
+          image_path: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["shop_item_kind"]
+          metadata: Json
+          slug: string
+          subtitle: string
+          title: string
+          updated_at: string
+          vip_duration_days: number | null
+        }
+        Insert: {
+          action_key?: string | null
+          coin_amount?: number | null
+          created_at?: string
+          cta_label?: string
+          description?: string
+          id?: string
+          image_path: string
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["shop_item_kind"]
+          metadata?: Json
+          slug: string
+          subtitle?: string
+          title: string
+          updated_at?: string
+          vip_duration_days?: number | null
+        }
+        Update: {
+          action_key?: string | null
+          coin_amount?: number | null
+          created_at?: string
+          cta_label?: string
+          description?: string
+          id?: string
+          image_path?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["shop_item_kind"]
+          metadata?: Json
+          slug?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+          vip_duration_days?: number | null
+        }
+        Relationships: []
+      }
+      shop_surface_slots: {
+        Row: {
+          card_variant: string
+          created_at: string
+          cta_label_override: string
+          id: string
+          is_active: boolean
+          item_id: string
+          sort_order: number
+          subtitle_override: string
+          surface_key: string
+          title_override: string
+          updated_at: string
+        }
+        Insert: {
+          card_variant?: string
+          created_at?: string
+          cta_label_override?: string
+          id?: string
+          is_active?: boolean
+          item_id: string
+          sort_order?: number
+          subtitle_override?: string
+          surface_key: string
+          title_override?: string
+          updated_at?: string
+        }
+        Update: {
+          card_variant?: string
+          created_at?: string
+          cta_label_override?: string
+          id?: string
+          is_active?: boolean
+          item_id?: string
+          sort_order?: number
+          subtitle_override?: string
+          surface_key?: string
+          title_override?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string | null
@@ -1849,6 +2050,14 @@ export type Database = {
         Args: { p_is_active: boolean; p_reward_id: string }
         Returns: Json
       }
+      admin_set_shop_item_active: {
+        Args: { p_is_active: boolean; p_item_id: string }
+        Returns: Json
+      }
+      admin_update_shop_claim: {
+        Args: { p_admin_note?: string; p_claim_id: string; p_status: string }
+        Returns: Json
+      }
       admin_upsert_challenge: {
         Args: {
           p_challenge_id?: string
@@ -1875,6 +2084,11 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_upsert_shop_item: { Args: { p_payload: Json }; Returns: Json }
+      admin_upsert_shop_surface_slot: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
       auto_refund_expired_matches: { Args: never; Returns: Json }
       cancel_match_v2: { Args: { p_match_id: string }; Returns: Json }
       change_username_vip: { Args: { p_new_username: string }; Returns: Json }
@@ -1895,6 +2109,7 @@ export type Database = {
         Returns: boolean
       }
       check_vip_status: { Args: { p_user_id?: string }; Returns: Json }
+      claim_shop_reward: { Args: { p_item_id: string }; Returns: Json }
       claim_challenge_reward: {
         Args: { p_challenge_id: string; p_period_key: string }
         Returns: Json
@@ -2077,6 +2292,7 @@ export type Database = {
       get_player_profile_view: { Args: { p_user_id: string }; Returns: Json }
       get_player_rank: { Args: { p_user_id: string }; Returns: number }
       get_player_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_shop_catalog: { Args: never; Returns: Json }
       get_team_detail: { Args: { p_team_id: string }; Returns: Json }
       get_team_invites: { Args: never; Returns: Json }
       get_team_leaderboard_earnings: {
@@ -2179,6 +2395,7 @@ export type Database = {
         Returns: Json
       }
       purchase_vip: { Args: never; Returns: Json }
+      purchase_shop_wallet_item: { Args: { p_item_id: string }; Returns: Json }
       record_challenge_event:
         | {
             Args: {
@@ -2300,6 +2517,21 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      shop_claim_status:
+        | "pending"
+        | "approved"
+        | "fulfilled"
+        | "rejected"
+        | "cancelled"
+      shop_item_kind:
+        | "coin_pack"
+        | "vip_membership"
+        | "physical_product"
+        | "physical_reward"
+        | "action_card"
+      shop_price_audience: "base" | "vip"
+      shop_price_currency: "eur" | "coins"
+      shop_unlock_type: "none" | "level" | "challenge"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2428,6 +2660,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      shop_claim_status: ["pending", "approved", "fulfilled", "rejected", "cancelled"],
+      shop_item_kind: [
+        "coin_pack",
+        "vip_membership",
+        "physical_product",
+        "physical_reward",
+        "action_card",
+      ],
+      shop_price_audience: ["base", "vip"],
+      shop_price_currency: ["eur", "coins"],
+      shop_unlock_type: ["none", "level", "challenge"],
     },
   },
 } as const

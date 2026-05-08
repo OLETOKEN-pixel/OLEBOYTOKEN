@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -8,13 +9,19 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { FooterSection } from '@/components/home/sections/FooterSection';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
+import { useShopCatalog } from '@/hooks/useShopCatalog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
+import type { ShopActionKey, ShopCardViewModel } from '@/lib/shopCatalog';
+import { extractFunctionErrorMessage } from '@/lib/oauth';
+import { redirectToCheckout } from '@/lib/checkoutRedirect';
+import { supabase } from '@/integrations/supabase/client';
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif";
 const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif";
 const FONT_BOLD_OBLIQUE = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial', sans-serif";
-const FONT_EXPANDED = "'Base_Neue_Trial:Expanded', 'Base Neue Trial', sans-serif";
 const FONT_EXPANDED_BOLD = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif";
 const FONT_HEAD = "'Base_Neue_Trial:Expanded_Black_Oblique', 'Base Neue Trial', sans-serif";
 const REWARD_ASSET_VERSION = '?v=3';
@@ -25,7 +32,6 @@ const SHOP_ASSETS = {
   titleOutline: '/figma-assets/shop/title-outline.svg',
   titleTriangles: '/figma-assets/shop/title-triangles.svg',
   searchIcon: '/figma-assets/shop/search-icon.svg',
-  rewardFigure: '/figma-assets/shop/reward-figure.png',
   vipHeroMask: '/figma-assets/shop/vip-hero-mask.svg',
   vipHeroOverlay: '/figma-assets/shop/vip-hero-overlay.svg',
   rewardTrianglesLeft: `/figma-assets/shop/reward-triangles-left.svg${REWARD_ASSET_VERSION}`,
@@ -34,54 +40,16 @@ const SHOP_ASSETS = {
   rewardVectorSmall: `/figma-assets/shop/reward-vector-small.svg${REWARD_ASSET_VERSION}`,
   rewardStarShape: `/figma-assets/shop/reward-star-shape.svg${REWARD_ASSET_VERSION}`,
   arrowStroke: '/figma-assets/figma-arrow-stroke.svg',
-  starShape: '/figma-assets/figma-star-shape.svg',
   mousepad: `/figma-assets/shop/reward-mousepad.png${REWARD_ASSET_VERSION}`,
   walletCoin: '/coin.png',
+  vipIcon: '/showreel/vip-icon.svg',
 };
-
-type ShopCard = {
-  id: string;
-  title: string;
-  keywords: string[];
-  kind: 'reward-figure' | 'price-only' | 'coin-stack';
-  badge: string;
-};
-
-const vipCards: ShopCard[] = Array.from({ length: 5 }, (_, index) => ({
-  id: `vip-${index + 1}`,
-  title: '500',
-  keywords: ['500', 'reward', 'statue', 'coins'],
-  kind: 'reward-figure',
-  badge: '500',
-}));
-
-const REWARD_PRICE = '€9,99';
-
-const BROKEN_EURO_PREFIX = REWARD_PRICE.replace('9,99', '');
-
-const rewardCards: ShopCard[] = [
-  {
-    id: 'reward-price',
-    title: '€9,99',
-    keywords: ['9,99', '9.99', 'reward', 'price'],
-    kind: 'price-only',
-    badge: '€9,99',
-  },
-  ...Array.from({ length: 4 }, (_, index) => ({
-    id: `reward-${index + 1}`,
-    title: 'x100',
-    keywords: ['9,99', '9.99', '100', 'x100', 'coins'],
-    kind: 'coin-stack' as const,
-    badge: '€9,99',
-  })),
-];
 
 const DESKTOP_PAGE_WIDTH = 1920;
 const DESKTOP_PAGE_HEIGHT = 2547;
 const DESKTOP_SHELL_WIDTH = 1532;
 const DESKTOP_CONTENT_LEFT = 42;
 const DESKTOP_CONTENT_WIDTH = 1448;
-const DESKTOP_CARD_X = [0, 303.966, 607.954, 911.94, 1216.078] as const;
 const DESKTOP_FOOTER_TOP = 1910;
 
 const desktopPageStyle: CSSProperties = {
@@ -94,85 +62,12 @@ const desktopPageStyle: CSSProperties = {
 };
 
 function normalizeQuery(value: string) {
-  return value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC').trim().toLowerCase();
+  return value.trim().toLowerCase();
 }
 
-function matchesQuery(card: ShopCard, query: string) {
+function matchesQuery(card: ShopCardViewModel, query: string) {
   if (!query) return true;
-  return [card.title, ...card.keywords].some((value) => value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC').toLowerCase().includes(query));
-}
-
-function displayLabel(value: string) {
-  return value.replaceAll(BROKEN_EURO_PREFIX, '\u20AC');
-}
-
-function BannerDecoration({
-  left,
-  top,
-  width,
-  height,
-  innerWidth,
-  innerHeight,
-  rotation,
-  src,
-  imageInset = 0,
-}: {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-  innerWidth: number;
-  innerHeight: number;
-  rotation: number;
-  src: string;
-  imageInset?: CSSProperties['inset'];
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        left,
-        top,
-        width,
-        height,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        style={{
-          width: innerWidth,
-          height: innerHeight,
-          position: 'relative',
-          flex: '0 0 auto',
-          transform: `rotate(${rotation}deg)`,
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: imageInset,
-            pointerEvents: 'none',
-          }}
-        >
-          <img
-            src={src}
-            alt=""
-            aria-hidden="true"
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return card.searchText.includes(query);
 }
 
 function TitleLockup() {
@@ -258,64 +153,122 @@ function ActionPill({
   onClick: () => void;
   kind: 'policy' | 'wallet';
 }) {
-  const policy = kind === 'policy';
+  const isWallet = kind === 'wallet';
 
   return (
     <button
       type="button"
       onClick={onClick}
       style={{
-        width: policy ? 173 : 191,
+        width: isWallet ? 190 : 173,
         height: 47,
         borderRadius: 16,
-        border: `1px solid ${policy ? 'rgba(255,255,255,0.5)' : '#ff1654'}`,
-        background: policy ? 'rgba(40,40,40,0.8)' : 'rgba(255,22,84,0.2)',
+        border: `1px solid ${isWallet ? '#ff1654' : 'rgba(255,255,255,0.3)'}`,
+        background: isWallet ? 'rgba(255,22,84,0.12)' : '#282828',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 12,
-        cursor: 'pointer',
         color: '#ffffff',
+        fontFamily: FONT_EXPANDED_BOLD,
+        fontSize: 20,
+        lineHeight: '24px',
+        whiteSpace: 'nowrap',
       }}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: '999px',
-          background: '#ffffff',
-          color: 'rgba(40,40,40,0.8)',
-          display: policy ? 'grid' : 'none',
-          placeItems: 'center',
-          fontFamily: FONT_EXPANDED_BOLD,
-          fontSize: 13,
-          lineHeight: 1,
-          flexShrink: 0,
-        }}
-      >
-        i
-      </span>
-      {policy ? null : (
+      {isWallet ? (
         <img
           src={SHOP_ASSETS.walletCoin}
           alt=""
           aria-hidden="true"
           data-wallet-coin="true"
-          style={{ width: 23, height: 23, objectFit: 'contain', display: 'block', flexShrink: 0 }}
+          style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }}
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: '999px',
+            background: '#ffffff',
+            opacity: 0.9,
+            boxShadow: '0 0 0 3px rgba(255,255,255,0.1) inset',
+            display: 'block',
+          }}
         />
       )}
-      <span
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function BannerDecoration({
+  left,
+  top,
+  width,
+  height,
+  innerWidth,
+  innerHeight,
+  rotation,
+  src,
+  imageInset = 0,
+}: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  innerWidth: number;
+  innerHeight: number;
+  rotation: number;
+  src: string;
+  imageInset?: CSSProperties['inset'];
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width,
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
         style={{
-          fontFamily: FONT_EXPANDED_BOLD,
-          fontSize: 24,
-          lineHeight: '29px',
-          whiteSpace: 'nowrap',
+          width: innerWidth,
+          height: innerHeight,
+          position: 'relative',
+          flex: '0 0 auto',
+          transform: `rotate(${rotation}deg)`,
         }}
       >
-        {label}
-      </span>
-    </button>
+        <div
+          style={{
+            position: 'absolute',
+            inset: imageInset,
+            pointerEvents: 'none',
+          }}
+        >
+          <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -347,221 +300,6 @@ function KnowMoreButton({ onClick }: { onClick: () => void }) {
         style={{ width: 15.653, height: 21.071, transform: 'rotate(-90deg)', display: 'block' }}
       />
     </button>
-  );
-}
-
-function FigureCard({ card }: { card: ShopCard }) {
-  return (
-    <div
-      data-shop-card={card.id}
-      style={{
-        width: 226.563,
-        height: 271.875,
-        borderRadius: 17.219,
-        background: '#3a0000',
-        position: 'relative',
-        overflow: 'hidden',
-        flex: '0 0 auto',
-      }}
-    >
-      <img
-        src={SHOP_ASSETS.rewardFigure}
-        alt=""
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 5,
-          top: 9,
-          width: 232.906,
-          height: 232.906,
-          objectFit: 'contain',
-          display: 'block',
-          pointerEvents: 'none',
-        }}
-      />
-
-      <div
-        style={{
-          position: 'absolute',
-          left: 54.36,
-          top: 215.13,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <span
-          aria-hidden="true"
-          style={{
-            width: 24.469,
-            height: 24.469,
-            borderRadius: '999px',
-            background: '#ff1654',
-            boxShadow: '0 0 8px rgba(255,22,84,0.34)',
-            display: 'block',
-            flexShrink: 0,
-          }}
-        />
-        <span
-          style={{
-            fontFamily: FONT_EXPANDED_BOLD,
-            fontSize: 30.908,
-            lineHeight: '37px',
-            color: '#ffffff',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {displayLabel(card.badge)}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function PriceOnlyCard({ card }: { card: ShopCard }) {
-  return (
-    <div
-      data-shop-card={card.id}
-      style={{
-        width: 226.563,
-        height: 271.875,
-        borderRadius: 17.219,
-        background: '#3a0000',
-        position: 'relative',
-        overflow: 'hidden',
-        flex: '0 0 auto',
-      }}
-    >
-      <span
-        style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: 21.2,
-          transform: 'translateX(-50%)',
-          fontFamily: FONT_EXPANDED_BOLD,
-          fontSize: 30.908,
-          lineHeight: '37px',
-          color: '#ffffff',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {displayLabel(card.badge)}
-      </span>
-    </div>
-  );
-}
-
-function CoinStackCard({ card }: { card: ShopCard }) {
-  return (
-    <div
-      data-shop-card={card.id}
-      style={{
-        width: 226.563,
-        height: 271.875,
-        borderRadius: 17.219,
-        background: '#3a0000',
-        position: 'relative',
-        overflow: 'hidden',
-        flex: '0 0 auto',
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 53,
-          top: 65,
-          width: 88,
-          height: 88,
-          borderRadius: '999px',
-          background: '#ff1654',
-          boxShadow: '0 0 18px rgba(255,22,84,0.34)',
-        }}
-      />
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 131,
-          top: 40,
-          width: 41,
-          height: 41,
-          borderRadius: '999px',
-          background: '#ff4e7d',
-        }}
-      />
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 105,
-          top: 41,
-          width: 21,
-          height: 21,
-          borderRadius: '999px',
-          background: '#ff4e7d',
-        }}
-      />
-      <span
-        style={{
-          position: 'absolute',
-          left: 120,
-          top: 127,
-          transform: 'translateX(-50%)',
-          fontFamily: FONT_BOLD_OBLIQUE,
-          fontSize: 30.908,
-          lineHeight: '37px',
-          color: '#ffffff',
-          backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        x100
-      </span>
-      <span
-        style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: 21.2,
-          transform: 'translateX(-50%)',
-          fontFamily: FONT_EXPANDED_BOLD,
-          fontSize: 30.908,
-          lineHeight: '37px',
-          color: '#ffffff',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {displayLabel(card.badge)}
-      </span>
-    </div>
-  );
-}
-
-function CardRow({ cards }: { cards: ShopCard[] }) {
-  return (
-    <div style={{ position: 'relative', width: DESKTOP_CONTENT_WIDTH, height: 271.875 }}>
-      {cards.slice(0, DESKTOP_CARD_X.length).map((card, index) => (
-        <div
-          key={card.id}
-          style={{
-            position: 'absolute',
-            left: DESKTOP_CARD_X[index],
-            top: 0,
-          }}
-        >
-          {card.kind === 'reward-figure' ? (
-            <FigureCard card={card} />
-          ) : card.kind === 'price-only' ? (
-            <PriceOnlyCard card={card} />
-          ) : (
-            <CoinStackCard card={card} />
-          )}
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -806,76 +544,6 @@ function DesktopHeroRewards({ onKnowMore }: { onKnowMore: () => void }) {
   );
 }
 
-function DesktopShopContent() {
-  const navigate = useNavigate();
-  const { openWalletPurchase } = useWalletPurchase();
-  const rewardRowRef = useRef<HTMLDivElement | null>(null);
-  const [search, setSearch] = useState('');
-
-  const query = normalizeQuery(search);
-  const filteredVipCards = useMemo(() => vipCards.filter((card) => matchesQuery(card, query)), [query]);
-  const filteredRewardCards = useMemo(() => rewardCards.filter((card) => matchesQuery(card, query)), [query]);
-
-  return (
-    <div data-testid="shop-page" style={desktopPageStyle}>
-      <img
-        src={SHOP_ASSETS.topNeon}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 146, objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
-      />
-
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          width: DESKTOP_SHELL_WIDTH,
-          height: DESKTOP_FOOTER_TOP,
-          transform: 'translateX(-50%)',
-          zIndex: 2,
-        }}
-      >
-        <div style={{ position: 'absolute', left: -29, top: 156 }}>
-          <TitleLockup />
-        </div>
-
-        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 396 }}>
-          <SearchBar value={search} onChange={(event) => setSearch(event.target.value)} />
-        </div>
-
-        <div style={{ position: 'absolute', left: 1116.09, top: 395 }}>
-          <ActionPill kind="policy" label="POLICY" onClick={() => navigate('/privacy')} />
-        </div>
-
-        <div style={{ position: 'absolute', left: 1299.078, top: 395 }}>
-          <ActionPill kind="wallet" label="WALLET" onClick={() => openWalletPurchase('coins')} />
-        </div>
-
-        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 496 }}>
-          <DesktopHeroVip onKnowMore={() => openWalletPurchase('vip')} />
-        </div>
-
-        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 874 }}>
-          <CardRow cards={filteredVipCards} />
-        </div>
-
-        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1233 }}>
-          <DesktopHeroRewards onKnowMore={() => rewardRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })} />
-        </div>
-
-        <div ref={rewardRowRef} style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1546 }}>
-          <CardRow cards={filteredRewardCards} />
-        </div>
-      </div>
-
-      <div style={{ position: 'absolute', left: 0, top: DESKTOP_FOOTER_TOP, width: '100%' }}>
-        <FooterSection />
-      </div>
-    </div>
-  );
-}
-
 function MobileHero({
   title,
   subtitle,
@@ -906,10 +574,12 @@ function MobileHero({
           style={{ position: 'absolute', right: -32, top: -18, width: 290, height: 188, opacity: 0.7, pointerEvents: 'none' }}
         />
       ) : (
-        <>
-          <img src={SHOP_ASSETS.starShape} alt="" aria-hidden="true" style={{ position: 'absolute', right: 36, top: -18, width: 136, height: 96, opacity: 0.72, pointerEvents: 'none' }} />
-          <img src={SHOP_ASSETS.mousepad} alt="" aria-hidden="true" style={{ position: 'absolute', right: 28, top: 28, width: 92, height: 78, objectFit: 'contain', pointerEvents: 'none' }} />
-        </>
+        <img
+          src={SHOP_ASSETS.mousepad}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', right: 28, top: 28, width: 92, height: 78, objectFit: 'contain', pointerEvents: 'none' }}
+        />
       )}
 
       <div style={{ position: 'relative', zIndex: 2 }}>
@@ -957,65 +627,202 @@ function MobileHero({
   );
 }
 
-function MobileCard({ card }: { card: ShopCard }) {
-  const isFigure = card.kind === 'reward-figure';
-  const isPriceOnly = card.kind === 'price-only';
+function CardEyebrow({ card }: { card: ShopCardViewModel }) {
+  const label = card.kind === 'coin_pack'
+    ? 'COINS'
+    : card.kind === 'vip_membership'
+      ? 'VIP'
+      : card.kind === 'physical_reward'
+        ? 'UNLOCK'
+        : card.kind === 'physical_product'
+          ? 'MERCH'
+          : 'ACTION';
 
   return (
-    <div
+    <span
       style={{
-        width: 158,
-        height: 194,
-        borderRadius: 18,
+        position: 'absolute',
+        left: 14,
+        top: 12,
+        borderRadius: 999,
+        border: '1px solid rgba(255,255,255,0.12)',
+        background: 'rgba(0,0,0,0.22)',
+        padding: '5px 10px',
+        fontFamily: FONT_EXPANDED_BOLD,
+        fontSize: 11,
+        lineHeight: '13px',
+        letterSpacing: '0.14em',
+        color: '#ff8ead',
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function CatalogCard({
+  card,
+  compact = false,
+  onAction,
+  disabled,
+}: {
+  card: ShopCardViewModel;
+  compact?: boolean;
+  onAction: (card: ShopCardViewModel) => void;
+  disabled?: boolean;
+}) {
+  const width = compact ? 158 : 226.563;
+  const height = compact ? 194 : 271.875;
+  const badgeBottom = compact ? 18 : 24;
+  const imageSize = compact ? 88 : 124;
+  const titleSize = compact ? 18 : 22;
+  const valueSize = compact ? 20 : 30;
+  const displayValue = card.unlockLabel ?? card.priceLabel ?? card.badgeLabel ?? card.ctaLabel;
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onAction(card)}
+      data-shop-card={card.id}
+      data-shop-card-kind={card.kind}
+      data-shop-claim-status={card.claimStatus ?? ''}
+      style={{
+        width,
+        height,
+        borderRadius: compact ? 18 : 17.219,
         background: '#3a0000',
         position: 'relative',
         overflow: 'hidden',
         flex: '0 0 auto',
+        border: '1px solid rgba(255,255,255,0.08)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        padding: 0,
+        opacity: disabled ? 0.65 : 1,
       }}
     >
-      {isFigure ? (
-        <img src={SHOP_ASSETS.rewardFigure} alt="" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '10px 8px 28px' }} />
-      ) : isPriceOnly ? null : (
-        <>
-          <span aria-hidden="true" style={{ position: 'absolute', left: 34, top: 50, width: 62, height: 62, borderRadius: '999px', background: '#ff1654' }} />
-          <span aria-hidden="true" style={{ position: 'absolute', left: 90, top: 34, width: 29, height: 29, borderRadius: '999px', background: '#ff4e7d' }} />
-          <span aria-hidden="true" style={{ position: 'absolute', left: 71, top: 35, width: 15, height: 15, borderRadius: '999px', background: '#ff4e7d' }} />
-          <span
-            style={{
-              position: 'absolute',
-              left: 77,
-              top: 98,
-              transform: 'translateX(-50%)',
-              fontFamily: FONT_BOLD_OBLIQUE,
-              fontSize: 22,
-              lineHeight: '26px',
-              backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            x100
-          </span>
-        </>
-      )}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(255,22,84,0.18) 0%, rgba(58,0,0,0.92) 100%)',
+        }}
+      />
+      <CardEyebrow card={card} />
 
       <div
         style={{
           position: 'absolute',
           left: '50%',
-          bottom: 16,
+          top: compact ? 52 : 60,
+          width: imageSize,
+          height: imageSize,
           transform: 'translateX(-50%)',
           display: 'flex',
           alignItems: 'center',
-          gap: isFigure ? 6 : 0,
+          justifyContent: 'center',
         }}
       >
-        {isFigure ? <span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: '999px', background: '#ff1654', display: 'block' }} /> : null}
-        <span style={{ fontFamily: FONT_EXPANDED_BOLD, fontSize: 26, lineHeight: '31px', color: '#ffffff', whiteSpace: 'nowrap' }}>
-          {displayLabel(card.badge)}
-        </span>
+        <img
+          src={card.image}
+          alt={card.title}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            filter: card.kind === 'action_card' ? 'drop-shadow(0 0 14px rgba(255,22,84,0.3))' : 'none',
+          }}
+        />
       </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          left: 16,
+          right: 16,
+          bottom: badgeBottom,
+          display: 'grid',
+          gap: compact ? 6 : 8,
+          textAlign: 'left',
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: 0,
+              fontFamily: FONT_EXPANDED_BOLD,
+              fontSize: titleSize,
+              lineHeight: compact ? '20px' : '24px',
+              color: '#ffffff',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {card.title}
+          </p>
+          {card.subtitle ? (
+            <p
+              style={{
+                margin: compact ? '4px 0 0' : '2px 0 0',
+                fontFamily: FONT_REGULAR,
+                fontSize: compact ? 12 : 14,
+                lineHeight: compact ? '14px' : '18px',
+                color: 'rgba(255,255,255,0.64)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {card.subtitle}
+            </p>
+          ) : null}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {card.kind === 'coin_pack' || card.kind === 'vip_membership' ? (
+            <img src={SHOP_ASSETS.walletCoin} alt="" aria-hidden="true" style={{ width: compact ? 18 : 22, height: compact ? 18 : 22, objectFit: 'contain' }} />
+          ) : null}
+          <span
+            style={{
+              fontFamily: card.kind === 'physical_reward' ? FONT_BOLD_OBLIQUE : FONT_EXPANDED_BOLD,
+              fontSize: valueSize,
+              lineHeight: compact ? '22px' : '37px',
+              color: '#ffffff',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {displayValue}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function CardRow({
+  cards,
+  onAction,
+  compact = false,
+  disabled,
+}: {
+  cards: ShopCardViewModel[];
+  onAction: (card: ShopCardViewModel) => void;
+  compact?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: compact ? 14 : 24,
+        flexWrap: compact ? 'nowrap' : 'wrap',
+      }}
+    >
+      {cards.map((card) => (
+        <CatalogCard key={card.slotId} card={card} compact={compact} onAction={onAction} disabled={disabled} />
+      ))}
     </div>
   );
 }
@@ -1097,15 +904,236 @@ function MobileFooter() {
   );
 }
 
-function MobileShopContent() {
+function useShopCardActions({
+  claimReward,
+}: {
+  claimReward: (itemId: string) => Promise<{ success?: boolean; error?: string; status?: string; claim_id?: string } | null>;
+}) {
   const navigate = useNavigate();
+  const { user, refreshWallet } = useAuth();
+  const { toast } = useToast();
   const { openWalletPurchase } = useWalletPurchase();
+
+  const runActionKey = useCallback((actionKey: ShopActionKey | null) => {
+    switch (actionKey) {
+      case 'open_wallet_coins':
+        openWalletPurchase('coins');
+        return;
+      case 'open_wallet_vip':
+        openWalletPurchase('vip');
+        return;
+      case 'open_challenges':
+        navigate('/challenges');
+        return;
+      case 'open_matches':
+        navigate('/matches');
+        return;
+      case 'open_teams':
+        navigate('/teams');
+        return;
+      case 'open_shop':
+        navigate('/shop');
+        return;
+      default:
+        return;
+    }
+  }, [navigate, openWalletPurchase]);
+
+  const startCheckout = useCallback(async (itemId: string) => {
+    const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
+      body: { itemId },
+    });
+
+    if (error) throw error;
+
+    const checkoutUrl = (data as { url?: string } | null)?.url;
+    if (!checkoutUrl) throw new Error('Stripe checkout URL missing.');
+
+    redirectToCheckout(checkoutUrl);
+  }, []);
+
+  const purchaseVip = useCallback(async (itemId: string) => {
+    const { data, error } = await supabase.rpc('purchase_shop_wallet_item', {
+      p_item_id: itemId,
+    });
+
+    if (error) throw error;
+
+    const result = data as { success?: boolean; error?: string } | null;
+    if (!result?.success) {
+      throw new Error(result?.error || 'Unable to activate VIP.');
+    }
+
+    await refreshWallet();
+    toast({
+      title: 'VIP updated',
+      description: 'Your VIP membership has been refreshed.',
+    });
+  }, [refreshWallet, toast]);
+
+  const handleCardAction = useCallback(async (card: ShopCardViewModel) => {
+    try {
+      if (card.kind === 'action_card') {
+        runActionKey(card.actionKey);
+        return;
+      }
+
+      if ((card.kind === 'coin_pack' || card.kind === 'physical_product') && !user) {
+        navigate('/auth');
+        return;
+      }
+
+      if (card.kind === 'coin_pack' || card.kind === 'physical_product') {
+        await startCheckout(card.id);
+        return;
+      }
+
+      if (card.kind === 'vip_membership') {
+        if (!user) {
+          navigate('/auth');
+          return;
+        }
+        await purchaseVip(card.id);
+        return;
+      }
+
+      if (card.kind === 'physical_reward') {
+        if (!user) {
+          navigate('/auth');
+          return;
+        }
+        if (card.isLocked || card.isClaimed) {
+          return;
+        }
+
+        const result = await claimReward(card.id);
+        if (!result?.success) {
+          throw new Error(result?.error || 'Unable to claim reward.');
+        }
+
+        toast({
+          title: 'Reward claimed',
+          description: `${card.title} is now pending admin review.`,
+        });
+      }
+    } catch (error) {
+      const message = await extractFunctionErrorMessage(error, 'Unable to complete this shop action.');
+      toast({
+        title: 'Shop error',
+        description: message,
+        variant: 'destructive',
+      });
+    }
+  }, [claimReward, navigate, purchaseVip, runActionKey, startCheckout, toast, user]);
+
+  return {
+    handleCardAction,
+  };
+}
+
+function DesktopShopContent() {
+  const navigate = useNavigate();
   const rewardRowRef = useRef<HTMLDivElement | null>(null);
+  const { openWalletPurchase } = useWalletPurchase();
+  const { featuredCards, unlockCards, catalog, claimReward, isClaiming } = useShopCatalog();
+  const { handleCardAction } = useShopCardActions({ claimReward });
   const [search, setSearch] = useState('');
 
   const query = normalizeQuery(search);
-  const filteredVipCards = useMemo(() => vipCards.filter((card) => matchesQuery(card, query)), [query]);
-  const filteredRewardCards = useMemo(() => rewardCards.filter((card) => matchesQuery(card, query)), [query]);
+  const filteredFeaturedCards = useMemo(() => featuredCards.filter((card) => matchesQuery(card, query)), [featuredCards, query]);
+  const filteredUnlockCards = useMemo(() => unlockCards.filter((card) => matchesQuery(card, query)), [unlockCards, query]);
+
+  return (
+    <div data-testid="shop-page" style={desktopPageStyle}>
+      <img
+        src={SHOP_ASSETS.topNeon}
+        alt=""
+        aria-hidden="true"
+        style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 146, objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
+      />
+
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          width: DESKTOP_SHELL_WIDTH,
+          height: DESKTOP_FOOTER_TOP,
+          transform: 'translateX(-50%)',
+          zIndex: 2,
+        }}
+      >
+        <div style={{ position: 'absolute', left: -29, top: 156 }}>
+          <TitleLockup />
+        </div>
+
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 396 }}>
+          <SearchBar value={search} onChange={(event) => setSearch(event.target.value)} />
+        </div>
+
+        <div style={{ position: 'absolute', left: 1116.09, top: 395 }}>
+          <ActionPill kind="policy" label="POLICY" onClick={() => navigate('/privacy')} />
+        </div>
+
+        <div style={{ position: 'absolute', left: 1299.078, top: 395 }}>
+          <ActionPill kind="wallet" label="WALLET" onClick={() => openWalletPurchase('coins')} />
+        </div>
+
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 496 }}>
+          <DesktopHeroVip onKnowMore={() => openWalletPurchase('vip')} />
+        </div>
+
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 874, width: DESKTOP_CONTENT_WIDTH }}>
+          <CardRow cards={filteredFeaturedCards} onAction={handleCardAction} />
+        </div>
+
+        <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1233 }}>
+          <DesktopHeroRewards onKnowMore={() => rewardRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })} />
+        </div>
+
+        <div ref={rewardRowRef} style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1546, width: DESKTOP_CONTENT_WIDTH }}>
+          <CardRow cards={filteredUnlockCards} onAction={handleCardAction} disabled={isClaiming} />
+        </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            left: DESKTOP_CONTENT_LEFT,
+            top: 1850,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 20,
+            color: 'rgba(255,255,255,0.66)',
+            fontFamily: FONT_REGULAR,
+            fontSize: 18,
+          }}
+        >
+          <span>LIVE VIEWER</span>
+          <span style={{ color: '#ffffff', fontFamily: FONT_EXPANDED_BOLD }}>
+            {catalog.viewer.isVip ? 'VIP' : 'BASE'}
+          </span>
+          <span>LVL {catalog.viewer.level}</span>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', left: 0, top: DESKTOP_FOOTER_TOP, width: '100%' }}>
+        <FooterSection />
+      </div>
+    </div>
+  );
+}
+
+function MobileShopContent() {
+  const navigate = useNavigate();
+  const rewardRowRef = useRef<HTMLDivElement | null>(null);
+  const { openWalletPurchase } = useWalletPurchase();
+  const { featuredCards, unlockCards, claimReward, isClaiming } = useShopCatalog();
+  const { handleCardAction } = useShopCardActions({ claimReward });
+  const [search, setSearch] = useState('');
+
+  const query = normalizeQuery(search);
+  const filteredFeaturedCards = useMemo(() => featuredCards.filter((card) => matchesQuery(card, query)), [featuredCards, query]);
+  const filteredUnlockCards = useMemo(() => unlockCards.filter((card) => matchesQuery(card, query)), [unlockCards, query]);
 
   return (
     <div data-testid="shop-page" style={{ minHeight: '100vh', background: '#0f0404', color: '#ffffff', overflowX: 'hidden' }}>
@@ -1132,19 +1160,15 @@ function MobileShopContent() {
           </div>
 
           <div style={{ display: 'flex', gap: 14, overflowX: 'auto', padding: '22px 0 6px' }}>
-            {filteredVipCards.map((card) => (
-              <MobileCard key={card.id} card={card} />
-            ))}
+            <CardRow cards={filteredFeaturedCards} compact onAction={handleCardAction} />
           </div>
 
           <div style={{ marginTop: 28 }}>
             <MobileHero title="REACH LVL.100!" subtitle="FOR CRAZY REWARDS..." onKnowMore={() => rewardRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
           </div>
 
-          <div ref={rewardRowRef} style={{ display: 'flex', gap: 14, overflowX: 'auto', padding: '22px 0 6px' }}>
-            {filteredRewardCards.map((card) => (
-              <MobileCard key={card.id} card={card} />
-            ))}
+          <div ref={rewardRowRef} style={{ overflowX: 'auto', padding: '22px 0 6px' }}>
+            <CardRow cards={filteredUnlockCards} compact onAction={handleCardAction} disabled={isClaiming} />
           </div>
         </div>
       </div>
