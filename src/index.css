@@ -505,12 +505,11 @@
     [role="button"],
     [tabindex] {
       transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
     }
 
     *:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px hsl(0 0% 4%), 0 0 0 4px rgba(255, 200, 5, 0.4);
-      border-radius: var(--radius);
     }
 
     .match-chat-root :is(input, button, a):focus,
