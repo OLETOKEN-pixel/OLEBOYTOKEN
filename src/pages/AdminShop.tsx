@@ -470,6 +470,8 @@ export default function AdminShop() {
     setItemActive,
     publishCatalog,
     hasUnpublishedChanges,
+    workspaceSource,
+    adminBackendAvailable,
     savingItem,
     savingSlot,
     togglingItem,
@@ -846,6 +848,7 @@ export default function AdminShop() {
           <Button
             variant="outline"
             onClick={() => openNewCardEditor('shop.featured_cards')}
+            disabled={!adminBackendAvailable}
             className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -854,6 +857,7 @@ export default function AdminShop() {
           <Button
             variant="outline"
             onClick={() => openNewCardEditor('shop.unlock_cards')}
+            disabled={!adminBackendAvailable}
             className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
           >
             <ShieldCheck className="mr-2 h-4 w-4" />
@@ -861,7 +865,7 @@ export default function AdminShop() {
           </Button>
           <Button
             onClick={handlePublish}
-            disabled={publishingCatalog || !hasUnpublishedChanges}
+            disabled={!adminBackendAvailable || publishingCatalog || !hasUnpublishedChanges}
             className="h-11 bg-[#ff1654] text-white hover:bg-[#ff1654]/90"
           >
             {publishingCatalog ? 'Publishing...' : 'Publish shop'}
@@ -886,10 +890,17 @@ export default function AdminShop() {
               <p className={hasUnpublishedChanges ? 'text-[#ff8ead]' : 'text-[#72f1b8]'}>
                 {isBootstrappingInitialDraft
                   ? 'Syncing the current shop cards into the draft workspace...'
+                  : workspaceSource === 'public_catalog_projection'
+                    ? 'Showing the current public shop cards because the admin draft backend is not returning data yet.'
                   : hasUnpublishedChanges
                     ? 'Unpublished changes detected in draft.'
                     : 'Draft and live shop are in sync.'}
               </p>
+              {!adminBackendAvailable ? (
+                <p className="text-sm leading-6 text-[#ffb4c7]">
+                  Editing is temporarily disabled until the admin shop workspace RPCs are available in this environment.
+                </p>
+              ) : null}
               <p>Click any card in the studio rows to edit the exact frontend UI, copy, pricing, images, and reward state.</p>
               <p>If a row grows past five cards, the live page and the preview both switch to the marquee rail used on the logged-in home shop section.</p>
             </div>
@@ -919,7 +930,7 @@ export default function AdminShop() {
                         Figma-accurate desktop cards. Click a card to edit content and live preview UI.
                       </p>
                     </div>
-                    <Button variant="outline" onClick={() => openNewCardEditor('shop.featured_cards')} className={ADMIN_OUTLINE_BUTTON_CLASS}>
+                    <Button variant="outline" onClick={() => openNewCardEditor('shop.featured_cards')} disabled={!adminBackendAvailable} className={ADMIN_OUTLINE_BUTTON_CLASS}>
                       Add card
                     </Button>
                   </div>
@@ -946,7 +957,7 @@ export default function AdminShop() {
                         Physical rewards only. The template stays reward-focused while matching the shared card system.
                       </p>
                     </div>
-                    <Button variant="outline" onClick={() => openNewCardEditor('shop.unlock_cards')} className={ADMIN_OUTLINE_BUTTON_CLASS}>
+                    <Button variant="outline" onClick={() => openNewCardEditor('shop.unlock_cards')} disabled={!adminBackendAvailable} className={ADMIN_OUTLINE_BUTTON_CLASS}>
                       Add reward
                     </Button>
                   </div>

@@ -239,6 +239,8 @@ vi.mock('@/hooks/useAdminShopCatalog', () => ({
     setItemActive: mocks.setItemActive,
     publishCatalog: mocks.publishCatalog,
     hasUnpublishedChanges: true,
+    workspaceSource: 'workspace',
+    adminBackendAvailable: true,
     savingItem: false,
     savingSlot: false,
     togglingItem: false,

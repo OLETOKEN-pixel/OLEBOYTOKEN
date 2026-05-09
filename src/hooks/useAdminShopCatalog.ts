@@ -5,7 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   createFallbackAdminShopSeed,
   createDefaultShopPresentation,
+  normalizeShopCatalogPayload,
   type ShopCatalogItem,
+  type ShopCatalogPayload,
   type ShopSurfaceCard,
   type ShopCardPresentation,
   type ShopCardTemplateKey,
@@ -532,6 +534,107 @@ async function bootstrapDraftFromFallbackSeed() {
   }
 }
 
+function createWorkspaceProjectionFromCatalog(
+  catalog: ShopCatalogPayload,
+  workspace: ShopWorkspace,
+): AdminShopWorkspaceSnapshot {
+  const itemMap = new Map<string, AdminShopItemRecord>();
+  const projectedCards = [...catalog.featuredCards, ...catalog.unlockCards];
+
+  const registerItem = (item: ShopCatalogItem) => {
+    if (itemMap.has(item.id)) return;
+
+    itemMap.set(item.id, {
+      id: item.id,
+      slug: item.slug,
+      kind: item.kind,
+      title: item.title,
+      subtitle: item.subtitle,
+      description: item.description,
+      image_path: item.imagePath,
+      cta_label: item.ctaLabel,
+      is_active: true,
+      action_key: item.actionKey,
+      coin_amount: item.coinAmount,
+      vip_duration_days: item.vipDurationDays,
+      metadata: item.metadata,
+      created_at: '',
+      updated_at: '',
+      prices: item.effectivePrice
+        ? [
+            {
+              id: `${item.id}-price-${item.effectivePrice.audience}`,
+              item_id: item.id,
+              audience: item.effectivePrice.audience,
+              currency: item.effectivePrice.currency,
+              amount_minor: item.effectivePrice.amountMinor,
+              compare_at_minor: item.effectivePrice.compareAtMinor,
+              is_active: true,
+              created_at: '',
+              updated_at: '',
+            },
+          ]
+        : [],
+      unlockRule: item.kind === 'physical_reward'
+        ? {
+            item_id: item.id,
+            unlock_type: item.unlockRule.unlockType,
+            level_required: item.unlockRule.levelRequired,
+            challenge_id: item.unlockRule.challengeId,
+            claim_once: item.unlockRule.claimOnce,
+            created_at: '',
+            updated_at: '',
+          }
+        : null,
+    });
+  };
+
+  catalog.coinPacks.forEach(registerItem);
+  if (catalog.vipOffer) registerItem(catalog.vipOffer);
+  projectedCards.forEach((card) => registerItem(card.item));
+
+  const slots = projectedCards.map((card) => ({
+    id: card.slotId,
+    surface_key: card.surfaceKey,
+    sort_order: card.sortOrder,
+    item_id: card.item.id,
+    card_variant: card.cardVariant,
+    title_override: card.title === card.item.title ? '' : card.title,
+    subtitle_override: card.subtitle === card.item.subtitle ? '' : card.subtitle,
+    cta_label_override: card.ctaLabel === card.item.ctaLabel ? '' : card.ctaLabel,
+    is_active: true,
+    created_at: '',
+    updated_at: '',
+  }));
+
+  const presentations = projectedCards.map((card) => ({
+    id: `${workspace}-${card.slotId}`,
+    slot_id: card.slotId,
+    workspace,
+    template_key: card.presentation.templateKey,
+    theme_key: card.presentation.themeKey,
+    eyebrow_text: card.presentation.eyebrowText,
+    supporting_text: card.presentation.supportingText,
+    primary_image_path: card.presentation.primaryImagePath,
+    secondary_image_path: card.presentation.secondaryImagePath,
+    show_badge: card.presentation.showBadge,
+    show_subtitle: card.presentation.showSubtitle,
+    show_supporting_text: card.presentation.showSupportingText,
+    show_secondary_image: card.presentation.showSecondaryImage,
+    metadata: card.presentation.metadata,
+    created_at: '',
+    updated_at: '',
+  }));
+
+  return {
+    workspace,
+    items: Array.from(itemMap.values()),
+    slots,
+    presentations,
+    challenges: [],
+  };
+}
+
 export function useAdminShopCatalog() {
   const { isAdmin } = useAdminStatus();
   const queryClient = useQueryClient();
@@ -540,48 +643,99 @@ export function useAdminShopCatalog() {
     queryKey: ['admin-shop-workspaces'],
     enabled: isAdmin,
     queryFn: async () => {
-      const [draftRes, liveRes] = await Promise.all([
-        supabase.rpc('admin_get_shop_workspace', { p_workspace: 'draft' }),
-        supabase.rpc('admin_get_shop_workspace', { p_workspace: 'live' }),
-      ]);
-
-      if (draftRes.error) throw draftRes.error;
-      if (liveRes.error) throw liveRes.error;
-
-      const draftPayload = draftRes.data as { success?: boolean; error?: string } | null;
-      const livePayload = liveRes.data as { success?: boolean; error?: string } | null;
-
-      if (!draftPayload || draftPayload.success === false) {
-        throw new Error(draftPayload?.error || 'Unable to load draft shop workspace.');
-      }
-      if (!livePayload || livePayload.success === false) {
-        throw new Error(livePayload?.error || 'Unable to load live shop workspace.');
-      }
-
-      let draft = normalizeWorkspaceSnapshot(draftPayload, 'draft');
-      const live = normalizeWorkspaceSnapshot(livePayload, 'live');
-
-      if (draft.items.length === 0 && draft.slots.length === 0) {
-        if (live.slots.length > 0) {
-          await bootstrapDraftFromLiveSnapshot(live);
-        } else {
-          await bootstrapDraftFromFallbackSeed();
-        }
-
-        const refreshedDraftRes = await supabase.rpc('admin_get_shop_workspace', { p_workspace: 'draft' });
-        if (refreshedDraftRes.error) throw refreshedDraftRes.error;
-        const refreshedDraftPayload = refreshedDraftRes.data as { success?: boolean; error?: string } | null;
-        if (!refreshedDraftPayload || refreshedDraftPayload.success === false) {
-          throw new Error(refreshedDraftPayload?.error || 'Unable to refresh draft shop workspace after sync.');
-        }
-
-        draft = normalizeWorkspaceSnapshot(refreshedDraftPayload, 'draft');
-      }
-
-      return {
-        draft,
-        live,
+      const loadPublicProjection = async () => {
+        const { data, error } = await supabase.rpc('get_shop_catalog');
+        if (error) throw error;
+        const catalog = normalizeShopCatalogPayload(data);
+        const projection = createWorkspaceProjectionFromCatalog(catalog, 'draft');
+        return {
+          draft: projection,
+          live: createWorkspaceProjectionFromCatalog(catalog, 'live'),
+          workspaceSource: 'public_catalog_projection' as const,
+          adminBackendAvailable: false,
+        };
       };
+
+      try {
+        const [draftRes, liveRes] = await Promise.all([
+          supabase.rpc('admin_get_shop_workspace', { p_workspace: 'draft' }),
+          supabase.rpc('admin_get_shop_workspace', { p_workspace: 'live' }),
+        ]);
+
+        if (draftRes.error) throw draftRes.error;
+        if (liveRes.error) throw liveRes.error;
+
+        const draftPayload = draftRes.data as { success?: boolean; error?: string } | null;
+        const livePayload = liveRes.data as { success?: boolean; error?: string } | null;
+
+        if (!draftPayload || draftPayload.success === false) {
+          throw new Error(draftPayload?.error || 'Unable to load draft shop workspace.');
+        }
+        if (!livePayload || livePayload.success === false) {
+          throw new Error(livePayload?.error || 'Unable to load live shop workspace.');
+        }
+
+        let draft = normalizeWorkspaceSnapshot(draftPayload, 'draft');
+        let live = normalizeWorkspaceSnapshot(livePayload, 'live');
+
+        if (draft.items.length === 0 && draft.slots.length === 0) {
+          try {
+            if (live.slots.length > 0) {
+              await bootstrapDraftFromLiveSnapshot(live);
+            } else {
+              await bootstrapDraftFromFallbackSeed();
+            }
+
+            const refreshedDraftRes = await supabase.rpc('admin_get_shop_workspace', { p_workspace: 'draft' });
+            if (refreshedDraftRes.error) throw refreshedDraftRes.error;
+            const refreshedDraftPayload = refreshedDraftRes.data as { success?: boolean; error?: string } | null;
+            if (!refreshedDraftPayload || refreshedDraftPayload.success === false) {
+              throw new Error(refreshedDraftPayload?.error || 'Unable to refresh draft shop workspace after sync.');
+            }
+
+            draft = normalizeWorkspaceSnapshot(refreshedDraftPayload, 'draft');
+          } catch (seedError) {
+            console.error('Unable to bootstrap admin shop draft from current shop cards:', seedError);
+            return loadPublicProjection();
+          }
+        }
+
+        if (draft.items.length === 0 && live.items.length === 0) {
+          return loadPublicProjection();
+        }
+
+        if (draft.items.length === 0 && live.items.length > 0) {
+          draft = {
+            ...live,
+            workspace: 'draft',
+            presentations: live.presentations.map((presentation) => ({
+              ...presentation,
+              workspace: 'draft',
+            })),
+          };
+        }
+
+        if (live.items.length === 0 && draft.items.length > 0) {
+          live = {
+            ...draft,
+            workspace: 'live',
+            presentations: draft.presentations.map((presentation) => ({
+              ...presentation,
+              workspace: 'live',
+            })),
+          };
+        }
+
+        return {
+          draft,
+          live,
+          workspaceSource: 'workspace' as const,
+          adminBackendAvailable: true,
+        };
+      } catch (error) {
+        console.error('Falling back to public shop projection for admin workspace:', error);
+        return loadPublicProjection();
+      }
     },
     staleTime: 5_000,
     refetchOnWindowFocus: false,
@@ -683,6 +837,8 @@ export function useAdminShopCatalog() {
     liveItems: live.items,
     liveSlots: live.slots,
     livePresentations: live.presentations,
+    workspaceSource: query.data?.workspaceSource ?? 'workspace',
+    adminBackendAvailable: query.data?.adminBackendAvailable ?? true,
     hasUnpublishedChanges,
     saveItem: saveItem.mutateAsync,
     saveSlot: saveSlot.mutateAsync,
