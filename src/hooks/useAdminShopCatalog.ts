@@ -2,6 +2,15 @@ import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  createFallbackAdminShopSeed,
+  createDefaultShopPresentation,
+  type ShopCatalogItem,
+  type ShopSurfaceCard,
+  type ShopCardPresentation,
+  type ShopCardTemplateKey,
+  type ShopPrice,
+} from '@/lib/shopCatalog';
 import type {
   ShopActionKey,
   ShopCardVariant,
@@ -112,6 +121,8 @@ interface AdminShopWorkspaceSnapshot {
   presentations: AdminShopPresentationRecord[];
   challenges: AdminShopChallengeRecord[];
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -297,6 +308,230 @@ function stableWorkspaceHash(snapshot: AdminShopWorkspaceSnapshot) {
   });
 }
 
+function isUuid(value: string | null | undefined) {
+  return Boolean(value && UUID_PATTERN.test(value));
+}
+
+function toPricePayload(price: ShopPrice | AdminShopPriceRecord) {
+  return {
+    audience: price.audience,
+    currency: price.currency,
+    amount_minor: 'amountMinor' in price ? price.amountMinor : price.amount_minor,
+    compare_at_minor: 'compareAtMinor' in price ? price.compareAtMinor : price.compare_at_minor,
+    is_active: 'is_active' in price ? price.is_active : true,
+  };
+}
+
+function toUnlockRulePayload(item: ShopCatalogItem | AdminShopItemRecord) {
+  const unlockRule = 'unlockRule' in item ? item.unlockRule : item.unlockRule;
+  if (!unlockRule || item.kind !== 'physical_reward') return undefined;
+
+  return {
+    unlock_type: 'unlockType' in unlockRule ? unlockRule.unlockType : unlockRule.unlock_type,
+    level_required: 'levelRequired' in unlockRule ? unlockRule.levelRequired : unlockRule.level_required,
+    challenge_id: 'challengeId' in unlockRule ? unlockRule.challengeId : unlockRule.challenge_id,
+    claim_once: 'claimOnce' in unlockRule ? unlockRule.claimOnce : unlockRule.claim_once,
+  };
+}
+
+function createDraftItemPayload(
+  item: ShopCatalogItem | AdminShopItemRecord,
+  options: { preserveId?: boolean } = {},
+) {
+  const prices = 'effectivePrice' in item
+    ? (item.effectivePrice ? [toPricePayload(item.effectivePrice)] : [])
+    : item.prices
+        .filter((price) => price.is_active)
+        .map((price) => toPricePayload(price));
+
+  return {
+    ...(options.preserveId && isUuid(item.id) ? { id: item.id } : {}),
+    slug: item.slug,
+    kind: item.kind,
+    title: item.title,
+    subtitle: item.subtitle,
+    description: item.description,
+    image_path: 'imagePath' in item ? item.imagePath : item.image_path,
+    cta_label: 'ctaLabel' in item ? item.ctaLabel : item.cta_label,
+    is_active: 'is_active' in item ? item.is_active : true,
+    action_key: item.actionKey ?? ('action_key' in item ? item.action_key : null),
+    coin_amount: item.coinAmount ?? ('coin_amount' in item ? item.coin_amount : null),
+    vip_duration_days: item.vipDurationDays ?? ('vip_duration_days' in item ? item.vip_duration_days : null),
+    metadata: item.metadata,
+    prices,
+    unlock_rule: toUnlockRulePayload(item),
+  };
+}
+
+function normalizePresentationPayload(
+  presentation: ShopCardPresentation | AdminShopPresentationRecord | null,
+  fallbackSurface: ShopSurfaceKey,
+  fallbackKind: ShopItemKind,
+  fallbackImagePath: string,
+) {
+  const resolved = presentation
+    ? 'templateKey' in presentation
+      ? presentation
+      : {
+          templateKey: presentation.template_key as ShopCardTemplateKey,
+          themeKey: presentation.theme_key,
+          eyebrowText: presentation.eyebrow_text,
+          supportingText: presentation.supporting_text,
+          primaryImagePath: presentation.primary_image_path,
+          secondaryImagePath: presentation.secondary_image_path,
+          showBadge: presentation.show_badge,
+          showSubtitle: presentation.show_subtitle,
+          showSupportingText: presentation.show_supporting_text,
+          showSecondaryImage: presentation.show_secondary_image,
+          metadata: presentation.metadata,
+        }
+    : createDefaultShopPresentation({
+        surfaceKey: fallbackSurface,
+        kind: fallbackKind,
+        imagePath: fallbackImagePath,
+      });
+
+  return {
+    template_key: resolved.templateKey,
+    theme_key: resolved.themeKey,
+    eyebrow_text: resolved.eyebrowText,
+    supporting_text: resolved.supportingText,
+    primary_image_path: resolved.primaryImagePath || fallbackImagePath,
+    secondary_image_path: resolved.secondaryImagePath,
+    show_badge: resolved.showBadge,
+    show_subtitle: resolved.showSubtitle,
+    show_supporting_text: resolved.showSupportingText,
+    show_secondary_image: resolved.showSecondaryImage,
+    metadata: resolved.metadata,
+  };
+}
+
+function createDraftSlotPayload(
+  slot: ShopSurfaceCard | AdminShopSlotRecord,
+  itemId: string,
+  options: {
+    preserveId?: boolean;
+    fallbackKind: ShopItemKind;
+    fallbackImagePath: string;
+    presentation?: ShopCardPresentation | AdminShopPresentationRecord | null;
+  },
+) {
+  const surfaceKey = 'surfaceKey' in slot ? slot.surfaceKey : slot.surface_key;
+  const title = 'title' in slot ? slot.title : '';
+  const subtitle = 'subtitle' in slot ? slot.subtitle : '';
+  const ctaLabel = 'ctaLabel' in slot ? slot.ctaLabel : '';
+
+  return {
+    ...(
+      options.preserveId
+      && 'id' in slot
+      && isUuid(slot.id)
+        ? { id: slot.id }
+        : {}
+    ),
+    surface_key: surfaceKey,
+    sort_order: 'sortOrder' in slot ? slot.sortOrder : slot.sort_order,
+    item_id: itemId,
+    card_variant: 'cardVariant' in slot ? slot.cardVariant : slot.card_variant,
+    title_override: 'title_override' in slot ? slot.title_override : title,
+    subtitle_override: 'subtitle_override' in slot ? slot.subtitle_override : subtitle,
+    cta_label_override: 'cta_label_override' in slot ? slot.cta_label_override : ctaLabel,
+    is_active: 'is_active' in slot ? slot.is_active : true,
+    presentation: normalizePresentationPayload(
+      options.presentation ?? null,
+      surfaceKey,
+      options.fallbackKind,
+      options.fallbackImagePath,
+    ),
+  };
+}
+
+async function runAdminItemUpsert(payload: Record<string, unknown>) {
+  const { data, error } = await supabase.rpc('admin_upsert_shop_item', { p_payload: payload });
+  if (error) throw error;
+  const result = data as { success?: boolean; error?: string; id?: string } | null;
+  if (!result?.success || !result.id) {
+    throw new Error(result?.error || 'Unable to seed draft shop item.');
+  }
+  return result.id;
+}
+
+async function runAdminSlotUpsert(payload: Record<string, unknown>) {
+  const { data, error } = await supabase.rpc('admin_upsert_shop_surface_slot', { p_payload: payload });
+  if (error) throw error;
+  const result = data as { success?: boolean; error?: string } | null;
+  if (!result?.success) {
+    throw new Error(result?.error || 'Unable to seed draft shop slot.');
+  }
+}
+
+async function bootstrapDraftFromLiveSnapshot(snapshot: AdminShopWorkspaceSnapshot) {
+  const presentationMap = new Map(snapshot.presentations.map((presentation) => [presentation.slot_id, presentation]));
+
+  for (const item of snapshot.items) {
+    await runAdminItemUpsert(createDraftItemPayload(item, { preserveId: true }));
+  }
+
+  for (const slot of [...snapshot.slots].sort((a, b) => a.sort_order - b.sort_order)) {
+    const item = snapshot.items.find((entry) => entry.id === slot.item_id);
+    if (!item) continue;
+
+    await runAdminSlotUpsert(
+      createDraftSlotPayload(slot, slot.item_id, {
+        preserveId: true,
+        fallbackKind: item.kind,
+        fallbackImagePath: item.image_path,
+        presentation: presentationMap.get(slot.id) ?? null,
+      }),
+    );
+  }
+}
+
+async function bootstrapDraftFromFallbackSeed() {
+  const seed = createFallbackAdminShopSeed();
+  const itemIdMap = new Map<string, string>();
+
+  for (const item of seed.items) {
+    const persistedId = await runAdminItemUpsert({
+      slug: item.slug,
+      kind: item.kind,
+      title: item.title,
+      subtitle: item.subtitle,
+      description: item.description,
+      image_path: item.image_path,
+      cta_label: item.cta_label,
+      is_active: item.is_active,
+      action_key: item.action_key,
+      coin_amount: item.coin_amount,
+      vip_duration_days: item.vip_duration_days,
+      metadata: item.metadata,
+      prices: item.prices,
+      unlock_rule: item.unlock_rule,
+    });
+
+    itemIdMap.set(item.sourceKey, persistedId);
+  }
+
+  for (const slot of seed.slots) {
+    const itemId = itemIdMap.get(slot.itemSourceKey);
+    if (!itemId) {
+      throw new Error(`Unable to resolve seeded item for slot ${slot.sourceKey}.`);
+    }
+
+    await runAdminSlotUpsert({
+      surface_key: slot.surface_key,
+      sort_order: slot.sort_order,
+      item_id: itemId,
+      card_variant: slot.card_variant,
+      title_override: slot.title_override,
+      subtitle_override: slot.subtitle_override,
+      cta_label_override: slot.cta_label_override,
+      is_active: slot.is_active,
+      presentation: slot.presentation,
+    });
+  }
+}
+
 export function useAdminShopCatalog() {
   const { isAdmin } = useAdminStatus();
   const queryClient = useQueryClient();
@@ -323,9 +558,29 @@ export function useAdminShopCatalog() {
         throw new Error(livePayload?.error || 'Unable to load live shop workspace.');
       }
 
+      let draft = normalizeWorkspaceSnapshot(draftPayload, 'draft');
+      const live = normalizeWorkspaceSnapshot(livePayload, 'live');
+
+      if (draft.items.length === 0 && draft.slots.length === 0) {
+        if (live.slots.length > 0) {
+          await bootstrapDraftFromLiveSnapshot(live);
+        } else {
+          await bootstrapDraftFromFallbackSeed();
+        }
+
+        const refreshedDraftRes = await supabase.rpc('admin_get_shop_workspace', { p_workspace: 'draft' });
+        if (refreshedDraftRes.error) throw refreshedDraftRes.error;
+        const refreshedDraftPayload = refreshedDraftRes.data as { success?: boolean; error?: string } | null;
+        if (!refreshedDraftPayload || refreshedDraftPayload.success === false) {
+          throw new Error(refreshedDraftPayload?.error || 'Unable to refresh draft shop workspace after sync.');
+        }
+
+        draft = normalizeWorkspaceSnapshot(refreshedDraftPayload, 'draft');
+      }
+
       return {
-        draft: normalizeWorkspaceSnapshot(draftPayload, 'draft'),
-        live: normalizeWorkspaceSnapshot(livePayload, 'live'),
+        draft,
+        live,
       };
     },
     staleTime: 5_000,
@@ -437,5 +692,6 @@ export function useAdminShopCatalog() {
     savingSlot: saveSlot.isPending,
     togglingItem: setItemActive.isPending,
     publishingCatalog: publishCatalog.isPending,
+    isBootstrappingInitialDraft: query.isLoading && draft.items.length === 0 && draft.slots.length === 0,
   };
 }

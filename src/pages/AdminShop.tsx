@@ -474,6 +474,7 @@ export default function AdminShop() {
     savingSlot,
     togglingItem,
     publishingCatalog,
+    isBootstrappingInitialDraft,
   } = useAdminShopCatalog();
   const { claims, updateClaim, updatingClaim } = useShopClaims();
 
@@ -541,6 +542,7 @@ export default function AdminShop() {
   const featuredCount = featuredSlots.length;
   const unlockCount = unlockSlots.length;
   const pendingClaimsCount = claims.filter((claim) => claim.status === 'pending').length;
+  const statValue = (value: number) => (isBootstrappingInitialDraft ? '...' : String(value));
 
   const openNewCardEditor = (surfaceKey: ShopSurfaceKey) => {
     const nextSortOrder = surfaceKey === 'shop.featured_cards' ? featuredCount : unlockCount;
@@ -869,10 +871,10 @@ export default function AdminShop() {
     >
       <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
         <div className="grid min-h-0 gap-4 xl:grid-rows-[repeat(4,minmax(0,120px))_minmax(0,1fr)]">
-          <AdminStatCard label="Draft items" value={String(items.length)} icon={Package} />
-          <AdminStatCard label="Featured cards" value={String(featuredCount)} icon={Boxes} accent="#72d2ff" />
-          <AdminStatCard label="Unlock cards" value={String(unlockCount)} icon={ShieldCheck} accent="#72f1b8" />
-          <AdminStatCard label="Pending claims" value={String(pendingClaimsCount)} icon={Sparkles} accent="#ff8a65" />
+          <AdminStatCard label="Draft items" value={statValue(items.length)} icon={Package} />
+          <AdminStatCard label="Featured cards" value={statValue(featuredCount)} icon={Boxes} accent="#72d2ff" />
+          <AdminStatCard label="Unlock cards" value={statValue(unlockCount)} icon={ShieldCheck} accent="#72f1b8" />
+          <AdminStatCard label="Pending claims" value={statValue(pendingClaimsCount)} icon={Sparkles} accent="#ff8a65" />
 
           <AdminPanel
             title="Workspace status"
@@ -882,7 +884,11 @@ export default function AdminShop() {
           >
             <div className="space-y-3 text-sm leading-6 text-white/58">
               <p className={hasUnpublishedChanges ? 'text-[#ff8ead]' : 'text-[#72f1b8]'}>
-                {hasUnpublishedChanges ? 'Unpublished changes detected in draft.' : 'Draft and live shop are in sync.'}
+                {isBootstrappingInitialDraft
+                  ? 'Syncing the current shop cards into the draft workspace...'
+                  : hasUnpublishedChanges
+                    ? 'Unpublished changes detected in draft.'
+                    : 'Draft and live shop are in sync.'}
               </p>
               <p>Click any card in the studio rows to edit the exact frontend UI, copy, pricing, images, and reward state.</p>
               <p>If a row grows past five cards, the live page and the preview both switch to the marquee rail used on the logged-in home shop section.</p>
@@ -919,7 +925,10 @@ export default function AdminShop() {
                   </div>
                   <div className="p-4">
                     {featuredCards.length === 0 ? (
-                      <AdminEmptyState title="No featured cards yet" description="Create the first purchasable shop card." />
+                      <AdminEmptyState
+                        title={isBootstrappingInitialDraft ? 'Syncing featured cards...' : 'No featured cards yet'}
+                        description={isBootstrappingInitialDraft ? 'We are pulling the current public shop cards into admin draft.' : 'Create the first purchasable shop card.'}
+                      />
                     ) : (
                       <ShopCardRail cards={featuredCards} onAction={(card) => {
                         const slot = featuredSlots.find((entry) => entry.id === card.slotId);
@@ -943,7 +952,10 @@ export default function AdminShop() {
                   </div>
                   <div className="p-4">
                     {unlockCards.length === 0 ? (
-                      <AdminEmptyState title="No unlock cards yet" description="Add the first level or challenge reward." />
+                      <AdminEmptyState
+                        title={isBootstrappingInitialDraft ? 'Syncing unlock cards...' : 'No unlock cards yet'}
+                        description={isBootstrappingInitialDraft ? 'We are pulling the current public reward cards into admin draft.' : 'Add the first level or challenge reward.'}
+                      />
                     ) : (
                       <ShopCardRail cards={unlockCards} onAction={(card) => {
                         const slot = unlockSlots.find((entry) => entry.id === card.slotId);

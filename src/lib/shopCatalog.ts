@@ -108,6 +108,71 @@ export interface ShopCatalogPayload {
   vipOffer: ShopCatalogItem | null;
 }
 
+export interface ShopAdminSeedPrice {
+  audience: ShopPriceAudience;
+  currency: ShopPriceCurrency;
+  amount_minor: number;
+  compare_at_minor: number | null;
+  is_active: boolean;
+}
+
+export interface ShopAdminSeedUnlockRule {
+  unlock_type: ShopUnlockType;
+  level_required: number | null;
+  challenge_id: string | null;
+  claim_once: boolean;
+}
+
+export interface ShopAdminSeedItem {
+  sourceKey: string;
+  slug: string;
+  kind: ShopItemKind;
+  title: string;
+  subtitle: string;
+  description: string;
+  image_path: string;
+  cta_label: string;
+  is_active: boolean;
+  action_key: ShopActionKey | null;
+  coin_amount: number | null;
+  vip_duration_days: number | null;
+  metadata: Record<string, unknown>;
+  prices: ShopAdminSeedPrice[];
+  unlock_rule?: ShopAdminSeedUnlockRule;
+}
+
+export interface ShopAdminSeedPresentation {
+  template_key: ShopCardTemplateKey;
+  theme_key: string;
+  eyebrow_text: string;
+  supporting_text: string;
+  primary_image_path: string;
+  secondary_image_path: string;
+  show_badge: boolean;
+  show_subtitle: boolean;
+  show_supporting_text: boolean;
+  show_secondary_image: boolean;
+  metadata: Record<string, unknown>;
+}
+
+export interface ShopAdminSeedSlot {
+  sourceKey: string;
+  itemSourceKey: string;
+  surface_key: ShopSurfaceKey;
+  sort_order: number;
+  card_variant: ShopCardVariant;
+  title_override: string;
+  subtitle_override: string;
+  cta_label_override: string;
+  is_active: boolean;
+  presentation: ShopAdminSeedPresentation;
+}
+
+export interface ShopAdminSeed {
+  items: ShopAdminSeedItem[];
+  slots: ShopAdminSeedSlot[];
+}
+
 export interface ShopCardViewModel {
   id: string;
   slotId: string;
@@ -550,6 +615,85 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
     ),
     coinPacks: coinPackItems,
     vipOffer,
+  };
+}
+
+export function createFallbackAdminShopSeed(): ShopAdminSeed {
+  const fallback = createFallbackShopCatalog();
+  const itemMap = new Map<string, ShopAdminSeedItem>();
+
+  const registerItem = (item: ShopCatalogItem) => {
+    if (itemMap.has(item.id)) return;
+
+    itemMap.set(item.id, {
+      sourceKey: item.id,
+      slug: item.slug,
+      kind: item.kind,
+      title: item.title,
+      subtitle: item.subtitle,
+      description: item.description,
+      image_path: item.imagePath,
+      cta_label: item.ctaLabel,
+      is_active: true,
+      action_key: item.actionKey,
+      coin_amount: item.coinAmount,
+      vip_duration_days: item.vipDurationDays,
+      metadata: item.metadata,
+      prices: item.effectivePrice
+        ? [
+            {
+              audience: item.effectivePrice.audience,
+              currency: item.effectivePrice.currency,
+              amount_minor: item.effectivePrice.amountMinor,
+              compare_at_minor: item.effectivePrice.compareAtMinor,
+              is_active: true,
+            },
+          ]
+        : [],
+      unlock_rule:
+        item.kind === 'physical_reward'
+          ? {
+              unlock_type: item.unlockRule.unlockType,
+              level_required: item.unlockRule.levelRequired,
+              challenge_id: item.unlockRule.challengeId,
+              claim_once: item.unlockRule.claimOnce,
+            }
+          : undefined,
+    });
+  };
+
+  fallback.coinPacks.forEach(registerItem);
+  if (fallback.vipOffer) registerItem(fallback.vipOffer);
+  fallback.unlockCards.forEach((card) => registerItem(card.item));
+
+  const slots = [...fallback.featuredCards, ...fallback.unlockCards].map((card) => ({
+    sourceKey: card.slotId,
+    itemSourceKey: card.item.id,
+    surface_key: card.surfaceKey,
+    sort_order: card.sortOrder,
+    card_variant: card.cardVariant,
+    title_override: card.title === card.item.title ? '' : card.title,
+    subtitle_override: card.subtitle === card.item.subtitle ? '' : card.subtitle,
+    cta_label_override: card.ctaLabel === card.item.ctaLabel ? '' : card.ctaLabel,
+    is_active: true,
+    presentation: {
+      template_key: card.presentation.templateKey,
+      theme_key: card.presentation.themeKey,
+      eyebrow_text: card.presentation.eyebrowText,
+      supporting_text: card.presentation.supportingText,
+      primary_image_path: card.presentation.primaryImagePath,
+      secondary_image_path: card.presentation.secondaryImagePath,
+      show_badge: card.presentation.showBadge,
+      show_subtitle: card.presentation.showSubtitle,
+      show_supporting_text: card.presentation.showSupportingText,
+      show_secondary_image: card.presentation.showSecondaryImage,
+      metadata: card.presentation.metadata,
+    },
+  }));
+
+  return {
+    items: Array.from(itemMap.values()),
+    slots,
   };
 }
 
