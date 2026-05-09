@@ -13,6 +13,7 @@ export type ShopPriceCurrency = 'eur' | 'coins';
 export type ShopUnlockType = 'none' | 'level' | 'challenge';
 export type ShopClaimStatus = 'pending' | 'approved' | 'fulfilled' | 'rejected' | 'cancelled';
 export type ShopSurfaceKey = 'shop.featured_cards' | 'shop.unlock_cards';
+export type ShopWorkspace = 'draft' | 'live';
 export type ShopActionKey =
   | 'open_wallet_coins'
   | 'open_wallet_vip'
@@ -22,6 +23,7 @@ export type ShopActionKey =
   | 'open_shop';
 
 export type ShopCardVariant = 'default' | 'coins' | 'reward' | 'action';
+export type ShopCardTemplateKey = 'featured-card' | 'unlock-card';
 
 export interface ShopPrice {
   audience: ShopPriceAudience;
@@ -44,6 +46,20 @@ export interface ShopClaimState {
   requestedAt: string | null;
   resolvedAt: string | null;
   adminNote: string;
+}
+
+export interface ShopCardPresentation {
+  templateKey: ShopCardTemplateKey;
+  themeKey: string;
+  eyebrowText: string;
+  supportingText: string;
+  primaryImagePath: string;
+  secondaryImagePath: string;
+  showBadge: boolean;
+  showSubtitle: boolean;
+  showSupportingText: boolean;
+  showSecondaryImage: boolean;
+  metadata: Record<string, unknown>;
 }
 
 export interface ShopCatalogItem {
@@ -73,6 +89,7 @@ export interface ShopSurfaceCard {
   title: string;
   subtitle: string;
   ctaLabel: string;
+  presentation: ShopCardPresentation;
   item: ShopCatalogItem;
 }
 
@@ -97,10 +114,15 @@ export interface ShopCardViewModel {
   surfaceKey: ShopSurfaceKey;
   sortOrder: number;
   cardVariant: ShopCardVariant;
+  templateKey: ShopCardTemplateKey;
+  themeKey: string;
   title: string;
   subtitle: string;
   description: string;
+  supportingText: string;
   image: string;
+  primaryImage: string;
+  secondaryImage: string;
   kind: ShopItemKind;
   ctaLabel: string;
   actionKey: ShopActionKey | null;
@@ -115,6 +137,10 @@ export interface ShopCardViewModel {
   isClaimed: boolean;
   claimStatus: ShopClaimStatus | null;
   badgeLabel: string | null;
+  showBadge: boolean;
+  showSubtitle: boolean;
+  showSupportingText: boolean;
+  showSecondaryImage: boolean;
   metadata: Record<string, unknown>;
   searchText: string;
 }
@@ -140,11 +166,38 @@ export function formatShopMoneyLabel(amountMinor: number, currency: ShopPriceCur
 
 export function resolveShopCatalogImage(imagePath: string) {
   if (!imagePath) return '';
-  if (imagePath.startsWith('/') || imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+  if (
+    imagePath.startsWith('/')
+    || imagePath.startsWith('http://')
+    || imagePath.startsWith('https://')
+    || imagePath.startsWith('blob:')
+    || imagePath.startsWith('data:')
+  ) {
     return imagePath;
   }
 
   return supabase.storage.from(SHOP_CATALOG_BUCKET).getPublicUrl(imagePath).data.publicUrl;
+}
+
+export function defaultShopTemplateForSurface(surfaceKey: ShopSurfaceKey): ShopCardTemplateKey {
+  return surfaceKey === 'shop.unlock_cards' ? 'unlock-card' : 'featured-card';
+}
+
+export function defaultShopBadgeLabel(kind: ShopItemKind) {
+  switch (kind) {
+    case 'coin_pack':
+      return 'COINS';
+    case 'vip_membership':
+      return 'VIP';
+    case 'physical_reward':
+      return 'UNLOCK';
+    case 'physical_product':
+      return 'MERCH';
+    case 'action_card':
+      return 'ACTION';
+    default:
+      return 'SHOP';
+  }
 }
 
 function asObject(value: unknown): Record<string, unknown> {
@@ -206,6 +259,64 @@ function normalizeClaimState(value: unknown): ShopClaimState | null {
   };
 }
 
+export function normalizeShopPresentation(
+  value: unknown,
+  surfaceKey: ShopSurfaceKey,
+  kind: ShopItemKind,
+  imagePath: string,
+): ShopCardPresentation {
+  const input = asObject(value);
+  const primaryImagePath = asString(input.primary_image_path ?? input.primaryImagePath, imagePath) || imagePath;
+
+  return {
+    templateKey: (asString(input.template_key ?? input.templateKey, defaultShopTemplateForSurface(surfaceKey)) as ShopCardTemplateKey)
+      || defaultShopTemplateForSurface(surfaceKey),
+    themeKey: asString(input.theme_key ?? input.themeKey, 'default') || 'default',
+    eyebrowText: asString(input.eyebrow_text ?? input.eyebrowText, defaultShopBadgeLabel(kind)) || defaultShopBadgeLabel(kind),
+    supportingText: asString(input.supporting_text ?? input.supportingText),
+    primaryImagePath: resolveShopCatalogImage(primaryImagePath),
+    secondaryImagePath: resolveShopCatalogImage(asString(input.secondary_image_path ?? input.secondaryImagePath)),
+    showBadge: asBoolean(input.show_badge ?? input.showBadge, true),
+    showSubtitle: asBoolean(input.show_subtitle ?? input.showSubtitle, true),
+    showSupportingText: asBoolean(input.show_supporting_text ?? input.showSupportingText, surfaceKey === 'shop.unlock_cards'),
+    showSecondaryImage: asBoolean(input.show_secondary_image ?? input.showSecondaryImage, false),
+    metadata: asObject(input.metadata),
+  };
+}
+
+export function createDefaultShopPresentation({
+  surfaceKey,
+  kind,
+  imagePath,
+  supportingText = '',
+  metadata = {},
+}: {
+  surfaceKey: ShopSurfaceKey;
+  kind: ShopItemKind;
+  imagePath: string;
+  supportingText?: string;
+  metadata?: Record<string, unknown>;
+}): ShopCardPresentation {
+  return normalizeShopPresentation(
+    {
+      template_key: defaultShopTemplateForSurface(surfaceKey),
+      theme_key: 'default',
+      eyebrow_text: defaultShopBadgeLabel(kind),
+      supporting_text: supportingText,
+      primary_image_path: imagePath,
+      secondary_image_path: '',
+      show_badge: true,
+      show_subtitle: true,
+      show_supporting_text: surfaceKey === 'shop.unlock_cards',
+      show_secondary_image: false,
+      metadata,
+    },
+    surfaceKey,
+    kind,
+    imagePath,
+  );
+}
+
 function normalizeCatalogItem(value: unknown): ShopCatalogItem | null {
   const input = asObject(value);
   const id = asString(input.id);
@@ -248,6 +359,7 @@ function normalizeSurfaceCard(value: unknown, fallbackSurface: ShopSurfaceKey): 
     title: asString(input.title, item.title),
     subtitle: asString(input.subtitle, item.subtitle),
     ctaLabel: asString(input.cta_label ?? input.ctaLabel, item.ctaLabel),
+    presentation: normalizeShopPresentation(input.presentation, fallbackSurface, item.kind, item.imagePath),
     item,
   };
 }
@@ -263,6 +375,40 @@ function normalizeSurfaceCards(value: unknown, surfaceKey: ShopSurfaceKey): Shop
     .map((entry) => normalizeSurfaceCard(entry, surfaceKey))
     .filter((entry): entry is ShopSurfaceCard => Boolean(entry))
     .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function createShopSurfaceCard({
+  slotId,
+  surfaceKey,
+  sortOrder,
+  cardVariant,
+  title,
+  subtitle,
+  ctaLabel,
+  presentation,
+  item,
+}: {
+  slotId: string;
+  surfaceKey: ShopSurfaceKey;
+  sortOrder: number;
+  cardVariant: ShopCardVariant;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  presentation: ShopCardPresentation;
+  item: ShopCatalogItem;
+}): ShopSurfaceCard {
+  return {
+    slotId,
+    surfaceKey,
+    sortOrder,
+    cardVariant,
+    title,
+    subtitle,
+    ctaLabel,
+    presentation,
+    item,
+  };
 }
 
 export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogViewer> = {}): ShopCatalogPayload {
@@ -294,7 +440,7 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
     actionKey: null,
     coinAmount: coins,
     vipDurationDays: null,
-    metadata: { badge: `x${coins}` },
+    metadata: { badge: defaultShopBadgeLabel('coin_pack') },
     effectivePrice: basePrice(coins),
     unlockRule: { unlockType: 'none', levelRequired: null, challengeId: null, claimOnce: true },
     isUnlocked: true,
@@ -367,26 +513,41 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
 
   return {
     viewer,
-    featuredCards: coinPackItems.slice(0, 5).map((item, index) => ({
-      slotId: `fallback-featured-${index}`,
-      surfaceKey: 'shop.featured_cards',
-      sortOrder: index,
-      cardVariant: 'coins',
-      title: item.title,
-      subtitle: item.subtitle,
-      ctaLabel: item.ctaLabel,
-      item,
-    })),
-    unlockCards: unlockItems.map((item, index) => ({
-      slotId: `fallback-unlock-${index}`,
-      surfaceKey: 'shop.unlock_cards',
-      sortOrder: index,
-      cardVariant: 'reward',
-      title: item.title,
-      subtitle: item.subtitle,
-      ctaLabel: item.ctaLabel,
-      item,
-    })),
+    featuredCards: coinPackItems.slice(0, 5).map((item, index) =>
+      createShopSurfaceCard({
+        slotId: `fallback-featured-${index}`,
+        surfaceKey: 'shop.featured_cards',
+        sortOrder: index,
+        cardVariant: 'coins',
+        title: item.title,
+        subtitle: item.subtitle,
+        ctaLabel: item.ctaLabel,
+        presentation: createDefaultShopPresentation({
+          surfaceKey: 'shop.featured_cards',
+          kind: item.kind,
+          imagePath: item.imagePath,
+        }),
+        item,
+      }),
+    ),
+    unlockCards: unlockItems.map((item, index) =>
+      createShopSurfaceCard({
+        slotId: `fallback-unlock-${index}`,
+        surfaceKey: 'shop.unlock_cards',
+        sortOrder: index,
+        cardVariant: 'reward',
+        title: item.title,
+        subtitle: item.subtitle,
+        ctaLabel: item.ctaLabel,
+        presentation: createDefaultShopPresentation({
+          surfaceKey: 'shop.unlock_cards',
+          kind: item.kind,
+          imagePath: item.imagePath,
+          supportingText: item.description,
+        }),
+        item,
+      }),
+    ),
     coinPacks: coinPackItems,
     vipOffer,
   };
@@ -408,6 +569,7 @@ export function normalizeShopCatalogPayload(
     ...viewerOverrides,
   };
 
+  const viewerFallback = createFallbackShopCatalog(viewer);
   const featuredCards = normalizeSurfaceCards(input.featured_cards ?? input.featuredCards, 'shop.featured_cards');
   const unlockCards = normalizeSurfaceCards(input.unlock_cards ?? input.unlockCards, 'shop.unlock_cards');
   const coinPacks = normalizeCatalogItems(input.coin_packs ?? input.coinPacks);
@@ -415,10 +577,10 @@ export function normalizeShopCatalogPayload(
 
   return {
     viewer,
-    featuredCards: featuredCards.length > 0 ? featuredCards : createFallbackShopCatalog(viewer).featuredCards,
-    unlockCards: unlockCards.length > 0 ? unlockCards : createFallbackShopCatalog(viewer).unlockCards,
-    coinPacks: coinPacks.length > 0 ? coinPacks : createFallbackShopCatalog(viewer).coinPacks,
-    vipOffer: vipOffer ?? createFallbackShopCatalog(viewer).vipOffer,
+    featuredCards: featuredCards.length > 0 ? featuredCards : viewerFallback.featuredCards,
+    unlockCards: unlockCards.length > 0 ? unlockCards : viewerFallback.unlockCards,
+    coinPacks: coinPacks.length > 0 ? coinPacks : viewerFallback.coinPacks,
+    vipOffer: vipOffer ?? viewerFallback.vipOffer,
   };
 }
 
@@ -444,22 +606,21 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     }
   }
 
-  const badgeLabel = typeof card.item.metadata.badge === 'string'
-    ? (card.item.metadata.badge as string)
-    : card.item.coinAmount
-      ? `x${card.item.coinAmount}`
-      : null;
-
   return {
     id: card.item.id,
     slotId: card.slotId,
     surfaceKey: card.surfaceKey,
     sortOrder: card.sortOrder,
     cardVariant: card.cardVariant,
+    templateKey: card.presentation.templateKey,
+    themeKey: card.presentation.themeKey,
     title: card.title,
     subtitle: card.subtitle,
     description: card.item.description,
-    image: card.item.imagePath,
+    supportingText: card.presentation.supportingText,
+    image: card.presentation.primaryImagePath || card.item.imagePath,
+    primaryImage: card.presentation.primaryImagePath || card.item.imagePath,
+    secondaryImage: card.presentation.secondaryImagePath,
     kind: card.item.kind,
     ctaLabel: card.ctaLabel || card.item.ctaLabel,
     actionKey: card.item.actionKey,
@@ -473,15 +634,23 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     isLocked,
     isClaimed,
     claimStatus,
-    badgeLabel,
-    metadata: card.item.metadata,
+    badgeLabel: card.presentation.eyebrowText || defaultShopBadgeLabel(card.item.kind),
+    showBadge: card.presentation.showBadge,
+    showSubtitle: card.presentation.showSubtitle,
+    showSupportingText: card.presentation.showSupportingText,
+    showSecondaryImage: card.presentation.showSecondaryImage,
+    metadata: {
+      ...card.item.metadata,
+      ...card.presentation.metadata,
+    },
     searchText: [
       card.title,
       card.subtitle,
+      card.presentation.supportingText,
       card.item.description,
       priceLabel,
       unlockLabel,
-      badgeLabel,
+      card.presentation.eyebrowText,
       card.item.kind,
     ]
       .filter(Boolean)
@@ -497,8 +666,8 @@ export function mapCatalogToLevelRewards(catalog: ShopCatalogPayload): LevelRewa
       id: card.item.id,
       name: card.title,
       description: card.item.description,
-      image: card.item.imagePath,
-      imagePath: card.item.imagePath,
+      image: card.presentation.primaryImagePath || card.item.imagePath,
+      imagePath: card.presentation.primaryImagePath || card.item.imagePath,
       levelRequired: card.item.unlockRule.levelRequired ?? 1,
       isActive: true,
     }));

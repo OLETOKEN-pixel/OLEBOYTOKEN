@@ -11,9 +11,11 @@ import { FooterSection } from '@/components/home/sections/FooterSection';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useShopCatalog } from '@/hooks/useShopCatalog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { ShopCardRail } from '@/components/shop/ShopCardRail';
 import type { ShopActionKey, ShopCardViewModel } from '@/lib/shopCatalog';
 import { extractFunctionErrorMessage } from '@/lib/oauth';
 import { redirectToCheckout } from '@/lib/checkoutRedirect';
@@ -1035,9 +1037,17 @@ function DesktopShopContent() {
   const navigate = useNavigate();
   const rewardRowRef = useRef<HTMLDivElement | null>(null);
   const { openWalletPurchase } = useWalletPurchase();
+  const { isAdmin } = useAdminStatus();
   const { featuredCards, unlockCards, catalog, claimReward, isClaiming } = useShopCatalog();
   const { handleCardAction } = useShopCardActions({ claimReward });
   const [search, setSearch] = useState('');
+
+  const handleEditCard = useCallback(
+    (card: ShopCardViewModel) => {
+      navigate(`/admin/shop?slot=${encodeURIComponent(card.slotId)}&surface=${encodeURIComponent(card.surfaceKey)}&item=${encodeURIComponent(card.id)}`);
+    },
+    [navigate],
+  );
 
   const query = normalizeQuery(search);
   const filteredFeaturedCards = useMemo(() => featuredCards.filter((card) => matchesQuery(card, query)), [featuredCards, query]);
@@ -1084,7 +1094,11 @@ function DesktopShopContent() {
         </div>
 
         <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 874, width: DESKTOP_CONTENT_WIDTH }}>
-          <CardRow cards={filteredFeaturedCards} onAction={handleCardAction} />
+          <ShopCardRail
+            cards={filteredFeaturedCards}
+            onAction={handleCardAction}
+            onEdit={isAdmin ? handleEditCard : undefined}
+          />
         </div>
 
         <div style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1233 }}>
@@ -1092,7 +1106,12 @@ function DesktopShopContent() {
         </div>
 
         <div ref={rewardRowRef} style={{ position: 'absolute', left: DESKTOP_CONTENT_LEFT, top: 1546, width: DESKTOP_CONTENT_WIDTH }}>
-          <CardRow cards={filteredUnlockCards} onAction={handleCardAction} disabled={isClaiming} />
+          <ShopCardRail
+            cards={filteredUnlockCards}
+            onAction={handleCardAction}
+            disabled={isClaiming}
+            onEdit={isAdmin ? handleEditCard : undefined}
+          />
         </div>
 
         <div
@@ -1127,9 +1146,17 @@ function MobileShopContent() {
   const navigate = useNavigate();
   const rewardRowRef = useRef<HTMLDivElement | null>(null);
   const { openWalletPurchase } = useWalletPurchase();
+  const { isAdmin } = useAdminStatus();
   const { featuredCards, unlockCards, claimReward, isClaiming } = useShopCatalog();
   const { handleCardAction } = useShopCardActions({ claimReward });
   const [search, setSearch] = useState('');
+
+  const handleEditCard = useCallback(
+    (card: ShopCardViewModel) => {
+      navigate(`/admin/shop?slot=${encodeURIComponent(card.slotId)}&surface=${encodeURIComponent(card.surfaceKey)}&item=${encodeURIComponent(card.id)}`);
+    },
+    [navigate],
+  );
 
   const query = normalizeQuery(search);
   const filteredFeaturedCards = useMemo(() => featuredCards.filter((card) => matchesQuery(card, query)), [featuredCards, query]);
@@ -1160,7 +1187,13 @@ function MobileShopContent() {
           </div>
 
           <div style={{ display: 'flex', gap: 14, overflowX: 'auto', padding: '22px 0 6px' }}>
-            <CardRow cards={filteredFeaturedCards} compact onAction={handleCardAction} />
+            <ShopCardRail
+              cards={filteredFeaturedCards}
+              compact
+              onAction={handleCardAction}
+              onEdit={isAdmin ? handleEditCard : undefined}
+              marqueeWhenOverflow={false}
+            />
           </div>
 
           <div style={{ marginTop: 28 }}>
@@ -1168,7 +1201,14 @@ function MobileShopContent() {
           </div>
 
           <div ref={rewardRowRef} style={{ overflowX: 'auto', padding: '22px 0 6px' }}>
-            <CardRow cards={filteredUnlockCards} compact onAction={handleCardAction} disabled={isClaiming} />
+            <ShopCardRail
+              cards={filteredUnlockCards}
+              compact
+              onAction={handleCardAction}
+              disabled={isClaiming}
+              onEdit={isAdmin ? handleEditCard : undefined}
+              marqueeWhenOverflow={false}
+            />
           </div>
         </div>
       </div>

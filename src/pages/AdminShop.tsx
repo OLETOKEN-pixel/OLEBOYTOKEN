@@ -1,14 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Boxes,
-  Eye,
-  ImagePlus,
-  LayoutTemplate,
   Package,
   Plus,
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  UploadCloud,
 } from 'lucide-react';
 import {
   ADMIN_DIALOG_CLASS,
@@ -20,35 +19,50 @@ import {
   AdminShell,
   AdminStatCard,
 } from '@/components/admin/AdminShell';
+import { ShopCardRail } from '@/components/shop/ShopCardRail';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useAdminShopCatalog, type AdminShopItemRecord } from '@/hooks/useAdminShopCatalog';
+import {
+  useAdminShopCatalog,
+  type AdminShopChallengeRecord,
+  type AdminShopItemRecord,
+  type AdminShopPresentationRecord,
+  type AdminShopSlotRecord,
+} from '@/hooks/useAdminShopCatalog';
 import { useShopClaims } from '@/hooks/useShopClaims';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
 import {
-  SHOP_ACTION_KEYS,
+  createDefaultShopPresentation,
+  createShopSurfaceCard,
   formatShopMoneyLabel,
+  normalizeShopPresentation,
   resolveShopCatalogImage,
+  toShopCardViewModel,
   type ShopActionKey,
+  type ShopCardTemplateKey,
   type ShopCardVariant,
+  type ShopCardViewModel,
   type ShopItemKind,
+  type ShopPrice,
   type ShopPriceAudience,
   type ShopPriceCurrency,
+  type ShopSurfaceKey,
   type ShopUnlockType,
 } from '@/lib/shopCatalog';
 
-type ShopSlotRow = Database['public']['Tables']['shop_surface_slots']['Row'];
-type ChallengeRow = Database['public']['Tables']['challenges']['Row'];
-type ShopClaimStatus = Database['public']['Enums']['shop_claim_status'];
+type ShopClaimStatus = 'pending' | 'approved' | 'fulfilled' | 'rejected' | 'cancelled';
+type PreviewAudience = 'base' | 'vip';
+type RewardPreviewState = 'locked' | 'unlocked' | 'claimed';
 
-type ItemFormState = {
-  id: string | null;
+type EditorFormState = {
+  itemId: string | null;
+  slotId: string | null;
+  presentationId: string | null;
   slug: string;
   kind: ShopItemKind;
   title: string;
@@ -66,25 +80,32 @@ type ItemFormState = {
   levelRequired: string;
   challengeId: string;
   claimOnce: boolean;
-  imagePath: string;
-  imagePreview: string;
+  itemImagePath: string;
+  itemImagePreview: string;
+  primaryImagePath: string;
+  primaryImagePreview: string;
+  secondaryImagePath: string;
+  secondaryImagePreview: string;
+  itemFile: File | null;
+  primaryFile: File | null;
+  secondaryFile: File | null;
   metadataBenefits: string;
-  file: File | null;
-};
-
-type SlotFormState = {
-  id: string | null;
-  surfaceKey: 'shop.featured_cards' | 'shop.unlock_cards';
+  surfaceKey: ShopSurfaceKey;
   sortOrder: string;
-  itemId: string;
   cardVariant: ShopCardVariant;
   titleOverride: string;
   subtitleOverride: string;
   ctaLabelOverride: string;
-  isActive: boolean;
+  slotActive: boolean;
+  templateKey: ShopCardTemplateKey;
+  themeKey: string;
+  eyebrowText: string;
+  supportingText: string;
+  showBadge: boolean;
+  showSubtitle: boolean;
+  showSupportingText: boolean;
+  showSecondaryImage: boolean;
 };
-
-type ClaimNoteState = Record<string, string>;
 
 const ITEM_KIND_OPTIONS: Array<{ value: ShopItemKind; label: string }> = [
   { value: 'coin_pack', label: 'Coin pack' },
@@ -92,11 +113,6 @@ const ITEM_KIND_OPTIONS: Array<{ value: ShopItemKind; label: string }> = [
   { value: 'physical_product', label: 'Physical product' },
   { value: 'physical_reward', label: 'Physical reward' },
   { value: 'action_card', label: 'Action card' },
-];
-
-const SURFACE_OPTIONS: Array<{ value: SlotFormState['surfaceKey']; label: string }> = [
-  { value: 'shop.featured_cards', label: 'Top row / featured cards' },
-  { value: 'shop.unlock_cards', label: 'Bottom row / unlock cards' },
 ];
 
 const CLAIM_STATUS_OPTIONS: Array<{ value: ShopClaimStatus; label: string }> = [
@@ -113,10 +129,6 @@ function buildSafeFileName(file: File) {
   return `shop-${Date.now()}-${base || 'item'}.${extension}`;
 }
 
-function canDeleteStorageObject(path: string) {
-  return Boolean(path) && !path.startsWith('/') && !path.startsWith('http://') && !path.startsWith('https://');
-}
-
 function priceCurrencyForKind(kind: ShopItemKind): ShopPriceCurrency {
   return kind === 'vip_membership' ? 'coins' : 'eur';
 }
@@ -125,6 +137,26 @@ function defaultCardVariant(kind: ShopItemKind): ShopCardVariant {
   if (kind === 'physical_reward') return 'reward';
   if (kind === 'action_card') return 'action';
   return 'coins';
+}
+
+function defaultTemplateForSurface(surfaceKey: ShopSurfaceKey): ShopCardTemplateKey {
+  return surfaceKey === 'shop.unlock_cards' ? 'unlock-card' : 'featured-card';
+}
+
+function deriveDefaultCta(kind: ShopItemKind) {
+  switch (kind) {
+    case 'coin_pack':
+    case 'physical_product':
+      return 'BUY NOW';
+    case 'vip_membership':
+      return 'GET VIP';
+    case 'physical_reward':
+      return 'CLAIM';
+    case 'action_card':
+      return 'OPEN';
+    default:
+      return '';
+  }
 }
 
 function formatAdminPrice(amountMinor: number | null, currency: ShopPriceCurrency) {
@@ -144,64 +176,228 @@ function parseAdminPrice(value: string, currency: ShopPriceCurrency) {
   return Number.isFinite(normalized) ? normalized : null;
 }
 
-function deriveDefaultCta(kind: ShopItemKind) {
-  switch (kind) {
-    case 'coin_pack':
-    case 'physical_product':
-      return 'BUY NOW';
-    case 'vip_membership':
-      return 'GET VIP';
-    case 'physical_reward':
-      return 'CLAIM';
-    case 'action_card':
-      return 'OPEN';
-    default:
-      return '';
-  }
-}
+function emptyEditorForm(surfaceKey: ShopSurfaceKey = 'shop.featured_cards'): EditorFormState {
+  const kind: ShopItemKind = surfaceKey === 'shop.unlock_cards' ? 'physical_reward' : 'coin_pack';
 
-function createEmptyItemForm(): ItemFormState {
   return {
-    id: null,
+    itemId: null,
+    slotId: null,
+    presentationId: null,
     slug: '',
-    kind: 'coin_pack',
+    kind,
     title: '',
-    subtitle: '',
+    subtitle: kind === 'physical_reward' ? 'LEVEL REWARD' : '',
     description: '',
-    ctaLabel: deriveDefaultCta('coin_pack'),
+    ctaLabel: deriveDefaultCta(kind),
     isActive: true,
     actionKey: '',
     coinAmount: '',
     vipDurationDays: '',
-    priceCurrency: 'eur',
+    priceCurrency: priceCurrencyForKind(kind),
     basePrice: '',
     vipPrice: '',
-    unlockType: 'none',
-    levelRequired: '',
+    unlockType: kind === 'physical_reward' ? 'level' : 'none',
+    levelRequired: kind === 'physical_reward' ? '1' : '',
     challengeId: '',
     claimOnce: true,
-    imagePath: '',
-    imagePreview: '',
+    itemImagePath: '',
+    itemImagePreview: '',
+    primaryImagePath: '',
+    primaryImagePreview: '',
+    secondaryImagePath: '',
+    secondaryImagePreview: '',
+    itemFile: null,
+    primaryFile: null,
+    secondaryFile: null,
     metadataBenefits: '',
-    file: null,
-  };
-}
-
-function createEmptySlotForm(): SlotFormState {
-  return {
-    id: null,
-    surfaceKey: 'shop.featured_cards',
+    surfaceKey,
     sortOrder: '0',
-    itemId: '',
-    cardVariant: 'coins',
+    cardVariant: defaultCardVariant(kind),
     titleOverride: '',
     subtitleOverride: '',
     ctaLabelOverride: '',
-    isActive: true,
+    slotActive: true,
+    templateKey: defaultTemplateForSurface(surfaceKey),
+    themeKey: 'default',
+    eyebrowText: surfaceKey === 'shop.unlock_cards' ? 'UNLOCK' : 'COINS',
+    supportingText: '',
+    showBadge: true,
+    showSubtitle: true,
+    showSupportingText: surfaceKey === 'shop.unlock_cards',
+    showSecondaryImage: false,
   };
 }
 
-function formFromItem(item: AdminShopItemRecord): ItemFormState {
+function createEffectivePrice(audience: ShopPriceAudience, currency: ShopPriceCurrency, amountMinor: number | null): ShopPrice | null {
+  if (amountMinor === null) return null;
+  return {
+    audience,
+    currency,
+    amountMinor,
+    compareAtMinor: null,
+    label: formatShopMoneyLabel(amountMinor, currency),
+  };
+}
+
+function buildPreviewCard(
+  form: EditorFormState,
+  audience: PreviewAudience,
+  rewardState: RewardPreviewState,
+): ShopCardViewModel {
+  const baseMinor = parseAdminPrice(form.basePrice, form.priceCurrency);
+  const vipMinor = parseAdminPrice(form.vipPrice, form.priceCurrency);
+  const itemImage = form.itemImagePreview || form.itemImagePath;
+  const primaryImage = form.primaryImagePreview || form.primaryImagePath || itemImage;
+  const secondaryImage = form.secondaryImagePreview || form.secondaryImagePath;
+
+  const item = {
+    id: form.itemId ?? 'preview-item',
+    slug: form.slug || 'preview-item',
+    kind: form.kind,
+    title: form.title,
+    subtitle: form.subtitle,
+    description: form.description,
+    imagePath: resolveShopCatalogImage(itemImage),
+    ctaLabel: form.ctaLabel,
+    actionKey: form.actionKey || null,
+    coinAmount: form.kind === 'coin_pack' ? Number(form.coinAmount || '0') || null : null,
+    vipDurationDays: form.kind === 'vip_membership' ? Number(form.vipDurationDays || '0') || null : null,
+    metadata:
+      form.kind === 'vip_membership' && form.metadataBenefits.trim()
+        ? { benefits: form.metadataBenefits.split(',').map((entry) => entry.trim()).filter(Boolean) }
+        : {},
+    effectivePrice:
+      form.kind === 'physical_reward' || form.kind === 'action_card'
+        ? null
+        : createEffectivePrice(
+            audience,
+            form.priceCurrency,
+            audience === 'vip' ? (vipMinor ?? baseMinor) : baseMinor,
+          ),
+    unlockRule: {
+      unlockType: form.kind === 'physical_reward' ? form.unlockType : 'none',
+      levelRequired: form.kind === 'physical_reward' && form.unlockType === 'level' ? Number(form.levelRequired || '0') || null : null,
+      challengeId: form.kind === 'physical_reward' && form.unlockType === 'challenge' ? form.challengeId || null : null,
+      claimOnce: form.claimOnce,
+    },
+    isUnlocked: form.kind === 'physical_reward' ? rewardState !== 'locked' : true,
+    claimState:
+      form.kind === 'physical_reward' && rewardState === 'claimed'
+        ? {
+            id: 'preview-claim',
+            status: 'approved' as const,
+            requestedAt: null,
+            resolvedAt: null,
+            adminNote: '',
+          }
+        : null,
+  };
+
+  const presentation = normalizeShopPresentation(
+    {
+      template_key: form.templateKey,
+      theme_key: form.themeKey,
+      eyebrow_text: form.eyebrowText,
+      supporting_text: form.supportingText,
+      primary_image_path: primaryImage || itemImage,
+      secondary_image_path: secondaryImage,
+      show_badge: form.showBadge,
+      show_subtitle: form.showSubtitle,
+      show_supporting_text: form.showSupportingText,
+      show_secondary_image: form.showSecondaryImage,
+      metadata: {},
+    },
+    form.surfaceKey,
+    form.kind,
+    itemImage,
+  );
+
+  return toShopCardViewModel(
+    createShopSurfaceCard({
+      slotId: form.slotId ?? 'preview-slot',
+      surfaceKey: form.surfaceKey,
+      sortOrder: Number(form.sortOrder || '0'),
+      cardVariant: form.cardVariant,
+      title: form.titleOverride.trim() || form.title,
+      subtitle: form.subtitleOverride.trim() || form.subtitle,
+      ctaLabel: form.ctaLabelOverride.trim() || form.ctaLabel,
+      presentation,
+      item,
+    }),
+  );
+}
+
+function buildWorkspaceCard(
+  item: AdminShopItemRecord,
+  slot: AdminShopSlotRecord,
+  presentation: AdminShopPresentationRecord | null,
+  audience: PreviewAudience = 'base',
+): ShopCardViewModel {
+  const basePrice = item.prices.find((price) => price.audience === 'base' && price.is_active);
+  const vipPrice = item.prices.find((price) => price.audience === 'vip' && price.is_active);
+
+  const effectivePrice =
+    item.kind === 'physical_reward' || item.kind === 'action_card'
+      ? null
+      : createEffectivePrice(
+          audience,
+          (vipPrice?.currency ?? basePrice?.currency ?? priceCurrencyForKind(item.kind)) as ShopPriceCurrency,
+          audience === 'vip'
+            ? (vipPrice?.amount_minor ?? basePrice?.amount_minor ?? null)
+            : (basePrice?.amount_minor ?? null),
+        );
+
+  const resolvedPresentation = presentation
+    ? normalizeShopPresentation(presentation, slot.surface_key, item.kind, item.image_path)
+    : createDefaultShopPresentation({
+        surfaceKey: slot.surface_key,
+        kind: item.kind,
+        imagePath: item.image_path,
+        supportingText: slot.surface_key === 'shop.unlock_cards' ? item.description : '',
+      });
+
+  return toShopCardViewModel(
+    createShopSurfaceCard({
+      slotId: slot.id,
+      surfaceKey: slot.surface_key,
+      sortOrder: slot.sort_order,
+      cardVariant: slot.card_variant,
+      title: slot.title_override.trim() || item.title,
+      subtitle: slot.subtitle_override.trim() || item.subtitle,
+      ctaLabel: slot.cta_label_override.trim() || item.cta_label,
+      presentation: resolvedPresentation,
+      item: {
+        id: item.id,
+        slug: item.slug,
+        kind: item.kind,
+        title: item.title,
+        subtitle: item.subtitle,
+        description: item.description,
+        imagePath: resolveShopCatalogImage(item.image_path),
+        ctaLabel: item.cta_label,
+        actionKey: item.action_key,
+        coinAmount: item.coin_amount,
+        vipDurationDays: item.vip_duration_days,
+        metadata: item.metadata,
+        effectivePrice,
+        unlockRule: {
+          unlockType: item.unlockRule?.unlock_type ?? 'none',
+          levelRequired: item.unlockRule?.level_required ?? null,
+          challengeId: item.unlockRule?.challenge_id ?? null,
+          claimOnce: item.unlockRule?.claim_once ?? true,
+        },
+        isUnlocked: item.kind === 'physical_reward' ? false : true,
+        claimState: null,
+      },
+    }),
+  );
+}
+
+function createEditorForm(
+  item: AdminShopItemRecord,
+  slot: AdminShopSlotRecord | null,
+  presentation: AdminShopPresentationRecord | null,
+): EditorFormState {
   const primaryCurrency = item.prices[0]?.currency ?? priceCurrencyForKind(item.kind);
   const basePrice = item.prices.find((price) => price.audience === 'base');
   const vipPrice = item.prices.find((price) => price.audience === 'vip');
@@ -210,7 +406,9 @@ function formFromItem(item: AdminShopItemRecord): ItemFormState {
     : '';
 
   return {
-    id: item.id,
+    itemId: item.id,
+    slotId: slot?.id ?? null,
+    presentationId: presentation?.id ?? null,
     slug: item.slug,
     kind: item.kind,
     title: item.title,
@@ -218,7 +416,7 @@ function formFromItem(item: AdminShopItemRecord): ItemFormState {
     description: item.description,
     ctaLabel: item.cta_label,
     isActive: item.is_active,
-    actionKey: (item.action_key as ShopActionKey | null) ?? '',
+    actionKey: item.action_key ?? '',
     coinAmount: item.coin_amount ? String(item.coin_amount) : '',
     vipDurationDays: item.vip_duration_days ? String(item.vip_duration_days) : '',
     priceCurrency: primaryCurrency,
@@ -228,101 +426,67 @@ function formFromItem(item: AdminShopItemRecord): ItemFormState {
     levelRequired: item.unlockRule?.level_required ? String(item.unlockRule.level_required) : '',
     challengeId: item.unlockRule?.challenge_id ?? '',
     claimOnce: item.unlockRule?.claim_once ?? true,
-    imagePath: item.image_path,
-    imagePreview: resolveShopCatalogImage(item.image_path),
+    itemImagePath: item.image_path,
+    itemImagePreview: resolveShopCatalogImage(item.image_path),
+    primaryImagePath: presentation?.primary_image_path || '',
+    primaryImagePreview: presentation?.primary_image_path ? resolveShopCatalogImage(presentation.primary_image_path) : '',
+    secondaryImagePath: presentation?.secondary_image_path || '',
+    secondaryImagePreview: presentation?.secondary_image_path ? resolveShopCatalogImage(presentation.secondary_image_path) : '',
+    itemFile: null,
+    primaryFile: null,
+    secondaryFile: null,
     metadataBenefits,
-    file: null,
+    surfaceKey: slot?.surface_key ?? (item.kind === 'physical_reward' ? 'shop.unlock_cards' : 'shop.featured_cards'),
+    sortOrder: slot ? String(slot.sort_order) : '0',
+    cardVariant: slot?.card_variant ?? defaultCardVariant(item.kind),
+    titleOverride: slot?.title_override ?? '',
+    subtitleOverride: slot?.subtitle_override ?? '',
+    ctaLabelOverride: slot?.cta_label_override ?? '',
+    slotActive: slot?.is_active ?? true,
+    templateKey: presentation?.template_key ?? defaultTemplateForSurface(slot?.surface_key ?? 'shop.featured_cards'),
+    themeKey: presentation?.theme_key ?? 'default',
+    eyebrowText: presentation?.eyebrow_text ?? (item.kind === 'physical_reward' ? 'UNLOCK' : item.kind === 'vip_membership' ? 'VIP' : 'COINS'),
+    supportingText: presentation?.supporting_text ?? '',
+    showBadge: presentation?.show_badge ?? true,
+    showSubtitle: presentation?.show_subtitle ?? true,
+    showSupportingText: presentation?.show_supporting_text ?? ((slot?.surface_key ?? 'shop.featured_cards') === 'shop.unlock_cards'),
+    showSecondaryImage: presentation?.show_secondary_image ?? false,
   };
-}
-
-function formFromSlot(slot: ShopSlotRow): SlotFormState {
-  return {
-    id: slot.id,
-    surfaceKey: slot.surface_key as SlotFormState['surfaceKey'],
-    sortOrder: String(slot.sort_order),
-    itemId: slot.item_id,
-    cardVariant: (slot.card_variant as ShopCardVariant) ?? 'default',
-    titleOverride: slot.title_override,
-    subtitleOverride: slot.subtitle_override,
-    ctaLabelOverride: slot.cta_label_override,
-    isActive: slot.is_active,
-  };
-}
-
-function PricePreview({
-  label,
-  title,
-  subtitle,
-  value,
-}: {
-  label: string;
-  title: string;
-  subtitle: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-[22px] border border-[#302025] bg-[#171012] p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-white/46">{label}</p>
-      <p className="mt-3 text-xl font-semibold text-white">{title || 'Untitled item'}</p>
-      <p className="mt-1 text-sm text-white/48">{subtitle || 'Subtitle preview'}</p>
-      <p className="mt-5 text-2xl font-semibold text-[#ff8ead]">{value || 'No price / unlock label'}</p>
-    </div>
-  );
-}
-
-function ItemEditorPreview({
-  form,
-  baseLabel,
-  vipLabel,
-}: {
-  form: ItemFormState;
-  baseLabel: string;
-  vipLabel: string;
-}) {
-  const previewValue =
-    form.kind === 'physical_reward'
-      ? form.unlockType === 'level'
-        ? `LVL ${form.levelRequired || '0'}`
-        : form.unlockType === 'challenge'
-          ? 'CHALLENGE'
-          : 'UNLOCK'
-      : baseLabel;
-
-  return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      <PricePreview label="Base preview" title={form.title} subtitle={form.subtitle} value={previewValue} />
-      <PricePreview
-        label="VIP preview"
-        title={form.title}
-        subtitle={form.subtitle}
-        value={form.kind === 'physical_reward' ? previewValue : vipLabel || baseLabel}
-      />
-    </div>
-  );
 }
 
 export default function AdminShop() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const {
     items,
     slots,
+    presentations,
     challenges,
     isLoading,
     refetch,
     saveItem,
     saveSlot,
     setItemActive,
+    publishCatalog,
+    hasUnpublishedChanges,
     savingItem,
     savingSlot,
+    togglingItem,
+    publishingCatalog,
   } = useAdminShopCatalog();
   const { claims, updateClaim, updatingClaim } = useShopClaims();
-  const [activeTab, setActiveTab] = useState('catalog');
+
+  const [activeTab, setActiveTab] = useState('studio');
   const [search, setSearch] = useState('');
-  const [itemDialogOpen, setItemDialogOpen] = useState(false);
-  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
-  const [itemForm, setItemForm] = useState<ItemFormState>(createEmptyItemForm());
-  const [slotForm, setSlotForm] = useState<SlotFormState>(createEmptySlotForm());
-  const [claimNotes, setClaimNotes] = useState<ClaimNoteState>({});
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorForm, setEditorForm] = useState<EditorFormState>(emptyEditorForm());
+  const [previewAudience, setPreviewAudience] = useState<PreviewAudience>('base');
+  const [rewardPreviewState, setRewardPreviewState] = useState<RewardPreviewState>('locked');
+  const [claimNotes, setClaimNotes] = useState<Record<string, string>>({});
+
+  const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+  const presentationMap = useMemo(() => new Map(presentations.map((presentation) => [presentation.slot_id, presentation])), [presentations]);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -336,113 +500,195 @@ export default function AdminShop() {
     );
   }, [items, search]);
 
-  const featuredCount = slots.filter((slot) => slot.surface_key === 'shop.featured_cards').length;
-  const unlockCount = slots.filter((slot) => slot.surface_key === 'shop.unlock_cards').length;
+  const featuredSlots = useMemo(
+    () => slots.filter((slot) => slot.surface_key === 'shop.featured_cards').sort((a, b) => a.sort_order - b.sort_order),
+    [slots],
+  );
+  const unlockSlots = useMemo(
+    () => slots.filter((slot) => slot.surface_key === 'shop.unlock_cards').sort((a, b) => a.sort_order - b.sort_order),
+    [slots],
+  );
+
+  const featuredCards = useMemo(
+    () =>
+      featuredSlots
+        .map((slot) => {
+          const item = itemMap.get(slot.item_id);
+          if (!item) return null;
+          return buildWorkspaceCard(item, slot, presentationMap.get(slot.id) ?? null, 'base');
+        })
+        .filter((entry): entry is ShopCardViewModel => Boolean(entry)),
+    [featuredSlots, itemMap, presentationMap],
+  );
+
+  const unlockCards = useMemo(
+    () =>
+      unlockSlots
+        .map((slot) => {
+          const item = itemMap.get(slot.item_id);
+          if (!item) return null;
+          return buildWorkspaceCard(item, slot, presentationMap.get(slot.id) ?? null, 'base');
+        })
+        .filter((entry): entry is ShopCardViewModel => Boolean(entry)),
+    [unlockSlots, itemMap, presentationMap],
+  );
+
+  const previewCard = useMemo(
+    () => buildPreviewCard(editorForm, previewAudience, rewardPreviewState),
+    [editorForm, previewAudience, rewardPreviewState],
+  );
+
+  const featuredCount = featuredSlots.length;
+  const unlockCount = unlockSlots.length;
   const pendingClaimsCount = claims.filter((claim) => claim.status === 'pending').length;
 
-  const baseMinor = parseAdminPrice(itemForm.basePrice, itemForm.priceCurrency);
-  const vipMinor = parseAdminPrice(itemForm.vipPrice, itemForm.priceCurrency);
-  const baseLabel = baseMinor !== null ? formatShopMoneyLabel(baseMinor, itemForm.priceCurrency) : '';
-  const vipLabel = vipMinor !== null ? formatShopMoneyLabel(vipMinor, itemForm.priceCurrency) : '';
-
-  const physicalRewardItems = items.filter((item) => item.kind === 'physical_reward');
-  const featuredItems = items.filter((item) => item.kind !== 'physical_reward');
-
-  const openCreateItemDialog = () => {
-    setItemForm(createEmptyItemForm());
-    setItemDialogOpen(true);
+  const openNewCardEditor = (surfaceKey: ShopSurfaceKey) => {
+    const nextSortOrder = surfaceKey === 'shop.featured_cards' ? featuredCount : unlockCount;
+    const next = emptyEditorForm(surfaceKey);
+    next.sortOrder = String(nextSortOrder);
+    setEditorForm(next);
+    setPreviewAudience('base');
+    setRewardPreviewState(surfaceKey === 'shop.unlock_cards' ? 'locked' : 'unlocked');
+    setEditorOpen(true);
   };
 
-  const openEditItemDialog = (item: AdminShopItemRecord) => {
-    setItemForm(formFromItem(item));
-    setItemDialogOpen(true);
+  const openSlotEditor = (slot: AdminShopSlotRecord) => {
+    const item = itemMap.get(slot.item_id);
+    if (!item) return;
+    const presentation = presentationMap.get(slot.id) ?? null;
+    setEditorForm(createEditorForm(item, slot, presentation));
+    setPreviewAudience('base');
+    setRewardPreviewState(slot.surface_key === 'shop.unlock_cards' ? 'locked' : 'unlocked');
+    setEditorOpen(true);
   };
 
-  const openCreateSlotDialog = (surfaceKey?: SlotFormState['surfaceKey']) => {
-    const next = createEmptySlotForm();
-    if (surfaceKey) next.surfaceKey = surfaceKey;
-    setSlotForm(next);
-    setSlotDialogOpen(true);
+  const openItemEditor = (item: AdminShopItemRecord) => {
+    const linkedSlot = slots.find((slot) => slot.item_id === item.id) ?? null;
+    const presentation = linkedSlot ? presentationMap.get(linkedSlot.id) ?? null : null;
+    const nextForm = createEditorForm(item, linkedSlot, presentation);
+    if (!linkedSlot) {
+      nextForm.surfaceKey = item.kind === 'physical_reward' ? 'shop.unlock_cards' : 'shop.featured_cards';
+      nextForm.sortOrder = String(
+        nextForm.surfaceKey === 'shop.unlock_cards' ? unlockCount : featuredCount,
+      );
+    }
+    setEditorForm(nextForm);
+    setPreviewAudience('base');
+    setRewardPreviewState(item.kind === 'physical_reward' ? 'locked' : 'unlocked');
+    setEditorOpen(true);
   };
 
-  const openEditSlotDialog = (slot: ShopSlotRow) => {
-    setSlotForm(formFromSlot(slot));
-    setSlotDialogOpen(true);
-  };
+  useEffect(() => {
+    const slotId = searchParams.get('slot');
+    const itemId = searchParams.get('item');
+    if (!slotId && !itemId) return;
+    if (items.length === 0 && slots.length === 0) return;
 
-  const uploadSelectedFile = async () => {
-    if (!itemForm.file) {
-      return itemForm.imagePath;
+    const targetSlot = slotId ? slots.find((entry) => entry.id === slotId) : null;
+    const targetItem = targetSlot
+      ? itemMap.get(targetSlot.item_id)
+      : itemId
+        ? itemMap.get(itemId)
+        : null;
+
+    if (targetSlot && targetItem) {
+      openSlotEditor(targetSlot);
+      setActiveTab('studio');
+      setSearchParams({});
+      return;
     }
 
-    const path = buildSafeFileName(itemForm.file);
-    const { error } = await supabase.storage.from('shop-catalog').upload(path, itemForm.file, {
-      upsert: false,
-      contentType: itemForm.file.type || 'image/png',
-    });
+    if (targetItem) {
+      openItemEditor(targetItem);
+      setActiveTab('catalog');
+      setSearchParams({});
+    }
+  }, [items, slots, searchParams, setSearchParams, itemMap]);
 
+  const uploadShopAsset = async (file: File | null) => {
+    if (!file) return '';
+
+    const path = buildSafeFileName(file);
+    const { error } = await supabase.storage.from('shop-catalog').upload(path, file, {
+      upsert: false,
+      contentType: file.type || 'image/png',
+    });
     if (error) throw error;
     return path;
   };
 
-  const handleSaveItem = async () => {
+  const handleSaveCard = async () => {
     try {
-      if (!itemForm.title.trim() || !itemForm.slug.trim()) {
+      if (!editorForm.title.trim() || !editorForm.slug.trim()) {
         throw new Error('Title and slug are required.');
       }
 
-      if (!itemForm.imagePath && !itemForm.file) {
-        throw new Error('Image is required.');
+      if (!editorForm.itemImagePath && !editorForm.itemFile) {
+        throw new Error('An item image is required.');
       }
 
-      if (itemForm.kind === 'action_card' && !itemForm.actionKey) {
-        throw new Error('Action cards require an action key.');
+      if (editorForm.surfaceKey === 'shop.unlock_cards' && editorForm.kind !== 'physical_reward') {
+        throw new Error('Only physical rewards can be placed in the unlock row.');
       }
+
+      if (editorForm.surfaceKey === 'shop.featured_cards' && editorForm.kind === 'physical_reward') {
+        throw new Error('Physical rewards must stay in the unlock row.');
+      }
+
+      const baseMinor = parseAdminPrice(editorForm.basePrice, editorForm.priceCurrency);
+      const vipMinor = parseAdminPrice(editorForm.vipPrice, editorForm.priceCurrency);
 
       if (
-        (itemForm.kind === 'coin_pack' || itemForm.kind === 'vip_membership' || itemForm.kind === 'physical_product') &&
-        baseMinor === null
+        (editorForm.kind === 'coin_pack' || editorForm.kind === 'vip_membership' || editorForm.kind === 'physical_product')
+        && baseMinor === null
       ) {
-        throw new Error('A base price is required for this item.');
+        throw new Error('A base price is required for this card.');
       }
 
       if (baseMinor !== null && vipMinor !== null && vipMinor > baseMinor) {
         throw new Error('VIP price must be lower than or equal to the base price.');
       }
 
-      if (itemForm.kind === 'coin_pack' && Number(itemForm.coinAmount || '0') <= 0) {
+      if (editorForm.kind === 'coin_pack' && Number(editorForm.coinAmount || '0') <= 0) {
         throw new Error('Coin packs require a valid coin amount.');
       }
 
-      if (itemForm.kind === 'vip_membership' && Number(itemForm.vipDurationDays || '0') <= 0) {
+      if (editorForm.kind === 'vip_membership' && Number(editorForm.vipDurationDays || '0') <= 0) {
         throw new Error('VIP memberships require a valid duration in days.');
       }
 
-      if (itemForm.kind === 'physical_reward' && itemForm.unlockType === 'none') {
+      if (editorForm.kind === 'physical_reward' && editorForm.unlockType === 'none') {
         throw new Error('Physical rewards require an unlock rule.');
       }
 
-      if (itemForm.kind === 'physical_reward' && itemForm.unlockType === 'level' && Number(itemForm.levelRequired || '0') < 1) {
+      if (editorForm.kind === 'physical_reward' && editorForm.unlockType === 'level' && Number(editorForm.levelRequired || '0') < 1) {
         throw new Error('Level unlocks require a level greater than or equal to 1.');
       }
 
-      if (itemForm.kind === 'physical_reward' && itemForm.unlockType === 'challenge' && !itemForm.challengeId) {
-        throw new Error('Select a challenge for challenge-based unlocks.');
+      if (editorForm.kind === 'physical_reward' && editorForm.unlockType === 'challenge' && !editorForm.challengeId) {
+        throw new Error('Select a challenge for challenge-based rewards.');
       }
 
-      const uploadedPath = await uploadSelectedFile();
-      const previousPath = itemForm.id
-        ? items.find((item) => item.id === itemForm.id)?.image_path ?? ''
-        : '';
+      if (editorForm.kind === 'action_card' && !editorForm.actionKey) {
+        throw new Error('Action cards require an action key.');
+      }
+
+      const uploadedItemImagePath = await uploadShopAsset(editorForm.itemFile);
+      const uploadedPrimaryImagePath = await uploadShopAsset(editorForm.primaryFile);
+      const uploadedSecondaryImagePath = await uploadShopAsset(editorForm.secondaryFile);
+
+      const finalItemImagePath = uploadedItemImagePath || editorForm.itemImagePath;
+      const finalPrimaryImagePath = uploadedPrimaryImagePath || editorForm.primaryImagePath || finalItemImagePath;
+      const finalSecondaryImagePath = uploadedSecondaryImagePath || editorForm.secondaryImagePath;
 
       const prices =
-        itemForm.kind === 'physical_reward' || itemForm.kind === 'action_card'
+        editorForm.kind === 'physical_reward' || editorForm.kind === 'action_card'
           ? []
           : [
               baseMinor !== null
                 ? {
                     audience: 'base' as ShopPriceAudience,
-                    currency: itemForm.priceCurrency,
+                    currency: editorForm.priceCurrency,
                     amount_minor: baseMinor,
                     is_active: true,
                   }
@@ -450,109 +696,82 @@ export default function AdminShop() {
               vipMinor !== null
                 ? {
                     audience: 'vip' as ShopPriceAudience,
-                    currency: itemForm.priceCurrency,
+                    currency: editorForm.priceCurrency,
                     amount_minor: vipMinor,
                     is_active: true,
                   }
                 : null,
             ].filter(Boolean);
 
-      const payload = {
-        id: itemForm.id,
-        slug: itemForm.slug.trim(),
-        kind: itemForm.kind,
-        title: itemForm.title.trim(),
-        subtitle: itemForm.subtitle.trim(),
-        description: itemForm.description.trim(),
-        image_path: uploadedPath,
-        cta_label: itemForm.ctaLabel.trim() || deriveDefaultCta(itemForm.kind),
-        is_active: itemForm.isActive,
-        action_key: itemForm.kind === 'action_card' ? itemForm.actionKey : null,
-        coin_amount: itemForm.kind === 'coin_pack' ? Number(itemForm.coinAmount || '0') : null,
-        vip_duration_days: itemForm.kind === 'vip_membership' ? Number(itemForm.vipDurationDays || '0') : null,
+      const itemResult = await saveItem({
+        id: editorForm.itemId,
+        slug: editorForm.slug.trim(),
+        kind: editorForm.kind,
+        title: editorForm.title.trim(),
+        subtitle: editorForm.subtitle.trim(),
+        description: editorForm.description.trim(),
+        image_path: finalItemImagePath,
+        cta_label: editorForm.ctaLabel.trim() || deriveDefaultCta(editorForm.kind),
+        is_active: editorForm.isActive,
+        action_key: editorForm.kind === 'action_card' ? editorForm.actionKey : null,
+        coin_amount: editorForm.kind === 'coin_pack' ? Number(editorForm.coinAmount || '0') : null,
+        vip_duration_days: editorForm.kind === 'vip_membership' ? Number(editorForm.vipDurationDays || '0') : null,
         metadata:
-          itemForm.kind === 'vip_membership' && itemForm.metadataBenefits.trim()
-            ? { benefits: itemForm.metadataBenefits.split(',').map((entry) => entry.trim()).filter(Boolean) }
+          editorForm.kind === 'vip_membership' && editorForm.metadataBenefits.trim()
+            ? { benefits: editorForm.metadataBenefits.split(',').map((entry) => entry.trim()).filter(Boolean) }
             : {},
         prices,
         unlock_rule:
-          itemForm.kind === 'physical_reward'
+          editorForm.kind === 'physical_reward'
             ? {
-                unlock_type: itemForm.unlockType,
-                level_required: itemForm.unlockType === 'level' ? Number(itemForm.levelRequired || '0') : null,
-                challenge_id: itemForm.unlockType === 'challenge' ? itemForm.challengeId || null : null,
-                claim_once: itemForm.claimOnce,
+                unlock_type: editorForm.unlockType,
+                level_required: editorForm.unlockType === 'level' ? Number(editorForm.levelRequired || '0') : null,
+                challenge_id: editorForm.unlockType === 'challenge' ? editorForm.challengeId || null : null,
+                claim_once: editorForm.claimOnce,
               }
             : undefined,
-      };
+      }) as { id?: string };
 
-      await saveItem(payload);
-
-      if (
-        itemForm.file &&
-        previousPath &&
-        previousPath !== uploadedPath &&
-        canDeleteStorageObject(previousPath)
-      ) {
-        await supabase.storage.from('shop-catalog').remove([previousPath]);
-      }
-
-      toast({
-        title: itemForm.id ? 'Shop item updated' : 'Shop item created',
-        description: itemForm.title,
-      });
-      setItemDialogOpen(false);
-      setItemForm(createEmptyItemForm());
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error?.message || 'Unable to save shop item.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleSaveSlot = async () => {
-    try {
-      if (!slotForm.itemId) {
-        throw new Error('Select an item before placing it.');
-      }
-
-      const selectedItem = items.find((item) => item.id === slotForm.itemId);
-      if (!selectedItem) {
-        throw new Error('Selected item not found.');
-      }
-
-      if (slotForm.surfaceKey === 'shop.unlock_cards' && selectedItem.kind !== 'physical_reward') {
-        throw new Error('Only physical rewards can be placed in the unlock row.');
-      }
-
-      if (slotForm.surfaceKey === 'shop.featured_cards' && selectedItem.kind === 'physical_reward') {
-        throw new Error('Physical rewards must stay in the unlock row.');
+      const itemId = itemResult?.id ?? editorForm.itemId;
+      if (!itemId) {
+        throw new Error('Missing draft item id after save.');
       }
 
       await saveSlot({
-        id: slotForm.id,
-        surface_key: slotForm.surfaceKey,
-        sort_order: Number(slotForm.sortOrder || '0'),
-        item_id: slotForm.itemId,
-        card_variant: slotForm.cardVariant,
-        title_override: slotForm.titleOverride,
-        subtitle_override: slotForm.subtitleOverride,
-        cta_label_override: slotForm.ctaLabelOverride,
-        is_active: slotForm.isActive,
+        id: editorForm.slotId,
+        surface_key: editorForm.surfaceKey,
+        sort_order: Number(editorForm.sortOrder || '0'),
+        item_id: itemId,
+        card_variant: editorForm.surfaceKey === 'shop.unlock_cards' ? 'reward' : editorForm.cardVariant,
+        title_override: editorForm.titleOverride.trim(),
+        subtitle_override: editorForm.subtitleOverride.trim(),
+        cta_label_override: editorForm.ctaLabelOverride.trim(),
+        is_active: editorForm.slotActive,
+        presentation: {
+          template_key: editorForm.templateKey,
+          theme_key: editorForm.themeKey,
+          eyebrow_text: editorForm.eyebrowText.trim(),
+          supporting_text: editorForm.supportingText.trim(),
+          primary_image_path: finalPrimaryImagePath,
+          secondary_image_path: finalSecondaryImagePath,
+          show_badge: editorForm.showBadge,
+          show_subtitle: editorForm.showSubtitle,
+          show_supporting_text: editorForm.showSupportingText,
+          show_secondary_image: editorForm.showSecondaryImage,
+          metadata: {},
+        },
       });
 
       toast({
-        title: slotForm.id ? 'Placement updated' : 'Placement created',
-        description: slotForm.surfaceKey,
+        title: editorForm.slotId ? 'Draft card updated' : 'Draft card created',
+        description: editorForm.title,
       });
-      setSlotDialogOpen(false);
-      setSlotForm(createEmptySlotForm());
+      setEditorOpen(false);
+      setEditorForm(emptyEditorForm());
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error?.message || 'Unable to save placement.',
+        description: error?.message || 'Unable to save draft shop card.',
         variant: 'destructive',
       });
     }
@@ -562,13 +781,29 @@ export default function AdminShop() {
     try {
       await setItemActive({ itemId: item.id, isActive: !item.is_active });
       toast({
-        title: item.is_active ? 'Item deactivated' : 'Item activated',
+        title: item.is_active ? 'Draft item deactivated' : 'Draft item activated',
         description: item.title,
       });
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error?.message || 'Unable to change item status.',
+        description: error?.message || 'Unable to change draft item status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handlePublish = async () => {
+    try {
+      await publishCatalog();
+      toast({
+        title: 'Shop published',
+        description: 'Live /shop now uses the current draft workspace.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Publish error',
+        description: error?.message || 'Unable to publish the draft shop.',
         variant: 'destructive',
       });
     }
@@ -594,74 +829,146 @@ export default function AdminShop() {
     }
   };
 
+  const rewardChallenges = challenges as AdminShopChallengeRecord[];
+
   return (
     <AdminShell
-      title="Shop Catalog"
-      description="Canonical shop management for live cards, pricing, unlock rules, and claim moderation."
+      title="Shop Workspace"
+      description="Draft-first visual editing for every public shop card, with preview and one-click publish."
       actions={
         <>
           <Button variant="outline" onClick={() => refetch()} className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button variant="outline" onClick={() => openCreateSlotDialog()} className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}>
-            <LayoutTemplate className="mr-2 h-4 w-4" />
-            New placement
-          </Button>
-          <Button onClick={openCreateItemDialog} className="h-11 bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
+          <Button
+            variant="outline"
+            onClick={() => openNewCardEditor('shop.featured_cards')}
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
+          >
             <Plus className="mr-2 h-4 w-4" />
-            New item
+            New featured card
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => openNewCardEditor('shop.unlock_cards')}
+            className={`h-11 ${ADMIN_OUTLINE_BUTTON_CLASS}`}
+          >
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            New unlock card
+          </Button>
+          <Button
+            onClick={handlePublish}
+            disabled={publishingCatalog || !hasUnpublishedChanges}
+            className="h-11 bg-[#ff1654] text-white hover:bg-[#ff1654]/90"
+          >
+            {publishingCatalog ? 'Publishing...' : 'Publish shop'}
           </Button>
         </>
       }
     >
-      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
         <div className="grid min-h-0 gap-4 xl:grid-rows-[repeat(4,minmax(0,120px))_minmax(0,1fr)]">
-          <AdminStatCard label="Items" value={String(items.length)} icon={Package} />
-          <AdminStatCard label="Featured slots" value={String(featuredCount)} icon={Boxes} accent="#72d2ff" />
-          <AdminStatCard label="Unlock slots" value={String(unlockCount)} icon={ShieldCheck} accent="#72f1b8" />
+          <AdminStatCard label="Draft items" value={String(items.length)} icon={Package} />
+          <AdminStatCard label="Featured cards" value={String(featuredCount)} icon={Boxes} accent="#72d2ff" />
+          <AdminStatCard label="Unlock cards" value={String(unlockCount)} icon={ShieldCheck} accent="#72f1b8" />
           <AdminStatCard label="Pending claims" value={String(pendingClaimsCount)} icon={Sparkles} accent="#ff8a65" />
 
           <AdminPanel
-            title="Publishing rules"
-            description="The lower row is reserved for unlockable physical rewards. VIP prices must never exceed base prices."
+            title="Workspace status"
+            description="The public shop reads only live data. This editor changes the draft until you publish."
             className="min-h-0"
             contentClassName="min-h-0 overflow-y-auto pr-1"
           >
             <div className="space-y-3 text-sm leading-6 text-white/58">
-              <p>Use the catalog tab to define items, then place them into the exact public card rows from Placements.</p>
-              <p>Claims stay pending until an admin marks them approved, fulfilled, rejected, or cancelled.</p>
+              <p className={hasUnpublishedChanges ? 'text-[#ff8ead]' : 'text-[#72f1b8]'}>
+                {hasUnpublishedChanges ? 'Unpublished changes detected in draft.' : 'Draft and live shop are in sync.'}
+              </p>
+              <p>Click any card in the studio rows to edit the exact frontend UI, copy, pricing, images, and reward state.</p>
+              <p>If a row grows past five cards, the live page and the preview both switch to the marquee rail used on the logged-in home shop section.</p>
             </div>
           </AdminPanel>
         </div>
 
         <AdminPanel
-          title="Live shop workspace"
-          description="Catalog, placements, and claim moderation are all driven by the canonical shop schema."
+          title="Admin shop"
+          description="Use the visual studio first; the catalog tab remains available for quick search and review."
           className="h-full"
           contentClassName="min-h-0 h-full overflow-y-auto pr-1"
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full min-h-0 flex-col">
             <TabsList className="mb-4 w-fit bg-[#171012]">
+              <TabsTrigger value="studio">Studio</TabsTrigger>
               <TabsTrigger value="catalog">Catalog</TabsTrigger>
-              <TabsTrigger value="placements">Placements</TabsTrigger>
               <TabsTrigger value="claims">Claims</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="studio" className="mt-0 min-h-0 flex-1">
+              <div className="space-y-6">
+                <div className={`min-h-0 overflow-hidden ${ADMIN_INSET_PANEL_CLASS}`}>
+                  <div className="flex items-start justify-between gap-4 border-b border-[#2b1a1f] px-4 py-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Featured row</h3>
+                      <p className="mt-1 text-sm leading-6 text-white/52">
+                        Figma-accurate desktop cards. Click a card to edit content and live preview UI.
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={() => openNewCardEditor('shop.featured_cards')} className={ADMIN_OUTLINE_BUTTON_CLASS}>
+                      Add card
+                    </Button>
+                  </div>
+                  <div className="p-4">
+                    {featuredCards.length === 0 ? (
+                      <AdminEmptyState title="No featured cards yet" description="Create the first purchasable shop card." />
+                    ) : (
+                      <ShopCardRail cards={featuredCards} onAction={(card) => {
+                        const slot = featuredSlots.find((entry) => entry.id === card.slotId);
+                        if (slot) openSlotEditor(slot);
+                      }} />
+                    )}
+                  </div>
+                </div>
+
+                <div className={`min-h-0 overflow-hidden ${ADMIN_INSET_PANEL_CLASS}`}>
+                  <div className="flex items-start justify-between gap-4 border-b border-[#2b1a1f] px-4 py-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Unlock row</h3>
+                      <p className="mt-1 text-sm leading-6 text-white/52">
+                        Physical rewards only. The template stays reward-focused while matching the shared card system.
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={() => openNewCardEditor('shop.unlock_cards')} className={ADMIN_OUTLINE_BUTTON_CLASS}>
+                      Add reward
+                    </Button>
+                  </div>
+                  <div className="p-4">
+                    {unlockCards.length === 0 ? (
+                      <AdminEmptyState title="No unlock cards yet" description="Add the first level or challenge reward." />
+                    ) : (
+                      <ShopCardRail cards={unlockCards} onAction={(card) => {
+                        const slot = unlockSlots.find((entry) => entry.id === card.slotId);
+                        if (slot) openSlotEditor(slot);
+                      }} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
 
             <TabsContent value="catalog" className="mt-0 min-h-0 flex-1">
               <div className="mb-4 flex flex-wrap gap-3">
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search items by title, slug, kind..."
+                  placeholder="Search draft items by title, slug, kind..."
                   className={`${ADMIN_FIELD_CLASS} max-w-[380px]`}
                 />
               </div>
 
               {filteredItems.length === 0 && !isLoading ? (
                 <AdminEmptyState
-                  title="No catalog items yet"
-                  description="Create the first coin pack, VIP offer, merch item, unlock reward, or action card."
+                  title="No draft items yet"
+                  description="Start from the studio by creating a featured or unlock card."
                 />
               ) : (
                 <div className="grid gap-4 xl:grid-cols-2">
@@ -669,6 +976,7 @@ export default function AdminShop() {
                     const imageSrc = resolveShopCatalogImage(item.image_path);
                     const basePrice = item.prices.find((price) => price.audience === 'base');
                     const vipPrice = item.prices.find((price) => price.audience === 'vip');
+                    const linkedSlot = slots.find((slot) => slot.item_id === item.id);
 
                     return (
                       <div key={item.id} className="rounded-[24px] border border-[#302025] bg-[#1c1c1c] p-4">
@@ -677,7 +985,7 @@ export default function AdminShop() {
                             {imageSrc ? (
                               <img src={imageSrc} alt={item.title} className="h-full w-full object-contain p-4" />
                             ) : (
-                              <ImagePlus className="h-8 w-8 text-white/28" />
+                              <UploadCloud className="h-8 w-8 text-white/28" />
                             )}
                           </div>
 
@@ -692,7 +1000,7 @@ export default function AdminShop() {
                                   item.is_active ? 'bg-[#72f1b8]/16 text-[#72f1b8]' : 'bg-white/8 text-white/46'
                                 }`}
                               >
-                                {item.is_active ? 'Active' : 'Inactive'}
+                                {item.is_active ? 'Draft active' : 'Draft inactive'}
                               </span>
                             </div>
 
@@ -707,16 +1015,16 @@ export default function AdminShop() {
                                 VIP: <span className="font-semibold text-white">{vipPrice ? formatShopMoneyLabel(vipPrice.amount_minor, vipPrice.currency) : 'Same as base'}</span>
                               </div>
                               <div>
-                                CTA: <span className="font-semibold text-white">{item.cta_label || 'Default'}</span>
+                                Surface: <span className="font-semibold text-white">{linkedSlot?.surface_key ?? 'Not placed yet'}</span>
                               </div>
                               <div>
-                                Unlock: <span className="font-semibold text-white">{item.unlockRule?.unlock_type ?? 'none'}</span>
+                                Order: <span className="font-semibold text-white">{linkedSlot ? linkedSlot.sort_order : '-'}</span>
                               </div>
                             </div>
 
                             <div className="mt-4 flex flex-wrap gap-2">
-                              <Button variant="outline" onClick={() => openEditItemDialog(item)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
-                                Edit
+                              <Button variant="outline" onClick={() => openItemEditor(item)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
+                                Open editor
                               </Button>
                               <Button variant="outline" onClick={() => handleToggleItem(item)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
                                 {item.is_active ? 'Deactivate' : 'Activate'}
@@ -731,93 +1039,41 @@ export default function AdminShop() {
               )}
             </TabsContent>
 
-            <TabsContent value="placements" className="mt-0 min-h-0 flex-1">
-              <div className="grid gap-4 xl:grid-cols-2">
-                {SURFACE_OPTIONS.map((surface) => {
-                  const surfaceSlots = slots.filter((slot) => slot.surface_key === surface.value);
-                  return (
-                    <div key={surface.value} className={`min-h-0 overflow-hidden ${ADMIN_INSET_PANEL_CLASS}`}>
-                      <div className="flex items-start justify-between gap-4 border-b border-[#2b1a1f] px-4 py-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{surface.label}</h3>
-                          <p className="mt-1 text-sm leading-6 text-white/52">
-                            {surface.value === 'shop.unlock_cards'
-                              ? 'Only physical rewards are valid here.'
-                              : 'Coin packs, VIP, products, and action cards live here.'}
-                          </p>
-                        </div>
-                        <Button variant="outline" onClick={() => openCreateSlotDialog(surface.value)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
-                          Add
-                        </Button>
-                      </div>
-
-                      <div className="space-y-3 p-4">
-                        {surfaceSlots.length === 0 ? (
-                          <AdminEmptyState
-                            title="No placements yet"
-                            description="Create the first live slot for this shop surface."
-                          />
-                        ) : (
-                          surfaceSlots.map((slot) => {
-                            const item = items.find((entry) => entry.id === slot.item_id);
-                            return (
-                              <div key={slot.id} className="rounded-[20px] border border-[#302025] bg-[#1c1c1c] p-4">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <h4 className="text-base font-semibold text-white">{item?.title ?? 'Unknown item'}</h4>
-                                  <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
-                                    order {slot.sort_order}
-                                  </span>
-                                  <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
-                                    {slot.card_variant}
-                                  </span>
-                                </div>
-                                <p className="mt-2 text-sm text-white/56">
-                                  Overrides: {slot.title_override || 'No title override'} / {slot.subtitle_override || 'No subtitle override'}
-                                </p>
-                                <div className="mt-4">
-                                  <Button variant="outline" onClick={() => openEditSlotDialog(slot)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
-                                    Edit placement
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </TabsContent>
-
             <TabsContent value="claims" className="mt-0 min-h-0 flex-1">
               {claims.length === 0 ? (
-                <AdminEmptyState
-                  title="No reward claims yet"
-                  description="Player claims for unlockable physical rewards will appear here."
-                />
+                <AdminEmptyState title="No reward claims yet" description="User reward claims will appear here for moderation." />
               ) : (
-                <div className="space-y-4">
+                <div className="grid gap-4 xl:grid-cols-2">
                   {claims.map((claim) => (
                     <div key={claim.id} className="rounded-[24px] border border-[#302025] bg-[#1c1c1c] p-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-lg font-semibold text-white">{claim.itemTitle}</h3>
-                        <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
-                          {claim.status}
-                        </span>
-                        <span className="rounded-full border border-[#39242b] bg-[#171012] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[#b7afb2]">
-                          user {claim.user_id}
-                        </span>
+                      <div className="flex items-center gap-4">
+                        {claim.itemImage ? (
+                          <img src={resolveShopCatalogImage(claim.itemImage)} alt={claim.itemTitle} className="h-[82px] w-[82px] rounded-[16px] border border-white/10 bg-[#1a0808] object-contain p-2" />
+                        ) : (
+                          <div className="flex h-[82px] w-[82px] items-center justify-center rounded-[16px] border border-white/10 bg-[#1a0808] text-white/22">
+                            <ShieldCheck className="h-6 w-6" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h3 className="text-lg font-semibold text-white">{claim.itemTitle}</h3>
+                          <p className="text-sm uppercase tracking-[0.18em] text-white/42">{claim.itemSlug}</p>
+                          <p className="mt-2 text-sm text-white/58">Status: {claim.status}</p>
+                        </div>
                       </div>
 
-                      <p className="mt-2 text-sm text-white/58">Requested at {new Date(claim.requested_at).toLocaleString()}</p>
-
-                      <Textarea
-                        value={claimNotes[claim.id] ?? claim.admin_note}
-                        onChange={(event) => setClaimNotes((current) => ({ ...current, [claim.id]: event.target.value }))}
-                        className={`${ADMIN_FIELD_CLASS} mt-4 min-h-[110px]`}
-                        placeholder="Admin note for this claim..."
-                      />
+                      <div className="mt-4">
+                        <label className="text-sm text-white/62">Admin note</label>
+                        <Textarea
+                          value={claimNotes[claim.id] ?? claim.admin_note}
+                          onChange={(event) =>
+                            setClaimNotes((current) => ({
+                              ...current,
+                              [claim.id]: event.target.value,
+                            }))
+                          }
+                          className={`${ADMIN_FIELD_CLASS} mt-2 min-h-[110px]`}
+                        />
+                      </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
                         {CLAIM_STATUS_OPTIONS.map((option) => (
@@ -841,346 +1097,483 @@ export default function AdminShop() {
         </AdminPanel>
       </div>
 
-      <Dialog open={itemDialogOpen} onOpenChange={setItemDialogOpen}>
-        <DialogContent className={`${ADMIN_DIALOG_CLASS} max-h-[90vh] overflow-y-auto sm:max-w-[980px]`}>
+      <Dialog
+        open={editorOpen}
+        onOpenChange={(open) => {
+          setEditorOpen(open);
+          if (!open) {
+            setSearchParams({});
+          }
+        }}
+      >
+        <DialogContent className={`${ADMIN_DIALOG_CLASS} max-h-[92vh] overflow-y-auto sm:max-w-[1180px]`}>
           <DialogHeader>
-            <DialogTitle>{itemForm.id ? 'Edit shop item' : 'Create shop item'}</DialogTitle>
+            <DialogTitle>{editorForm.slotId ? 'Edit draft shop card' : 'Create draft shop card'}</DialogTitle>
             <DialogDescription className="text-white/56">
-              Configure item content, audience pricing, unlock rules, and the live card preview before publishing.
+              Edit the exact frontend card content and preview it before publishing to the live shop.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-5 py-2">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Kind</label>
-                <select
-                  value={itemForm.kind}
-                  onChange={(event) =>
-                    setItemForm((current) => ({
-                      ...current,
-                      kind: event.target.value as ShopItemKind,
-                      priceCurrency: priceCurrencyForKind(event.target.value as ShopItemKind),
-                      ctaLabel: deriveDefaultCta(event.target.value as ShopItemKind),
-                      actionKey: event.target.value === 'action_card' ? current.actionKey : '',
-                      unlockType: event.target.value === 'physical_reward' ? current.unlockType : 'none',
-                    }))
-                  }
-                  className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
-                >
-                  {ITEM_KIND_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Slug</label>
-                <Input value={itemForm.slug} onChange={(event) => setItemForm((current) => ({ ...current, slug: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Title</label>
-                <Input value={itemForm.title} onChange={(event) => setItemForm((current) => ({ ...current, title: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Subtitle</label>
-                <Input value={itemForm.subtitle} onChange={(event) => setItemForm((current) => ({ ...current, subtitle: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <label className="text-sm text-white/64">Description</label>
-              <Textarea value={itemForm.description} onChange={(event) => setItemForm((current) => ({ ...current, description: event.target.value }))} className={`${ADMIN_FIELD_CLASS} min-h-[120px]`} />
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Image path or uploaded file</label>
-                <Input value={itemForm.imagePath} onChange={(event) => setItemForm((current) => ({ ...current, imagePath: event.target.value, imagePreview: resolveShopCatalogImage(event.target.value) }))} className={ADMIN_FIELD_CLASS} />
-                <Input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setItemForm((current) => ({
-                      ...current,
-                      file,
-                      imagePreview: file ? URL.createObjectURL(file) : current.imagePreview,
-                    }));
-                  }}
-                  className={ADMIN_FIELD_CLASS}
-                />
-              </div>
-
-              <div className="flex h-[140px] items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-[#171012]">
-                {itemForm.imagePreview ? (
-                  <img src={itemForm.imagePreview} alt="Preview" className="h-full w-full object-contain p-4" />
-                ) : (
-                  <Eye className="h-7 w-7 text-white/28" />
-                )}
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">CTA label</label>
-                <Input value={itemForm.ctaLabel} onChange={(event) => setItemForm((current) => ({ ...current, ctaLabel: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Active</label>
-                <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
-                  <span className="text-white/72">{itemForm.isActive ? 'Live' : 'Draft'}</span>
-                  <Switch checked={itemForm.isActive} onCheckedChange={(checked) => setItemForm((current) => ({ ...current, isActive: checked }))} />
-                </div>
-              </div>
-
-              {itemForm.kind === 'action_card' ? (
+          <div className="grid gap-6 py-2 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="grid gap-5">
+              <div className="grid gap-4 lg:grid-cols-3">
                 <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Action key</label>
+                  <label className="text-sm text-white/64">Surface</label>
                   <select
-                    value={itemForm.actionKey}
-                    onChange={(event) => setItemForm((current) => ({ ...current, actionKey: event.target.value as ShopActionKey | '' }))}
+                    value={editorForm.surfaceKey}
+                    onChange={(event) => {
+                      const surfaceKey = event.target.value as ShopSurfaceKey;
+                      setEditorForm((current) => ({
+                        ...current,
+                        surfaceKey,
+                        kind: surfaceKey === 'shop.unlock_cards' ? 'physical_reward' : current.kind === 'physical_reward' ? 'coin_pack' : current.kind,
+                        priceCurrency: surfaceKey === 'shop.unlock_cards' ? 'eur' : current.priceCurrency,
+                        cardVariant: surfaceKey === 'shop.unlock_cards' ? 'reward' : defaultCardVariant(current.kind === 'physical_reward' ? 'coin_pack' : current.kind),
+                        templateKey: defaultTemplateForSurface(surfaceKey),
+                        eyebrowText: surfaceKey === 'shop.unlock_cards' ? 'UNLOCK' : current.kind === 'vip_membership' ? 'VIP' : 'COINS',
+                        showSupportingText: surfaceKey === 'shop.unlock_cards' ? true : current.showSupportingText,
+                      }));
+                    }}
                     className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
                   >
-                    <option value="">Select action</option>
-                    {SHOP_ACTION_KEYS.map((action) => (
-                      <option key={action} value={action}>
-                        {action}
+                    <option value="shop.featured_cards">Top row / featured cards</option>
+                    <option value="shop.unlock_cards">Bottom row / unlock cards</option>
+                  </select>
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Kind</label>
+                  <select
+                    value={editorForm.kind}
+                    onChange={(event) => {
+                      const kind = event.target.value as ShopItemKind;
+                      setEditorForm((current) => ({
+                        ...current,
+                        kind,
+                        priceCurrency: priceCurrencyForKind(kind),
+                        ctaLabel: deriveDefaultCta(kind),
+                        actionKey: kind === 'action_card' ? current.actionKey : '',
+                        unlockType: kind === 'physical_reward' ? current.unlockType : 'none',
+                        cardVariant: current.surfaceKey === 'shop.unlock_cards' ? 'reward' : defaultCardVariant(kind),
+                        eyebrowText: current.surfaceKey === 'shop.unlock_cards'
+                          ? 'UNLOCK'
+                          : kind === 'vip_membership'
+                            ? 'VIP'
+                            : kind === 'physical_product'
+                              ? 'MERCH'
+                              : kind === 'action_card'
+                                ? 'ACTION'
+                                : 'COINS',
+                      }));
+                    }}
+                    className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
+                    disabled={editorForm.surfaceKey === 'shop.unlock_cards'}
+                  >
+                    {ITEM_KIND_OPTIONS.filter((option) => editorForm.surfaceKey !== 'shop.unlock_cards' || option.value === 'physical_reward').map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Sort order</label>
+                  <Input
+                    value={editorForm.sortOrder}
+                    onChange={(event) => setEditorForm((current) => ({ ...current, sortOrder: event.target.value }))}
+                    className={ADMIN_FIELD_CLASS}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Slug</label>
+                  <Input value={editorForm.slug} onChange={(event) => setEditorForm((current) => ({ ...current, slug: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">CTA label</label>
+                  <Input value={editorForm.ctaLabel} onChange={(event) => setEditorForm((current) => ({ ...current, ctaLabel: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Title</label>
+                  <Input value={editorForm.title} onChange={(event) => setEditorForm((current) => ({ ...current, title: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Subtitle</label>
+                  <Input value={editorForm.subtitle} onChange={(event) => setEditorForm((current) => ({ ...current, subtitle: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm text-white/64">Description</label>
+                <Textarea value={editorForm.description} onChange={(event) => setEditorForm((current) => ({ ...current, description: event.target.value }))} className={`${ADMIN_FIELD_CLASS} min-h-[100px]`} />
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Item image path or upload</label>
+                  <Input
+                    value={editorForm.itemImagePath}
+                    onChange={(event) =>
+                      setEditorForm((current) => ({
+                        ...current,
+                        itemImagePath: event.target.value,
+                        itemImagePreview: resolveShopCatalogImage(event.target.value),
+                      }))
+                    }
+                    className={ADMIN_FIELD_CLASS}
+                  />
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      setEditorForm((current) => ({
+                        ...current,
+                        itemFile: file,
+                        itemImagePreview: file ? URL.createObjectURL(file) : current.itemImagePreview,
+                      }));
+                    }}
+                    className={ADMIN_FIELD_CLASS}
+                  />
+                </div>
+
+                <div className="flex h-[140px] items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-[#171012]">
+                  {editorForm.itemImagePreview ? (
+                    <img src={editorForm.itemImagePreview} alt="Item preview" className="h-full w-full object-contain p-4" />
+                  ) : (
+                    <UploadCloud className="h-7 w-7 text-white/28" />
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[22px] border border-[#302025] bg-[#171012] p-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-base font-semibold text-white">Frontend card UI</h3>
+                    <p className="mt-1 text-sm leading-6 text-white/52">Everything visible on the live card can be edited here before publish.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Eyebrow / badge text</label>
+                    <Input value={editorForm.eyebrowText} onChange={(event) => setEditorForm((current) => ({ ...current, eyebrowText: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Supporting text</label>
+                    <Input value={editorForm.supportingText} onChange={(event) => setEditorForm((current) => ({ ...current, supportingText: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Title override</label>
+                    <Input value={editorForm.titleOverride} onChange={(event) => setEditorForm((current) => ({ ...current, titleOverride: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Subtitle override</label>
+                    <Input value={editorForm.subtitleOverride} onChange={(event) => setEditorForm((current) => ({ ...current, subtitleOverride: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">CTA override</label>
+                    <Input value={editorForm.ctaLabelOverride} onChange={(event) => setEditorForm((current) => ({ ...current, ctaLabelOverride: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Theme key</label>
+                    <Input value={editorForm.themeKey} onChange={(event) => setEditorForm((current) => ({ ...current, themeKey: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_220px]">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Primary card image override</label>
+                    <Input
+                      value={editorForm.primaryImagePath}
+                      onChange={(event) =>
+                        setEditorForm((current) => ({
+                          ...current,
+                          primaryImagePath: event.target.value,
+                          primaryImagePreview: resolveShopCatalogImage(event.target.value),
+                        }))
+                      }
+                      className={ADMIN_FIELD_CLASS}
+                    />
+                    <Input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setEditorForm((current) => ({
+                          ...current,
+                          primaryFile: file,
+                          primaryImagePreview: file ? URL.createObjectURL(file) : current.primaryImagePreview,
+                        }));
+                      }}
+                      className={ADMIN_FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="flex h-[140px] items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-[#171012]">
+                    {editorForm.primaryImagePreview ? (
+                      <img src={editorForm.primaryImagePreview} alt="Primary override preview" className="h-full w-full object-contain p-4" />
+                    ) : (
+                      <UploadCloud className="h-7 w-7 text-white/28" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_220px]">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Secondary / decorative image override</label>
+                    <Input
+                      value={editorForm.secondaryImagePath}
+                      onChange={(event) =>
+                        setEditorForm((current) => ({
+                          ...current,
+                          secondaryImagePath: event.target.value,
+                          secondaryImagePreview: resolveShopCatalogImage(event.target.value),
+                        }))
+                      }
+                      className={ADMIN_FIELD_CLASS}
+                    />
+                    <Input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setEditorForm((current) => ({
+                          ...current,
+                          secondaryFile: file,
+                          secondaryImagePreview: file ? URL.createObjectURL(file) : current.secondaryImagePreview,
+                          showSecondaryImage: file ? true : current.showSecondaryImage,
+                        }));
+                      }}
+                      className={ADMIN_FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="flex h-[140px] items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-[#171012]">
+                    {editorForm.secondaryImagePreview ? (
+                      <img src={editorForm.secondaryImagePreview} alt="Secondary override preview" className="h-full w-full object-contain p-4" />
+                    ) : (
+                      <UploadCloud className="h-7 w-7 text-white/28" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
+                    <span className="text-white/72">Show badge</span>
+                    <Switch checked={editorForm.showBadge} onCheckedChange={(checked) => setEditorForm((current) => ({ ...current, showBadge: checked }))} />
+                  </div>
+                  <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
+                    <span className="text-white/72">Show subtitle</span>
+                    <Switch checked={editorForm.showSubtitle} onCheckedChange={(checked) => setEditorForm((current) => ({ ...current, showSubtitle: checked }))} />
+                  </div>
+                  <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
+                    <span className="text-white/72">Show supporting text</span>
+                    <Switch checked={editorForm.showSupportingText} onCheckedChange={(checked) => setEditorForm((current) => ({ ...current, showSupportingText: checked }))} />
+                  </div>
+                  <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
+                    <span className="text-white/72">Show secondary image</span>
+                    <Switch checked={editorForm.showSecondaryImage} onCheckedChange={(checked) => setEditorForm((current) => ({ ...current, showSecondaryImage: checked }))} />
+                  </div>
+                </div>
+              </div>
+
+              {editorForm.kind === 'coin_pack' ? (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Coins granted</label>
+                    <Input value={editorForm.coinAmount} onChange={(event) => setEditorForm((current) => ({ ...current, coinAmount: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Base EUR price</label>
+                    <Input value={editorForm.basePrice} onChange={(event) => setEditorForm((current) => ({ ...current, basePrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">VIP EUR price</label>
+                    <Input value={editorForm.vipPrice} onChange={(event) => setEditorForm((current) => ({ ...current, vipPrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                </div>
+              ) : null}
+
+              {editorForm.kind === 'vip_membership' ? (
+                <div className="grid gap-4 lg:grid-cols-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Duration days</label>
+                    <Input value={editorForm.vipDurationDays} onChange={(event) => setEditorForm((current) => ({ ...current, vipDurationDays: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Base coin price</label>
+                    <Input value={editorForm.basePrice} onChange={(event) => setEditorForm((current) => ({ ...current, basePrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">VIP coin price</label>
+                    <Input value={editorForm.vipPrice} onChange={(event) => setEditorForm((current) => ({ ...current, vipPrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Benefits (comma separated)</label>
+                    <Input value={editorForm.metadataBenefits} onChange={(event) => setEditorForm((current) => ({ ...current, metadataBenefits: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                </div>
+              ) : null}
+
+              {editorForm.kind === 'physical_product' ? (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Base EUR price</label>
+                    <Input value={editorForm.basePrice} onChange={(event) => setEditorForm((current) => ({ ...current, basePrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">VIP EUR price</label>
+                    <Input value={editorForm.vipPrice} onChange={(event) => setEditorForm((current) => ({ ...current, vipPrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                  </div>
+                </div>
+              ) : null}
+
+              {editorForm.kind === 'physical_reward' ? (
+                <div className="grid gap-4 lg:grid-cols-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm text-white/64">Unlock type</label>
+                    <select
+                      value={editorForm.unlockType}
+                      onChange={(event) => setEditorForm((current) => ({ ...current, unlockType: event.target.value as ShopUnlockType }))}
+                      className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
+                    >
+                      <option value="level">Level</option>
+                      <option value="challenge">Challenge</option>
+                    </select>
+                  </div>
+
+                  {editorForm.unlockType === 'level' ? (
+                    <div className="grid gap-2">
+                      <label className="text-sm text-white/64">Level required</label>
+                      <Input value={editorForm.levelRequired} onChange={(event) => setEditorForm((current) => ({ ...current, levelRequired: event.target.value }))} className={ADMIN_FIELD_CLASS} />
+                    </div>
+                  ) : null}
+
+                  {editorForm.unlockType === 'challenge' ? (
+                    <div className="grid gap-2 lg:col-span-2">
+                      <label className="text-sm text-white/64">Challenge required</label>
+                      <select
+                        value={editorForm.challengeId}
+                        onChange={(event) => setEditorForm((current) => ({ ...current, challengeId: event.target.value }))}
+                        className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
+                      >
+                        <option value="">Select challenge</option>
+                        {rewardChallenges.map((challenge) => (
+                          <option key={challenge.id} value={challenge.id}>
+                            {challenge.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
+
+                  <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
+                    <span className="text-white/72">Claim once</span>
+                    <Switch checked={editorForm.claimOnce} onCheckedChange={(checked) => setEditorForm((current) => ({ ...current, claimOnce: checked }))} />
+                  </div>
+                </div>
+              ) : null}
+
+              {editorForm.kind === 'action_card' ? (
+                <div className="grid gap-2">
+                  <label className="text-sm text-white/64">Action key</label>
+                  <Input value={editorForm.actionKey} onChange={(event) => setEditorForm((current) => ({ ...current, actionKey: event.target.value as ShopActionKey | '' }))} className={ADMIN_FIELD_CLASS} />
+                </div>
               ) : null}
             </div>
 
-            {itemForm.kind === 'coin_pack' ? (
-              <div className="grid gap-4 lg:grid-cols-3">
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Coins granted</label>
-                  <Input value={itemForm.coinAmount} onChange={(event) => setItemForm((current) => ({ ...current, coinAmount: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Base EUR price</label>
-                  <Input value={itemForm.basePrice} onChange={(event) => setItemForm((current) => ({ ...current, basePrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">VIP EUR price</label>
-                  <Input value={itemForm.vipPrice} onChange={(event) => setItemForm((current) => ({ ...current, vipPrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-              </div>
-            ) : null}
-
-            {itemForm.kind === 'vip_membership' ? (
-              <div className="grid gap-4 lg:grid-cols-4">
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Duration days</label>
-                  <Input value={itemForm.vipDurationDays} onChange={(event) => setItemForm((current) => ({ ...current, vipDurationDays: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Base coin price</label>
-                  <Input value={itemForm.basePrice} onChange={(event) => setItemForm((current) => ({ ...current, basePrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">VIP coin price</label>
-                  <Input value={itemForm.vipPrice} onChange={(event) => setItemForm((current) => ({ ...current, vipPrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Benefits (comma separated)</label>
-                  <Input value={itemForm.metadataBenefits} onChange={(event) => setItemForm((current) => ({ ...current, metadataBenefits: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-              </div>
-            ) : null}
-
-            {itemForm.kind === 'physical_product' ? (
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Base EUR price</label>
-                  <Input value={itemForm.basePrice} onChange={(event) => setItemForm((current) => ({ ...current, basePrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">VIP EUR price</label>
-                  <Input value={itemForm.vipPrice} onChange={(event) => setItemForm((current) => ({ ...current, vipPrice: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                </div>
-              </div>
-            ) : null}
-
-            {itemForm.kind === 'physical_reward' ? (
-              <div className="grid gap-4 lg:grid-cols-4">
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Unlock type</label>
-                  <select
-                    value={itemForm.unlockType}
-                    onChange={(event) => setItemForm((current) => ({ ...current, unlockType: event.target.value as ShopUnlockType }))}
-                    className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
+            <div className="grid gap-4">
+              <div className="rounded-[24px] border border-[#302025] bg-[#171012] p-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={previewAudience === 'base' ? 'default' : 'outline'}
+                    className={previewAudience === 'base' ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/90' : ADMIN_OUTLINE_BUTTON_CLASS}
+                    onClick={() => setPreviewAudience('base')}
                   >
-                    <option value="none">None</option>
-                    <option value="level">Level</option>
-                    <option value="challenge">Challenge</option>
-                  </select>
+                    Base
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={previewAudience === 'vip' ? 'default' : 'outline'}
+                    className={previewAudience === 'vip' ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/90' : ADMIN_OUTLINE_BUTTON_CLASS}
+                    onClick={() => setPreviewAudience('vip')}
+                  >
+                    VIP
+                  </Button>
+                  {editorForm.kind === 'physical_reward' ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant={rewardPreviewState === 'locked' ? 'default' : 'outline'}
+                        className={rewardPreviewState === 'locked' ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/90' : ADMIN_OUTLINE_BUTTON_CLASS}
+                        onClick={() => setRewardPreviewState('locked')}
+                      >
+                        Locked
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={rewardPreviewState === 'unlocked' ? 'default' : 'outline'}
+                        className={rewardPreviewState === 'unlocked' ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/90' : ADMIN_OUTLINE_BUTTON_CLASS}
+                        onClick={() => setRewardPreviewState('unlocked')}
+                      >
+                        Unlocked
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={rewardPreviewState === 'claimed' ? 'default' : 'outline'}
+                        className={rewardPreviewState === 'claimed' ? 'bg-[#ff1654] text-white hover:bg-[#ff1654]/90' : ADMIN_OUTLINE_BUTTON_CLASS}
+                        onClick={() => setRewardPreviewState('claimed')}
+                      >
+                        Claimed
+                      </Button>
+                    </>
+                  ) : null}
                 </div>
 
-                {itemForm.unlockType === 'level' ? (
-                  <div className="grid gap-2">
-                    <label className="text-sm text-white/64">Level required</label>
-                    <Input value={itemForm.levelRequired} onChange={(event) => setItemForm((current) => ({ ...current, levelRequired: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-                  </div>
-                ) : null}
-
-                {itemForm.unlockType === 'challenge' ? (
-                  <div className="grid gap-2 lg:col-span-2">
-                    <label className="text-sm text-white/64">Challenge required</label>
-                    <select
-                      value={itemForm.challengeId}
-                      onChange={(event) => setItemForm((current) => ({ ...current, challengeId: event.target.value }))}
-                      className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
-                    >
-                      <option value="">Select challenge</option>
-                      {challenges.map((challenge: ChallengeRow) => (
-                        <option key={challenge.id} value={challenge.id}>
-                          {challenge.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : null}
-
-                <div className="grid gap-2">
-                  <label className="text-sm text-white/64">Claim once</label>
-                  <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
-                    <span className="text-white/72">{itemForm.claimOnce ? 'Yes' : 'No'}</span>
-                    <Switch checked={itemForm.claimOnce} onCheckedChange={(checked) => setItemForm((current) => ({ ...current, claimOnce: checked }))} />
-                  </div>
+                <p className="mt-4 text-sm uppercase tracking-[0.2em] text-white/42">User-facing preview</p>
+                <div className="mt-4 overflow-hidden rounded-[20px] border border-white/8 bg-[#120607] p-4">
+                  <ShopCardRail cards={[previewCard]} />
                 </div>
-              </div>
-            ) : null}
 
-            <ItemEditorPreview form={itemForm} baseLabel={baseLabel} vipLabel={vipLabel} />
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setItemDialogOpen(false)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveItem} disabled={savingItem} className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
-              {savingItem ? 'Saving...' : itemForm.id ? 'Save item' : 'Create item'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={slotDialogOpen} onOpenChange={setSlotDialogOpen}>
-        <DialogContent className={`${ADMIN_DIALOG_CLASS} max-h-[90vh] overflow-y-auto sm:max-w-[760px]`}>
-          <DialogHeader>
-            <DialogTitle>{slotForm.id ? 'Edit placement' : 'Create placement'}</DialogTitle>
-            <DialogDescription className="text-white/56">
-              Assign catalog items to the featured or unlock rows exactly as they should appear on the public shop page.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-2">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Surface</label>
-                <select
-                  value={slotForm.surfaceKey}
-                  onChange={(event) => {
-                    const surfaceKey = event.target.value as SlotFormState['surfaceKey'];
-                    setSlotForm((current) => ({
-                      ...current,
-                      surfaceKey,
-                      cardVariant: surfaceKey === 'shop.unlock_cards' ? 'reward' : current.cardVariant,
-                      itemId:
-                        surfaceKey === 'shop.unlock_cards'
-                          ? physicalRewardItems[0]?.id ?? ''
-                          : current.itemId,
-                    }));
-                  }}
-                  className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
-                >
-                  {SURFACE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Sort order</label>
-                <Input value={slotForm.sortOrder} onChange={(event) => setSlotForm((current) => ({ ...current, sortOrder: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Item</label>
-                <select
-                  value={slotForm.itemId}
-                  onChange={(event) => setSlotForm((current) => ({ ...current, itemId: event.target.value }))}
-                  className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
-                >
-                  <option value="">Select item</option>
-                  {(slotForm.surfaceKey === 'shop.unlock_cards' ? physicalRewardItems : featuredItems).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.title} ({item.kind})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Card variant</label>
-                <select
-                  value={slotForm.cardVariant}
-                  onChange={(event) => setSlotForm((current) => ({ ...current, cardVariant: event.target.value as ShopCardVariant }))}
-                  className={`${ADMIN_FIELD_CLASS} h-12 rounded-[16px] bg-[#171012] px-4 text-white`}
-                >
-                  {['default', 'coins', 'reward', 'action'].map((variant) => (
-                    <option key={variant} value={variant}>
-                      {variant}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Title override</label>
-                <Input value={slotForm.titleOverride} onChange={(event) => setSlotForm((current) => ({ ...current, titleOverride: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">Subtitle override</label>
-                <Input value={slotForm.subtitleOverride} onChange={(event) => setSlotForm((current) => ({ ...current, subtitleOverride: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm text-white/64">CTA override</label>
-                <Input value={slotForm.ctaLabelOverride} onChange={(event) => setSlotForm((current) => ({ ...current, ctaLabelOverride: event.target.value }))} className={ADMIN_FIELD_CLASS} />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <label className="text-sm text-white/64">Active</label>
-              <div className={`${ADMIN_FIELD_CLASS} flex h-12 items-center justify-between rounded-[16px] px-4`}>
-                <span className="text-white/72">{slotForm.isActive ? 'Live slot' : 'Hidden slot'}</span>
-                <Switch checked={slotForm.isActive} onCheckedChange={(checked) => setSlotForm((current) => ({ ...current, isActive: checked }))} />
+                <div className="mt-4 flex items-center gap-3 text-sm text-white/58">
+                  <span>LIVE VIEWER</span>
+                  <span className="font-semibold text-white">{previewAudience === 'vip' ? 'VIP' : 'BASE'}</span>
+                  <span>
+                    LVL{' '}
+                    {rewardPreviewState === 'locked'
+                      ? '0'
+                      : editorForm.kind === 'physical_reward' && editorForm.unlockType === 'level'
+                        ? editorForm.levelRequired || '1'
+                        : '99'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSlotDialogOpen(false)} className={ADMIN_OUTLINE_BUTTON_CLASS}>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" className={ADMIN_OUTLINE_BUTTON_CLASS} onClick={() => setEditorOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveSlot} disabled={savingSlot} className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90">
-              {savingSlot ? 'Saving...' : slotForm.id ? 'Save placement' : 'Create placement'}
+            <Button
+              type="button"
+              onClick={handleSaveCard}
+              disabled={savingItem || savingSlot}
+              className="bg-[#ff1654] text-white hover:bg-[#ff1654]/90"
+            >
+              {editorForm.slotId ? 'Save draft card' : 'Create draft card'}
             </Button>
           </DialogFooter>
         </DialogContent>

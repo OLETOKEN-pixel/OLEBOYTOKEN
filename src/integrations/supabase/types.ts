@@ -2243,6 +2243,11 @@ export type Database = {
         Returns: Json
       }
       generate_unique_username: { Args: { base_name: string }; Returns: string }
+      admin_get_shop_workspace: {
+        Args: { p_workspace?: string }
+        Returns: Json
+      }
+      admin_publish_shop_catalog: { Args: never; Returns: Json }
       get_admin_issue_stats: { Args: never; Returns: Json }
       get_current_period_key: { Args: { p_type: string }; Returns: string }
       get_leaderboard: {
@@ -2531,6 +2536,7 @@ export type Database = {
         | "action_card"
       shop_price_audience: "base" | "vip"
       shop_price_currency: "eur" | "coins"
+      shop_workspace: "draft" | "live"
       shop_unlock_type: "none" | "level" | "challenge"
     }
     CompositeTypes: {
@@ -2670,6 +2676,7 @@ export const Constants = {
       ],
       shop_price_audience: ["base", "vip"],
       shop_price_currency: ["eur", "coins"],
+      shop_workspace: ["draft", "live"],
       shop_unlock_type: ["none", "level", "challenge"],
     },
   },

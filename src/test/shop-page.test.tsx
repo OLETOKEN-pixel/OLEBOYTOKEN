@@ -2,213 +2,130 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Shop from '@/pages/Shop';
+import type { ShopCardViewModel } from '@/lib/shopCatalog';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(here, '..', '..');
 
+function makeFeaturedCard(
+  id: string,
+  slotId: string,
+  sortOrder: number,
+  title: string,
+  subtitle: string,
+  description: string,
+  coinAmount: number,
+  priceLabel: string,
+  badgeLabel: string,
+): ShopCardViewModel {
+  return {
+    id,
+    slotId,
+    surfaceKey: 'shop.featured_cards',
+    sortOrder,
+    cardVariant: 'coins',
+    templateKey: 'featured-card',
+    themeKey: 'default',
+    title,
+    subtitle,
+    description,
+    supportingText: '',
+    image: '/coin.png',
+    primaryImage: '/coin.png',
+    secondaryImage: '',
+    kind: 'coin_pack',
+    ctaLabel: 'BUY NOW',
+    actionKey: null,
+    coinAmount,
+    vipDurationDays: null,
+    priceLabel,
+    priceCurrency: 'eur',
+    unlockLabel: null,
+    levelRequired: null,
+    challengeId: null,
+    isLocked: false,
+    isClaimed: false,
+    claimStatus: null,
+    badgeLabel,
+    showBadge: true,
+    showSubtitle: true,
+    showSupportingText: false,
+    showSecondaryImage: false,
+    metadata: { badge: badgeLabel },
+    searchText: `${title} ${subtitle} ${description} ${priceLabel} ${badgeLabel}`.toLowerCase(),
+  };
+}
+
+function makeUnlockCard(
+  id: string,
+  slotId: string,
+  sortOrder: number,
+  title: string,
+  description: string,
+  image: string,
+  levelRequired: number,
+): ShopCardViewModel {
+  return {
+    id,
+    slotId,
+    surfaceKey: 'shop.unlock_cards',
+    sortOrder,
+    cardVariant: 'reward',
+    templateKey: 'unlock-card',
+    themeKey: 'default',
+    title,
+    subtitle: 'LEVEL REWARD',
+    description,
+    supportingText: description,
+    image,
+    primaryImage: image,
+    secondaryImage: '',
+    kind: 'physical_reward',
+    ctaLabel: 'CLAIM',
+    actionKey: null,
+    coinAmount: null,
+    vipDurationDays: null,
+    priceLabel: null,
+    priceCurrency: null,
+    unlockLabel: `LVL ${levelRequired}`,
+    levelRequired,
+    challengeId: null,
+    isLocked: true,
+    isClaimed: false,
+    claimStatus: null,
+    badgeLabel: 'UNLOCK',
+    showBadge: true,
+    showSubtitle: true,
+    showSupportingText: true,
+    showSecondaryImage: false,
+    metadata: {},
+    searchText: `${title} level reward ${description} lvl ${levelRequired}`.toLowerCase(),
+  };
+}
+
 const mocks = vi.hoisted(() => ({
   isMobile: false,
+  isAdmin: false,
   openWalletPurchase: vi.fn(),
   claimReward: vi.fn(),
   refreshWallet: vi.fn(),
   toast: vi.fn(),
   featuredCards: [
-    {
-      id: 'coin-pack-3',
-      slotId: 'featured-1',
-      surfaceKey: 'shop.featured_cards',
-      sortOrder: 0,
-      cardVariant: 'coins',
-      title: '3 COINS',
-      subtitle: 'STARTER',
-      description: 'Starter pack',
-      image: '/coin.png',
-      kind: 'coin_pack',
-      ctaLabel: 'BUY NOW',
-      actionKey: null,
-      coinAmount: 3,
-      vipDurationDays: null,
-      priceLabel: '€3,00',
-      priceCurrency: 'eur',
-      unlockLabel: null,
-      levelRequired: null,
-      challengeId: null,
-      isLocked: false,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: 'x3',
-      metadata: { badge: 'x3' },
-      searchText: '3 coins starter starter pack €3,00 x3 coin_pack',
-    },
-    {
-      id: 'coin-pack-5',
-      slotId: 'featured-2',
-      surfaceKey: 'shop.featured_cards',
-      sortOrder: 1,
-      cardVariant: 'coins',
-      title: '5 COINS',
-      subtitle: 'BOOST',
-      description: 'Boost pack',
-      image: '/coin.png',
-      kind: 'coin_pack',
-      ctaLabel: 'BUY NOW',
-      actionKey: null,
-      coinAmount: 5,
-      vipDurationDays: null,
-      priceLabel: '€5,00',
-      priceCurrency: 'eur',
-      unlockLabel: null,
-      levelRequired: null,
-      challengeId: null,
-      isLocked: false,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: 'x5',
-      metadata: { badge: 'x5' },
-      searchText: '5 coins boost boost pack €5,00 x5 coin_pack',
-    },
-    {
-      id: 'coin-pack-10',
-      slotId: 'featured-3',
-      surfaceKey: 'shop.featured_cards',
-      sortOrder: 2,
-      cardVariant: 'coins',
-      title: '10 COINS',
-      subtitle: 'MOST WANTED',
-      description: 'Most wanted pack',
-      image: '/coin.png',
-      kind: 'coin_pack',
-      ctaLabel: 'BUY NOW',
-      actionKey: null,
-      coinAmount: 10,
-      vipDurationDays: null,
-      priceLabel: '€10,00',
-      priceCurrency: 'eur',
-      unlockLabel: null,
-      levelRequired: null,
-      challengeId: null,
-      isLocked: false,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: 'x10',
-      metadata: { badge: 'x10' },
-      searchText: '10 coins most wanted most wanted pack €10,00 x10 coin_pack',
-    },
-    {
-      id: 'coin-pack-15',
-      slotId: 'featured-4',
-      surfaceKey: 'shop.featured_cards',
-      sortOrder: 3,
-      cardVariant: 'coins',
-      title: '15 COINS',
-      subtitle: 'CLIMBER',
-      description: 'Climber pack',
-      image: '/coin.png',
-      kind: 'coin_pack',
-      ctaLabel: 'BUY NOW',
-      actionKey: null,
-      coinAmount: 15,
-      vipDurationDays: null,
-      priceLabel: '€15,00',
-      priceCurrency: 'eur',
-      unlockLabel: null,
-      levelRequired: null,
-      challengeId: null,
-      isLocked: false,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: 'x15',
-      metadata: { badge: 'x15' },
-      searchText: '15 coins climber climber pack €15,00 x15 coin_pack',
-    },
-    {
-      id: 'coin-pack-25',
-      slotId: 'featured-5',
-      surfaceKey: 'shop.featured_cards',
-      sortOrder: 4,
-      cardVariant: 'coins',
-      title: '25 COINS',
-      subtitle: 'BEST SELLER',
-      description: 'Best seller pack',
-      image: '/coin.png',
-      kind: 'coin_pack',
-      ctaLabel: 'BUY NOW',
-      actionKey: null,
-      coinAmount: 25,
-      vipDurationDays: null,
-      priceLabel: '€25,00',
-      priceCurrency: 'eur',
-      unlockLabel: null,
-      levelRequired: null,
-      challengeId: null,
-      isLocked: false,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: 'x25',
-      metadata: { badge: 'x25' },
-      searchText: '25 coins best seller best seller pack €25,00 x25 coin_pack',
-    },
-  ],
+    makeFeaturedCard('coin-pack-3', 'featured-1', 0, '3 COINS', 'STARTER PACK', 'Starter pack', 3, '€3,00', 'COINS'),
+    makeFeaturedCard('coin-pack-5', 'featured-2', 1, '5 COINS', 'COIN PACK', 'Boost pack', 5, '€5,00', 'COINS'),
+    makeFeaturedCard('coin-pack-10', 'featured-3', 2, '10 COINS', 'COIN PACK', 'Most wanted pack', 10, '€10,00', 'COINS'),
+    makeFeaturedCard('coin-pack-15', 'featured-4', 3, '15 COINS', 'COIN PACK', 'Climber pack', 15, '€15,00', 'COINS'),
+    makeFeaturedCard('coin-pack-25', 'featured-5', 4, '25 COINS', 'COIN PACK', 'Best seller pack', 25, '€25,00', 'COINS'),
+  ] satisfies ShopCardViewModel[],
   unlockCards: [
-    {
-      id: 'reward-15',
-      slotId: 'unlock-1',
-      surfaceKey: 'shop.unlock_cards',
-      sortOrder: 0,
-      cardVariant: 'reward',
-      title: 'TAPPETINO',
-      subtitle: 'LEVEL REWARD',
-      description: 'Official OleBoy mousepad reward.',
-      image: '/shop/tappetino.png',
-      kind: 'physical_reward',
-      ctaLabel: 'CLAIM',
-      actionKey: null,
-      coinAmount: null,
-      vipDurationDays: null,
-      priceLabel: null,
-      priceCurrency: null,
-      unlockLabel: 'LVL 15',
-      levelRequired: 15,
-      challengeId: null,
-      isLocked: true,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: null,
-      metadata: {},
-      searchText: 'tappetino level reward official oleboy mousepad reward lvl 15 physical_reward',
-    },
-    {
-      id: 'reward-30',
-      slotId: 'unlock-2',
-      surfaceKey: 'shop.unlock_cards',
-      sortOrder: 1,
-      cardVariant: 'reward',
-      title: 'MOUSE',
-      subtitle: 'LEVEL REWARD',
-      description: 'Official OleBoy mouse reward.',
-      image: '/shop/mouse.webp',
-      kind: 'physical_reward',
-      ctaLabel: 'CLAIM',
-      actionKey: null,
-      coinAmount: null,
-      vipDurationDays: null,
-      priceLabel: null,
-      priceCurrency: null,
-      unlockLabel: 'LVL 30',
-      levelRequired: 30,
-      challengeId: null,
-      isLocked: true,
-      isClaimed: false,
-      claimStatus: null,
-      badgeLabel: null,
-      metadata: {},
-      searchText: 'mouse level reward official oleboy mouse reward lvl 30 physical_reward',
-    },
-  ],
+    makeUnlockCard('reward-15', 'unlock-1', 0, 'TAPPETINO', 'Official OleBoy mousepad reward.', '/shop/tappetino.png', 15),
+    makeUnlockCard('reward-30', 'unlock-2', 1, 'MOUSE', 'Official OleBoy mouse reward.', '/shop/mouse.webp', 30),
+  ] satisfies ShopCardViewModel[],
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -224,6 +141,15 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: null,
     refreshWallet: mocks.refreshWallet,
+  }),
+}));
+
+vi.mock('@/hooks/useAdminStatus', () => ({
+  useAdminStatus: () => ({
+    user: null,
+    authLoading: false,
+    isAdmin: mocks.isAdmin,
+    isLoading: false,
   }),
 }));
 
@@ -266,20 +192,39 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
+function createWrapper({ children }: { children: ReactNode }) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+function AdminLocationProbe() {
+  const location = useLocation();
+  return <div data-testid="admin-location">{`${location.pathname}${location.search}`}</div>;
+}
+
 function renderShop() {
   return render(
     <MemoryRouter initialEntries={['/shop']}>
       <Routes>
         <Route path="/shop" element={<Shop />} />
         <Route path="/privacy" element={<div data-testid="privacy-page">PRIVACY</div>} />
+        <Route path="/admin/shop" element={<AdminLocationProbe />} />
       </Routes>
     </MemoryRouter>,
+    { wrapper: createWrapper },
   );
 }
 
 describe('Shop page', () => {
   beforeEach(() => {
     mocks.isMobile = false;
+    mocks.isAdmin = false;
     mocks.openWalletPurchase.mockReset();
     mocks.claimReward.mockReset();
     mocks.refreshWallet.mockReset();
@@ -313,6 +258,7 @@ describe('Shop page', () => {
     expect(screen.getByText('LVL 12')).toBeInTheDocument();
     expect(screen.getByTestId('shop-footer')).toBeInTheDocument();
     expect(container.querySelector('[data-wallet-coin="true"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-shop-rail-mode="fixed"]')).toHaveLength(2);
     expect(srcs).toContain('/figma-assets/shop-spaccato-title.svg');
     expect(srcs).toContain('/figma-assets/shop/search-icon.svg');
     expect(srcs).toContain('/figma-assets/shop/vip-hero-overlay.svg');
@@ -354,6 +300,17 @@ describe('Shop page', () => {
 
     fireEvent.change(input, { target: { value: '' } });
     expect(container.querySelectorAll('[data-shop-card]').length).toBe(7);
+  });
+
+  it('deep-links admins from a public card into the admin shop editor workspace', () => {
+    mocks.isAdmin = true;
+    renderShop();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit 3 COINS' }));
+
+    expect(screen.getByTestId('admin-location')).toHaveTextContent(
+      '/admin/shop?slot=featured-1&surface=shop.featured_cards&item=coin-pack-3',
+    );
   });
 
   it('renders the responsive mobile adaptation', () => {

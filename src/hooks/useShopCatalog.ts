@@ -52,7 +52,7 @@ export function useShopCatalog() {
       return;
     }
 
-    const tables = ['shop_items', 'shop_item_prices', 'shop_item_unlock_rules', 'shop_surface_slots'] as const;
+    const tables = ['shop_items', 'shop_item_prices', 'shop_item_unlock_rules', 'shop_surface_slots', 'shop_slot_presentations'] as const;
     const channels = tables.map((table) =>
       supabase
         .channel(`shop-catalog-${table}`)

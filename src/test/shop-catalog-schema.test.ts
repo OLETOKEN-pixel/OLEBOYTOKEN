@@ -32,6 +32,26 @@ describe('Shop catalog canonical schema', () => {
     expect(migration).toContain("'vip-membership-30d'");
   });
 
+  it('adds the draft/live workspace migration with slot presentations and publish RPCs', () => {
+    const migration = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/migrations/20260509113000_shop_workspace_draft_publish.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain('CREATE TYPE public.shop_workspace AS ENUM');
+    expect(migration).toContain("'draft'");
+    expect(migration).toContain("'live'");
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.shop_draft_items');
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.shop_draft_item_prices');
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.shop_draft_item_unlock_rules');
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.shop_draft_surface_slots');
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.shop_slot_presentations');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.admin_get_shop_workspace');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.admin_publish_shop_catalog()');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.shop_money_label');
+    expect(migration).toContain("'€' || REPLACE(to_char");
+  });
+
   it('exposes the canonical shop catalog types and RPCs to the frontend', () => {
     const typesFile = fs.readFileSync(
       path.resolve(process.cwd(), 'src/integrations/supabase/types.ts'),
@@ -48,6 +68,8 @@ describe('Shop catalog canonical schema', () => {
     expect(typesFile).toContain('p_payload: Json');
     expect(typesFile).toContain('admin_upsert_shop_surface_slot: {');
     expect(typesFile).toContain('admin_set_shop_item_active: {');
+    expect(typesFile).toContain('admin_get_shop_workspace: {');
+    expect(typesFile).toContain('admin_publish_shop_catalog: { Args: never; Returns: Json }');
     expect(typesFile).toContain('claim_shop_reward: { Args: { p_item_id: string }; Returns: Json }');
     expect(typesFile).toContain('admin_update_shop_claim: {');
     expect(typesFile).toContain('purchase_shop_wallet_item: { Args: { p_item_id: string }; Returns: Json }');
@@ -66,6 +88,7 @@ describe('Shop catalog canonical schema', () => {
     expect(typesFile).toContain('"fulfilled"');
     expect(typesFile).toContain('"rejected"');
     expect(typesFile).toContain('"cancelled"');
+    expect(typesFile).toContain('shop_workspace: "draft" | "live"');
   });
 
   it('registers the generic shop checkout function in Supabase config', () => {

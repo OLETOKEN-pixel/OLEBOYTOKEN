@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
+import { ShopCardRail } from '@/components/shop/ShopCardRail';
 import { useShopCatalog } from '@/hooks/useShopCatalog';
 import { useShopLevelRewards } from '@/hooks/useShopLevelRewards';
+import type { ShopCardViewModel } from '@/lib/shopCatalog';
 
 const imgStarShape = '/figma-assets/figma-star-shape.svg';
 const imgArrowStroke = '/figma-assets/figma-arrow-stroke.svg';
@@ -8,42 +10,85 @@ const imgBwArrow = '/figma-assets/figma-bw-arrow.svg';
 const imgFwArrow = '/figma-assets/figma-fw-arrow.svg';
 const imgSpaccatoTitle = '/figma-assets/shop-spaccato-title.svg';
 
-type ShopItem =
-  | { type: 'level'; image: string; name: string; levelRequired: number }
-  | { type: 'vip'; image: string; price: string; label: string; sublabel: string };
-
-const shopItems: ShopItem[] = [
-  { type: 'vip', image: '/showreel/vip-icon.svg', price: '5 COINS', label: 'VIP', sublabel: '1 MONTH' },
-];
-
-const CARD_WIDTH = 227;
-const CARD_GAP = 60;
-
 export const ShopSection = () => {
   const navigate = useNavigate();
   const { rewards } = useShopLevelRewards();
   const { vipOffer } = useShopCatalog();
 
-  const levelRewardItems: ShopItem[] = rewards.map((reward) => ({
-    type: 'level',
-    image: reward.image,
-    name: reward.name,
-    levelRequired: reward.levelRequired,
-  }));
-
-  const vipItems: ShopItem[] = vipOffer
-    ? [
-        {
-          type: 'vip',
-          image: vipOffer.imagePath,
-          price: vipOffer.effectivePrice?.label ?? '5 COINS',
-          label: vipOffer.title,
-          sublabel: vipOffer.subtitle || '1 MONTH',
-        },
-      ]
-    : shopItems;
-
-  const carouselItems = [...levelRewardItems, ...vipItems];
+  const cards: ShopCardViewModel[] = [
+    ...rewards.map((reward, index) => ({
+      id: reward.id,
+      slotId: `home-reward-${reward.id}`,
+      surfaceKey: 'shop.unlock_cards' as const,
+      sortOrder: index,
+      cardVariant: 'reward' as const,
+      templateKey: 'unlock-card' as const,
+      themeKey: 'default',
+      title: reward.name,
+      subtitle: 'LEVEL REWARD',
+      description: reward.description,
+      supportingText: reward.description,
+      image: reward.image,
+      primaryImage: reward.image,
+      secondaryImage: '',
+      kind: 'physical_reward' as const,
+      ctaLabel: 'CLAIM',
+      actionKey: null,
+      coinAmount: null,
+      vipDurationDays: null,
+      priceLabel: null,
+      priceCurrency: null,
+      unlockLabel: `LVL ${reward.levelRequired}`,
+      levelRequired: reward.levelRequired,
+      challengeId: null,
+      isLocked: true,
+      isClaimed: false,
+      claimStatus: null,
+      badgeLabel: 'UNLOCK',
+      showBadge: true,
+      showSubtitle: true,
+      showSupportingText: true,
+      showSecondaryImage: false,
+      metadata: {},
+      searchText: `${reward.name} level reward lvl ${reward.levelRequired}`.toLowerCase(),
+    })),
+    {
+      id: vipOffer?.id ?? 'home-vip-fallback',
+      slotId: 'home-vip-offer',
+      surfaceKey: 'shop.featured_cards',
+      sortOrder: 9_999,
+      cardVariant: 'coins',
+      templateKey: 'featured-card',
+      themeKey: 'default',
+      title: vipOffer?.title ?? 'VIP',
+      subtitle: vipOffer?.subtitle || '1 MONTH',
+      description: vipOffer?.description ?? 'VIP membership',
+      supportingText: '',
+      image: vipOffer?.imagePath ?? '/showreel/vip-icon.svg',
+      primaryImage: vipOffer?.imagePath ?? '/showreel/vip-icon.svg',
+      secondaryImage: '',
+      kind: 'vip_membership',
+      ctaLabel: vipOffer?.ctaLabel ?? 'GET VIP',
+      actionKey: null,
+      coinAmount: null,
+      vipDurationDays: vipOffer?.vipDurationDays ?? 30,
+      priceLabel: vipOffer?.effectivePrice?.label ?? '5 COINS',
+      priceCurrency: vipOffer?.effectivePrice?.currency ?? 'coins',
+      unlockLabel: null,
+      levelRequired: null,
+      challengeId: null,
+      isLocked: false,
+      isClaimed: false,
+      claimStatus: null,
+      badgeLabel: 'VIP',
+      showBadge: true,
+      showSubtitle: true,
+      showSupportingText: false,
+      showSecondaryImage: false,
+      metadata: {},
+      searchText: `${vipOffer?.title ?? 'VIP'} ${vipOffer?.effectivePrice?.label ?? '5 COINS'}`.toLowerCase(),
+    },
+  ];
 
   return (
     <div id="s-shop" className="z-[1] h-[955px] w-[1920px] flex bg-[#0f0404]">
@@ -95,79 +140,8 @@ export const ShopSection = () => {
           </div>
         </div>
 
-        <div className="group absolute left-0 top-[311px] h-[272px] w-[623px] overflow-hidden">
-          <div
-            className="flex h-[272px] w-max animate-marquee group-hover:[animation-play-state:paused]"
-            style={{ animationDuration: '12s', willChange: 'transform' }}
-          >
-            {[...carouselItems, ...carouselItems].map((item, index) => (
-              <div
-                key={index}
-                className="relative flex-shrink-0 overflow-hidden rounded-[17px] bg-[#3a0000]"
-                style={{ width: `${CARD_WIDTH}px`, height: '272px', marginRight: `${CARD_GAP}px` }}
-              >
-                {item.type === 'level' ? (
-                  <>
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="absolute inset-0 h-full w-full object-contain p-4"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 h-[120px] bg-gradient-to-t from-[#3a0000] to-transparent" />
-                    <div className="absolute bottom-[14px] left-[14px] flex items-center gap-[6px]">
-                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] text-[18px] font-bold leading-normal whitespace-nowrap text-white">
-                        Lvl {item.levelRequired}
-                      </span>
-                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] text-[18px] font-bold leading-normal text-white">
-                        -
-                      </span>
-                      <span
-                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] text-[18px] font-black leading-normal whitespace-nowrap"
-                        style={{
-                          background: 'linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,78,125,1) 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        FREE
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <img src={item.image} alt="VIP" className="mb-3 h-[63px] w-[76px]" />
-                      <span
-                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] text-[31px] font-black leading-[normal]"
-                        style={{
-                          background: 'linear-gradient(to bottom, #ff1654, #3a0000)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {item.label}
-                      </span>
-                      <span
-                        className="[font-family:'Base_Neue_Trial-ExpandedBlack_Oblique',Helvetica] mt-1 text-[14px] font-black"
-                        style={{
-                          background: 'linear-gradient(to bottom, white, #0f0404)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {item.sublabel}
-                      </span>
-                    </div>
-                    <div className="absolute bottom-[14px] left-[14px]">
-                      <span className="[font-family:'Base_Neue_Trial-ExpandedBold',Helvetica] text-[31px] font-bold leading-[normal] text-white">
-                        {item.price}
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="absolute left-0 top-[311px] h-[272px] w-[623px] overflow-hidden">
+          <ShopCardRail cards={cards} onAction={() => navigate('/shop')} forceMarquee />
         </div>
 
         <div className="pointer-events-none absolute left-[338px] top-[311px] h-[272px] w-[285px] bg-[linear-gradient(270deg,rgba(15,4,4,1)_0%,rgba(15,4,4,0)_100%)]" />
