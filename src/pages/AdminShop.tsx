@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Package, ShieldCheck, UploadCloud } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ChevronLeft, ChevronRight, Package, ShieldCheck, UploadCloud } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import {
   ADMIN_DIALOG_CLASS,
@@ -347,6 +347,46 @@ function buildPreviewCard(form: EditorFormState): ShopCardViewModel {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function ScrollableRail({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const scrollBy = (direction: 1 | -1) => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * Math.max(280, el.clientWidth * 0.7), behavior: 'smooth' });
+  };
+
+  const buttonClass =
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#3a2329] bg-[#1a0d10] text-white transition hover:bg-[#241318] active:scale-95';
+
+  return (
+    <div className="relative flex items-center gap-2">
+      <button
+        type="button"
+        aria-label="Scroll left"
+        onClick={() => scrollBy(-1)}
+        className={buttonClass}
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <div
+        ref={ref}
+        className="admin-shop-rail-scroll min-w-0 max-w-full flex-1 overflow-x-auto overflow-y-hidden scroll-smooth pb-3"
+      >
+        <div className="w-max min-w-full">{children}</div>
+      </div>
+      <button
+        type="button"
+        aria-label="Scroll right"
+        onClick={() => scrollBy(1)}
+        className={buttonClass}
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+    </div>
+  );
 }
 
 export default function AdminShop() {
@@ -720,18 +760,16 @@ export default function AdminShop() {
                 description="Create the first shop card for the top row."
               />
             ) : (
-              <div className="admin-shop-rail-scroll min-w-0 max-w-full overflow-x-auto overflow-y-hidden pb-3">
-                <div className="w-max min-w-full">
-                  <ShopCardRail
-                    cards={publicDigitalCards.map((entry) => entry.card)}
-                    onAction={canEditWorkspace ? ((card) => {
-                      const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                      if (entry) openEntryEditor(entry);
-                    }) : undefined}
-                    marqueeWhenOverflow={false}
-                  />
-                </div>
-              </div>
+              <ScrollableRail>
+                <ShopCardRail
+                  cards={publicDigitalCards.map((entry) => entry.card)}
+                  onAction={canEditWorkspace ? ((card) => {
+                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                    if (entry) openEntryEditor(entry);
+                  }) : undefined}
+                  marqueeWhenOverflow={false}
+                />
+              </ScrollableRail>
             )}
           </AdminPanel>
 
@@ -752,18 +790,16 @@ export default function AdminShop() {
                 description="VIP and extra coin packs appear here when they are not placed in the public row."
               />
             ) : (
-              <div className="admin-shop-rail-scroll min-w-0 max-w-full overflow-x-auto overflow-y-hidden pb-3">
-                <div className="w-max min-w-full">
-                  <ShopCardRail
-                    cards={walletOffers.map((entry) => entry.card)}
-                    onAction={canEditWorkspace ? ((card) => {
-                      const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                      if (entry) openEntryEditor(entry);
-                    }) : undefined}
-                    marqueeWhenOverflow={false}
-                  />
-                </div>
-              </div>
+              <ScrollableRail>
+                <ShopCardRail
+                  cards={walletOffers.map((entry) => entry.card)}
+                  onAction={canEditWorkspace ? ((card) => {
+                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                    if (entry) openEntryEditor(entry);
+                  }) : undefined}
+                  marqueeWhenOverflow={false}
+                />
+              </ScrollableRail>
             )}
           </AdminPanel>
         </div>
@@ -785,18 +821,16 @@ export default function AdminShop() {
               description="Create the first physical product or unlock reward."
             />
           ) : (
-            <div className="admin-shop-rail-scroll min-w-0 max-w-full overflow-x-auto overflow-y-hidden pb-3">
-              <div className="w-max min-w-full">
-                <ShopCardRail
-                  cards={realItems.map((entry) => entry.card)}
-                  onAction={canEditWorkspace ? ((card) => {
-                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                    if (entry) openEntryEditor(entry);
-                  }) : undefined}
-                  marqueeWhenOverflow={false}
-                />
-              </div>
-            </div>
+            <ScrollableRail>
+              <ShopCardRail
+                cards={realItems.map((entry) => entry.card)}
+                onAction={canEditWorkspace ? ((card) => {
+                  const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                  if (entry) openEntryEditor(entry);
+                }) : undefined}
+                marqueeWhenOverflow={false}
+              />
+            </ScrollableRail>
           )}
         </AdminPanel>
 
