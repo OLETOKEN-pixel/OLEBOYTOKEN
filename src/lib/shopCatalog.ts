@@ -795,7 +795,7 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     badgeLabel,
     showBadge: true,
     showSubtitle: false,
-    showSupportingText: Boolean(resolvedSupportingText),
+    showSupportingText: false,
     showSecondaryImage: false,
     metadata: {
       ...card.item.metadata,

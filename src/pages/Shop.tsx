@@ -765,7 +765,7 @@ function CatalogCard({
           >
             {card.title}
           </p>
-          {card.subtitle ? (
+          {card.showSubtitle && card.subtitle ? (
             <p
               style={{
                 margin: compact ? '4px 0 0' : '2px 0 0',
