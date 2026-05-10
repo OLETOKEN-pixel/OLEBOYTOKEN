@@ -346,7 +346,16 @@ function buildPreviewCard(form: EditorFormState): ShopCardViewModel {
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object') {
+    const candidate = error as { message?: unknown; error?: unknown; details?: unknown; hint?: unknown };
+    const message = typeof candidate.message === 'string' ? candidate.message : null;
+    const inner = typeof candidate.error === 'string' ? candidate.error : null;
+    const details = typeof candidate.details === 'string' ? candidate.details : null;
+    const hint = typeof candidate.hint === 'string' ? candidate.hint : null;
+    return message || inner || details || hint || fallback;
+  }
+  return fallback;
 }
 
 function ScrollableRail({ children }: { children: ReactNode }) {
@@ -665,6 +674,7 @@ export default function AdminShop() {
         description: 'The live shop now matches the current admin draft.',
       });
     } catch (error) {
+      console.error('admin_publish_shop_catalog failed:', error);
       toast({
         title: 'Publish error',
         description: getErrorMessage(error, 'Unable to publish the shop.'),
