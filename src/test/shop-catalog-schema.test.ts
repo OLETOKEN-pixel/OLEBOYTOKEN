@@ -82,6 +82,22 @@ describe('Shop catalog canonical schema', () => {
     expect(migration).toContain("workspace = 'live'::public.shop_workspace");
   });
 
+  it('adds the copy-strip migration so shop descriptions cannot come back from saved rows', () => {
+    const migration = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/migrations/20260510184500_shop_strip_descriptions.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.sanitize_shop_item_copy_fields()');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.sanitize_shop_slot_presentation_copy_fields()');
+    expect(migration).toContain('CREATE TRIGGER sanitize_shop_items_copy_fields');
+    expect(migration).toContain('CREATE TRIGGER sanitize_shop_draft_items_copy_fields');
+    expect(migration).toContain('CREATE TRIGGER sanitize_shop_slot_presentations_copy_fields');
+    expect(migration).toContain("description = ''");
+    expect(migration).toContain("supporting_text = ''");
+    expect(migration).toContain('show_supporting_text = false');
+  });
+
   it('exposes the canonical shop catalog types and RPCs to the frontend', () => {
     const typesFile = fs.readFileSync(
       path.resolve(process.cwd(), 'src/integrations/supabase/types.ts'),

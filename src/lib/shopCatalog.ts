@@ -347,12 +347,12 @@ export function normalizeShopPresentation(
       || defaultShopTemplateForSurface(surfaceKey),
     themeKey: asString(input.theme_key ?? input.themeKey, 'default') || 'default',
     eyebrowText: asString(input.eyebrow_text ?? input.eyebrowText, defaultShopBadgeLabel(kind)) || defaultShopBadgeLabel(kind),
-    supportingText: asString(input.supporting_text ?? input.supportingText),
+    supportingText: '',
     primaryImagePath: resolveShopCatalogImage(primaryImagePath),
     secondaryImagePath: resolveShopCatalogImage(asString(input.secondary_image_path ?? input.secondaryImagePath)),
     showBadge: asBoolean(input.show_badge ?? input.showBadge, true),
     showSubtitle: asBoolean(input.show_subtitle ?? input.showSubtitle, true),
-    showSupportingText: asBoolean(input.show_supporting_text ?? input.showSupportingText, surfaceKey === 'shop.unlock_cards'),
+    showSupportingText: false,
     showSecondaryImage: asBoolean(input.show_secondary_image ?? input.showSecondaryImage, false),
     metadata: asObject(input.metadata),
   };
@@ -362,13 +362,11 @@ export function createDefaultShopPresentation({
   surfaceKey,
   kind,
   imagePath,
-  supportingText = '',
   metadata = {},
 }: {
   surfaceKey: ShopSurfaceKey;
   kind: ShopItemKind;
   imagePath: string;
-  supportingText?: string;
   metadata?: Record<string, unknown>;
 }): ShopCardPresentation {
   return normalizeShopPresentation(
@@ -376,12 +374,12 @@ export function createDefaultShopPresentation({
       template_key: defaultShopTemplateForSurface(surfaceKey),
       theme_key: 'default',
       eyebrow_text: defaultShopBadgeLabel(kind),
-      supporting_text: supportingText,
+      supporting_text: '',
       primary_image_path: imagePath,
       secondary_image_path: '',
       show_badge: true,
       show_subtitle: false,
-      show_supporting_text: Boolean(supportingText),
+      show_supporting_text: false,
       show_secondary_image: false,
       metadata,
     },
@@ -404,7 +402,7 @@ function normalizeCatalogItem(value: unknown): ShopCatalogItem | null {
     kind,
     title: asString(input.title),
     subtitle: asString(input.subtitle),
-    description: asString(input.description),
+    description: '',
     imagePath: resolveShopCatalogImage(asString(input.image_path ?? input.imagePath)),
     ctaLabel: asString(input.cta_label ?? input.ctaLabel),
     actionKey: (asString(input.action_key ?? input.actionKey) as ShopActionKey) || null,
@@ -508,7 +506,7 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
     kind: 'coin_pack',
     title: `${coins} COINS`,
     subtitle: coins >= 10 ? 'COIN PACK' : 'STARTER PACK',
-    description: `${coins} OBC coins`,
+    description: '',
     imagePath: '/coin.png',
     ctaLabel: 'BUY NOW',
     actionKey: null,
@@ -527,7 +525,7 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
     kind: 'vip_membership',
     title: 'VIP',
     subtitle: '1 MONTH',
-    description: 'VIP membership for 30 days',
+    description: '',
     imagePath: '/showreel/vip-icon.svg',
     ctaLabel: viewer.isVip ? 'RENEW VIP' : 'GET VIP',
     actionKey: null,
@@ -553,7 +551,7 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
       kind: 'physical_reward',
       title: 'TAPPETINO',
       subtitle: 'LEVEL REWARD',
-      description: 'Official OleBoy mousepad reward.',
+      description: '',
       imagePath: '/shop/tappetino.png',
       ctaLabel: 'CLAIM',
       actionKey: null,
@@ -571,7 +569,7 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
       kind: 'physical_reward',
       title: 'MOUSE',
       subtitle: 'LEVEL REWARD',
-      description: 'Official OleBoy mouse reward.',
+      description: '',
       imagePath: '/shop/mouse.webp',
       ctaLabel: 'CLAIM',
       actionKey: null,
@@ -617,7 +615,6 @@ export function createFallbackShopCatalog(viewerOverrides: Partial<ShopCatalogVi
           surfaceKey: 'shop.unlock_cards',
           kind: item.kind,
           imagePath: item.imagePath,
-          supportingText: item.description,
         }),
         item,
       }),
@@ -640,7 +637,7 @@ export function createFallbackAdminShopSeed(): ShopAdminSeed {
       kind: item.kind,
       title: item.title,
       subtitle: item.subtitle,
-      description: item.description,
+      description: '',
       image_path: item.imagePath,
       cta_label: item.ctaLabel,
       is_active: true,
@@ -689,12 +686,12 @@ export function createFallbackAdminShopSeed(): ShopAdminSeed {
       template_key: card.presentation.templateKey,
       theme_key: card.presentation.themeKey,
       eyebrow_text: card.presentation.eyebrowText,
-      supporting_text: card.presentation.supportingText,
+      supporting_text: '',
       primary_image_path: card.presentation.primaryImagePath,
       secondary_image_path: card.presentation.secondaryImagePath,
       show_badge: card.presentation.showBadge,
       show_subtitle: card.presentation.showSubtitle,
-      show_supporting_text: card.presentation.showSupportingText,
+      show_supporting_text: false,
       show_secondary_image: card.presentation.showSecondaryImage,
       metadata: card.presentation.metadata,
     },
@@ -747,7 +744,7 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
   const isLocked = card.item.kind === 'physical_reward' ? !card.item.isUnlocked && !isClaimed : false;
   const isUnlockSurface = card.surfaceKey === 'shop.unlock_cards';
   const primaryImage = card.presentation.primaryImagePath || card.item.imagePath;
-  const resolvedSupportingText = card.item.description || card.presentation.supportingText;
+  const resolvedSupportingText = '';
   const badgeLabel = defaultShopBadgeLabel(card.item.kind);
 
   let unlockLabel: string | null = null;
@@ -774,8 +771,8 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     themeKey: 'default',
     title: card.title,
     subtitle: card.subtitle,
-    description: card.item.description,
-    supportingText: resolvedSupportingText,
+    description: '',
+    supportingText: '',
     image: primaryImage,
     primaryImage,
     secondaryImage: '',
@@ -804,8 +801,6 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     searchText: [
       card.title,
       card.subtitle,
-      resolvedSupportingText,
-      card.item.description,
       priceLabel,
       unlockLabel,
       badgeLabel,
@@ -823,7 +818,7 @@ export function mapCatalogToLevelRewards(catalog: ShopCatalogPayload): LevelRewa
     .map((card) => ({
       id: card.item.id,
       name: card.title,
-      description: card.item.description,
+      description: '',
       image: card.presentation.primaryImagePath || card.item.imagePath,
       imagePath: card.presentation.primaryImagePath || card.item.imagePath,
       levelRequired: card.item.unlockRule.levelRequired ?? 1,

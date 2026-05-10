@@ -156,8 +156,7 @@ function buildAutoSubtitle(form: EditorFormState, finalKind: ShopItemKind) {
   if (finalKind === 'physical_reward') {
     return form.realItemMode === 'unlock_challenge' ? 'CHALLENGE REWARD' : 'LEVEL REWARD';
   }
-  if (finalKind === 'physical_product') return '';
-  return form.description.trim();
+  return '';
 }
 
 function buildAutomaticPresentationPayload(form: EditorFormState, finalKind: ShopItemKind, imagePath: string) {
@@ -165,12 +164,12 @@ function buildAutomaticPresentationPayload(form: EditorFormState, finalKind: Sho
     template_key: getSurfaceKey(form) === 'shop.unlock_cards' ? 'unlock-card' : 'featured-card',
     theme_key: 'default',
     eyebrow_text: defaultShopBadgeLabel(finalKind),
-    supporting_text: form.description.trim(),
+    supporting_text: '',
     primary_image_path: imagePath,
     secondary_image_path: '',
     show_badge: true,
     show_subtitle: false,
-    show_supporting_text: Boolean(form.description.trim()),
+    show_supporting_text: false,
     show_secondary_image: false,
     metadata: {},
   };
@@ -244,7 +243,7 @@ function createEditorFormFromEntry(entry: AdminShopCardEntry): EditorFormState {
     slug: entry.item.slug,
     category: entry.placement === 'real_item' ? 'real' : 'digital',
     title: entry.item.title,
-    description: entry.item.description,
+    description: '',
     itemImagePath: entry.item.image_path,
     itemImagePreview: resolveShopCatalogImage(entry.item.image_path),
     itemFile: null,
@@ -284,15 +283,14 @@ function buildPreviewCard(form: EditorFormState): ShopCardViewModel {
       surfaceKey,
       kind: finalKind,
       imagePath,
-      supportingText: form.description.trim(),
     }),
     eyebrowText: defaultShopBadgeLabel(finalKind),
-    supportingText: form.description.trim(),
+    supportingText: '',
     primaryImagePath: imagePath,
     secondaryImagePath: '',
     showBadge: true,
     showSubtitle: false,
-    showSupportingText: Boolean(form.description.trim()),
+    showSupportingText: false,
     showSecondaryImage: false,
     metadata: {},
   };
@@ -313,7 +311,7 @@ function buildPreviewCard(form: EditorFormState): ShopCardViewModel {
         kind: finalKind,
         title: form.title.trim() || 'New card',
         subtitle: buildAutoSubtitle(form, finalKind),
-        description: form.description.trim(),
+        description: '',
         imagePath,
         ctaLabel: deriveDefaultCta(finalKind),
         actionKey: finalKind === 'action_card' ? (form.preservedActionKey || 'open_shop') : null,
@@ -523,7 +521,6 @@ export default function AdminShop() {
       const baseMinor = parseAdminPrice(editorForm.basePrice, priceCurrency);
       const vipMinor = parseAdminPrice(editorForm.vipPrice, priceCurrency);
       const rawTitle = editorForm.title.trim();
-      const rawDescription = editorForm.description.trim();
 
       if (!rawTitle) {
         throw new Error('Title is required.');
@@ -579,7 +576,7 @@ export default function AdminShop() {
         kind: finalKind,
         title: rawTitle,
         subtitle: buildAutoSubtitle(editorForm, finalKind),
-        description: rawDescription,
+        description: '',
         image_path: normalizedImagePath,
         cta_label: deriveDefaultCta(finalKind),
         is_active: editorForm.isActive,
@@ -982,15 +979,6 @@ export default function AdminShop() {
                     </div>
                   </div>
 
-                  <div className="grid gap-2">
-                    <label className="text-sm text-white/64">Descrizione breve</label>
-                    <Textarea
-                      value={editorForm.description}
-                      onChange={(event) => setEditorForm((current) => ({ ...current, description: event.target.value }))}
-                      className={`${ADMIN_FIELD_CLASS} min-h-[100px]`}
-                    />
-                  </div>
-
                   <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px]">
                     <div className="grid gap-2">
                       <label className="text-sm text-white/64">Immagine</label>
@@ -1141,15 +1129,6 @@ export default function AdminShop() {
                         className={ADMIN_FIELD_CLASS}
                       />
                     </div>
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label className="text-sm text-white/64">Descrizione breve</label>
-                    <Textarea
-                      value={editorForm.description}
-                      onChange={(event) => setEditorForm((current) => ({ ...current, description: event.target.value }))}
-                      className={`${ADMIN_FIELD_CLASS} min-h-[100px]`}
-                    />
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px]">

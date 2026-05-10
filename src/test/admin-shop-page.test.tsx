@@ -505,6 +505,7 @@ describe('AdminShop', () => {
     expect(screen.getByText('Tipo')).toBeInTheDocument();
     expect(screen.getByText('Destinazione')).toBeInTheDocument();
     expect(screen.getByText('Live Preview')).toBeInTheDocument();
+    expect(screen.queryByText('Descrizione breve')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Base' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'VIP' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Locked' })).not.toBeInTheDocument();
@@ -521,6 +522,7 @@ describe('AdminShop', () => {
     expect(screen.getByText('Coins amount')).toBeInTheDocument();
     expect(screen.getByText('Prezzo')).toBeInTheDocument();
     expect(screen.getByText('Prezzo VIP')).toBeInTheDocument();
+    expect(screen.queryByText('Descrizione breve')).not.toBeInTheDocument();
 
     fireEvent.change(findFieldInput('Tipo', 'select'), { target: { value: 'vip_membership' } });
     expect(screen.getByText('Durata giorni')).toBeInTheDocument();
@@ -548,7 +550,6 @@ describe('AdminShop', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Card Item' }));
     fireEvent.change(findFieldInput('Titolo'), { target: { value: 'Official Pack' } });
-    fireEvent.change(findFieldInput('Descrizione breve', 'textarea'), { target: { value: 'Exclusive pack.' } });
     fireEvent.change(findFieldInput('Immagine'), { target: { value: '/shop/pack.webp' } });
     fireEvent.change(findFieldInput('Coins amount'), { target: { value: '25' } });
     fireEvent.change(findFieldInput('Prezzo'), { target: { value: '19.99' } });
