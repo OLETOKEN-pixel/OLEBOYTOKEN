@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AdminShop from '@/pages/AdminShop';
+import type { AdminShopCardEntry } from '@/hooks/useAdminShopCatalog';
+import type { ShopCardViewModel } from '@/lib/shopCatalog';
 
 const mocks = vi.hoisted(() => ({
   toast: vi.fn(),
-  refetch: vi.fn(),
   saveItem: vi.fn(),
   saveSlot: vi.fn(),
-  setItemActive: vi.fn(),
   publishCatalog: vi.fn(),
   updateClaim: vi.fn(),
 }));
@@ -19,7 +19,7 @@ const catalogItems = [
     slug: 'starter-coins',
     kind: 'coin_pack',
     title: 'Starter Coins',
-    subtitle: 'BOOST',
+    subtitle: 'Entry coin pack.',
     description: 'Entry coin pack.',
     image_path: '/coin.png',
     cta_label: 'BUY NOW',
@@ -46,12 +46,43 @@ const catalogItems = [
     unlockRule: null,
   },
   {
+    id: 'item-wallet-50',
+    slug: 'wallet-50',
+    kind: 'coin_pack',
+    title: '50 COINS',
+    subtitle: 'Wallet only pack.',
+    description: 'Wallet only pack.',
+    image_path: '/coin.png',
+    cta_label: 'BUY NOW',
+    is_active: true,
+    action_key: null,
+    coin_amount: 50,
+    vip_duration_days: null,
+    metadata: { badge: 'x50' },
+    created_at: '2026-05-07T10:00:00.000Z',
+    updated_at: '2026-05-07T10:00:00.000Z',
+    prices: [
+      {
+        id: 'price-wallet-base',
+        item_id: 'item-wallet-50',
+        audience: 'base',
+        currency: 'eur',
+        amount_minor: 5000,
+        compare_at_minor: null,
+        is_active: true,
+        created_at: '2026-05-07T10:00:00.000Z',
+        updated_at: '2026-05-07T10:00:00.000Z',
+      },
+    ],
+    unlockRule: null,
+  },
+  {
     id: 'item-vip',
     slug: 'vip-30',
     kind: 'vip_membership',
     title: 'VIP',
-    subtitle: '1 MONTH',
-    description: '30 day VIP offer.',
+    subtitle: 'VIP membership for 30 days.',
+    description: 'VIP membership for 30 days.',
     image_path: '/showreel/vip-icon.svg',
     cta_label: 'GET VIP',
     is_active: true,
@@ -120,6 +151,19 @@ const slotRows = [
     updated_at: '2026-05-07T10:00:00.000Z',
   },
   {
+    id: 'slot-wallet-hidden',
+    surface_key: 'shop.featured_cards',
+    sort_order: 5,
+    item_id: 'item-wallet-50',
+    card_variant: 'coins',
+    title_override: '',
+    subtitle_override: '',
+    cta_label_override: '',
+    is_active: false,
+    created_at: '2026-05-07T10:00:00.000Z',
+    updated_at: '2026-05-07T10:00:00.000Z',
+  },
+  {
     id: 'slot-unlock',
     surface_key: 'shop.unlock_cards',
     sort_order: 0,
@@ -142,12 +186,12 @@ const presentations = [
     template_key: 'featured-card',
     theme_key: 'default',
     eyebrow_text: 'COINS',
-    supporting_text: '',
+    supporting_text: 'Entry coin pack.',
     primary_image_path: '/coin.png',
     secondary_image_path: '',
     show_badge: true,
-    show_subtitle: true,
-    show_supporting_text: false,
+    show_subtitle: false,
+    show_supporting_text: true,
     show_secondary_image: false,
     metadata: {},
     created_at: '2026-05-07T10:00:00.000Z',
@@ -164,7 +208,7 @@ const presentations = [
     primary_image_path: '/shop/tappetino.png',
     secondary_image_path: '',
     show_badge: true,
-    show_subtitle: true,
+    show_subtitle: false,
     show_supporting_text: true,
     show_secondary_image: false,
     metadata: {},
@@ -209,6 +253,130 @@ const challenges = [
   },
 ];
 
+function makeCard(overrides: Partial<ShopCardViewModel> & Pick<ShopCardViewModel, 'id' | 'slotId' | 'title' | 'ctaLabel' | 'kind'>): ShopCardViewModel {
+  return {
+    id: overrides.id,
+    slotId: overrides.slotId,
+    surfaceKey: overrides.surfaceKey ?? 'shop.featured_cards',
+    sortOrder: overrides.sortOrder ?? 0,
+    cardVariant: overrides.cardVariant ?? 'coins',
+    templateKey: overrides.templateKey ?? 'featured-card',
+    themeKey: overrides.themeKey ?? 'default',
+    title: overrides.title,
+    subtitle: overrides.subtitle ?? '',
+    description: overrides.description ?? '',
+    supportingText: overrides.supportingText ?? overrides.description ?? '',
+    image: overrides.image ?? '/coin.png',
+    primaryImage: overrides.primaryImage ?? overrides.image ?? '/coin.png',
+    secondaryImage: overrides.secondaryImage ?? '',
+    kind: overrides.kind,
+    ctaLabel: overrides.ctaLabel,
+    actionKey: overrides.actionKey ?? null,
+    coinAmount: overrides.coinAmount ?? null,
+    vipDurationDays: overrides.vipDurationDays ?? null,
+    priceLabel: overrides.priceLabel ?? null,
+    priceCurrency: overrides.priceCurrency ?? null,
+    unlockLabel: overrides.unlockLabel ?? null,
+    levelRequired: overrides.levelRequired ?? null,
+    challengeId: overrides.challengeId ?? null,
+    isLocked: overrides.isLocked ?? false,
+    isClaimed: overrides.isClaimed ?? false,
+    claimStatus: overrides.claimStatus ?? null,
+    badgeLabel: overrides.badgeLabel ?? 'COINS',
+    showBadge: overrides.showBadge ?? true,
+    showSubtitle: overrides.showSubtitle ?? false,
+    showSupportingText: overrides.showSupportingText ?? true,
+    showSecondaryImage: overrides.showSecondaryImage ?? false,
+    metadata: overrides.metadata ?? {},
+    searchText: overrides.searchText ?? overrides.title.toLowerCase(),
+  };
+}
+
+const publicDigitalCards: AdminShopCardEntry[] = [
+  {
+    item: catalogItems[0],
+    slot: slotRows[0],
+    presentation: presentations[0],
+    placement: 'public_digital',
+    isVisibleInShop: true,
+    card: makeCard({
+      id: 'item-coin',
+      slotId: 'slot-featured',
+      title: 'Starter Coins',
+      description: 'Entry coin pack.',
+      ctaLabel: 'BUY NOW',
+      kind: 'coin_pack',
+      priceLabel: '€5,00',
+      priceCurrency: 'eur',
+      badgeLabel: 'COINS',
+    }),
+  },
+];
+
+const walletOffers: AdminShopCardEntry[] = [
+  {
+    item: catalogItems[1],
+    slot: slotRows[1],
+    presentation: null,
+    placement: 'wallet_offer',
+    isVisibleInShop: false,
+    card: makeCard({
+      id: 'item-wallet-50',
+      slotId: 'slot-wallet-hidden',
+      title: '50 COINS',
+      description: 'Wallet only pack.',
+      ctaLabel: 'BUY NOW',
+      kind: 'coin_pack',
+      priceLabel: '€50,00',
+      priceCurrency: 'eur',
+      badgeLabel: 'COINS',
+    }),
+  },
+  {
+    item: catalogItems[2],
+    slot: null,
+    presentation: null,
+    placement: 'wallet_offer',
+    isVisibleInShop: false,
+    card: makeCard({
+      id: 'item-vip',
+      slotId: 'wallet-item-vip',
+      title: 'VIP',
+      description: 'VIP membership for 30 days.',
+      ctaLabel: 'GET VIP',
+      kind: 'vip_membership',
+      priceLabel: '5 COINS',
+      priceCurrency: 'coins',
+      badgeLabel: 'VIP',
+    }),
+  },
+];
+
+const realItems: AdminShopCardEntry[] = [
+  {
+    item: catalogItems[3],
+    slot: slotRows[2],
+    presentation: presentations[1],
+    placement: 'real_item',
+    isVisibleInShop: true,
+    card: makeCard({
+      id: 'item-reward',
+      slotId: 'slot-unlock',
+      title: 'Mousepad',
+      description: 'Unlockable reward.',
+      ctaLabel: 'CLAIM',
+      kind: 'physical_reward',
+      unlockLabel: 'LVL 15',
+      badgeLabel: 'UNLOCK',
+      surfaceKey: 'shop.unlock_cards',
+      cardVariant: 'reward',
+      templateKey: 'unlock-card',
+      isLocked: true,
+      levelRequired: 15,
+    }),
+  },
+];
+
 vi.mock('@/hooks/useAdminShopCatalog', () => ({
   useAdminShopCatalog: () => ({
     draft: {
@@ -232,19 +400,20 @@ vi.mock('@/hooks/useAdminShopCatalog', () => ({
     liveItems: catalogItems,
     liveSlots: slotRows,
     livePresentations: presentations,
-    isLoading: false,
-    refetch: mocks.refetch,
-    saveItem: mocks.saveItem,
-    saveSlot: mocks.saveSlot,
-    setItemActive: mocks.setItemActive,
-    publishCatalog: mocks.publishCatalog,
-    hasUnpublishedChanges: true,
     workspaceSource: 'workspace',
     adminBackendAvailable: true,
+    hasUnpublishedChanges: true,
+    publicDigitalCards,
+    walletOffers,
+    realItems,
+    isLoading: false,
+    saveItem: mocks.saveItem,
+    saveSlot: mocks.saveSlot,
+    publishCatalog: mocks.publishCatalog,
     savingItem: false,
     savingSlot: false,
-    togglingItem: false,
     publishingCatalog: false,
+    isBootstrappingInitialDraft: false,
   }),
 }));
 
@@ -278,7 +447,6 @@ vi.mock('@/integrations/supabase/client', () => ({
     storage: {
       from: () => ({
         upload: vi.fn().mockResolvedValue({ error: null }),
-        remove: vi.fn().mockResolvedValue({ error: null }),
       }),
     },
   },
@@ -304,77 +472,86 @@ function findFieldInput(label: string, selector = 'input,textarea,select') {
 describe('AdminShop', () => {
   beforeEach(() => {
     mocks.toast.mockReset();
-    mocks.refetch.mockReset();
     mocks.saveItem.mockReset();
     mocks.saveSlot.mockReset();
-    mocks.setItemActive.mockReset();
     mocks.publishCatalog.mockReset();
     mocks.updateClaim.mockReset();
   });
 
-  it('renders the visual draft workspace with studio, catalog, and claims tabs', () => {
+  it('renders the card-first workspace and removes the legacy tabs', () => {
     renderAdminShop();
 
     expect(screen.getByText('Shop Workspace')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Studio' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Catalog' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Claims' })).toBeInTheDocument();
-    expect(screen.getByText('Featured row')).toBeInTheDocument();
-    expect(screen.getByText('Unlock row')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Publish shop' })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Catalog' }));
-    expect(screen.getByText('Starter Coins')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Claims' }));
-    expect(screen.getByText('Mousepad')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Card Item' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Card Real Item' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeInTheDocument();
+    expect(screen.getByText('Card Items')).toBeInTheDocument();
+    expect(screen.getByText('Wallet Offers')).toBeInTheDocument();
+    expect(screen.getAllByText('Card Real Item').length).toBeGreaterThan(0);
+    expect(screen.getByText('Pending Claims')).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Studio' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Catalog' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Claims' })).not.toBeInTheDocument();
   });
 
-  it('opens the shared editor from a studio card and exposes the reward preview states', () => {
+  it('opens editors from existing cards and shows simplified forms without legacy preview toggles', () => {
     renderAdminShop();
 
-    fireEvent.click(screen.getByRole('button', { name: 'CLAIM' }));
-
-    expect(screen.getByText('Edit draft shop card')).toBeInTheDocument();
-    expect(screen.getByText('User-facing preview')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Base' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'VIP' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Locked' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Unlocked' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Claimed' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'GET VIP' }));
+    expect(screen.getByText('Edit shop card')).toBeInTheDocument();
+    expect(screen.getByText('Tipo')).toBeInTheDocument();
+    expect(screen.getByText('Destinazione')).toBeInTheDocument();
+    expect(screen.getByText('Live Preview')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Base' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'VIP' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Locked' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Unlocked' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Claimed' })).not.toBeInTheDocument();
   });
 
-  it('switches editor fields by kind and surface for featured cards and unlock rewards', () => {
+  it('switches the simplified editor fields for digital and real item creation', () => {
     renderAdminShop();
 
-    fireEvent.click(screen.getByRole('button', { name: 'New featured card' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Card Item' }));
+    expect(screen.getByText('Tipo')).toBeInTheDocument();
+    expect(screen.getByText('Destinazione')).toBeInTheDocument();
+    expect(screen.getByText('Coins amount')).toBeInTheDocument();
+    expect(screen.getByText('Prezzo')).toBeInTheDocument();
+    expect(screen.getByText('Prezzo VIP')).toBeInTheDocument();
 
-    fireEvent.change(findFieldInput('Kind', 'select'), { target: { value: 'vip_membership' } });
-    expect(screen.getByText('Duration days')).toBeInTheDocument();
-    expect(screen.getByText('Base coin price')).toBeInTheDocument();
-    expect(screen.getByText('VIP coin price')).toBeInTheDocument();
-    expect(screen.getByText('Benefits (comma separated)')).toBeInTheDocument();
+    fireEvent.change(findFieldInput('Tipo', 'select'), { target: { value: 'vip_membership' } });
+    expect(screen.getByText('Durata giorni')).toBeInTheDocument();
+    expect(screen.getByText('Benefits')).toBeInTheDocument();
 
-    fireEvent.change(findFieldInput('Surface', 'select'), { target: { value: 'shop.unlock_cards' } });
-    expect(screen.getByText('Unlock type')).toBeInTheDocument();
-    expect(screen.getByText('Claim once')).toBeInTheDocument();
+    fireEvent.change(findFieldInput('Destinazione', 'select'), { target: { value: 'wallet_only' } });
+    expect(screen.queryByText('Posizione')).not.toBeInTheDocument();
 
-    fireEvent.change(findFieldInput('Unlock type', 'select'), { target: { value: 'level' } });
-    expect(screen.getByText('Level required')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Card Real Item' }));
+    expect(screen.getByText('Modalita')).toBeInTheDocument();
+    expect(screen.getByText('Titolo')).toBeInTheDocument();
+    expect(screen.getByText('Posizione')).toBeInTheDocument();
+
+    fireEvent.change(findFieldInput('Modalita', 'select'), { target: { value: 'purchase' } });
+    expect(screen.getAllByText('Prezzo').length).toBeGreaterThan(0);
+    expect(screen.getByText('Prezzo VIP')).toBeInTheDocument();
+
+    fireEvent.change(findFieldInput('Modalita', 'select'), { target: { value: 'unlock_challenge' } });
+    expect(screen.getAllByText('Challenge').length).toBeGreaterThan(0);
   });
 
-  it('blocks VIP prices above the base price before saving a draft card', () => {
+  it('blocks VIP prices above the base price before saving a card', () => {
     renderAdminShop();
 
-    fireEvent.click(screen.getByRole('button', { name: 'New featured card' }));
-    fireEvent.change(findFieldInput('Kind', 'select'), { target: { value: 'physical_product' } });
-    fireEvent.change(findFieldInput('Slug'), { target: { value: 'hoodie' } });
-    fireEvent.change(findFieldInput('Title'), { target: { value: 'Official Hoodie' } });
-    fireEvent.change(findFieldInput('Item image path or upload'), { target: { value: '/shop/hoodie.webp' } });
-    fireEvent.change(findFieldInput('Base EUR price'), { target: { value: '29.99' } });
-    fireEvent.change(findFieldInput('VIP EUR price'), { target: { value: '39.99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Card Item' }));
+    fireEvent.change(findFieldInput('Titolo'), { target: { value: 'Official Pack' } });
+    fireEvent.change(findFieldInput('Descrizione breve', 'textarea'), { target: { value: 'Exclusive pack.' } });
+    fireEvent.change(findFieldInput('Immagine'), { target: { value: '/shop/pack.webp' } });
+    fireEvent.change(findFieldInput('Coins amount'), { target: { value: '25' } });
+    fireEvent.change(findFieldInput('Prezzo'), { target: { value: '19.99' } });
+    fireEvent.change(findFieldInput('Prezzo VIP'), { target: { value: '29.99' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft card' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create card' }));
 
     expect(mocks.saveItem).not.toHaveBeenCalled();
     expect(mocks.toast).toHaveBeenCalledWith(
@@ -386,10 +563,10 @@ describe('AdminShop', () => {
     );
   });
 
-  it('publishes the draft workspace from the admin header action', () => {
+  it('publishes the current draft from the simplified header action', () => {
     renderAdminShop();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Publish shop' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
 
     expect(mocks.publishCatalog).toHaveBeenCalledTimes(1);
   });

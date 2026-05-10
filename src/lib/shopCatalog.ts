@@ -265,6 +265,14 @@ export function defaultShopBadgeLabel(kind: ShopItemKind) {
   }
 }
 
+export function isPhysicalShopItemKind(kind: ShopItemKind) {
+  return kind === 'physical_product' || kind === 'physical_reward';
+}
+
+export function isDigitalShopItemKind(kind: ShopItemKind) {
+  return !isPhysicalShopItemKind(kind);
+}
+
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
@@ -371,8 +379,8 @@ export function createDefaultShopPresentation({
       primary_image_path: imagePath,
       secondary_image_path: '',
       show_badge: true,
-      show_subtitle: true,
-      show_supporting_text: surfaceKey === 'shop.unlock_cards',
+      show_subtitle: false,
+      show_supporting_text: Boolean(supportingText),
       show_secondary_image: false,
       metadata,
     },
@@ -736,6 +744,10 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
   const claimStatus = card.item.claimState?.status ?? null;
   const isClaimed = Boolean(claimStatus);
   const isLocked = card.item.kind === 'physical_reward' ? !card.item.isUnlocked && !isClaimed : false;
+  const isUnlockSurface = card.surfaceKey === 'shop.unlock_cards';
+  const primaryImage = card.presentation.primaryImagePath || card.item.imagePath;
+  const resolvedSupportingText = card.item.description || card.presentation.supportingText;
+  const badgeLabel = defaultShopBadgeLabel(card.item.kind);
 
   let unlockLabel: string | null = null;
   if (card.item.kind === 'physical_reward') {
@@ -756,15 +768,15 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     surfaceKey: card.surfaceKey,
     sortOrder: card.sortOrder,
     cardVariant: card.cardVariant,
-    templateKey: card.presentation.templateKey,
-    themeKey: card.presentation.themeKey,
+    templateKey: isUnlockSurface ? 'unlock-card' : 'featured-card',
+    themeKey: 'default',
     title: card.title,
     subtitle: card.subtitle,
     description: card.item.description,
-    supportingText: card.presentation.supportingText,
-    image: card.presentation.primaryImagePath || card.item.imagePath,
-    primaryImage: card.presentation.primaryImagePath || card.item.imagePath,
-    secondaryImage: card.presentation.secondaryImagePath,
+    supportingText: resolvedSupportingText,
+    image: primaryImage,
+    primaryImage,
+    secondaryImage: '',
     kind: card.item.kind,
     ctaLabel: card.ctaLabel || card.item.ctaLabel,
     actionKey: card.item.actionKey,
@@ -778,11 +790,11 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     isLocked,
     isClaimed,
     claimStatus,
-    badgeLabel: card.presentation.eyebrowText || defaultShopBadgeLabel(card.item.kind),
-    showBadge: card.presentation.showBadge,
-    showSubtitle: card.presentation.showSubtitle,
-    showSupportingText: card.presentation.showSupportingText,
-    showSecondaryImage: card.presentation.showSecondaryImage,
+    badgeLabel,
+    showBadge: true,
+    showSubtitle: false,
+    showSupportingText: Boolean(resolvedSupportingText),
+    showSecondaryImage: false,
     metadata: {
       ...card.item.metadata,
       ...card.presentation.metadata,
@@ -790,11 +802,11 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
     searchText: [
       card.title,
       card.subtitle,
-      card.presentation.supportingText,
+      resolvedSupportingText,
       card.item.description,
       priceLabel,
       unlockLabel,
-      card.presentation.eyebrowText,
+      badgeLabel,
       card.item.kind,
     ]
       .filter(Boolean)

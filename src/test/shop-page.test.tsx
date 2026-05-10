@@ -108,6 +108,53 @@ function makeUnlockCard(
   };
 }
 
+function makePricedRealItemCard(
+  id: string,
+  slotId: string,
+  sortOrder: number,
+  title: string,
+  description: string,
+  image: string,
+  priceLabel: string,
+): ShopCardViewModel {
+  return {
+    id,
+    slotId,
+    surfaceKey: 'shop.unlock_cards',
+    sortOrder,
+    cardVariant: 'reward',
+    templateKey: 'unlock-card',
+    themeKey: 'default',
+    title,
+    subtitle: '',
+    description,
+    supportingText: description,
+    image,
+    primaryImage: image,
+    secondaryImage: '',
+    kind: 'physical_product',
+    ctaLabel: 'BUY NOW',
+    actionKey: null,
+    coinAmount: null,
+    vipDurationDays: null,
+    priceLabel,
+    priceCurrency: 'eur',
+    unlockLabel: null,
+    levelRequired: null,
+    challengeId: null,
+    isLocked: false,
+    isClaimed: false,
+    claimStatus: null,
+    badgeLabel: 'MERCH',
+    showBadge: true,
+    showSubtitle: false,
+    showSupportingText: true,
+    showSecondaryImage: false,
+    metadata: {},
+    searchText: `${title} merch ${description} ${priceLabel}`.toLowerCase(),
+  };
+}
+
 const mocks = vi.hoisted(() => ({
   isMobile: false,
   isAdmin: false,
@@ -124,7 +171,7 @@ const mocks = vi.hoisted(() => ({
   ] satisfies ShopCardViewModel[],
   unlockCards: [
     makeUnlockCard('reward-15', 'unlock-1', 0, 'TAPPETINO', 'Official OleBoy mousepad reward.', '/shop/tappetino.png', 15),
-    makeUnlockCard('reward-30', 'unlock-2', 1, 'MOUSE', 'Official OleBoy mouse reward.', '/shop/mouse.webp', 30),
+    makePricedRealItemCard('reward-mouse', 'unlock-2', 1, 'MOUSE', 'Official OleBoy mouse reward.', '/shop/mouse.webp', '€89,00'),
   ] satisfies ShopCardViewModel[],
 }));
 
@@ -254,7 +301,7 @@ describe('Shop page', () => {
     expect(screen.getByText('€3,00')).toBeInTheDocument();
     expect(screen.getByText('€25,00')).toBeInTheDocument();
     expect(screen.getByText('LVL 15')).toBeInTheDocument();
-    expect(screen.getByText('LVL 30')).toBeInTheDocument();
+    expect(screen.getByText('€89,00')).toBeInTheDocument();
     expect(screen.getByText('LVL 12')).toBeInTheDocument();
     expect(screen.getByTestId('shop-footer')).toBeInTheDocument();
     expect(container.querySelector('[data-wallet-coin="true"]')).not.toBeNull();
@@ -293,9 +340,12 @@ describe('Shop page', () => {
     expect(container.querySelectorAll('[data-shop-card]').length).toBe(7);
 
     fireEvent.change(input, { target: { value: 'lvl' } });
-    expect(container.querySelectorAll('[data-shop-card]').length).toBe(2);
+    expect(container.querySelectorAll('[data-shop-card]').length).toBe(1);
 
     fireEvent.change(input, { target: { value: 'starter' } });
+    expect(container.querySelectorAll('[data-shop-card]').length).toBe(1);
+
+    fireEvent.change(input, { target: { value: 'merch' } });
     expect(container.querySelectorAll('[data-shop-card]').length).toBe(1);
 
     fireEvent.change(input, { target: { value: '' } });

@@ -5,9 +5,15 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   createFallbackAdminShopSeed,
   createDefaultShopPresentation,
+  createShopSurfaceCard,
+  isPhysicalShopItemKind,
   normalizeShopCatalogPayload,
+  normalizeShopPresentation,
+  resolveShopCatalogImage,
+  toShopCardViewModel,
   type ShopCatalogItem,
   type ShopCatalogPayload,
+  type ShopCardViewModel,
   type ShopSurfaceCard,
   type ShopCardPresentation,
   type ShopCardTemplateKey,
@@ -123,6 +129,33 @@ interface AdminShopWorkspaceSnapshot {
   presentations: AdminShopPresentationRecord[];
   challenges: AdminShopChallengeRecord[];
 }
+
+export type AdminShopCardPlacement = 'public_digital' | 'wallet_offer' | 'real_item';
+
+export interface AdminShopCardEntry {
+  item: AdminShopItemRecord;
+  slot: AdminShopSlotRecord | null;
+  presentation: AdminShopPresentationRecord | null;
+  card: ShopCardViewModel;
+  placement: AdminShopCardPlacement;
+  isVisibleInShop: boolean;
+}
+
+const EMPTY_DRAFT_WORKSPACE: AdminShopWorkspaceSnapshot = {
+  workspace: 'draft',
+  items: [],
+  slots: [],
+  presentations: [],
+  challenges: [],
+};
+
+const EMPTY_LIVE_WORKSPACE: AdminShopWorkspaceSnapshot = {
+  workspace: 'live',
+  items: [],
+  slots: [],
+  presentations: [],
+  challenges: [],
+};
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -321,6 +354,95 @@ function toPricePayload(price: ShopPrice | AdminShopPriceRecord) {
     amount_minor: 'amountMinor' in price ? price.amountMinor : price.amount_minor,
     compare_at_minor: 'compareAtMinor' in price ? price.compareAtMinor : price.compare_at_minor,
     is_active: 'is_active' in price ? price.is_active : true,
+  };
+}
+
+function buildAdminEffectivePrice(
+  item: AdminShopItemRecord,
+  audience: ShopPriceAudience = 'base',
+): ShopPrice | null {
+  const basePrice = item.prices.find((price) => price.is_active && price.audience === 'base');
+  const vipPrice = item.prices.find((price) => price.is_active && price.audience === 'vip');
+  const selectedPrice = audience === 'vip' ? (vipPrice ?? basePrice) : basePrice;
+  if (!selectedPrice || item.kind === 'physical_reward' || item.kind === 'action_card') {
+    return null;
+  }
+
+  return {
+    audience,
+    currency: selectedPrice.currency,
+    amountMinor: selectedPrice.amount_minor,
+    compareAtMinor: selectedPrice.compare_at_minor,
+    label: selectedPrice.currency === 'eur'
+      ? `€${(selectedPrice.amount_minor / 100).toFixed(2).replace('.', ',')}`
+      : `${selectedPrice.amount_minor} COINS`,
+  };
+}
+
+function buildAdminCardEntry({
+  item,
+  slot,
+  presentation,
+  placement,
+}: {
+  item: AdminShopItemRecord;
+  slot: AdminShopSlotRecord | null;
+  presentation: AdminShopPresentationRecord | null;
+  placement: AdminShopCardPlacement;
+}): AdminShopCardEntry {
+  const surfaceKey = slot?.surface_key ?? (placement === 'real_item' ? 'shop.unlock_cards' : 'shop.featured_cards');
+  const normalizedPresentation = presentation
+    ? normalizeShopPresentation(presentation, surfaceKey, item.kind, item.image_path)
+    : createDefaultShopPresentation({
+        surfaceKey,
+        kind: item.kind,
+        imagePath: item.image_path,
+        supportingText: item.description,
+      });
+
+  const card = toShopCardViewModel(
+    createShopSurfaceCard({
+      slotId: slot?.id ?? `draft-item-${item.id}`,
+      surfaceKey,
+      sortOrder: slot?.sort_order ?? 0,
+      cardVariant: slot?.card_variant ?? (placement === 'real_item' ? 'reward' : item.kind === 'action_card' ? 'action' : 'coins'),
+      title: slot?.title_override.trim() || item.title,
+      subtitle: slot?.subtitle_override.trim() || item.subtitle,
+      ctaLabel: slot?.cta_label_override.trim() || item.cta_label,
+      presentation: normalizedPresentation,
+      item: {
+        id: item.id,
+        slug: item.slug,
+        kind: item.kind,
+        title: item.title,
+        subtitle: item.subtitle,
+        description: item.description,
+        imagePath: resolveShopCatalogImage(item.image_path),
+        ctaLabel: item.cta_label,
+        actionKey: item.action_key,
+        coinAmount: item.coin_amount,
+        vipDurationDays: item.vip_duration_days,
+        metadata: item.metadata,
+        effectivePrice: buildAdminEffectivePrice(item),
+        unlockRule: {
+          unlockType: item.unlockRule?.unlock_type ?? 'none',
+          levelRequired: item.unlockRule?.level_required ?? null,
+          challengeId: item.unlockRule?.challenge_id ?? null,
+          claimOnce: item.unlockRule?.claim_once ?? true,
+        },
+        isUnlocked: item.kind !== 'physical_reward',
+        claimState: null,
+      },
+    }),
+  );
+
+  return {
+    item,
+    slot,
+    presentation,
+    card,
+    placement,
+    isVisibleInShop: Boolean(slot?.is_active),
   };
 }
 
@@ -806,25 +928,88 @@ export function useAdminShopCatalog() {
     },
   });
 
-  const draft = query.data?.draft ?? {
-    workspace: 'draft' as const,
-    items: [],
-    slots: [],
-    presentations: [],
-    challenges: [],
-  };
-  const live = query.data?.live ?? {
-    workspace: 'live' as const,
-    items: [],
-    slots: [],
-    presentations: [],
-    challenges: [],
-  };
+  const draft = query.data?.draft ?? EMPTY_DRAFT_WORKSPACE;
+  const live = query.data?.live ?? EMPTY_LIVE_WORKSPACE;
 
   const hasUnpublishedChanges = useMemo(
     () => stableWorkspaceHash(draft) !== stableWorkspaceHash(live),
     [draft, live],
   );
+
+  const groupedCards = useMemo(() => {
+    const slotsByItemId = new Map<string, AdminShopSlotRecord[]>();
+    const presentationBySlotId = new Map(draft.presentations.map((presentation) => [presentation.slot_id, presentation]));
+
+    for (const slot of draft.slots) {
+      const list = slotsByItemId.get(slot.item_id) ?? [];
+      list.push(slot);
+      list.sort((left, right) => left.sort_order - right.sort_order);
+      slotsByItemId.set(slot.item_id, list);
+    }
+
+    const publicDigitalCards: AdminShopCardEntry[] = [];
+    const walletOffers: AdminShopCardEntry[] = [];
+    const realItems: AdminShopCardEntry[] = [];
+
+    for (const item of draft.items) {
+      const itemSlots = slotsByItemId.get(item.id) ?? [];
+      const featuredSlot = itemSlots.find((slot) => slot.surface_key === 'shop.featured_cards' && slot.is_active)
+        ?? itemSlots.find((slot) => slot.surface_key === 'shop.featured_cards')
+        ?? null;
+      const unlockSlot = itemSlots.find((slot) => slot.surface_key === 'shop.unlock_cards' && slot.is_active)
+        ?? itemSlots.find((slot) => slot.surface_key === 'shop.unlock_cards')
+        ?? null;
+
+      if (isPhysicalShopItemKind(item.kind)) {
+        realItems.push(
+          buildAdminCardEntry({
+            item,
+            slot: unlockSlot,
+            presentation: unlockSlot ? presentationBySlotId.get(unlockSlot.id) ?? null : null,
+            placement: 'real_item',
+          }),
+        );
+        continue;
+      }
+
+      const digitalEntry = buildAdminCardEntry({
+        item,
+        slot: featuredSlot,
+        presentation: featuredSlot ? presentationBySlotId.get(featuredSlot.id) ?? null : null,
+        placement: featuredSlot?.is_active ? 'public_digital' : 'wallet_offer',
+      });
+
+      if (featuredSlot?.is_active) {
+        publicDigitalCards.push(digitalEntry);
+      } else {
+        walletOffers.push(digitalEntry);
+      }
+    }
+
+    walletOffers.sort((left, right) => {
+      const leftKindOrder = left.item.kind === 'coin_pack' ? 0 : left.item.kind === 'vip_membership' ? 1 : 2;
+      const rightKindOrder = right.item.kind === 'coin_pack' ? 0 : right.item.kind === 'vip_membership' ? 1 : 2;
+      if (leftKindOrder !== rightKindOrder) return leftKindOrder - rightKindOrder;
+      if (left.item.kind === 'coin_pack' && right.item.kind === 'coin_pack') {
+        return (left.item.coin_amount ?? 0) - (right.item.coin_amount ?? 0);
+      }
+      return left.item.title.localeCompare(right.item.title);
+    });
+
+    realItems.sort((left, right) => {
+      if (left.slot && right.slot) return left.slot.sort_order - right.slot.sort_order;
+      if (left.item.unlockRule?.level_required && right.item.unlockRule?.level_required) {
+        return left.item.unlockRule.level_required - right.item.unlockRule.level_required;
+      }
+      return left.item.title.localeCompare(right.item.title);
+    });
+
+    return {
+      publicDigitalCards,
+      walletOffers,
+      realItems,
+    };
+  }, [draft.items, draft.presentations, draft.slots]);
 
   return {
     ...query,
@@ -840,6 +1025,9 @@ export function useAdminShopCatalog() {
     workspaceSource: query.data?.workspaceSource ?? 'workspace',
     adminBackendAvailable: query.data?.adminBackendAvailable ?? true,
     hasUnpublishedChanges,
+    publicDigitalCards: groupedCards.publicDigitalCards,
+    walletOffers: groupedCards.walletOffers,
+    realItems: groupedCards.realItems,
     saveItem: saveItem.mutateAsync,
     saveSlot: saveSlot.mutateAsync,
     setItemActive: setItemActive.mutateAsync,

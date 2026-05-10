@@ -52,6 +52,21 @@ describe('Shop catalog canonical schema', () => {
     expect(migration).toContain("'€' || REPLACE(to_char");
   });
 
+  it('adds the surface validation migration for lower-row real items', () => {
+    const migration = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/migrations/20260510113000_shop_surface_real_items.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.admin_upsert_shop_surface_slot');
+    expect(migration).toContain("'physical_reward'::public.shop_item_kind, 'physical_product'::public.shop_item_kind");
+    expect(migration).toContain('Unlock cards only accept physical products or rewards');
+    expect(migration).toContain('Featured cards only accept digital items');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.admin_publish_shop_catalog()');
+    expect(migration).toContain("s.surface_key = 'shop.unlock_cards'");
+    expect(migration).toContain("s.surface_key = 'shop.featured_cards'");
+  });
+
   it('exposes the canonical shop catalog types and RPCs to the frontend', () => {
     const typesFile = fs.readFileSync(
       path.resolve(process.cwd(), 'src/integrations/supabase/types.ts'),
