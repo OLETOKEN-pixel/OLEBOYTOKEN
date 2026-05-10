@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Shop from '@/pages/Shop';
@@ -158,10 +158,13 @@ function makePricedRealItemCard(
 const mocks = vi.hoisted(() => ({
   isMobile: false,
   isAdmin: false,
+  user: null as { id: string; email?: string } | null,
   openWalletPurchase: vi.fn(),
   claimReward: vi.fn(),
   refreshWallet: vi.fn(),
   toast: vi.fn(),
+  createShopCheckout: vi.fn(),
+  redirectToCheckout: vi.fn(),
   featuredCards: [
     makeFeaturedCard('coin-pack-3', 'featured-1', 0, '3 COINS', 'STARTER PACK', 'Starter pack', 3, '€3,00', 'COINS'),
     makeFeaturedCard('coin-pack-5', 'featured-2', 1, '5 COINS', 'COIN PACK', 'Boost pack', 5, '€5,00', 'COINS'),
@@ -177,16 +180,13 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    functions: {
-      invoke: vi.fn(),
-    },
     rpc: vi.fn(),
   },
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
-    user: null,
+    user: mocks.user,
     refreshWallet: mocks.refreshWallet,
   }),
 }));
@@ -239,6 +239,14 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
+vi.mock('@/lib/shopCheckout', () => ({
+  createShopCheckout: mocks.createShopCheckout,
+}));
+
+vi.mock('@/lib/checkoutRedirect', () => ({
+  redirectToCheckout: mocks.redirectToCheckout,
+}));
+
 function createWrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -272,10 +280,13 @@ describe('Shop page', () => {
   beforeEach(() => {
     mocks.isMobile = false;
     mocks.isAdmin = false;
+    mocks.user = null;
     mocks.openWalletPurchase.mockReset();
     mocks.claimReward.mockReset();
     mocks.refreshWallet.mockReset();
     mocks.toast.mockReset();
+    mocks.createShopCheckout.mockReset();
+    mocks.redirectToCheckout.mockReset();
     Element.prototype.scrollIntoView = vi.fn();
   });
 
@@ -361,6 +372,19 @@ describe('Shop page', () => {
     expect(screen.getByTestId('admin-location')).toHaveTextContent(
       '/admin/shop?slot=featured-1&surface=shop.featured_cards&item=coin-pack-3',
     );
+  });
+
+  it('starts Stripe checkout when a logged-in user clicks a purchasable shop card', async () => {
+    mocks.user = { id: 'user-1', email: 'player@example.com' };
+    mocks.createShopCheckout.mockResolvedValue('https://checkout.stripe.test/session');
+    renderShop();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'BUY NOW' })[0]);
+
+    await waitFor(() => {
+      expect(mocks.createShopCheckout).toHaveBeenCalledWith('coin-pack-3');
+      expect(mocks.redirectToCheckout).toHaveBeenCalledWith('https://checkout.stripe.test/session');
+    });
   });
 
   it('renders the responsive mobile adaptation', () => {

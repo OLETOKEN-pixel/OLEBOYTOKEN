@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WalletPurchaseProvider, useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 
 const mocks = vi.hoisted(() => ({
-  invoke: vi.fn(),
   rpc: vi.fn(),
   toast: vi.fn(),
   redirectToCheckout: vi.fn(),
   refreshWallet: vi.fn(),
+  createShopCheckout: vi.fn(),
 }));
 
 const mockCoinPacks = [3, 5, 10, 15, 25, 50].map((coins) => ({
@@ -32,9 +32,6 @@ const mockVipOffer = {
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    functions: {
-      invoke: mocks.invoke,
-    },
     rpc: mocks.rpc,
   },
 }));
@@ -67,6 +64,10 @@ vi.mock('@/lib/checkoutRedirect', () => ({
   redirectToCheckout: mocks.redirectToCheckout,
 }));
 
+vi.mock('@/lib/shopCheckout', () => ({
+  createShopCheckout: mocks.createShopCheckout,
+}));
+
 function Trigger({ children = 'OPEN WALLET' }: { children?: ReactNode }) {
   const { openWalletPurchase } = useWalletPurchase();
   return (
@@ -97,11 +98,11 @@ function renderOverlay() {
 
 describe('WalletPurchaseOverlay', () => {
   beforeEach(() => {
-    mocks.invoke.mockReset();
     mocks.rpc.mockReset();
     mocks.toast.mockReset();
     mocks.redirectToCheckout.mockReset();
     mocks.refreshWallet.mockReset();
+    mocks.createShopCheckout.mockReset();
   });
 
   it('renders the Figma wallet modal with the live coin packages', () => {
@@ -123,7 +124,7 @@ describe('WalletPurchaseOverlay', () => {
   });
 
   it('updates the purchase button and starts the generic shop checkout for the selected package', async () => {
-    mocks.invoke.mockResolvedValue({ data: { url: 'https://checkout.stripe.test/session' }, error: null });
+    mocks.createShopCheckout.mockResolvedValue('https://checkout.stripe.test/session');
 
     renderOverlay();
 
@@ -132,9 +133,7 @@ describe('WalletPurchaseOverlay', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Purchase 25 coins' }));
 
     await waitFor(() => {
-      expect(mocks.invoke).toHaveBeenCalledWith('create-shop-checkout', {
-        body: { itemId: 'pack-25' },
-      });
+      expect(mocks.createShopCheckout).toHaveBeenCalledWith('pack-25');
     });
     expect(mocks.redirectToCheckout).toHaveBeenCalledWith('https://checkout.stripe.test/session');
   });

@@ -19,6 +19,7 @@ import { ShopCardRail } from '@/components/shop/ShopCardRail';
 import type { ShopActionKey, ShopCardViewModel } from '@/lib/shopCatalog';
 import { extractFunctionErrorMessage } from '@/lib/oauth';
 import { redirectToCheckout } from '@/lib/checkoutRedirect';
+import { createShopCheckout } from '@/lib/shopCheckout';
 import { supabase } from '@/integrations/supabase/client';
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif";
@@ -942,15 +943,7 @@ function useShopCardActions({
   }, [navigate, openWalletPurchase]);
 
   const startCheckout = useCallback(async (itemId: string) => {
-    const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
-      body: { itemId },
-    });
-
-    if (error) throw error;
-
-    const checkoutUrl = (data as { url?: string } | null)?.url;
-    if (!checkoutUrl) throw new Error('Stripe checkout URL missing.');
-
+    const checkoutUrl = await createShopCheckout(itemId);
     redirectToCheckout(checkoutUrl);
   }, []);
 

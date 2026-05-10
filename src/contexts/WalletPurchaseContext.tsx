@@ -14,6 +14,7 @@ import { useShopCatalog } from '@/hooks/useShopCatalog';
 import { useToast } from '@/hooks/use-toast';
 import { redirectToCheckout } from '@/lib/checkoutRedirect';
 import { extractFunctionErrorMessage } from '@/lib/oauth';
+import { createShopCheckout } from '@/lib/shopCheckout';
 import type { ShopCatalogItem } from '@/lib/shopCatalog';
 
 type WalletPurchaseContextValue = {
@@ -158,15 +159,7 @@ function WalletPurchaseOverlay({
     setCheckoutLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
-        body: { itemId: selectedPackage.id },
-      });
-
-      if (error) throw error;
-
-      const checkoutUrl = (data as { url?: string } | null)?.url;
-      if (!checkoutUrl) throw new Error('Stripe checkout URL missing.');
-
+      const checkoutUrl = await createShopCheckout(selectedPackage.id);
       redirectToCheckout(checkoutUrl);
     } catch (error) {
       const message = await extractFunctionErrorMessage(error, 'Unable to start checkout.');
