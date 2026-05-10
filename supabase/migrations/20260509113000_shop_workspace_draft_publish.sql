@@ -860,7 +860,7 @@ BEGIN
   FROM public.shop_slot_presentations p
   WHERE p.workspace = v_workspace::public.shop_workspace;
 
-  SELECT COALESCE(jsonb_agg(to_jsonb(c) ORDER BY c.type ASC, c.sort_order ASC), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(to_jsonb(c) ORDER BY c.type ASC, c.created_at ASC), '[]'::jsonb)
   INTO v_challenges
   FROM public.challenges c;
 

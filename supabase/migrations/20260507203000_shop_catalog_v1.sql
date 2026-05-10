@@ -1177,15 +1177,16 @@ INSERT INTO public.shop_items (
   cta_label,
   is_active,
   coin_amount,
+  vip_duration_days,
   metadata
 )
 VALUES
-  ('coin-pack-3', 'coin_pack', '3 COINS', 'STARTER', 'Starter coin pack', '/coin.png', 'BUY NOW', true, 3, '{"badge":"x3"}'::jsonb),
-  ('coin-pack-5', 'coin_pack', '5 COINS', 'BOOST', 'Everyday coin pack', '/coin.png', 'BUY NOW', true, 5, '{"badge":"x5"}'::jsonb),
-  ('coin-pack-10', 'coin_pack', '10 COINS', 'MOST WANTED', 'Popular coin pack', '/coin.png', 'BUY NOW', true, 10, '{"badge":"x10"}'::jsonb),
-  ('coin-pack-15', 'coin_pack', '15 COINS', 'CLIMBER', 'Large coin pack', '/coin.png', 'BUY NOW', true, 15, '{"badge":"x15"}'::jsonb),
-  ('coin-pack-25', 'coin_pack', '25 COINS', 'BEST SELLER', 'Best seller coin pack', '/coin.png', 'BUY NOW', true, 25, '{"badge":"x25"}'::jsonb),
-  ('coin-pack-50', 'coin_pack', '50 COINS', 'ULTRA', 'Ultra coin pack', '/coin.png', 'BUY NOW', true, 50, '{"badge":"x50"}'::jsonb),
+  ('coin-pack-3', 'coin_pack', '3 COINS', 'STARTER', 'Starter coin pack', '/coin.png', 'BUY NOW', true, 3, NULL, '{"badge":"x3"}'::jsonb),
+  ('coin-pack-5', 'coin_pack', '5 COINS', 'BOOST', 'Everyday coin pack', '/coin.png', 'BUY NOW', true, 5, NULL, '{"badge":"x5"}'::jsonb),
+  ('coin-pack-10', 'coin_pack', '10 COINS', 'MOST WANTED', 'Popular coin pack', '/coin.png', 'BUY NOW', true, 10, NULL, '{"badge":"x10"}'::jsonb),
+  ('coin-pack-15', 'coin_pack', '15 COINS', 'CLIMBER', 'Large coin pack', '/coin.png', 'BUY NOW', true, 15, NULL, '{"badge":"x15"}'::jsonb),
+  ('coin-pack-25', 'coin_pack', '25 COINS', 'BEST SELLER', 'Best seller coin pack', '/coin.png', 'BUY NOW', true, 25, NULL, '{"badge":"x25"}'::jsonb),
+  ('coin-pack-50', 'coin_pack', '50 COINS', 'ULTRA', 'Ultra coin pack', '/coin.png', 'BUY NOW', true, 50, NULL, '{"badge":"x50"}'::jsonb),
   ('vip-membership-30d', 'vip_membership', 'VIP', '1 MONTH', 'VIP membership for 30 days', '/showreel/vip-icon.svg', 'GET VIP', true, NULL, 30, '{"benefits":["Real rewards","Giveaways","Less levels, more prizes"]}'::jsonb)
 ON CONFLICT (slug) DO NOTHING;
 
