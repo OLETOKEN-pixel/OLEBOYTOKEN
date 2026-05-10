@@ -6,8 +6,6 @@ const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif";
 const FONT_BOLD_OBLIQUE = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial', sans-serif";
 const FONT_EXPANDED_BOLD = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif";
 
-const WALLET_COIN_ASSET = '/coin.png';
-
 export const SHOP_DESKTOP_CARD_WIDTH = 226.563;
 export const SHOP_DESKTOP_CARD_HEIGHT = 271.875;
 export const SHOP_DESKTOP_CARD_RADIUS = 17.219;
@@ -96,28 +94,6 @@ function ShopCardTile({
             : 'linear-gradient(180deg, rgba(255,22,84,0.22) 0%, rgba(255,22,84,0.03) 44%, rgba(15,4,4,0.14) 100%)',
         }}
       />
-
-      {card.showBadge ? (
-        <span
-          style={{
-            position: 'absolute',
-            left: compact ? 12 : 14,
-            top: compact ? 12 : 13,
-            borderRadius: 999,
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: 'rgba(0,0,0,0.28)',
-            padding: compact ? '4px 9px' : '5px 10px',
-            fontFamily: FONT_EXPANDED_BOLD,
-            fontSize: compact ? 10 : 11,
-            lineHeight: compact ? '12px' : '13px',
-            letterSpacing: '0.14em',
-            color: '#ff8ead',
-            zIndex: 2,
-          }}
-        >
-          {card.badgeLabel}
-        </span>
-      ) : null}
 
       {card.showSecondaryImage && card.secondaryImage ? (
         <div
@@ -229,20 +205,7 @@ function ShopCardTile({
           ) : null}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 6 : 8 }}>
-          {(card.kind === 'coin_pack' || card.kind === 'vip_membership' || card.kind === 'physical_product') ? (
-            <img
-              src={WALLET_COIN_ASSET}
-              alt=""
-              aria-hidden="true"
-              style={{
-                width: compact ? 16 : 22,
-                height: compact ? 16 : 22,
-                objectFit: 'contain',
-                display: 'block',
-              }}
-            />
-          ) : null}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <span
             style={{
               fontFamily: card.kind === 'physical_reward' ? FONT_BOLD_OBLIQUE : FONT_EXPANDED_BOLD,
