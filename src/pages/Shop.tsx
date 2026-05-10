@@ -942,8 +942,12 @@ function useShopCardActions({
     }
   }, [navigate, openWalletPurchase]);
 
-  const startCheckout = useCallback(async (itemId: string) => {
-    const checkoutUrl = await createShopCheckout(itemId);
+  const startCheckout = useCallback(async (card: ShopCardViewModel) => {
+    const checkoutUrl = await createShopCheckout({
+      itemId: card.id,
+      kind: card.kind,
+      coinAmount: card.coinAmount,
+    });
     redirectToCheckout(checkoutUrl);
   }, []);
 
@@ -979,7 +983,7 @@ function useShopCardActions({
       }
 
       if (card.kind === 'coin_pack' || card.kind === 'physical_product') {
-        await startCheckout(card.id);
+        await startCheckout(card);
         return;
       }
 

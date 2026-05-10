@@ -133,7 +133,12 @@ describe('WalletPurchaseOverlay', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Purchase 25 coins' }));
 
     await waitFor(() => {
-      expect(mocks.createShopCheckout).toHaveBeenCalledWith('pack-25');
+      expect(mocks.createShopCheckout).toHaveBeenCalledWith({
+        itemId: 'pack-25',
+        slug: null,
+        kind: 'coin_pack',
+        coinAmount: 25,
+      });
     });
     expect(mocks.redirectToCheckout).toHaveBeenCalledWith('https://checkout.stripe.test/session');
   });

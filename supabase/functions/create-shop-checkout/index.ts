@@ -32,6 +32,13 @@ type ShopPriceRow = {
   currency: "eur" | "coins";
 };
 
+function extractTrailingNumber(value: string) {
+  const match = value.match(/(\d+)(?!.*\d)/);
+  if (!match) return null;
+  const parsed = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function buildCatalogImageUrl(origin: string, supabaseUrl: string, imagePath: string) {
   if (!imagePath) return `${origin}/coin.png`;
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) return imagePath;
@@ -78,25 +85,70 @@ serve(async (req) => {
       );
     }
 
-    const payload = await req.json();
-    const itemId = typeof payload?.itemId === "string" ? payload.itemId : "";
-    if (!itemId) {
+    const payload = await req.json().catch(() => ({}));
+    const requestedItemId = typeof payload?.itemId === "string" ? payload.itemId.trim() : "";
+    const requestedSlug = typeof payload?.slug === "string" ? payload.slug.trim() : "";
+    const requestedKind = typeof payload?.kind === "string" ? payload.kind.trim() : "";
+    const requestedCoinAmount =
+      typeof payload?.coinAmount === "number" && Number.isFinite(payload.coinAmount)
+        ? payload.coinAmount
+        : extractTrailingNumber(requestedItemId || requestedSlug);
+
+    if (!requestedItemId && !requestedSlug && !requestedCoinAmount) {
       return new Response(
         JSON.stringify({ error: "itemId is required." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const { data: itemData, error: itemError } = await supabase
-      .from("shop_items")
-      .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
-      .eq("id", itemId)
-      .eq("is_active", true)
-      .maybeSingle();
+    let itemData: ShopItemRow | null = null;
+    let itemError: unknown = null;
+
+    if (requestedItemId) {
+      const response = await supabase
+        .from("shop_items")
+        .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
+        .eq("id", requestedItemId)
+        .eq("is_active", true)
+        .maybeSingle();
+      itemData = (response.data as ShopItemRow | null) ?? null;
+      itemError = response.error;
+    }
+
+    if (!itemData && requestedSlug) {
+      const response = await supabase
+        .from("shop_items")
+        .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
+        .eq("slug", requestedSlug)
+        .eq("is_active", true)
+        .maybeSingle();
+      itemData = (response.data as ShopItemRow | null) ?? null;
+      itemError = response.error ?? itemError;
+    }
+
+    if (!itemData && requestedCoinAmount && (!requestedKind || requestedKind === "coin_pack")) {
+      const response = await supabase
+        .from("shop_items")
+        .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
+        .eq("kind", "coin_pack")
+        .eq("coin_amount", requestedCoinAmount)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      itemData = (response.data as ShopItemRow | null) ?? null;
+      itemError = response.error ?? itemError;
+    }
 
     if (itemError || !itemData) {
       return new Response(
-        JSON.stringify({ error: "Shop item not found." }),
+        JSON.stringify({
+          error: "Shop item not found.",
+          requestedItemId: requestedItemId || null,
+          requestedSlug: requestedSlug || null,
+          requestedKind: requestedKind || null,
+          requestedCoinAmount: requestedCoinAmount ?? null,
+        }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

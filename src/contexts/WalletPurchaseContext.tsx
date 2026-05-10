@@ -159,7 +159,12 @@ function WalletPurchaseOverlay({
     setCheckoutLoading(true);
 
     try {
-      const checkoutUrl = await createShopCheckout(selectedPackage.id);
+      const checkoutUrl = await createShopCheckout({
+        itemId: selectedPackage.id,
+        slug: selectedPackage.slug ?? null,
+        kind: 'coin_pack',
+        coinAmount: selectedPackage.coinAmount ?? null,
+      });
       redirectToCheckout(checkoutUrl);
     } catch (error) {
       const message = await extractFunctionErrorMessage(error, 'Unable to start checkout.');

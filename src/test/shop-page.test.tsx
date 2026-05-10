@@ -382,7 +382,11 @@ describe('Shop page', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'BUY NOW' })[0]);
 
     await waitFor(() => {
-      expect(mocks.createShopCheckout).toHaveBeenCalledWith('coin-pack-3');
+      expect(mocks.createShopCheckout).toHaveBeenCalledWith({
+        itemId: 'coin-pack-3',
+        kind: 'coin_pack',
+        coinAmount: 3,
+      });
       expect(mocks.redirectToCheckout).toHaveBeenCalledWith('https://checkout.stripe.test/session');
     });
   });
