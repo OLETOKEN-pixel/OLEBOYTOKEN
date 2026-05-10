@@ -386,7 +386,7 @@ export default function AdminShop() {
     [editorForm.digitalKind, items],
   );
   const previewCard = useMemo(() => buildPreviewCard(editorForm), [editorForm]);
-  const canEditWorkspace = adminBackendAvailable && !isLoading;
+  const canEditWorkspace = !isLoading;
   const isCatalogLoading = isLoading && allEntries.length === 0;
 
   const entryByCardKey = useMemo(() => {
@@ -459,6 +459,14 @@ export default function AdminShop() {
   };
 
   const handleSaveCard = async () => {
+    if (!adminBackendAvailable) {
+      toast({
+        title: 'Admin backend non disponibile',
+        description: 'Le migration Supabase dello shop non sono applicate. Esegui `supabase db push` per poter salvare.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       const finalKind = getFinalKind(editorForm);
       const surfaceKey = getSurfaceKey(editorForm);
@@ -602,6 +610,14 @@ export default function AdminShop() {
   };
 
   const handlePublish = async () => {
+    if (!adminBackendAvailable) {
+      toast({
+        title: 'Admin backend non disponibile',
+        description: 'Applica le migration Supabase prima di pubblicare il catalogo.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       await publishCatalog();
       toast({
@@ -679,7 +695,7 @@ export default function AdminShop() {
               : isCatalogLoading
                 ? 'Loading the current shop workspace.'
               : workspaceSource === 'public_catalog_projection'
-                ? 'The admin workspace backend is unavailable, so this screen is mirroring the live public catalog.'
+                ? 'Admin backend non disponibile: schermata in sola lettura sul catalogo pubblico. Esegui `supabase db push` per applicare le migration dello shop.'
                 : hasUnpublishedChanges
                   ? 'Draft changes are ready and not yet published.'
                   : 'Draft and live shop are aligned.'}

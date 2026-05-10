@@ -766,9 +766,18 @@ export function useAdminShopCatalog() {
     enabled: !authLoading,
     queryFn: async () => {
       const loadPublicProjection = async () => {
-        const { data, error } = await supabase.rpc('get_shop_catalog');
-        if (error) throw error;
-        const catalog = normalizeShopCatalogPayload(data);
+        let rawCatalog: unknown = null;
+        try {
+          const { data, error } = await supabase.rpc('get_shop_catalog');
+          if (error) {
+            console.error('get_shop_catalog failed; using hardcoded fallback catalog:', error);
+          } else {
+            rawCatalog = data;
+          }
+        } catch (rpcError) {
+          console.error('get_shop_catalog threw; using hardcoded fallback catalog:', rpcError);
+        }
+        const catalog = normalizeShopCatalogPayload(rawCatalog);
         const projection = createWorkspaceProjectionFromCatalog(catalog, 'draft');
         return {
           draft: projection,

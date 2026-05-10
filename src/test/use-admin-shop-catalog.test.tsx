@@ -71,4 +71,73 @@ describe('useAdminShopCatalog', () => {
     expect(rpcMock).toHaveBeenCalledWith('get_shop_catalog');
     expect(rpcMock).not.toHaveBeenCalledWith('admin_get_shop_workspace', expect.anything());
   });
+
+  it('falls back to the hardcoded catalog when get_shop_catalog itself returns a 404', async () => {
+    rpcMock.mockImplementation(async (fn: string) => {
+      if (fn === 'get_shop_catalog') {
+        return {
+          data: null,
+          error: {
+            code: 'PGRST202',
+            message: 'Could not find the function public.get_shop_catalog without parameters in the schema cache',
+          },
+        };
+      }
+      return { data: null, error: null };
+    });
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useAdminShopCatalog(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.publicDigitalCards).toHaveLength(5);
+    });
+
+    expect(result.current.walletOffers).toHaveLength(2);
+    expect(result.current.realItems).toHaveLength(2);
+    expect(result.current.workspaceSource).toBe('public_catalog_projection');
+    expect(result.current.adminBackendAvailable).toBe(false);
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('still surfaces the public catalog for admins when admin_get_shop_workspace is missing', async () => {
+    useAdminStatusMock.mockReturnValue({
+      user: { id: 'admin-user' },
+      authLoading: false,
+      isAdmin: true,
+      isLoading: false,
+    });
+
+    rpcMock.mockImplementation(async (fn: string) => {
+      if (fn === 'admin_get_shop_workspace') {
+        return {
+          data: null,
+          error: {
+            code: 'PGRST202',
+            message: 'Could not find the function public.admin_get_shop_workspace(p_workspace) in the schema cache',
+          },
+        };
+      }
+      if (fn === 'get_shop_catalog') {
+        return { data: {}, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useAdminShopCatalog(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.publicDigitalCards).toHaveLength(5);
+    });
+
+    expect(result.current.realItems).toHaveLength(2);
+    expect(result.current.adminBackendAvailable).toBe(false);
+    expect(result.current.workspaceSource).toBe('public_catalog_projection');
+
+    consoleErrorSpy.mockRestore();
+  });
 });
