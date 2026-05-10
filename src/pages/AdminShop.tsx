@@ -368,6 +368,7 @@ export default function AdminShop() {
     savingSlot,
     publishingCatalog,
     isBootstrappingInitialDraft,
+    isLoading,
   } = useAdminShopCatalog();
   const { claims, updateClaim, updatingClaim } = useShopClaims();
 
@@ -385,6 +386,8 @@ export default function AdminShop() {
     [editorForm.digitalKind, items],
   );
   const previewCard = useMemo(() => buildPreviewCard(editorForm), [editorForm]);
+  const canEditWorkspace = adminBackendAvailable && !isLoading;
+  const isCatalogLoading = isLoading && allEntries.length === 0;
 
   const entryByCardKey = useMemo(() => {
     const map = new Map<string, AdminShopCardEntry>();
@@ -416,7 +419,7 @@ export default function AdminShop() {
     const slotId = searchParams.get('slot');
     const itemId = searchParams.get('item');
     if (!slotId && !itemId) return;
-    if (allEntries.length === 0) return;
+    if (!canEditWorkspace || allEntries.length === 0) return;
 
     const entry = (slotId ? entryByCardKey.get(slotId) : null)
       ?? (itemId ? entryByCardKey.get(itemId) : null);
@@ -426,7 +429,7 @@ export default function AdminShop() {
     setEditorForm(createEditorFormFromEntry(entry));
     setEditorOpen(true);
     setSearchParams({});
-  }, [allEntries, entryByCardKey, searchParams, setSearchParams]);
+  }, [allEntries, canEditWorkspace, entryByCardKey, searchParams, setSearchParams]);
 
   const openNewDigitalEditor = () => {
     setEditorForm(createEmptyDigitalForm(publicDigitalCards.length + 1));
@@ -673,6 +676,8 @@ export default function AdminShop() {
           <p className={hasUnpublishedChanges ? 'text-[#ffb4c7]' : 'text-[#72f1b8]'}>
             {isBootstrappingInitialDraft
               ? 'Syncing the current live shop into the draft workspace.'
+              : isCatalogLoading
+                ? 'Loading the current shop workspace.'
               : workspaceSource === 'public_catalog_projection'
                 ? 'The admin workspace backend is unavailable, so this screen is mirroring the live public catalog.'
                 : hasUnpublishedChanges
@@ -688,7 +693,12 @@ export default function AdminShop() {
             className="min-h-0"
             contentClassName="min-h-0"
           >
-            {publicDigitalCards.length === 0 ? (
+            {isCatalogLoading ? (
+              <AdminEmptyState
+                title="Loading shop cards"
+                description="Syncing the public row into this workspace."
+              />
+            ) : publicDigitalCards.length === 0 ? (
               <AdminEmptyState
                 title="No public digital cards"
                 description="Create the first shop card for the top row."
@@ -696,10 +706,10 @@ export default function AdminShop() {
             ) : (
               <ShopCardRail
                 cards={publicDigitalCards.map((entry) => entry.card)}
-                onAction={(card) => {
+                onAction={canEditWorkspace ? ((card) => {
                   const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
                   if (entry) openEntryEditor(entry);
-                }}
+                }) : undefined}
               />
             )}
           </AdminPanel>
@@ -710,7 +720,12 @@ export default function AdminShop() {
             className="min-h-0"
             contentClassName="min-h-0"
           >
-            {walletOffers.length === 0 ? (
+            {isCatalogLoading ? (
+              <AdminEmptyState
+                title="Loading wallet offers"
+                description="Collecting wallet-only offers from the current catalog."
+              />
+            ) : walletOffers.length === 0 ? (
               <AdminEmptyState
                 title="No wallet-only offers"
                 description="VIP and extra coin packs appear here when they are not placed in the public row."
@@ -718,10 +733,10 @@ export default function AdminShop() {
             ) : (
               <ShopCardRail
                 cards={walletOffers.map((entry) => entry.card)}
-                onAction={(card) => {
+                onAction={canEditWorkspace ? ((card) => {
                   const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
                   if (entry) openEntryEditor(entry);
-                }}
+                }) : undefined}
                 marqueeWhenOverflow={false}
               />
             )}
@@ -734,7 +749,12 @@ export default function AdminShop() {
           className="min-h-0"
           contentClassName="min-h-0"
         >
-          {realItems.length === 0 ? (
+          {isCatalogLoading ? (
+            <AdminEmptyState
+              title="Loading reward cards"
+              description="Syncing physical products and unlock rewards."
+            />
+          ) : realItems.length === 0 ? (
             <AdminEmptyState
               title="No real items"
               description="Create the first physical product or unlock reward."
@@ -742,10 +762,10 @@ export default function AdminShop() {
           ) : (
             <ShopCardRail
               cards={realItems.map((entry) => entry.card)}
-              onAction={(card) => {
+              onAction={canEditWorkspace ? ((card) => {
                 const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
                 if (entry) openEntryEditor(entry);
-              }}
+              }) : undefined}
             />
           )}
         </AdminPanel>

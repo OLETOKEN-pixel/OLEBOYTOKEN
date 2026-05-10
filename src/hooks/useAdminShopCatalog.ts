@@ -758,12 +758,12 @@ function createWorkspaceProjectionFromCatalog(
 }
 
 export function useAdminShopCatalog() {
-  const { isAdmin } = useAdminStatus();
+  const { user, authLoading, isAdmin } = useAdminStatus();
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['admin-shop-workspaces'],
-    enabled: isAdmin,
+    queryKey: ['admin-shop-workspaces', user?.id ?? 'guest', isAdmin ? 'admin' : 'public'],
+    enabled: !authLoading,
     queryFn: async () => {
       const loadPublicProjection = async () => {
         const { data, error } = await supabase.rpc('get_shop_catalog');
@@ -777,6 +777,10 @@ export function useAdminShopCatalog() {
           adminBackendAvailable: false,
         };
       };
+
+      if (!isAdmin) {
+        return loadPublicProjection();
+      }
 
       try {
         const [draftRes, liveRes] = await Promise.all([
@@ -1022,8 +1026,8 @@ export function useAdminShopCatalog() {
     liveItems: live.items,
     liveSlots: live.slots,
     livePresentations: live.presentations,
-    workspaceSource: query.data?.workspaceSource ?? 'workspace',
-    adminBackendAvailable: query.data?.adminBackendAvailable ?? true,
+    workspaceSource: query.data?.workspaceSource ?? 'public_catalog_projection',
+    adminBackendAvailable: query.data?.adminBackendAvailable ?? false,
     hasUnpublishedChanges,
     publicDigitalCards: groupedCards.publicDigitalCards,
     walletOffers: groupedCards.walletOffers,
