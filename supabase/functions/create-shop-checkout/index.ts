@@ -36,6 +36,10 @@ type ShopSurfaceSlotRow = {
   item_id: string;
 };
 
+function looksLikeUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function extractTrailingNumber(value: string) {
   const match = value.match(/(\d+)(?!.*\d)/);
   if (!match) return null;
@@ -107,9 +111,9 @@ serve(async (req) => {
     }
 
     let itemData: ShopItemRow | null = null;
-    let itemError: unknown = null;
+    const lookupErrors: unknown[] = [];
 
-    if (requestedItemId) {
+    if (requestedItemId && looksLikeUuid(requestedItemId)) {
       const response = await supabase
         .from("shop_items")
         .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
@@ -117,21 +121,30 @@ serve(async (req) => {
         .eq("is_active", true)
         .maybeSingle();
       itemData = (response.data as ShopItemRow | null) ?? null;
-      itemError = response.error;
+      if (response.error) lookupErrors.push(response.error);
     }
 
-    if (!itemData && requestedSlug) {
+    const slugCandidates = Array.from(
+      new Set(
+        [requestedSlug, looksLikeUuid(requestedItemId) ? "" : requestedItemId]
+          .map((entry) => entry.trim())
+          .filter(Boolean),
+      ),
+    );
+
+    for (const slugCandidate of slugCandidates) {
+      if (itemData) break;
       const response = await supabase
         .from("shop_items")
         .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
-        .eq("slug", requestedSlug)
+        .eq("slug", slugCandidate)
         .eq("is_active", true)
         .maybeSingle();
       itemData = (response.data as ShopItemRow | null) ?? null;
-      itemError = response.error ?? itemError;
+      if (response.error) lookupErrors.push(response.error);
     }
 
-    if (!itemData && requestedSlotId) {
+    if (!itemData && requestedSlotId && looksLikeUuid(requestedSlotId)) {
       const slotResponse = await supabase
         .from("shop_surface_slots")
         .select("item_id")
@@ -140,7 +153,7 @@ serve(async (req) => {
         .maybeSingle();
 
       const slot = (slotResponse.data as ShopSurfaceSlotRow | null) ?? null;
-      itemError = slotResponse.error ?? itemError;
+      if (slotResponse.error) lookupErrors.push(slotResponse.error);
 
       if (slot?.item_id) {
         const itemResponse = await supabase
@@ -150,7 +163,7 @@ serve(async (req) => {
           .eq("is_active", true)
           .maybeSingle();
         itemData = (itemResponse.data as ShopItemRow | null) ?? null;
-        itemError = itemResponse.error ?? itemError;
+        if (itemResponse.error) lookupErrors.push(itemResponse.error);
       }
     }
 
@@ -165,17 +178,17 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle();
       itemData = (response.data as ShopItemRow | null) ?? null;
-      itemError = response.error ?? itemError;
+      if (response.error) lookupErrors.push(response.error);
     }
 
-    if (itemError || !itemData) {
+    if (!itemData) {
       logStep("LOOKUP_FAILED", {
         requestedItemId: requestedItemId || null,
         requestedSlotId: requestedSlotId || null,
         requestedSlug: requestedSlug || null,
         requestedKind: requestedKind || null,
         requestedCoinAmount: requestedCoinAmount ?? null,
-        itemError,
+        lookupErrors,
       });
       return new Response(
         JSON.stringify({
@@ -185,6 +198,7 @@ serve(async (req) => {
           requestedSlug: requestedSlug || null,
           requestedKind: requestedKind || null,
           requestedCoinAmount: requestedCoinAmount ?? null,
+          lookupErrors,
         }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
