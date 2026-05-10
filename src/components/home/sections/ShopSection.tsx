@@ -18,6 +18,7 @@ export const ShopSection = () => {
   const cards: ShopCardViewModel[] = [
     ...rewards.map((reward, index) => ({
       id: reward.id,
+      slug: reward.id,
       slotId: `home-reward-${reward.id}`,
       surfaceKey: 'shop.unlock_cards' as const,
       sortOrder: index,
@@ -54,6 +55,7 @@ export const ShopSection = () => {
     })),
     {
       id: vipOffer?.id ?? 'home-vip-fallback',
+      slug: vipOffer?.slug ?? 'home-vip-fallback',
       slotId: 'home-vip-offer',
       surfaceKey: 'shop.featured_cards',
       sortOrder: 9_999,

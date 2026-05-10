@@ -32,6 +32,10 @@ type ShopPriceRow = {
   currency: "eur" | "coins";
 };
 
+type ShopSurfaceSlotRow = {
+  item_id: string;
+};
+
 function extractTrailingNumber(value: string) {
   const match = value.match(/(\d+)(?!.*\d)/);
   if (!match) return null;
@@ -87,6 +91,7 @@ serve(async (req) => {
 
     const payload = await req.json().catch(() => ({}));
     const requestedItemId = typeof payload?.itemId === "string" ? payload.itemId.trim() : "";
+    const requestedSlotId = typeof payload?.slotId === "string" ? payload.slotId.trim() : "";
     const requestedSlug = typeof payload?.slug === "string" ? payload.slug.trim() : "";
     const requestedKind = typeof payload?.kind === "string" ? payload.kind.trim() : "";
     const requestedCoinAmount =
@@ -94,7 +99,7 @@ serve(async (req) => {
         ? payload.coinAmount
         : extractTrailingNumber(requestedItemId || requestedSlug);
 
-    if (!requestedItemId && !requestedSlug && !requestedCoinAmount) {
+    if (!requestedItemId && !requestedSlotId && !requestedSlug && !requestedCoinAmount) {
       return new Response(
         JSON.stringify({ error: "itemId is required." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -126,6 +131,29 @@ serve(async (req) => {
       itemError = response.error ?? itemError;
     }
 
+    if (!itemData && requestedSlotId) {
+      const slotResponse = await supabase
+        .from("shop_surface_slots")
+        .select("item_id")
+        .eq("id", requestedSlotId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      const slot = (slotResponse.data as ShopSurfaceSlotRow | null) ?? null;
+      itemError = slotResponse.error ?? itemError;
+
+      if (slot?.item_id) {
+        const itemResponse = await supabase
+          .from("shop_items")
+          .select("id, slug, kind, title, subtitle, description, image_path, coin_amount")
+          .eq("id", slot.item_id)
+          .eq("is_active", true)
+          .maybeSingle();
+        itemData = (itemResponse.data as ShopItemRow | null) ?? null;
+        itemError = itemResponse.error ?? itemError;
+      }
+    }
+
     if (!itemData && requestedCoinAmount && (!requestedKind || requestedKind === "coin_pack")) {
       const response = await supabase
         .from("shop_items")
@@ -141,10 +169,19 @@ serve(async (req) => {
     }
 
     if (itemError || !itemData) {
+      logStep("LOOKUP_FAILED", {
+        requestedItemId: requestedItemId || null,
+        requestedSlotId: requestedSlotId || null,
+        requestedSlug: requestedSlug || null,
+        requestedKind: requestedKind || null,
+        requestedCoinAmount: requestedCoinAmount ?? null,
+        itemError,
+      });
       return new Response(
         JSON.stringify({
           error: "Shop item not found.",
           requestedItemId: requestedItemId || null,
+          requestedSlotId: requestedSlotId || null,
           requestedSlug: requestedSlug || null,
           requestedKind: requestedKind || null,
           requestedCoinAmount: requestedCoinAmount ?? null,

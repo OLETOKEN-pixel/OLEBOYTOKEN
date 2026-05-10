@@ -257,6 +257,7 @@ const challenges = [
 function makeCard(overrides: Partial<ShopCardViewModel> & Pick<ShopCardViewModel, 'id' | 'slotId' | 'title' | 'ctaLabel' | 'kind'>): ShopCardViewModel {
   return {
     id: overrides.id,
+    slug: overrides.slug ?? overrides.id,
     slotId: overrides.slotId,
     surfaceKey: overrides.surfaceKey ?? 'shop.featured_cards',
     sortOrder: overrides.sortOrder ?? 0,

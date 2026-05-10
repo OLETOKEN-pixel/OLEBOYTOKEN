@@ -25,6 +25,7 @@ function makeFeaturedCard(
 ): ShopCardViewModel {
   return {
     id,
+    slug: id,
     slotId,
     surfaceKey: 'shop.featured_cards',
     sortOrder,
@@ -72,6 +73,7 @@ function makeUnlockCard(
 ): ShopCardViewModel {
   return {
     id,
+    slug: id,
     slotId,
     surfaceKey: 'shop.unlock_cards',
     sortOrder,
@@ -119,6 +121,7 @@ function makePricedRealItemCard(
 ): ShopCardViewModel {
   return {
     id,
+    slug: id,
     slotId,
     surfaceKey: 'shop.unlock_cards',
     sortOrder,
@@ -384,6 +387,8 @@ describe('Shop page', () => {
     await waitFor(() => {
       expect(mocks.createShopCheckout).toHaveBeenCalledWith({
         itemId: 'coin-pack-3',
+        slotId: 'featured-1',
+        slug: 'coin-pack-3',
         kind: 'coin_pack',
         coinAmount: 3,
       });

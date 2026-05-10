@@ -3,15 +3,17 @@ import type { ShopItemKind } from '@/lib/shopCatalog';
 
 type ShopCheckoutRequest = {
   itemId: string;
+  slotId?: string | null;
   slug?: string | null;
   kind?: ShopItemKind | null;
   coinAmount?: number | null;
 };
 
-export async function createShopCheckout({ itemId, slug, kind, coinAmount }: ShopCheckoutRequest) {
+export async function createShopCheckout({ itemId, slotId, slug, kind, coinAmount }: ShopCheckoutRequest) {
   const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
     body: {
       itemId,
+      slotId: slotId ?? null,
       slug: slug ?? null,
       kind: kind ?? null,
       coinAmount: coinAmount ?? null,

@@ -945,6 +945,8 @@ function useShopCardActions({
   const startCheckout = useCallback(async (card: ShopCardViewModel) => {
     const checkoutUrl = await createShopCheckout({
       itemId: card.id,
+      slotId: card.slotId,
+      slug: card.slug,
       kind: card.kind,
       coinAmount: card.coinAmount,
     });

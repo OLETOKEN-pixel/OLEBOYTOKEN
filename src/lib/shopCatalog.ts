@@ -175,6 +175,7 @@ export interface ShopAdminSeed {
 
 export interface ShopCardViewModel {
   id: string;
+  slug: string;
   slotId: string;
   surfaceKey: ShopSurfaceKey;
   sortOrder: number;
@@ -764,6 +765,7 @@ export function toShopCardViewModel(card: ShopSurfaceCard): ShopCardViewModel {
 
   return {
     id: card.item.id,
+    slug: card.item.slug,
     slotId: card.slotId,
     surfaceKey: card.surfaceKey,
     sortOrder: card.sortOrder,
