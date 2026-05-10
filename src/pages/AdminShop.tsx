@@ -667,6 +667,13 @@ export default function AdminShop() {
       });
       return;
     }
+    if (!hasUnpublishedChanges) {
+      toast({
+        title: 'Nothing to publish',
+        description: 'There are no draft changes right now.',
+      });
+      return;
+    }
     try {
       await publishCatalog();
       toast({
@@ -708,7 +715,7 @@ export default function AdminShop() {
   return (
     <AdminShell
       title="Shop Workspace"
-      description="Edit the exact shop cards users see, keep wallet offers in sync, and publish one clean draft."
+      description="Edit the exact shop cards users see and publish one clean draft."
       actions={(
         <>
           <Button
@@ -729,7 +736,7 @@ export default function AdminShop() {
           </Button>
           <Button
             onClick={handlePublish}
-            disabled={!adminBackendAvailable || publishingCatalog || !hasUnpublishedChanges}
+            disabled={!adminBackendAvailable || publishingCatalog}
             className="h-11 bg-[#ff1654] text-white hover:bg-[#ff1654]/90"
           >
             {publishingCatalog ? 'Publishing...' : 'Publish'}
@@ -752,67 +759,35 @@ export default function AdminShop() {
           </p>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <AdminPanel
-            title="Card Items"
-            description="Public digital cards shown under the VIP banner. Click any card to edit it."
-            className="min-h-0 min-w-0"
-            contentClassName="min-h-0 min-w-0"
-          >
-            {isCatalogLoading ? (
-              <AdminEmptyState
-                title="Loading shop cards"
-                description="Syncing the public row into this workspace."
+        <AdminPanel
+          title="Card Items"
+          description="Public digital cards shown under the VIP banner. Click any card to edit it."
+          className="min-h-0 min-w-0"
+          contentClassName="min-h-0 min-w-0"
+        >
+          {isCatalogLoading ? (
+            <AdminEmptyState
+              title="Loading shop cards"
+              description="Syncing the public row into this workspace."
+            />
+          ) : publicDigitalCards.length === 0 ? (
+            <AdminEmptyState
+              title="No public digital cards"
+              description="Create the first shop card for the top row."
+            />
+          ) : (
+            <ScrollableRail>
+              <ShopCardRail
+                cards={publicDigitalCards.map((entry) => entry.card)}
+                onAction={canEditWorkspace ? ((card) => {
+                  const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                  if (entry) openEntryEditor(entry);
+                }) : undefined}
+                marqueeWhenOverflow={false}
               />
-            ) : publicDigitalCards.length === 0 ? (
-              <AdminEmptyState
-                title="No public digital cards"
-                description="Create the first shop card for the top row."
-              />
-            ) : (
-              <ScrollableRail>
-                <ShopCardRail
-                  cards={publicDigitalCards.map((entry) => entry.card)}
-                  onAction={canEditWorkspace ? ((card) => {
-                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                    if (entry) openEntryEditor(entry);
-                  }) : undefined}
-                  marqueeWhenOverflow={false}
-                />
-              </ScrollableRail>
-            )}
-          </AdminPanel>
-
-          <AdminPanel
-            title="Wallet Offers"
-            description="Digital offers active in the wallet but not visible in the five public cards."
-            className="min-h-0 min-w-0"
-            contentClassName="min-h-0 min-w-0"
-          >
-            {isCatalogLoading ? (
-              <AdminEmptyState
-                title="Loading wallet offers"
-                description="Collecting wallet-only offers from the current catalog."
-              />
-            ) : walletOffers.length === 0 ? (
-              <AdminEmptyState
-                title="No wallet-only offers"
-                description="VIP and extra coin packs appear here when they are not placed in the public row."
-              />
-            ) : (
-              <ScrollableRail>
-                <ShopCardRail
-                  cards={walletOffers.map((entry) => entry.card)}
-                  onAction={canEditWorkspace ? ((card) => {
-                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                    if (entry) openEntryEditor(entry);
-                  }) : undefined}
-                  marqueeWhenOverflow={false}
-                />
-              </ScrollableRail>
-            )}
-          </AdminPanel>
-        </div>
+            </ScrollableRail>
+          )}
+        </AdminPanel>
 
         <AdminPanel
           title="Card Real Item"

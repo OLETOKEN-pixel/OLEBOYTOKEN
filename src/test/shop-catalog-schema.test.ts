@@ -67,6 +67,21 @@ describe('Shop catalog canonical schema', () => {
     expect(migration).toContain("s.surface_key = 'shop.featured_cards'");
   });
 
+  it('adds the publish safety migration for Supabase full-table delete protection', () => {
+    const migration = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/migrations/20260510141000_shop_publish_safe_delete.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.admin_publish_shop_catalog()');
+    expect(migration).toContain('DELETE FROM public.shop_item_prices');
+    expect(migration).toContain('WHERE true;');
+    expect(migration).toContain('DELETE FROM public.shop_item_unlock_rules');
+    expect(migration).toContain('DELETE FROM public.shop_surface_slots');
+    expect(migration).toContain("DELETE FROM public.shop_slot_presentations");
+    expect(migration).toContain("workspace = 'live'::public.shop_workspace");
+  });
+
   it('exposes the canonical shop catalog types and RPCs to the frontend', () => {
     const typesFile = fs.readFileSync(
       path.resolve(process.cwd(), 'src/integrations/supabase/types.ts'),

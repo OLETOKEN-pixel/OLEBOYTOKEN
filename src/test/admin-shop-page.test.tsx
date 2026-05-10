@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   saveSlot: vi.fn(),
   publishCatalog: vi.fn(),
   updateClaim: vi.fn(),
+  hasUnpublishedChanges: true,
 }));
 
 const catalogItems = [
@@ -402,7 +403,7 @@ vi.mock('@/hooks/useAdminShopCatalog', () => ({
     livePresentations: presentations,
     workspaceSource: 'workspace',
     adminBackendAvailable: true,
-    hasUnpublishedChanges: true,
+    hasUnpublishedChanges: mocks.hasUnpublishedChanges,
     publicDigitalCards,
     walletOffers,
     realItems,
@@ -476,6 +477,7 @@ describe('AdminShop', () => {
     mocks.saveSlot.mockReset();
     mocks.publishCatalog.mockReset();
     mocks.updateClaim.mockReset();
+    mocks.hasUnpublishedChanges = true;
   });
 
   it('renders the card-first workspace and removes the legacy tabs', () => {
@@ -486,7 +488,7 @@ describe('AdminShop', () => {
     expect(screen.getByRole('button', { name: 'Card Real Item' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeInTheDocument();
     expect(screen.getByText('Card Items')).toBeInTheDocument();
-    expect(screen.getByText('Wallet Offers')).toBeInTheDocument();
+    expect(screen.queryByText('Wallet Offers')).not.toBeInTheDocument();
     expect(screen.getAllByText('Card Real Item').length).toBeGreaterThan(0);
     expect(screen.getByText('Pending Claims')).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Studio' })).not.toBeInTheDocument();
@@ -497,7 +499,7 @@ describe('AdminShop', () => {
   it('opens editors from existing cards and shows simplified forms without legacy preview toggles', () => {
     renderAdminShop();
 
-    fireEvent.click(screen.getByRole('button', { name: 'GET VIP' }));
+    fireEvent.click(screen.getByRole('button', { name: 'BUY NOW' }));
     expect(screen.getByText('Edit shop card')).toBeInTheDocument();
     expect(screen.getByText('Tipo')).toBeInTheDocument();
     expect(screen.getByText('Destinazione')).toBeInTheDocument();
@@ -569,5 +571,20 @@ describe('AdminShop', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
 
     expect(mocks.publishCatalog).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a helpful toast when there is nothing to publish', () => {
+    mocks.hasUnpublishedChanges = false;
+    renderAdminShop();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+
+    expect(mocks.publishCatalog).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Nothing to publish',
+        description: 'There are no draft changes right now.',
+      }),
+    );
   });
 });
