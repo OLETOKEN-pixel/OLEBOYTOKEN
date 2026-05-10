@@ -687,8 +687,8 @@ export default function AdminShop() {
         </>
       )}
     >
-      <div className="space-y-4">
-        <div className={`rounded-[22px] border px-4 py-3 text-sm ${ADMIN_INSET_PANEL_CLASS}`}>
+      <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
+        <div className={`shrink-0 rounded-[22px] border px-4 py-3 text-sm ${ADMIN_INSET_PANEL_CLASS}`}>
           <p className={hasUnpublishedChanges ? 'text-[#ffb4c7]' : 'text-[#72f1b8]'}>
             {isBootstrappingInitialDraft
               ? 'Syncing the current live shop into the draft workspace.'
@@ -720,13 +720,16 @@ export default function AdminShop() {
                 description="Create the first shop card for the top row."
               />
             ) : (
-              <ShopCardRail
-                cards={publicDigitalCards.map((entry) => entry.card)}
-                onAction={canEditWorkspace ? ((card) => {
-                  const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                  if (entry) openEntryEditor(entry);
-                }) : undefined}
-              />
+              <div className="admin-shop-rail-scroll overflow-x-auto pb-3">
+                <ShopCardRail
+                  cards={publicDigitalCards.map((entry) => entry.card)}
+                  onAction={canEditWorkspace ? ((card) => {
+                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                    if (entry) openEntryEditor(entry);
+                  }) : undefined}
+                  marqueeWhenOverflow={false}
+                />
+              </div>
             )}
           </AdminPanel>
 
@@ -747,14 +750,16 @@ export default function AdminShop() {
                 description="VIP and extra coin packs appear here when they are not placed in the public row."
               />
             ) : (
-              <ShopCardRail
-                cards={walletOffers.map((entry) => entry.card)}
-                onAction={canEditWorkspace ? ((card) => {
-                  const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                  if (entry) openEntryEditor(entry);
-                }) : undefined}
-                marqueeWhenOverflow={false}
-              />
+              <div className="admin-shop-rail-scroll overflow-x-auto pb-3">
+                <ShopCardRail
+                  cards={walletOffers.map((entry) => entry.card)}
+                  onAction={canEditWorkspace ? ((card) => {
+                    const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                    if (entry) openEntryEditor(entry);
+                  }) : undefined}
+                  marqueeWhenOverflow={false}
+                />
+              </div>
             )}
           </AdminPanel>
         </div>
@@ -776,13 +781,16 @@ export default function AdminShop() {
               description="Create the first physical product or unlock reward."
             />
           ) : (
-            <ShopCardRail
-              cards={realItems.map((entry) => entry.card)}
-              onAction={canEditWorkspace ? ((card) => {
-                const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
-                if (entry) openEntryEditor(entry);
-              }) : undefined}
-            />
+            <div className="admin-shop-rail-scroll overflow-x-auto pb-3">
+              <ShopCardRail
+                cards={realItems.map((entry) => entry.card)}
+                onAction={canEditWorkspace ? ((card) => {
+                  const entry = entryByCardKey.get(card.slotId) ?? entryByCardKey.get(card.id);
+                  if (entry) openEntryEditor(entry);
+                }) : undefined}
+                marqueeWhenOverflow={false}
+              />
+            </div>
           )}
         </AdminPanel>
 
