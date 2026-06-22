@@ -27,7 +27,7 @@ import { useWalletPurchase } from '@/contexts/WalletPurchaseContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFigmaScale } from '@/hooks/useFigmaScale';
 import { getDiscordAvatarUrl } from '@/lib/avatar';
-import { BRAND_LOGO_SRC, DESKTOP_BRAND_LOGO_SIZE, MOBILE_BRAND_LOGO_SIZE } from '@/lib/brand';
+import { BRAND_WORDMARK_SRC, DESKTOP_BRAND_LOGO_HEIGHT, MOBILE_BRAND_LOGO_HEIGHT } from '@/lib/brand';
 import { getLevel } from '@/lib/xp';
 import type { Profile } from '@/types';
 
@@ -233,26 +233,25 @@ export function NavbarFigmaLoggedIn() {
           boxSizing: 'border-box',
         }}
       >
-        {/* Logo — 65x55px */}
+        {/* Logo — OB wordmark */}
         <Link
           to="/"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
-            height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
+            height: `${DESKTOP_BRAND_LOGO_HEIGHT}px`,
             flexShrink: 0,
             filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))',
           }}
         >
           <img
-            src={BRAND_LOGO_SRC}
+            src={BRAND_WORDMARK_SRC}
             alt="OleBoy"
             style={{
               display: 'block',
-              width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
-              height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
+              height: `${DESKTOP_BRAND_LOGO_HEIGHT}px`,
+              width: 'auto',
               objectFit: 'contain',
             }}
           />
@@ -679,7 +678,6 @@ function NavbarFigmaLoggedInMobile({
           aria-label="OleBoy home"
           onClick={closeMenu}
           style={{
-            width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
             height: '44px',
             display: 'flex',
             alignItems: 'center',
@@ -688,12 +686,12 @@ function NavbarFigmaLoggedInMobile({
           }}
         >
           <img
-            src={BRAND_LOGO_SRC}
+            src={BRAND_WORDMARK_SRC}
             alt="OleBoy"
             style={{
               display: 'block',
-              width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
-              height: `${MOBILE_BRAND_LOGO_SIZE.height}px`,
+              height: `${MOBILE_BRAND_LOGO_HEIGHT}px`,
+              width: 'auto',
               objectFit: 'contain',
             }}
           />

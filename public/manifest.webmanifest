@@ -10,10 +10,10 @@
   "theme_color": "#ff1654",
   "icons": [
     {
-      "src": "/figma-assets/brand/logo-official.png",
-      "sizes": "2000x2000",
+      "src": "/figma-assets/brand/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

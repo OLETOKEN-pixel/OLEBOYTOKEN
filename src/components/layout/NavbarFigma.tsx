@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { BRAND_LOGO_SRC, DESKTOP_BRAND_LOGO_SIZE, MOBILE_BRAND_LOGO_SIZE } from '@/lib/brand';
+import { BRAND_WORDMARK_SRC, DESKTOP_BRAND_LOGO_HEIGHT, MOBILE_BRAND_LOGO_HEIGHT } from '@/lib/brand';
 import { useFigmaScale } from '@/hooks/useFigmaScale';
 
 const F = "'Base Neue Trial', 'Base Neue', sans-serif";
@@ -57,18 +57,17 @@ export function NavbarFigma() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
-          height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
+          height: `${DESKTOP_BRAND_LOGO_HEIGHT}px`,
           flexShrink: 0,
         }}
       >
         <img
-          src={BRAND_LOGO_SRC}
+          src={BRAND_WORDMARK_SRC}
           alt="OleBoy"
           style={{
             display: 'block',
-            width: `${DESKTOP_BRAND_LOGO_SIZE.width}px`,
-            height: `${DESKTOP_BRAND_LOGO_SIZE.height}px`,
+            height: `${DESKTOP_BRAND_LOGO_HEIGHT}px`,
+            width: 'auto',
             objectFit: 'contain',
           }}
         />
@@ -266,7 +265,6 @@ function NavbarFigmaMobile() {
           aria-label="OleBoy home"
           onClick={closeMenu}
           style={{
-            width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
             height: '44px',
             display: 'flex',
             alignItems: 'center',
@@ -275,12 +273,12 @@ function NavbarFigmaMobile() {
           }}
         >
           <img
-            src={BRAND_LOGO_SRC}
+            src={BRAND_WORDMARK_SRC}
             alt="OleBoy"
             style={{
               display: 'block',
-              width: `${MOBILE_BRAND_LOGO_SIZE.width}px`,
-              height: `${MOBILE_BRAND_LOGO_SIZE.height}px`,
+              height: `${MOBILE_BRAND_LOGO_HEIGHT}px`,
+              width: 'auto',
               objectFit: 'contain',
             }}
           />
