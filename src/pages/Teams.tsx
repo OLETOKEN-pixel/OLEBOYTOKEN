@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Trash2 } from 'lucide-react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
@@ -580,7 +581,11 @@ function ModalShell({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  return (
+  // Portal to <body> so the overlay escapes the FigmaFrame's scaled/clipped
+  // stacking context — otherwise the fixed navbar (rendered outside the frame)
+  // paints on top of the modal. zIndex sits above both navbars (desktop 50,
+  // mobile 80), matching PlayerStatsModal.
+  return createPortal(
     <div
       role="presentation"
       onMouseDown={(event) => {
@@ -589,7 +594,7 @@ function ModalShell({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 80,
+        zIndex: 100,
         background: 'rgba(15,4,4,0.78)',
         display: 'flex',
         alignItems: 'flex-start',
@@ -614,7 +619,8 @@ function ModalShell({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
