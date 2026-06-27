@@ -141,34 +141,8 @@ export function NavbarFigmaLoggedIn() {
     activeRouteItem === item || activeSection === NAV_SECTIONS[item];
 
   const handleNavItemClick = (item: NavItem) => {
-    if (item === 'leaderboard') {
-      if (isOnHome) {
-        scrollToSection(NAV_SECTIONS[item]);
-      } else {
-        navigate('/leaderboard');
-      }
-      return;
-    }
-
-    if (item === 'challenges') {
-      navigate('/challenges');
-      return;
-    }
-
-    if (item === 'teams') {
-      navigate('/teams');
-      return;
-    }
-
-    if (item === 'shop') {
-      if (isOnHome) {
-        scrollToSection(NAV_SECTIONS[item]);
-      } else {
-        navigate('/shop');
-      }
-      return;
-    }
-
+    // Navbar links always take the user to the matching home section. The CTA
+    // buttons inside each section are the ones that open the standalone pages.
     if (isOnHome) {
       scrollToSection(NAV_SECTIONS[item]);
     } else {

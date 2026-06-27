@@ -106,6 +106,8 @@ export const TeamsSection = () => {
     };
   }, []);
 
+  // Default avatar must match the Teams page (Teams.tsx `TeamLogo`): grey circle
+  // with the team's first initial, so the placeholder is consistent everywhere.
   const TeamAvatar = ({ url, alt }: { url: string | null; alt: string }) =>
     url ? (
       <img
@@ -114,7 +116,17 @@ export const TeamsSection = () => {
         src={url}
       />
     ) : (
-      <div className="w-[40px] h-[40px] rounded-full bg-gradient-to-br from-[#3b28cc] to-[#6f5cff] flex-shrink-0" />
+      <div
+        className="w-[40px] h-[40px] rounded-full flex-shrink-0 flex items-center justify-center"
+        style={{
+          background: '#d9d9d9',
+          color: '#0f0404',
+          fontFamily: "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif",
+          fontSize: '14px',
+        }}
+      >
+        {alt.slice(0, 1).toUpperCase()}
+      </div>
     );
 
   const ranks = ['1°', '2°', '3°'];
