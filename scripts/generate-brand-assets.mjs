@@ -18,10 +18,16 @@ const SOURCE = path.join(brandDir, 'logo-official.png');
 
 // Pixels with alpha below this are treated as background (the faint green halo).
 const ALPHA_THRESHOLD = 96;
+// Pixels darker than this are the letterform counters (the O's centre, the B's
+// bars, the lightning split). They must stay cut-out (transparent) so the dark
+// navbar shows through — recoloring them would fill the mark into a solid blob.
+const LUMA_THRESHOLD = 110;
 
 /**
- * Recolor every visible pixel to `rgb`, binarizing alpha against ALPHA_THRESHOLD,
- * then trim the surrounding transparency to the mark's tight bounding box.
+ * Recolor the bright letterforms to `rgb` while carving the dark counters out as
+ * transparency, then trim the surrounding transparency to the mark's tight
+ * bounding box. A pixel belongs to the mark only when it is opaque AND bright;
+ * dark pixels (counters) and the faint halo become transparent.
  * @returns {Promise<Buffer>} trimmed PNG buffer
  */
 async function makeTrimmedMark(rgb) {
@@ -32,11 +38,14 @@ async function makeTrimmedMark(rgb) {
 
   const out = Buffer.from(data);
   for (let i = 0; i < out.length; i += 4) {
-    const visible = out[i + 3] >= ALPHA_THRESHOLD;
+    const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    const isMark = data[i + 3] >= ALPHA_THRESHOLD && luma >= LUMA_THRESHOLD;
     out[i] = rgb[0];
     out[i + 1] = rgb[1];
     out[i + 2] = rgb[2];
-    out[i + 3] = visible ? 255 : 0;
+    // Keep the source alpha on the mark for a smooth outer contour; punch the
+    // counters (and halo) out to full transparency.
+    out[i + 3] = isMark ? data[i + 3] : 0;
   }
 
   return sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
