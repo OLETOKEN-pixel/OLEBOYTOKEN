@@ -597,9 +597,9 @@ function CoinPackageButton({
   onSelect: () => void;
 }) {
   const priceLabel = pack.effectivePrice?.label ?? '';
-  const badgeLabel = typeof pack.metadata.badge === 'string'
-    ? (pack.metadata.badge as string)
-    : `x${pack.coinAmount ?? 0}`;
+  // Always show the coin multiplier (x3, x5, x10, …) on the coin — never the raw
+  // catalog badge, which the live data sets to "COINS" (not what we want here).
+  const badgeLabel = `x${pack.coinAmount ?? 0}`;
 
   return (
     <button
