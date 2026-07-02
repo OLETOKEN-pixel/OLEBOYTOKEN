@@ -314,6 +314,9 @@ describe('Shop page', () => {
     expect(screen.getByText(/REACH/i)).toBeInTheDocument();
     expect(screen.getByText('€3,00')).toBeInTheDocument();
     expect(screen.getByText('€25,00')).toBeInTheDocument();
+    expect(screen.getByText('x3')).toBeInTheDocument();
+    expect(screen.getByText('x25')).toBeInTheDocument();
+    expect(screen.getByText('TAPPETINO')).toBeInTheDocument();
     expect(screen.getByText('LVL 15')).toBeInTheDocument();
     expect(screen.getByText('€89,00')).toBeInTheDocument();
     expect(screen.getByText('LVL 12')).toBeInTheDocument();

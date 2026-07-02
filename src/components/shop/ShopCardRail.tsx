@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react';
 import type { ShopCardViewModel } from '@/lib/shopCatalog';
 
 const FONT_REGULAR = "'Base_Neue_Trial:Regular', 'Base Neue Trial', sans-serif";
-const FONT_BOLD = "'Base_Neue_Trial:Bold', 'Base Neue Trial', sans-serif";
 const FONT_BOLD_OBLIQUE = "'Base_Neue_Trial:Bold_Oblique', 'Base Neue Trial', sans-serif";
 const FONT_EXPANDED_BOLD = "'Base_Neue_Trial:Expanded_Bold', 'Base Neue Trial', sans-serif";
 
@@ -41,6 +40,86 @@ function clampTextLines(lines: number): CSSProperties {
   };
 }
 
+// Same gradient-clipped oblique treatment as the wallet overlay tiles
+// (CoinPackageButton in WalletPurchaseContext.tsx) so shop cards and
+// wallet read as one family.
+function gradientHeroStyle(fontSize: number): CSSProperties {
+  return {
+    background: 'linear-gradient(180deg, #ffffff 0%, #ff1654 100%)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    fontFamily: FONT_BOLD_OBLIQUE,
+    fontSize,
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
+  };
+}
+
+function quietLabelStyle(compact: boolean): CSSProperties {
+  return {
+    margin: 0,
+    fontFamily: FONT_REGULAR,
+    fontSize: compact ? 10 : 12,
+    lineHeight: compact ? '13px' : '16px',
+    color: 'rgba(255,255,255,0.72)',
+    textTransform: 'uppercase',
+    letterSpacing: compact ? '0.16em' : '0.2em',
+    textAlign: 'center',
+    padding: '0 12px',
+    maxWidth: '100%',
+    ...clampTextLines(1),
+  };
+}
+
+const FIGURE_GLOW: CSSProperties = {
+  position: 'absolute',
+  inset: '-20%',
+  background: 'radial-gradient(closest-side, rgba(255,22,84,0.30), rgba(255,22,84,0) 72%)',
+  pointerEvents: 'none',
+};
+
+function CoinBadgeFigure({
+  amount,
+  size,
+  multiplierFontSize,
+  image,
+  alt,
+}: {
+  amount: number;
+  size: number;
+  multiplierFontSize: number;
+  image: string;
+  alt: string;
+}) {
+  return (
+    <div style={{ position: 'relative', width: size, height: size }}>
+      <div aria-hidden="true" style={FIGURE_GLOW} />
+      <img
+        src={image}
+        alt={alt}
+        style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+      />
+      <span
+        style={{
+          position: 'absolute',
+          left: size - 2,
+          top: Math.round(size * 0.6),
+          transform: 'translateX(-100%)',
+          display: 'inline-block',
+          minWidth: size >= 100 ? 48 : 34,
+          paddingRight: 4,
+          textAlign: 'right',
+          overflow: 'visible',
+          ...gradientHeroStyle(multiplierFontSize),
+        }}
+      >
+        {`x${amount}`}
+      </span>
+    </div>
+  );
+}
+
 function ShopCardTile({
   card,
   compact = false,
@@ -52,16 +131,35 @@ function ShopCardTile({
   const height = compact ? SHOP_MOBILE_CARD_HEIGHT : SHOP_DESKTOP_CARD_HEIGHT;
   const radius = compact ? 18 : SHOP_DESKTOP_CARD_RADIUS;
   const isUnlock = card.templateKey === 'unlock-card';
-  const titleSize = compact ? (isUnlock ? 17 : 18) : (isUnlock ? 24 : 23);
-  const subtitleSize = compact ? 11 : 14;
-  const valueSize = compact ? (isUnlock ? 18 : 20) : (isUnlock ? 28 : 30);
-  const imageBox = compact
-    ? (isUnlock ? { width: 70, height: 70, top: 58 } : { width: 90, height: 90, top: 50 })
-    : (isUnlock ? { width: 110, height: 110, top: 62 } : { width: 126, height: 126, top: 54 });
+  const isCoinPack = card.kind === 'coin_pack';
+  const figureSize = compact ? 80 : isCoinPack ? 124 : 118;
   const secondaryBox = compact
     ? { width: 52, height: 52, top: 44, right: 14 }
     : { width: 72, height: 72, top: 52, right: 18 };
   const displayValue = card.unlockLabel ?? card.priceLabel ?? card.ctaLabel;
+
+  // Centered stack: figure + gradient hero + price + quiet label.
+  // Coin packs carry the hero (x3, x5, …) on the coin itself, wallet-style.
+  const heroLabel = isCoinPack
+    ? null
+    : card.kind === 'physical_reward'
+      ? displayValue
+      : card.kind === 'vip_membership'
+        ? card.title
+        : card.kind === 'action_card'
+          ? card.ctaLabel
+          : null;
+  const heroBaseSize = card.kind === 'physical_reward' ? (compact ? 24 : 34) : (compact ? 20 : 30);
+  const heroSize = heroLabel && heroLabel.length > 8 ? Math.round(heroBaseSize * 0.72) : heroBaseSize;
+  const showPrice = Boolean(card.priceLabel)
+    && card.kind !== 'physical_reward'
+    && card.kind !== 'action_card';
+  const priceSize = card.kind === 'vip_membership' ? (compact ? 16 : 22) : (compact ? 20 : 28);
+  const quietLabel = isCoinPack
+    ? (card.showSubtitle && card.subtitle ? card.subtitle : null)
+    : card.kind === 'vip_membership'
+      ? (card.subtitle || null)
+      : card.title;
 
   return (
     <div
@@ -119,105 +217,74 @@ function ShopCardTile({
       <div
         style={{
           position: 'absolute',
-          left: '50%',
-          top: imageBox.top,
-          width: imageBox.width,
-          height: imageBox.height,
-          transform: 'translateX(-50%)',
+          inset: 0,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1,
           pointerEvents: 'none',
         }}
       >
-        <img
-          src={card.primaryImage}
-          alt={card.title}
-          style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            display: 'block',
-            filter: isUnlock ? 'drop-shadow(0 14px 20px rgba(0,0,0,0.16))' : 'drop-shadow(0 10px 18px rgba(255,22,84,0.18))',
-          }}
-        />
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          left: compact ? 14 : 16,
-          right: compact ? 14 : 16,
-          bottom: compact ? 16 : 18,
-          display: 'grid',
-          gap: compact ? 5 : 7,
-          textAlign: 'left',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      >
-        <div>
-          <p
+        {isCoinPack ? (
+          <CoinBadgeFigure
+            amount={card.coinAmount ?? 0}
+            size={figureSize}
+            multiplierFontSize={compact ? 22 : 34}
+            image={card.primaryImage || '/coin.png'}
+            alt={card.title}
+          />
+        ) : (
+          <div
             style={{
-              margin: 0,
-              fontFamily: isUnlock ? FONT_BOLD : FONT_EXPANDED_BOLD,
-              fontSize: titleSize,
-              lineHeight: compact ? '19px' : isUnlock ? '25px' : '24px',
-              color: '#ffffff',
-              ...clampTextLines(2),
+              position: 'relative',
+              width: figureSize,
+              height: figureSize,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {card.title}
-          </p>
-
-          {card.showSubtitle && card.subtitle ? (
-            <p
+            <div aria-hidden="true" style={FIGURE_GLOW} />
+            <img
+              src={card.primaryImage}
+              alt={card.title}
               style={{
-                margin: compact ? '3px 0 0' : '4px 0 0',
-                fontFamily: FONT_REGULAR,
-                fontSize: subtitleSize,
-                lineHeight: compact ? '13px' : '18px',
-                color: 'rgba(255,255,255,0.72)',
-                textTransform: 'uppercase',
-                letterSpacing: compact ? '0.03em' : '0.02em',
-                ...clampTextLines(1),
+                position: 'relative',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                display: 'block',
+                filter: 'drop-shadow(0 0 16px rgba(255,22,84,0.32)) drop-shadow(0 12px 22px rgba(0,0,0,0.30))',
               }}
-            >
-              {card.subtitle}
-            </p>
-          ) : null}
+            />
+          </div>
+        )}
 
-          {card.showSupportingText && card.supportingText ? (
-            <p
-              style={{
-                margin: compact ? '5px 0 0' : '6px 0 0',
-                fontFamily: FONT_REGULAR,
-                fontSize: compact ? 10 : 12,
-                lineHeight: compact ? '12px' : '15px',
-                color: 'rgba(255,255,255,0.78)',
-                textTransform: 'uppercase',
-                ...clampTextLines(compact ? 2 : 1),
-              }}
-            >
-              {card.supportingText}
-            </p>
-          ) : null}
-        </div>
+        {heroLabel ? (
+          <span style={{ ...gradientHeroStyle(heroSize), marginTop: compact ? 12 : 18 }}>
+            {heroLabel}
+          </span>
+        ) : null}
 
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        {showPrice ? (
           <span
             style={{
-              fontFamily: card.kind === 'physical_reward' ? FONT_BOLD_OBLIQUE : FONT_EXPANDED_BOLD,
-              fontSize: valueSize,
-              lineHeight: compact ? '22px' : card.kind === 'physical_reward' ? '30px' : '37px',
+              marginTop: heroLabel ? (compact ? 8 : 10) : (compact ? 14 : 20),
+              fontFamily: FONT_EXPANDED_BOLD,
+              fontSize: priceSize,
+              lineHeight: 1,
               color: '#ffffff',
               whiteSpace: 'nowrap',
             }}
           >
-            {displayValue}
+            {card.priceLabel}
           </span>
-        </div>
+        ) : null}
+
+        {quietLabel ? (
+          <p style={{ ...quietLabelStyle(compact), marginTop: compact ? 6 : 10 }}>{quietLabel}</p>
+        ) : null}
       </div>
 
       {onAction ? (
