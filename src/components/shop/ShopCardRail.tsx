@@ -82,21 +82,23 @@ const FIGURE_GLOW: CSSProperties = {
 // Coin-pack layout from the Figma shop designs (file FptPH7s4mlIk8kcFJW7puE,
 // nodes 917-1008…1035): one large coin low-left, two smaller coins above it
 // to the right, the xN multiplier overlapping the large coin's bottom-right
-// edge, and the price beneath. Coordinates are relative to the card box.
+// edge, and the price beneath. The cluster is scaled up so the coins fill
+// most of the card; the multiplier is center-anchored on the large coin so
+// short labels (x3, x5) still sit on it. Coordinates relative to the card.
 const COIN_CLUSTER_DESKTOP = {
-  big: { left: 53, top: 65, size: 88 },
-  small: { left: 105, top: 41, size: 21 },
-  mid: { left: 131, top: 40, size: 41 },
-  multiplier: { right: 168, centerY: 154.5, fontSize: 31 },
-  price: { centerY: 231.5, fontSize: 31 },
+  big: { left: 22, top: 44, size: 132 },
+  small: { left: 98, top: 20, size: 32 },
+  mid: { left: 138, top: 18, size: 62 },
+  multiplier: { centerX: 122, centerY: 170, fontSize: 40 },
+  price: { centerY: 234, fontSize: 31 },
 };
 
 const COIN_CLUSTER_COMPACT = {
-  big: { left: 37, top: 46, size: 62 },
-  small: { left: 73, top: 29, size: 15 },
-  mid: { left: 91, top: 28, size: 29 },
-  multiplier: { right: 117, centerY: 108, fontSize: 22 },
-  price: { centerY: 162, fontSize: 20 },
+  big: { left: 15, top: 31, size: 92 },
+  small: { left: 68, top: 14, size: 22 },
+  mid: { left: 96, top: 13, size: 43 },
+  multiplier: { centerX: 85, centerY: 119, fontSize: 28 },
+  price: { centerY: 163, fontSize: 22 },
 };
 
 function CoinClusterFigure({
@@ -131,10 +133,9 @@ function CoinClusterFigure({
       <span
         style={{
           position: 'absolute',
-          left: g.multiplier.right,
+          left: g.multiplier.centerX,
           top: g.multiplier.centerY,
-          transform: 'translate(-100%, -50%)',
-          textAlign: 'right',
+          transform: 'translate(-50%, -50%)',
           ...gradientHeroStyle(g.multiplier.fontSize),
         }}
       >
