@@ -79,43 +79,84 @@ const FIGURE_GLOW: CSSProperties = {
   pointerEvents: 'none',
 };
 
-function CoinBadgeFigure({
+// Coin-pack layout from the Figma shop designs (file FptPH7s4mlIk8kcFJW7puE,
+// nodes 917-1008…1035): one large coin low-left, two smaller coins above it
+// to the right, the xN multiplier overlapping the large coin's bottom-right
+// edge, and the price beneath. Coordinates are relative to the card box.
+const COIN_CLUSTER_DESKTOP = {
+  big: { left: 53, top: 65, size: 88 },
+  small: { left: 105, top: 41, size: 21 },
+  mid: { left: 131, top: 40, size: 41 },
+  multiplier: { right: 168, centerY: 154.5, fontSize: 31 },
+  price: { centerY: 231.5, fontSize: 31 },
+};
+
+const COIN_CLUSTER_COMPACT = {
+  big: { left: 37, top: 46, size: 62 },
+  small: { left: 73, top: 29, size: 15 },
+  mid: { left: 91, top: 28, size: 29 },
+  multiplier: { right: 117, centerY: 108, fontSize: 22 },
+  price: { centerY: 162, fontSize: 20 },
+};
+
+function CoinClusterFigure({
   amount,
-  size,
-  multiplierFontSize,
+  priceLabel,
   image,
   alt,
+  compact,
 }: {
   amount: number;
-  size: number;
-  multiplierFontSize: number;
+  priceLabel: string | null;
   image: string;
   alt: string;
+  compact: boolean;
 }) {
+  const g = compact ? COIN_CLUSTER_COMPACT : COIN_CLUSTER_DESKTOP;
+  const coinStyle = (c: { left: number; top: number; size: number }): CSSProperties => ({
+    position: 'absolute',
+    left: c.left,
+    top: c.top,
+    width: c.size,
+    height: c.size,
+    objectFit: 'contain',
+    display: 'block',
+  });
+
   return (
-    <div style={{ position: 'relative', width: size, height: size }}>
-      <div aria-hidden="true" style={FIGURE_GLOW} />
-      <img
-        src={image}
-        alt={alt}
-        style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-      />
+    <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+      <img src={image} alt={alt} style={coinStyle(g.big)} />
+      <img src={image} alt="" aria-hidden="true" style={coinStyle(g.small)} />
+      <img src={image} alt="" aria-hidden="true" style={coinStyle(g.mid)} />
       <span
         style={{
           position: 'absolute',
-          left: size - 2,
-          top: Math.round(size * 0.6),
-          transform: 'translateX(-100%)',
-          display: 'inline-block',
-          minWidth: size >= 100 ? 48 : 34,
-          paddingRight: 4,
+          left: g.multiplier.right,
+          top: g.multiplier.centerY,
+          transform: 'translate(-100%, -50%)',
           textAlign: 'right',
-          overflow: 'visible',
-          ...gradientHeroStyle(multiplierFontSize),
+          ...gradientHeroStyle(g.multiplier.fontSize),
         }}
       >
         {`x${amount}`}
       </span>
+      {priceLabel ? (
+        <span
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: g.price.centerY,
+            transform: 'translate(-50%, -50%)',
+            fontFamily: FONT_EXPANDED_BOLD,
+            fontSize: g.price.fontSize,
+            lineHeight: 1,
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {priceLabel}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -132,34 +173,28 @@ function ShopCardTile({
   const radius = compact ? 18 : SHOP_DESKTOP_CARD_RADIUS;
   const isUnlock = card.templateKey === 'unlock-card';
   const isCoinPack = card.kind === 'coin_pack';
-  const figureSize = compact ? 80 : isCoinPack ? 124 : 118;
+  const figureSize = compact ? 80 : 118;
   const secondaryBox = compact
     ? { width: 52, height: 52, top: 44, right: 14 }
     : { width: 72, height: 72, top: 52, right: 18 };
   const displayValue = card.unlockLabel ?? card.priceLabel ?? card.ctaLabel;
 
-  // Centered stack: figure + gradient hero + price + quiet label.
-  // Coin packs carry the hero (x3, x5, …) on the coin itself, wallet-style.
-  const heroLabel = isCoinPack
-    ? null
-    : card.kind === 'physical_reward'
-      ? displayValue
-      : card.kind === 'vip_membership'
-        ? card.title
-        : card.kind === 'action_card'
-          ? card.ctaLabel
-          : null;
+  // Non-coin cards use a centered stack: figure + gradient hero + price +
+  // quiet label. Coin packs render the Figma coin cluster instead.
+  const heroLabel = card.kind === 'physical_reward'
+    ? displayValue
+    : card.kind === 'vip_membership'
+      ? card.title
+      : card.kind === 'action_card'
+        ? card.ctaLabel
+        : null;
   const heroBaseSize = card.kind === 'physical_reward' ? (compact ? 24 : 34) : (compact ? 20 : 30);
   const heroSize = heroLabel && heroLabel.length > 8 ? Math.round(heroBaseSize * 0.72) : heroBaseSize;
   const showPrice = Boolean(card.priceLabel)
     && card.kind !== 'physical_reward'
     && card.kind !== 'action_card';
   const priceSize = card.kind === 'vip_membership' ? (compact ? 16 : 22) : (compact ? 20 : 28);
-  const quietLabel = isCoinPack
-    ? (card.showSubtitle && card.subtitle ? card.subtitle : null)
-    : card.kind === 'vip_membership'
-      ? (card.subtitle || null)
-      : card.title;
+  const quietLabel = card.kind === 'vip_membership' ? (card.subtitle || null) : card.title;
 
   return (
     <div
@@ -214,27 +249,27 @@ function ShopCardTile({
         </div>
       ) : null}
 
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1,
-          pointerEvents: 'none',
-        }}
-      >
-        {isCoinPack ? (
-          <CoinBadgeFigure
-            amount={card.coinAmount ?? 0}
-            size={figureSize}
-            multiplierFontSize={compact ? 22 : 34}
-            image={card.primaryImage || '/coin.png'}
-            alt={card.title}
-          />
-        ) : (
+      {isCoinPack ? (
+        <CoinClusterFigure
+          amount={card.coinAmount ?? 0}
+          priceLabel={card.priceLabel}
+          image={card.primaryImage || '/coin.png'}
+          alt={card.title}
+          compact={compact}
+        />
+      ) : (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}
+        >
           <div
             style={{
               position: 'relative',
@@ -259,33 +294,33 @@ function ShopCardTile({
               }}
             />
           </div>
-        )}
 
-        {heroLabel ? (
-          <span style={{ ...gradientHeroStyle(heroSize), marginTop: compact ? 12 : 18 }}>
-            {heroLabel}
-          </span>
-        ) : null}
+          {heroLabel ? (
+            <span style={{ ...gradientHeroStyle(heroSize), marginTop: compact ? 12 : 18 }}>
+              {heroLabel}
+            </span>
+          ) : null}
 
-        {showPrice ? (
-          <span
-            style={{
-              marginTop: heroLabel ? (compact ? 8 : 10) : (compact ? 14 : 20),
-              fontFamily: FONT_EXPANDED_BOLD,
-              fontSize: priceSize,
-              lineHeight: 1,
-              color: '#ffffff',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {card.priceLabel}
-          </span>
-        ) : null}
+          {showPrice ? (
+            <span
+              style={{
+                marginTop: heroLabel ? (compact ? 8 : 10) : (compact ? 14 : 20),
+                fontFamily: FONT_EXPANDED_BOLD,
+                fontSize: priceSize,
+                lineHeight: 1,
+                color: '#ffffff',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {card.priceLabel}
+            </span>
+          ) : null}
 
-        {quietLabel ? (
-          <p style={{ ...quietLabelStyle(compact), marginTop: compact ? 6 : 10 }}>{quietLabel}</p>
-        ) : null}
-      </div>
+          {quietLabel ? (
+            <p style={{ ...quietLabelStyle(compact), marginTop: compact ? 6 : 10 }}>{quietLabel}</p>
+          ) : null}
+        </div>
+      )}
 
       {onAction ? (
         <button
